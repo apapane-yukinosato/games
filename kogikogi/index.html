@@ -33,7 +33,7 @@ aside{width:96px;flex:none;display:flex;flex-direction:column;gap:10px}
 .box{background:var(--card);border-radius:12px;padding:8px;box-shadow:0 3px 0 #d9c3a3}
 .lbl{font-size:10px;font-weight:800;letter-spacing:.12em;color:var(--mute)}
 .val{font-size:20px;font-weight:800;line-height:1.15;font-variant-numeric:tabular-nums;word-break:break-all}
-#next{display:block;width:80px;height:150px;margin-top:4px}
+#next{display:block;width:80px;height:130px;margin-top:4px}
 #pad{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
 .pb{font:inherit;font-weight:800;font-size:22px;height:64px;border:0;border-radius:14px;cursor:pointer;touch-action:none;
   background:var(--card);color:var(--ink);box-shadow:0 5px 0 #d9c3a3}
@@ -60,7 +60,15 @@ aside{width:96px;flex:none;display:flex;flex-direction:column;gap:10px}
 .big{font-size:44px;font-weight:800;line-height:1;margin:8px 0 2px;font-variant-numeric:tabular-nums}
 .keys{font-size:11px!important}
 .back{display:block;margin-top:10px;font-size:13px;font-weight:800;color:var(--mute);text-decoration:none}
-@media (max-width:360px){ aside{width:80px} #next{width:64px;height:120px} .val{font-size:16px} .pb{height:56px;font-size:19px} }
+.bar{height:8px;border-radius:4px;background:#EADBC4;overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;width:0;border-radius:4px;background:var(--orange);transition:width .3s}
+#bossBox .bar i{background:#E0485A}
+.note{font-size:11px;font-weight:800;color:var(--mute);margin-top:4px;line-height:1.35}
+#bossC{display:block;width:80px;height:64px;margin:2px auto 0}
+.oj{color:#6B6F80}
+.stageNo{font-size:13px;font-weight:800;color:var(--orange);letter-spacing:.1em}
+@media (max-width:360px){ #bossC{width:64px;height:52px} }
+@media (max-width:360px){ aside{width:80px} #next{width:64px;height:104px} .val{font-size:16px} .pb{height:56px;font-size:19px} }
 </style>
 </head>
 <body>
@@ -85,6 +93,7 @@ aside{width:96px;flex:none;display:flex;flex-direction:column;gap:10px}
             <li>たて・よこに<b>4ひき以上</b>つながると消える</li>
             <li>消えたあと落ちて、また消えると<b>れんさ</b>！</li>
             <li><b>✕</b>のマスがうまったらおしまい</li>
+            <li><b>1000てん</b>とるとステージクリア。<b>ステージ3はボスねこ</b>とたいけつ！</li>
           </ol>
           <div class="seg" id="diffs">
             <button data-d="0" aria-pressed="false">かんたん<span>3色</span></button>
@@ -98,6 +107,15 @@ aside{width:96px;flex:none;display:flex;flex-direction:column;gap:10px}
         </div>
       </div>
 
+      <div class="ov" id="stageOv" hidden>
+        <div class="card">
+          <div class="stageNo" id="stNo"></div>
+          <h2 id="stTitle"></h2>
+          <p id="stText"></p>
+          <button class="go" id="stBtn">つぎのステージへ</button>
+        </div>
+      </div>
+
       <div class="ov" id="pauseOv" hidden>
         <div class="card">
           <h2>ひとやすみ</h2>
@@ -108,7 +126,7 @@ aside{width:96px;flex:none;display:flex;flex-direction:column;gap:10px}
 
       <div class="ov" id="overOv" hidden>
         <div class="card">
-          <h2>ばたんきゅ〜</h2>
+          <h2 id="endTitle">ばたんきゅ〜</h2>
           <div class="big" id="endScore">0</div>
           <p id="endInfo"></p>
           <p id="endBest"></p>
@@ -123,7 +141,10 @@ aside{width:96px;flex:none;display:flex;flex-direction:column;gap:10px}
       <div class="box"><div class="lbl">NEXT</div><canvas id="next"></canvas></div>
       <div class="box"><div class="lbl">スコア</div><div class="val" id="score">0</div></div>
       <div class="box"><div class="lbl">さいだいれんさ</div><div class="val" id="maxc">0</div></div>
-      <div class="box"><div class="lbl">レベル</div><div class="val" id="lvl">1</div></div>
+      <div class="box" id="stageBox"><div class="lbl">ステージ</div><div class="val" id="stg">1/3</div>
+        <div class="bar"><i id="stgBar"></i></div><div class="note" id="stgNote"></div></div>
+      <div class="box" id="bossBox" hidden><div class="lbl">ボスねこ</div><canvas id="bossC"></canvas>
+        <div class="bar"><i id="hpBar"></i></div><div class="note" id="hpNote"></div><div class="note oj" id="ojNote"></div></div>
     </aside>
   </div>
 
@@ -151,10 +172,15 @@ const CHAIN_B=[0,8,16,32,64,96,128,160,192,224,256,288,320,352,384,416,448,480,5
 const COLOR_B=[0,3,6,12,24];
 const connB=n=>n<=4?0:n>=11?10:n-3;
 const DIFF=[{n:3,base:700},{n:4,base:640},{n:5,base:560}];
+const OJ=9;                  // じゃまねこ (nuisance)
+const GOAL=1000;             // points needed to clear stage 1 and 2
+const STAGES=[{speed:1},{speed:.82},{speed:.75,boss:true}];
+const BOSS=[{hp:1500,every:5,min:2,max:4},{hp:2500,every:4,min:3,max:6},{hp:3500,every:3,min:4,max:8}];
 
 const field=$('field'), g=field.getContext('2d');
 const nextC=$('next'), ng=nextC.getContext('2d');
 let cs=40, dpr=1;
+const bossC=$('bossC'), bg=bossC.getContext('2d');
 
 // ---------- sound ----------
 let AC=null, muted=false;
@@ -175,7 +201,8 @@ function setMute(m){ muted=m; $('muteBtn').textContent=m?'音 OFF':'音 ON'; try
 setMute(muted);
 
 // ---------- state ----------
-let grid, cur=null, queue=[], phase='title', score=0, chain=0, maxChain=0, placed=0, level=1, diff=1;
+let grid, cur=null, queue=[], phase='title', score=0, chain=0, maxChain=0, diff=1;
+let stage=0, stageStart=0, bossHP=0, bossMax=1, pending=0, bossTimer=0, bossHit=0, bossAtk=0;
 let pool=[], fallT=0, lockT=0, lockResets=0, fallers=[], dropT=0, popCells=[], popT=0, parts=[], texts=[], lastRotFail=0, overT=0;
 const held={left:false,right:false,down:false}; let dasDir=0, dasT=0;
 
@@ -186,11 +213,21 @@ function makePair(first){ const p=first?pool.slice(0,3):pool; return {a:p[rnd(p.
 function newGame(){
   const order=[0,1,2,3,4].sort(()=>Math.random()-.5);
   pool=order.slice(0,DIFF[diff].n);
-  grid=emptyGrid(); score=0; chain=0; maxChain=0; placed=0; level=1;
-  parts=[]; texts=[]; fallers=[]; popCells=[];
+  score=0; maxChain=0; parts=[];
+  startStage(0);
+}
+function startStage(n){
+  stage=n; stageStart=score; grid=emptyGrid(); chain=0;
+  texts=[]; fallers=[]; popCells=[];
   queue=[makePair(true),makePair(true),makePair(false)];
+  const B=BOSS[diff];
+  if(STAGES[n].boss){ bossMax=bossHP=B.hp; pending=newAttack(); bossTimer=0; bossHit=0; bossAtk=0; }
+  $('stageOv').hidden=true;
+  $('stageBox').hidden=!!STAGES[n].boss; $('bossBox').hidden=!STAGES[n].boss;
+  texts.push({t:0,x:3*cs,y:5*cs,s:STAGES[n].boss?'ボスねこ！':`ステージ${n+1}`,big:true,sub:STAGES[n].boss?'れんさで攻撃だ':`${GOAL}てんでクリア`});
   hud(); spawn();
 }
+function newAttack(){ const B=BOSS[diff]; return B.min+rnd(B.max-B.min+1); }
 function spawn(){
   if(grid[1][2]!==-1 || !fits(2,2,0)){ gameOver(); return; }
   const p=queue.shift(); queue.push(makePair(false));
@@ -230,13 +267,13 @@ function rotate(dir){
   }
   lastRotFail=now;
 }
-function fallInterval(){ return Math.max(120, DIFF[diff].base-(level-1)*30); }
+function fallInterval(){ return Math.max(120, DIFF[diff].base*STAGES[stage].speed); }
 
 function lockPiece(){
   const y=cur.y2/2;
   const cells=[[cur.x,y,cur.a],[cur.x+DX[cur.rot],y+DY[cur.rot],cur.b]];
   for(const [x,yy,c] of cells) if(yy>=0) grid[yy][x]=c;   // above the 13th row vanishes
-  cur=null; sLand(); placed++; level=1+Math.floor(placed/15); chain=0; hud();
+  cur=null; sLand(); chain=0; if(STAGES[stage].boss)bossTimer++; hud();
   startGravity();
 }
 function startGravity(){
@@ -254,7 +291,7 @@ function startGravity(){
 function findGroups(){
   const seen=emptyGrid().map(r=>r.map(()=>false)), out=[];
   for(let y=1;y<H;y++)for(let x=0;x<W;x++){
-    const c=grid[y][x]; if(c<0||seen[y][x])continue;
+    const c=grid[y][x]; if(c<0||c===OJ||seen[y][x])continue;
     const st=[[x,y]], cells=[]; seen[y][x]=true;
     while(st.length){
       const [cx,cy]=st.pop(); cells.push([cx,cy]);
@@ -277,15 +314,37 @@ function afterDrop(){
     let bonus=CHAIN_B[Math.min(chain-1,CHAIN_B.length-1)]+groups.reduce((s,gr)=>s+connB(gr.cells.length),0)+COLOR_B[colors-1];
     bonus=Math.min(999,Math.max(1,bonus));
     const gain=10*n*bonus; score+=gain;
-    popCells=groups.flatMap(gr=>gr.cells); popT=0; phase='pop';
-    const cx=popCells.reduce((s,p)=>s+p[0],0)/n, cy=popCells.reduce((s,p)=>s+p[1],0)/n;
+    popCells=groups.flatMap(gr=>gr.cells);
+    // じゃまねこ next to a cleared group are cleared too
+    const key=new Set(popCells.map(([x,y])=>x+','+y));
+    for(const [x,y] of groups.flatMap(gr=>gr.cells))
+      for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+        const nx=x+dx, ny=y+dy;
+        if(nx<0||nx>=W||ny<1||ny>=H||grid[ny][nx]!==OJ||key.has(nx+','+ny))continue;
+        key.add(nx+','+ny); popCells.push([nx,ny]);
+      }
+    popT=0; phase='pop';
+    const cx=groups[0].cells.reduce((s,p)=>s+p[0],0)/groups[0].cells.length, cy=groups[0].cells.reduce((s,p)=>s+p[1],0)/groups[0].cells.length;
     texts.push({t:0,x:(cx+.5)*cs,y:cy*cs,s:chain>=2?`${chain}れんさ！`:`+${gain}`,big:chain>=2,sub:chain>=2?`+${gain}`:''});
+    if(STAGES[stage].boss){
+      bossHP=Math.max(0,bossHP-gain); bossHit=400;
+      pending=Math.max(0,pending-Math.floor(gain/70));   // 70 points cancel one じゃまねこ
+    }
     sBark(chain); hud();
     return;
   }
   if(chain>0 && grid.every(r=>r.every(c=>c<0))){
-    score+=2100; texts.push({t:0,x:3*cs,y:6*cs,s:'ぜんけし！',big:true,sub:'+2100'}); sBark(6); hud();
+    score+=2100; texts.push({t:0,x:3*cs,y:6*cs,s:'ぜんけし！',big:true,sub:'+2100'}); sBark(6);
+    if(STAGES[stage].boss){ bossHP=Math.max(0,bossHP-2100); bossHit=400; }
+    hud();
   }
+  if(STAGES[stage].boss){
+    if(bossHP<=0){ win(); return; }
+    if(bossTimer>=BOSS[diff].every){
+      if(pending>0){ dropOjama(); return; }
+      pending=newAttack(); bossTimer=0; hud();
+    }
+  }else if(score-stageStart>=GOAL){ stageClear(); return; }
   spawn();
 }
 function finishPop(){
@@ -297,8 +356,33 @@ function finishPop(){
   }
   popCells=[]; startGravity();
 }
-function gameOver(){
-  phase='over'; overT=0; cur=null;
+function dropOjama(){
+  const n=Math.min(pending,30), cols=Array(W).fill(Math.floor(n/W));
+  const xs=[0,1,2,3,4,5].sort(()=>Math.random()-.5).slice(0,n%W); for(const x of xs)cols[x]++;
+  fallers=[];
+  for(let x=0;x<W;x++){
+    let top=0; while(top<H&&grid[top][x]===-1)top++;
+    for(let i=0;i<cols[x];i++){ const to=top-1-i; if(to<0)break; fallers.push({x,from:to-9,to,y:to-9,c:OJ}); }
+  }
+  pending=newAttack(); bossTimer=0; bossAtk=600;
+  texts.push({t:0,x:3*cs,y:4*cs,s:'ニャー！',big:true,sub:`じゃまねこ ×${n}`});
+  tone(300,.3,'sawtooth',.08,1.8); tone(500,.25,'sawtooth',.07,.6,.25);
+  hud();
+  if(fallers.length){ phase='drop'; dropT=0; } else spawn();
+}
+function stageClear(){
+  phase='stage'; cur=null;
+  const next=stage+1;
+  $('stNo').textContent=`STAGE ${stage+1}`;
+  $('stTitle').textContent='クリア！';
+  $('stText').innerHTML=STAGES[next].boss
+    ?'つぎは<b>ボスねこ</b>とたいけつ！<br>れんさで点をとるとボスにダメージ。ボスは<b>じゃまねこ</b>を落としてくるぞ。じゃまねこはとなりのコーギーを消すと消えるよ。'
+    :`つぎはステージ${next+1}。すこし速くなるよ。<br>${GOAL}てんとったらクリア！`;
+  $('stBtn').textContent=STAGES[next].boss?'ボスとたたかう':'つぎのステージへ';
+  tone(660,.12,'triangle',.08); tone(880,.12,'triangle',.08,0,.12); tone(1320,.25,'triangle',.08,0,.24);
+  setTimeout(()=>{ if(phase==='stage') $('stageOv').hidden=false; },700);
+}
+function saveBest(){
   let best=0, bestC=0;
   try{
     best=+localStorage.getItem('kogiBest'+diff)||0; bestC=+localStorage.getItem('kogiBestChain'+diff)||0;
@@ -306,15 +390,35 @@ function gameOver(){
     if(maxChain>bestC)localStorage.setItem('kogiBestChain'+diff,maxChain);
   }catch(e){}
   $('endScore').textContent=score.toLocaleString();
-  $('endInfo').textContent=`さいだい ${maxChain}れんさ ・ レベル ${level}`;
   $('endBest').textContent=score>best?'ハイスコア更新！🎉':`ハイスコア ${best.toLocaleString()}`;
+}
+function win(){
+  phase='clear'; cur=null; saveBest();
+  try{ localStorage.setItem('kogiCleared'+diff,'1'); }catch(e){}
+  $('endTitle').textContent='ボスねこをたおした！';
+  $('endInfo').textContent=`ゲームクリア 🎉 ・ さいだい ${maxChain}れんさ`;
+  for(let i=0;i<80;i++) parts.push({x:Math.random()*W*cs,y:-Math.random()*cs*3,vx:(Math.random()-.5)*3,vy:Math.random()*2,life:2.5,c:rnd(5)});
+  [523,659,784,1047].forEach((f,i)=>tone(f,.2,'triangle',.08,0,i*.13));
+  setTimeout(()=>{ if(phase==='clear') $('overOv').hidden=false; },1400);
+}
+function gameOver(){
+  phase='over'; overT=0; cur=null; saveBest();
+  $('endTitle').textContent='ばたんきゅ〜';
+  $('endInfo').textContent=`ステージ${stage+1}${STAGES[stage].boss?'（ボス）':''}まで ・ さいだい ${maxChain}れんさ`;
   tone(330,.25,'sawtooth',.07,.5); tone(220,.4,'sawtooth',.07,.5,.25);
   setTimeout(()=>{ if(phase==='over') $('overOv').hidden=false; },900);
 }
 function hud(){
   $('score').textContent=score.toLocaleString();
   $('maxc').textContent=maxChain;
-  $('lvl').textContent=level;
+  $('stg').textContent=`${stage+1}/3`;
+  const got=Math.min(GOAL,score-stageStart);
+  $('stgBar').style.width=(got/GOAL*100)+'%';
+  $('stgNote').textContent=`クリアまで あと${GOAL-got}てん`;
+  $('hpBar').style.width=(bossHP/bossMax*100)+'%';
+  $('hpNote').textContent=`HP ${bossHP} / ${bossMax}`;
+  const left=Math.max(0,BOSS[diff].every-bossTimer);
+  $('ojNote').textContent=pending>0?`じゃまねこ ×${pending}（あと${left}手）`:'じゃまねこ なし';
 }
 
 // ---------- update ----------
@@ -322,6 +426,7 @@ function update(dt){
   for(const p of parts){ p.x+=p.vx*dt/16; p.y+=p.vy*dt/16; p.vy+=.35*dt/16; p.life-=dt/700; }
   parts=parts.filter(p=>p.life>0);
   for(const t of texts)t.t+=dt; texts=texts.filter(t=>t.t<1300);
+  bossHit=Math.max(0,bossHit-dt); bossAtk=Math.max(0,bossAtk-dt);
   if(phase==='over'){ overT+=dt; return; }
 
   if(phase==='fall'){
@@ -344,7 +449,59 @@ function update(dt){
 }
 
 // ---------- drawing ----------
+function drawCat(c,cx,cy,s,mode,sc=1){
+  const r=s*.4*sc; if(r<=0)return;
+  c.save(); c.translate(cx,cy);
+  c.fillStyle='#8C90A3'; c.strokeStyle='#5E6275'; c.lineWidth=Math.max(1,s*.03);
+  for(const k of [-1,1]){ c.beginPath(); c.moveTo(k*r*.95,-r*.1); c.lineTo(k*r*.85,-r*1.05); c.lineTo(k*r*.3,-r*.75); c.closePath(); c.fill(); c.stroke(); }
+  c.beginPath(); c.ellipse(0,r*.05,r,r*.88,0,0,Math.PI*2); c.fill(); c.stroke();
+  c.fillStyle='#A9ADBE'; c.beginPath(); c.ellipse(0,r*.4,r*.5,r*.32,0,0,Math.PI*2); c.fill();
+  const ink='#2A2D3A'; c.strokeStyle=ink; c.lineCap='round'; c.lineWidth=Math.max(1.2,r*.1);
+  for(const k of [-1,1]){
+    c.beginPath();
+    if(mode==='pop'){ c.moveTo(k*r*.48,-r*.2); c.lineTo(k*r*.28,-r*.1); c.lineTo(k*r*.48,0); }
+    else { c.moveTo(k*r*.52,-r*.1); c.lineTo(k*r*.22,-r*.1); }
+    c.stroke();
+  }
+  c.fillStyle='#E88A9A'; c.beginPath(); c.moveTo(-r*.1,r*.18); c.lineTo(r*.1,r*.18); c.lineTo(0,r*.3); c.closePath(); c.fill();
+  c.lineWidth=Math.max(1,r*.06); c.beginPath();
+  c.arc(-r*.1,r*.32,r*.1,0,Math.PI); c.moveTo(r*.2,r*.32); c.arc(r*.1,r*.32,r*.1,0,Math.PI); c.stroke();
+  c.strokeStyle='rgba(42,45,58,.6)'; c.lineWidth=Math.max(1,r*.04); c.beginPath();
+  for(const k of [-1,1])for(const d of [-.08,.08]){ c.moveTo(k*r*.55,r*(.3+d)); c.lineTo(k*r*1.05,r*(.28+d*2)); }
+  c.stroke(); c.restore();
+}
+function drawBoss(c,w,h,now){
+  c.clearRect(0,0,w,h);
+  const shake=bossHit>0?Math.sin(now/25)*bossHit/60:0, bob=Math.sin(now/300)*1.5;
+  const r=Math.min(w*.4,h*.42), cx=w/2+shake, cy=h*.58+bob;
+  c.save(); c.translate(cx,cy);
+  c.fillStyle='#3B3A48'; c.strokeStyle='#1E1D28'; c.lineWidth=2;
+  for(const k of [-1,1]){ c.beginPath(); c.moveTo(k*r*.95,-r*.15); c.lineTo(k*r*.9,-r*1.05); c.lineTo(k*r*.3,-r*.75); c.closePath(); c.fill(); c.stroke(); }
+  c.beginPath(); c.ellipse(0,0,r*1.05,r*.85,0,0,Math.PI*2); c.fill(); c.stroke();
+  // crown
+  c.fillStyle='#FFC53D'; c.strokeStyle='#B7820A'; c.lineWidth=1.5;
+  c.beginPath(); c.moveTo(-r*.4,-r*.72); c.lineTo(-r*.45,-r*1.15); c.lineTo(-r*.2,-r*.92); c.lineTo(0,-r*1.25); c.lineTo(r*.2,-r*.92); c.lineTo(r*.45,-r*1.15); c.lineTo(r*.4,-r*.72); c.closePath(); c.fill(); c.stroke();
+  // eyes
+  const hurt=bossHit>0;
+  for(const k of [-1,1]){
+    if(hurt){ c.strokeStyle='#fff'; c.lineWidth=2.5; c.beginPath(); c.moveTo(k*r*.55,-r*.3); c.lineTo(k*r*.25,-r*.15); c.lineTo(k*r*.55,0); c.stroke(); }
+    else{
+      c.fillStyle='#FFE14D'; c.beginPath(); c.ellipse(k*r*.4,-r*.15,r*.2,r*.15,0,0,Math.PI*2); c.fill();
+      c.fillStyle='#1E1D28'; c.beginPath(); c.ellipse(k*r*.4,-r*.15,r*.05,r*.13,0,0,Math.PI*2); c.fill();
+      c.strokeStyle='#1E1D28'; c.lineWidth=2.5; c.beginPath(); c.moveTo(k*r*.65,-r*.45); c.lineTo(k*r*.2,-r*.3); c.stroke();
+    }
+  }
+  c.fillStyle='#E88A9A'; c.beginPath(); c.moveTo(-r*.1,r*.12); c.lineTo(r*.1,r*.12); c.lineTo(0,r*.24); c.closePath(); c.fill();
+  c.strokeStyle='#fff'; c.lineWidth=1.8;
+  if(bossAtk>0){ c.fillStyle='#8B2E3A'; c.beginPath(); c.ellipse(0,r*.45,r*.25,r*.2,0,0,Math.PI*2); c.fill();
+    c.fillStyle='#fff'; for(const k of [-1,1]){ c.beginPath(); c.moveTo(k*r*.16,r*.3); c.lineTo(k*r*.08,r*.42); c.lineTo(k*r*.02,r*.3); c.fill(); } }
+  else{ c.beginPath(); c.arc(-r*.12,r*.3,r*.12,0,Math.PI); c.moveTo(r*.24,r*.3); c.arc(r*.12,r*.3,r*.12,0,Math.PI); c.stroke(); }
+  c.strokeStyle='rgba(255,255,255,.55)'; c.lineWidth=1.2; c.beginPath();
+  for(const k of [-1,1])for(const d of [-.1,.1]){ c.moveTo(k*r*.6,r*(.25+d)); c.lineTo(k*r*1.2,r*(.2+d*2)); }
+  c.stroke(); c.restore();
+}
 function drawCorgi(c,cx,cy,s,ci,mode,sc=1){
+  if(ci===OJ){ drawCat(c,cx,cy,s,mode,sc); return; }
   const C=COLORS[ci], r=s*.42*sc;
   if(r<=0)return;
   c.save(); c.translate(cx,cy);
@@ -392,7 +549,7 @@ function drawCorgi(c,cx,cy,s,ci,mode,sc=1){
 }
 function bridges(){
   for(let y=1;y<H;y++)for(let x=0;x<W;x++){
-    const c=grid[y][x]; if(c<0)continue;
+    const c=grid[y][x]; if(c<0||c===OJ)continue;
     g.fillStyle=COLORS[c].fur; const b=cs*.62;
     if(x+1<W&&grid[y][x+1]===c) g.fillRect((x+.5)*cs,y*cs-b/2,cs,b);
     if(y+1<H&&grid[y+1][x]===c) g.fillRect((x+.5)*cs-b/2,y*cs,b,cs);
@@ -401,7 +558,8 @@ function bridges(){
 function render(now){
   const w=W*cs, h=12.5*cs;
   g.setTransform(dpr,0,0,dpr,0,0);
-  g.fillStyle='#2E2A4F'; g.fillRect(0,0,w,h);
+  const boss=grid&&STAGES[stage].boss&&phase!=='title';
+  g.fillStyle=boss?'#43243F':'#2E2A4F'; g.fillRect(0,0,w,h);
   g.fillStyle='#3A3563'; g.fillRect(0,0,w,cs*.5);
   // paw-dot grid
   g.fillStyle='rgba(255,255,255,.05)';
@@ -433,7 +591,7 @@ function render(now){
     drawCorgi(g,(cur.x+DX[cur.rot]+.5)*cs,(y+DY[cur.rot])*cs,cs,cur.b,'n');
   }
   for(const p of parts){
-    g.globalAlpha=Math.max(0,p.life); g.fillStyle=COLORS[p.c].fur;
+    g.globalAlpha=Math.max(0,Math.min(1,p.life)); g.fillStyle=p.c===OJ?'#9A9EAE':COLORS[p.c].fur;
     g.beginPath(); g.arc(p.x,p.y,cs*.1,0,Math.PI*2); g.fill();
   }
   g.globalAlpha=1;
@@ -447,6 +605,9 @@ function render(now){
     if(t.sub){ g.font=`800 ${Math.round(cs*.42)}px "M PLUS Rounded 1c",sans-serif`; g.strokeText(t.sub,tx,yy+cs*.7); g.fillStyle='#fff'; g.fillText(t.sub,tx,yy+cs*.7); }
   }
   g.globalAlpha=1;
+  if(boss&&!$('bossBox').hidden){ const bw=bossC.clientWidth, bh=bossC.clientHeight;
+    if(bossC.width!==bw*dpr){ bossC.width=bw*dpr; bossC.height=bh*dpr; }
+    bg.setTransform(dpr,0,0,dpr,0,0); drawBoss(bg,bw,bh,now); }
   if(phase==='over'){ g.fillStyle=`rgba(46,42,79,${Math.min(.5,overT/1500)})`; g.fillRect(0,0,w,h); }
 }
 function drawNext(){
@@ -503,16 +664,17 @@ field.addEventListener('pointerdown',e=>{ if(phase==='fall'){ e.preventDefault()
 // ---------- screens ----------
 let paused=false;
 function togglePause(){
-  if(phase==='title'||phase==='over')return;
+  if(!['fall','drop','pop'].includes(phase))return;
   paused=!paused; $('pauseOv').hidden=!paused;
   for(const k in held)held[k]=false; dasDir=0;
 }
 function start(){
-  ac(); $('titleOv').hidden=true; $('overOv').hidden=true; $('pauseOv').hidden=true; paused=false;
+  ac(); $('titleOv').hidden=true; $('overOv').hidden=true; $('pauseOv').hidden=true; $('stageOv').hidden=true; paused=false;
   newGame();
 }
 function toTitle(){
-  phase='title'; paused=false; cur=null; $('pauseOv').hidden=true; $('overOv').hidden=true; $('titleOv').hidden=false;
+  phase='title'; paused=false; cur=null; $('pauseOv').hidden=true; $('overOv').hidden=true; $('stageOv').hidden=true; $('titleOv').hidden=false;
+  stage=0; $('stageBox').hidden=false; $('bossBox').hidden=true; score=0; maxChain=0; stageStart=0; hud();
   showBest(); demo();
 }
 function showBest(){
@@ -522,11 +684,11 @@ function showBest(){
 for(const b of document.querySelectorAll('#diffs button')){
   b.addEventListener('click',()=>{ diff=+b.dataset.d; for(const o of document.querySelectorAll('#diffs button'))o.setAttribute('aria-pressed',o===b); showBest(); });
 }
-$('startBtn').onclick=start; $('againBtn').onclick=start;
+$('startBtn').onclick=start; $('stBtn').onclick=()=>{ ac(); startStage(stage+1); }; $('againBtn').onclick=start;
 $('toTitleBtn').onclick=toTitle; $('quitBtn').onclick=toTitle;
 $('resumeBtn').onclick=togglePause; $('pauseBtn').onclick=togglePause;
 $('muteBtn').onclick=()=>setMute(!muted);
-document.addEventListener('visibilitychange',()=>{ if(document.hidden&&!paused&&phase!=='title'&&phase!=='over')togglePause(); });
+document.addEventListener('visibilitychange',()=>{ if(document.hidden&&!paused)togglePause(); });
 
 function demo(){
   grid=emptyGrid(); queue=[];
@@ -544,7 +706,7 @@ function loop(now){
 layout(); toTitle(); requestAnimationFrame(loop);
 
 // test hook
-window.__kogi={get state(){return {grid,cur,phase,score,chain,maxChain,level};}, set(gr){grid=gr;}, afterDrop:()=>{chain=0;startGravity();}};
+window.__kogi={get state(){return {grid,cur,phase,score,chain,maxChain,stage,bossHP,pending,bossTimer};}, set(gr){grid=gr;}, afterDrop:()=>{chain=0;startGravity();}, stage:n=>startStage(n), setScore:v=>{score=v;hud();}, setTimer:v=>{bossTimer=v;}};
 })();
 </script>
 </body>
