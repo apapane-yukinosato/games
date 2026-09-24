@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="お金を弾にして人生を進むシューティング。貯金・保険・投資・ライフイベントを体験しよう">
+<title>人生マネーシューター</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&display=swap">
+<style>
+:root{
+  --bg:#1F2A44; --bg2:#2B3A5E; --card:#FFF8EC; --ink:#2A2440; --mute:#8C86A3; --soft:#B8C2DC;
+  --gold:#F6C343; --gold2:#C9971A; --green:#5BD19A; --red:#FF6B6B; --blue:#6FB7FF;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:#fff;
+  font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#app{height:100%;box-sizing:border-box;max-width:520px;margin:0 auto;padding:8px 16px 12px;display:flex;flex-direction:column;gap:6px}
+#top{display:flex;align-items:center;gap:8px}
+#top a{color:var(--soft);text-decoration:none;font-size:13px;font-weight:800}
+#top h1{flex:1;margin:0;text-align:center;font-size:17px;font-weight:800;letter-spacing:.04em}
+.mini{font:inherit;font-size:12px;font-weight:800;border:0;border-radius:999px;padding:6px 10px;background:var(--bg2);color:#fff;cursor:pointer}
+.mini:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#hud{display:grid;grid-template-columns:.8fr 1fr 1.2fr;gap:6px}
+.st{background:var(--bg2);border-radius:10px;padding:5px 8px}
+.lbl{display:block;font-size:10px;font-weight:800;color:var(--soft);letter-spacing:.06em}
+.st b{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+.st small{font-size:10px;color:var(--soft);margin-left:2px}
+#hWallet{color:var(--gold)} #hSave{color:var(--green)}
+.st.flash{animation:fl .5s}
+@keyframes fl{0%{background:var(--red)}100%{background:var(--bg2)}}
+.st.up{animation:up .5s}
+@keyframes up{0%{background:#2F8F63}100%{background:var(--bg2)}}
+#sub{display:flex;gap:10px;justify-content:space-between;font-size:11px;color:var(--soft);font-weight:800;padding:0 2px}
+#sub b{color:#fff}
+#stage{position:relative;flex:1;min-height:0;display:flex;align-items:flex-start;justify-content:center}
+#cv{display:block;border-radius:14px;touch-action:none;background:#8FD3FF}
+#fire{position:absolute;right:10px;bottom:10px;width:84px;height:84px;border-radius:50%;border:0;cursor:pointer;touch-action:none;
+  background:var(--gold);color:var(--ink);font:inherit;font-weight:800;font-size:28px;line-height:1;box-shadow:0 5px 0 var(--gold2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+#fire span{font-size:13px}
+#fire.on{transform:translateY(4px);box-shadow:0 1px 0 var(--gold2)}
+#hint{position:absolute;left:10px;bottom:14px;font-size:11px;font-weight:800;color:rgba(42,36,64,.55);pointer-events:none}
+.ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;
+  background:rgba(20,26,45,.72);overflow:auto;z-index:5}
+.card{background:var(--card);color:var(--ink);border-radius:18px;padding:18px 16px;width:100%;max-width:380px;margin:auto;box-shadow:0 6px 0 #0f1526}
+.card h2{margin:0 0 6px;font-size:22px;font-weight:800;line-height:1.3;text-align:center}
+.card p{margin:6px 0;font-size:13px;line-height:1.6}
+.card .c{text-align:center}
+.card ul{margin:6px 0 10px;padding-left:1.2em;font-size:12.5px;line-height:1.6}
+.go{font:inherit;font-weight:800;font-size:17px;width:100%;min-height:50px;border:0;border-radius:14px;cursor:pointer;margin-top:8px;
+  background:var(--ink);color:var(--gold);box-shadow:0 4px 0 #0f1526;padding:8px 12px}
+.go:active{transform:translateY(3px);box-shadow:0 1px 0 #0f1526}
+.go.alt{background:#E9E1D1;color:var(--ink);box-shadow:0 4px 0 #CFC3AC}
+.go:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.choice{display:block;text-align:left;font-size:14px}
+.choice small{display:block;font-size:11.5px;font-weight:500;opacity:.8;margin-top:2px}
+.lesson{background:#F1EAD9;border-radius:10px;padding:8px 10px;font-size:12.5px!important}
+.big{font-size:40px;font-weight:800;text-align:center;font-variant-numeric:tabular-nums;margin:4px 0}
+.big small{font-size:16px;margin-left:4px}
+.rows{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:13px;margin:8px 0}
+.rows b{text-align:right;font-variant-numeric:tabular-nums}
+.verdict{font-size:20px;font-weight:800;text-align:center;margin:10px 0 4px;line-height:1.35}
+.bought{font-size:22px;line-height:1.3;text-align:center;word-break:break-all;margin:4px 0}
+.back{display:block;text-align:center;margin-top:10px;font-size:13px;font-weight:800;color:var(--mute);text-decoration:none}
+@media (max-width:370px){ .st b{font-size:16px} #sub{font-size:10px} }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>人生マネーシューター</h1>
+    <button class="mini" id="muteBtn">音 ON</button>
+    <button class="mini" id="pauseBtn" aria-label="一時停止">Ⅱ</button>
+  </div>
+  <div id="hud">
+    <div class="st" id="sAge"><span class="lbl">ねんれい</span><b id="hAge">22</b><small>さい</small></div>
+    <div class="st" id="sWallet"><span class="lbl">手持ち（弾）</span><b id="hWallet">0</b><small>万円</small></div>
+    <div class="st" id="sSave"><span class="lbl">貯金</span><b id="hSave">0</b><small>万円</small></div>
+  </div>
+  <div id="sub"><span id="hSalLbl">給料 <b id="hSalary">20万</b></span><span>保険 <b id="hIns">なし</b></span><span>投資 <b id="hInv">なし</b></span></div>
+
+  <div id="stage">
+    <canvas id="cv"></canvas>
+    <div id="hint">ドラッグでいどう</div>
+    <button id="fire" aria-label="お金をうつ">💴<span>うつ</span></button>
+
+    <div class="ov" id="titleOv">
+      <div class="card">
+        <h2>人生マネーシューター</h2>
+        <p class="c">お金を弾にして、22さいから人生をすすもう。</p>
+        <ul>
+          <li>💰<b>給料</b>をとると弾（手持ち）がふえて、<b>貯金</b>もふえる</li>
+          <li>👕🛋 服や家具はお金をうって手に入れる。お金がたりないと買えない</li>
+          <li>💼<b>転職</b>は給料が上がるかも…下がるかも</li>
+          <li>🏢📜 あやしい投資話はよけよう。さわると貯金がへる</li>
+          <li>☂️ 保険はえらんで入ろう。病気やケガにそなえる</li>
+          <li>💒🎓 結婚や入学などの<b>ライフイベント</b>がボスとしてやってくる</li>
+          <li>👼 85さいで天にめされたとき、どんな人生だったかな？</li>
+        </ul>
+        <button class="go" id="startBtn">人生をはじめる</button>
+        <p class="c" style="font-size:11px;color:var(--mute)">スマホ：画面をドラッグでいどう、💴ボタンでうつ<br>キーボード：矢印キーでいどう、スペースでうつ、Pでポーズ</p>
+        <p class="c" id="bestTxt" style="font-size:12px"></p>
+        <a class="back" href="../">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+
+    <div class="ov" id="choiceOv" hidden>
+      <div class="card">
+        <div id="choiceAsk">
+          <h2 id="chTitle">投資をはじめる？</h2>
+          <p class="c" id="chText">貯金が少したまってきた。どうする？</p>
+          <div id="chBtns"></div>
+        </div>
+        <div id="choiceRes" hidden>
+          <h2 id="resTitle"></h2>
+          <p class="c" id="resText"></p>
+          <p class="lesson" id="resLesson"></p>
+          <button class="go" id="resBtn">つづける</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov" id="pauseOv" hidden>
+      <div class="card">
+        <h2>ひとやすみ</h2>
+        <button class="go" id="resumeBtn">つづける</button>
+        <button class="go alt" id="quitBtn">タイトルへ</button>
+      </div>
+    </div>
+
+    <div class="ov" id="endOv" hidden>
+      <div class="card">
+        <h2>👼 天にめされました</h2>
+        <p class="c" style="margin:0">85さい。のこした貯金は…</p>
+        <div class="big"><span id="endMoney">0</span><small>万円</small></div>
+        <div id="endMore" hidden>
+          <div class="verdict" id="verdict"></div>
+          <p class="lesson" id="verdictMsg"></p>
+          <div class="rows" id="endRows"></div>
+          <p style="margin:0;font-size:12px;font-weight:800">人生で手に入れたもの</p>
+          <div class="bought" id="endBought"></div>
+          <div class="rows"><span><b style="font-size:16px">人生まんぞく度</b></span><b id="endScore" style="font-size:22px"></b></div>
+          <p class="c" id="endBest" style="font-size:12px"></p>
+          <button class="go" id="againBtn">もう一度人生をやりなおす</button>
+          <button class="go alt" id="toTitleBtn">タイトルへ</button>
+          <a class="back" href="../">← ゲーム一覧にもどる</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const VW=360, VH=600;
+const cv=$('cv'), g=cv.getContext('2d');
+let scale=1, dpr=1;
+const EMOJI='"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+const FONT='"M PLUS Rounded 1c","Hiragino Maru Gothic ProN",sans-serif';
+
+// ---------- game data (金額の単位は万円) ----------
+const START_AGE=22, END_AGE=85, RETIRE=65, YEAR_SEC=2.4;
+const WALLET_CAP=300;
+const GOODS=[
+  {e:'👕',n:'服',p:3,j:3,w:5},{e:'👟',n:'スニーカー',p:2,j:2,w:4},{e:'👗',n:'ワンピース',p:5,j:4,w:3},
+  {e:'🪑',n:'いす',p:4,j:3,w:3},{e:'🛋️',n:'ソファ',p:12,j:9,w:2},{e:'🛏️',n:'ベッド',p:10,j:8,w:2},
+  {e:'📺',n:'テレビ',p:8,j:6,w:2},{e:'🎸',n:'ギター',p:8,j:7,w:1},{e:'🚲',n:'自転車',p:6,j:5,w:2},
+  {e:'✈️',n:'旅行',p:25,j:25,w:1},{e:'🍣',n:'お寿司',p:2,j:3,w:3},{e:'🚗',n:'車',p:50,j:30,w:.5},
+];
+const TRAPS=[
+  {e:'🏢',n:'新築ワンルーム投資',tag:'家賃保証！節税になる！',k:.5,msg:'ローンと空き部屋だけがのこった…',
+   lesson:'新築は買った直後に値下がりしやすく、空室やローンのリスクがあります。「保証」「節税」という言葉だけで決めないこと。'},
+  {e:'📜',n:'私募ファンド',tag:'年利20%！元本保証！',k:.4,msg:'運用会社と連絡がとれなくなった…',
+   lesson:'「高い利回り」と「元本保証」は両立しません。そんな話はまず疑おう。'},
+  {e:'💳',n:'リボ払い',tag:'毎月ラクラク定額！',sub:80,msg:'手数料がどんどんふくらんだ…',
+   lesson:'リボ払いは手数料（金利）が年15%ほどかかることも。払い終わるまでが長くなります。'},
+  {e:'📱',n:'もうけ話セミナー',tag:'だれでも月100万！',sub:100,msg:'高いセミナー代と教材を買わされた…',
+   lesson:'「かんたんに、すぐ、だれでも」もうかる話は、たいてい話す人がもうかる仕組みです。'},
+];
+const INS={
+  good:{e:'☂️',n:'掛け捨て保険',tag:'安い保険料で大きな保障',label:'掛け捨て',prem:2,cover:.1,
+        lesson:'保険は「もしも」のそなえ。安い保険料で大きな保障を買うのが基本です。'},
+  fx:{e:'💱',n:'外貨建て保険',tag:'利回り3%！ドルでふえる',label:'外貨建て',prem:10,cover:.5,
+        lesson:'為替の変動や手数料で、思ったほどふえないことも。保険と投資は分けて考えよう。'},
+  save:{e:'🐷',n:'貯蓄型保険',tag:'保障も貯金もできる！',label:'貯蓄型',prem:8,cover:.5,
+        lesson:'手数料が高めで、保障のわりに保険料が高くなりがち。保険と貯金は分けて考えよう。'},
+};
+const RISKS=[{e:'🤒',n:'病気',d:40},{e:'🚑',n:'ケガ',d:50},{e:'🏥',n:'入院',d:70}];
+const BOSSES=[
+  {age:29,e:'💒',n:'結婚',cost:120,j:60,shot:'💸'},
+  {age:36,e:'🎒',n:'子どもの小学校入学',cost:60,j:40,shot:'✏️'},
+  {age:48,e:'🎓',n:'子どもの大学入学',cost:180,j:60,shot:'📚'},
+  {age:57,e:'🧓',n:'親の介護',cost:120,j:40,shot:'💊'},
+  {age:71,e:'🏥',n:'大きな病気',cost:200,j:30,shot:'💉',ins:true},
+];
+const CHOICES={32:1,45:2};
+
+// ---------- sound ----------
+let AC=null, muted=false;
+try{muted=localStorage.getItem('moneyMute')==='1';}catch(e){}
+function ac(){ if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}} if(AC&&AC.state==='suspended')AC.resume(); return AC; }
+function tone(f,d,type='square',vol=.05,slide=0,delay=0){
+  if(muted)return; const a=ac(); if(!a)return;
+  const t=a.currentTime+delay, o=a.createOscillator(), v=a.createGain();
+  o.type=type; o.frequency.setValueAtTime(f,t); if(slide)o.frequency.exponentialRampToValueAtTime(f*slide,t+d);
+  v.gain.setValueAtTime(vol,t); v.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(v).connect(a.destination); o.start(t); o.stop(t+d+.02);
+}
+const sCoin=()=>{tone(988,.06,'square',.04);tone(1319,.1,'square',.04,0,.06);};
+const sShot=()=>tone(1400,.03,'triangle',.02);
+const sGet=()=>{tone(660,.08,'triangle',.07);tone(990,.14,'triangle',.07,0,.08);};
+const sBad=()=>{tone(300,.25,'sawtooth',.06,.5);};
+const sBoss=()=>{[392,330,262].forEach((f,i)=>tone(f,.18,'square',.05,0,i*.16));};
+const sWin=()=>{[523,659,784,1047].forEach((f,i)=>tone(f,.18,'triangle',.07,0,i*.12));};
+function setMute(m){ muted=m; $('muteBtn').textContent=m?'音 OFF':'音 ON'; try{localStorage.setItem('moneyMute',m?'1':'0');}catch(e){} }
+setMute(muted);
+
+// ---------- state ----------
+let phase='title', paused=false;
+let P, wallet, savings, salary, age, yearT, joy, insurance, invest, ents, bullets, ebul, boss, floats, parts, banner, bought, log, wasted, fireT, spawn, noMoneyT, bgY, nextBoss, t0;
+const keys={}; let firing=false;
+const rnd=n=>Math.floor(Math.random()*n);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+function reset(){
+  P={x:VW/2,y:VH-70,hurt:0};
+  wallet=20; savings=0; salary=20; age=START_AGE; yearT=0; joy=0; insurance=null; invest='none';
+  ents=[]; bullets=[]; ebul=[]; boss=null; floats=[]; parts=[]; banner=null; bought=[]; log=[]; wasted=0; fireT=0; noMoneyT=0; bgY=0;
+  spawn={salary:.6,good:1.2,trap:6,ins:2.5,career:8,risk:5};
+  nextBoss=0; t0=performance.now();
+  hud();
+}
+function start(){
+  ac(); reset(); phase='play'; paused=false;
+  for(const id of ['titleOv','endOv','pauseOv','choiceOv'])$(id).hidden=true;
+  showBanner('22さい　社会人スタート！','💰給料をあつめて、ほしいものをお金でうとう','#fff');
+}
+
+// ---------- HUD ----------
+function fmt(n){ return Math.round(n).toLocaleString(); }
+function bump(id,cls){ const el=$(id); el.classList.remove('flash','up'); void el.offsetWidth; el.classList.add(cls); }
+function hud(){
+  $('hAge').textContent=age;
+  $('hWallet').textContent=fmt(wallet);
+  $('hSave').textContent=fmt(savings);
+  $('hSalLbl').firstChild.textContent=age>=RETIRE?'収入 ':'給料 ';
+  $('hSalary').textContent=age>=RETIRE?'年金':salary+'万';
+  $('hIns').textContent=insurance?INS[insurance].label:'なし';
+  $('hIns').style.color=insurance==='good'?'var(--green)':insurance?'var(--red)':'#fff';
+  $('hInv').textContent=invest==='index'?'インデックス':'なし';
+}
+function addSave(v,quiet){ const before=savings; savings=Math.max(0,savings+v); if(!quiet)bump('sSave',v>=0?'up':'flash'); return before-savings; }
+function float(x,y,s,color='#fff',size=14){ floats.push({x,y,s,color,size,t:0}); }
+function showBanner(title,body,color='#fff',dur=3.2){ banner={title,body,color,t:0,dur}; }
+
+// ---------- spawning ----------
+function pickGood(){ const tot=GOODS.reduce((s,g)=>s+g.w,0); let r=Math.random()*tot; for(const it of GOODS){ r-=it.w; if(r<=0)return it; } return GOODS[0]; }
+function add(kind,data,o={}){
+  ents.push(Object.assign({kind,data,x:rr(34,VW-34),y:-30,vy:rr(55,80),r:20,t:0,ph:Math.random()*6,sway:rr(10,30),home:0},o));
+}
+function doSpawn(dt){
+  for(const k in spawn)spawn[k]-=dt;
+  const retired=age>=RETIRE, inBoss=!!boss;
+  if(spawn.salary<=0){ spawn.salary=retired?1.7:1.3; add('salary',null,{vy:rr(70,95),r:18}); }
+  if(spawn.good<=0){ spawn.good=inBoss?99:rr(1.1,1.9); if(!inBoss){ const it=pickGood(); add('good',it,{hp:it.p,vy:rr(40,62),r:it.p>=20?26:21}); } }
+  if(spawn.trap<=0){ spawn.trap=rr(7,11); if(!inBoss&&age>=24){ add('trap',TRAPS[rnd(TRAPS.length)],{vy:rr(60,80),home:20,r:22}); } }
+  if(spawn.ins<=0){ spawn.ins=rr(9,13); if(!inBoss&&insurance!=='good'&&age<70){
+    const bad=Math.random()<.5?'fx':'save', left=Math.random()<.5;
+    add('ins','good',{x:left?90:VW-90,vy:58,r:22,sway:8}); add('ins',bad,{x:left?VW-90:90,vy:58,r:22,sway:8});
+  } }
+  if(spawn.career<=0){ spawn.career=rr(8,12); if(!inBoss&&age<60) add('career',null,{vy:rr(60,75),r:20}); }
+  if(spawn.risk<=0){ spawn.risk=Math.max(2.4,7.5-(age-START_AGE)/10)+rr(0,2); if(age>=25) add('risk',RISKS[rnd(RISKS.length)],{vy:rr(85,115),home:55,r:20}); }
+}
+
+// ---------- events ----------
+function collect(e){
+  const d=e.data;
+  if(e.kind==='salary'){
+    if(age>=RETIRE){ wallet+=12; float(e.x,e.y,'年金 +12万','#FFE27A'); }
+    else{
+      const s=Math.round(salary*.35);
+      wallet+=salary; addSave(s);
+      float(e.x,e.y,`+${salary}万（貯金+${s}）`,'#FFE27A',13);
+    }
+    if(wallet>WALLET_CAP){ const over=wallet-WALLET_CAP; wallet=WALLET_CAP; addSave(over); float(P.x,P.y-40,'つかわない分は貯金へ','#9DF5C8',11); }
+    bump('sWallet','up'); sCoin();
+  }else if(e.kind==='career'){
+    if(Math.random()<.55){ const v=5+rnd(8); salary+=v; wallet+=10;
+      showBanner('転職 大成功！',`給料が ${v}万 アップ！（手持ち +10万）`,'#9DF5C8'); sGet(); log.push(`転職で給料アップ +${v}万`);
+    }else{ const v=4+rnd(6); salary=Math.max(10,salary-v); const lost=Math.min(wallet,10); wallet-=lost;
+      showBanner('ブラック企業だった…',`給料が ${v}万 ダウン（手持ち -${lost}万）`,'#FFB3B3'); sBad(); bump('sWallet','flash'); log.push(`転職で給料ダウン -${v}万`);
+    }
+  }else if(e.kind==='trap'){
+    const before=savings;
+    if(d.k) savings=Math.max(savings-600,Math.floor(savings*d.k)); else savings=Math.max(0,savings-d.sub);
+    const lost=before-savings; bump('sSave','flash'); sBad(); P.hurt=1;
+    showBanner(`${d.e} ${d.n}のワナ！`,`${d.msg}　貯金 -${fmt(lost)}万`,'#FFB3B3',4.5); banner.lesson=d.lesson;
+    if(lost>0) log.push(`${d.n}で -${fmt(lost)}万`);
+  }else if(e.kind==='ins'){
+    const it=INS[d];
+    if(insurance===d){ float(e.x,e.y,'もう入っている','#fff',12); e.dead=true; return; }
+    insurance=d;
+    if(d==='good'){ showBanner('☂️ 掛け捨て保険に入った！','安い保険料で病気やケガにそなえられる','#9DF5C8',4); sGet(); }
+    else{ showBanner(`${it.e} ${it.n}に入った…`,`保険料が高い！毎年 -${it.prem}万。保障もいまひとつ`,'#FFB3B3',4.5); sBad(); }
+    banner.lesson=it.lesson; log.push(`${it.n}に加入`);
+  }else if(e.kind==='risk'){
+    const cover=insurance?INS[insurance].cover:1, loss=Math.round(d.d*cover);
+    addSave(-loss); P.hurt=1; sBad();
+    if(insurance==='good') showBanner(`${d.e} ${d.n}！`,`保険でたすかった！　貯金 -${loss}万ですんだ`,'#9DF5C8');
+    else if(insurance) showBanner(`${d.e} ${d.n}！`,`保障が少なくて 貯金 -${loss}万…`,'#FFB3B3');
+    else showBanner(`${d.e} ${d.n}！`,`保険がなくて 貯金 -${loss}万！`,'#FFB3B3');
+  }
+  e.dead=true;
+}
+function buy(e){
+  const d=e.data; joy+=d.j; bought.push(d.e); e.dead=true; sGet();
+  float(e.x,e.y,`GET! ${d.n}`,'#fff',15);
+  for(let i=0;i<14;i++){ const a=Math.random()*Math.PI*2, s=rr(40,140); parts.push({x:e.x,y:e.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:.8,c:'#FFD84D'}); }
+}
+function yearTick(){
+  age++;
+  // investment
+  if(invest==='index' && savings>0){
+    const r=rr(-.06,.12), v=Math.round(savings*r); addSave(v,true);
+    if(r<-.03) float(VW-70,30,`株価が下がった ${v}万`,'#FFB3B3',12);
+    else if(r>.08) float(VW-70,30,`投資が育った +${v}万`,'#9DF5C8',12);
+  }
+  if(insurance){ addSave(-INS[insurance].prem,true); }
+  if(age===RETIRE){ showBanner('🎉 定年退職！','これからは年金ぐらし。生活費の足りない分は貯金から','#FFE27A',4.5); log.push('65さいで定年退職'); }
+  if(age>RETIRE){ addSave(-30,true); float(VW-70,48,'生活費 -30万','#FFD0A0',11); }
+  const b=BOSSES[nextBoss];
+  if(b && age>=b.age){ nextBoss++; startBoss(b); }
+  else if(CHOICES[age]) openChoice(CHOICES[age]);
+  if(age>=END_AGE) endGame();
+  hud();
+}
+
+// ---------- boss ----------
+function startBoss(b){
+  const cost=b.ins?Math.round(b.cost*(insurance==='good'?.2:insurance?.6:1)):b.cost;
+  boss={...b,hp:cost,max:cost,x:VW/2,y:-60,vx:60,t:22,shotT:1.2,hit:0};
+  showBanner(`ライフイベント！ ${b.e} ${b.n}`,`${cost}万円かかる。時間内にお金をうって はらおう！`,'#FFE27A',3.5);
+  if(b.ins) banner.lesson=insurance==='good'?'保険に入っていたので、かかるお金がへった！':'保険の保障が少ないと、大きな病気のお金が重くのしかかる…';
+  sBoss();
+}
+function endBoss(win){
+  const b=boss;
+  if(win){ joy+=b.j; showBanner(`${b.e} ${b.n} クリア！`,'いい思い出になった！','#9DF5C8'); log.push(`${b.n}：ちゃんとはらえた`); sWin();
+    for(let i=0;i<30;i++){ const a=Math.random()*Math.PI*2, s=rr(60,200); parts.push({x:b.x,y:b.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1.2,c:['#FFD84D','#9DF5C8','#FF9EC4'][i%3]}); }
+  }else{
+    const need=b.hp;
+    if(savings>=need){ addSave(-need); joy+=Math.round(b.j/2); showBanner(`${b.e} ${b.n}`,`手持ちがたりず 貯金から ${need}万 はらった`,'#FFE27A'); log.push(`${b.n}：貯金から ${need}万`); }
+    else{ const paid=savings; addSave(-paid); showBanner(`${b.e} ${b.n}`,`お金がたりなかった…（貯金 -${fmt(paid)}万）`,'#FFB3B3'); log.push(`${b.n}：お金がたりなかった`); sBad(); }
+  }
+  boss=null; spawn.good=1; spawn.trap=4;
+}
+
+// ---------- choices ----------
+let choiceNo=0;
+function openChoice(n){
+  choiceNo=n; phase='choice'; firing=false; $('fire').classList.remove('on');
+  $('chTitle').textContent=n===1?'投資をはじめる？':'もう一度、お金の使い道を考えよう';
+  $('chText').textContent=n===1?'貯金が少したまってきた。友だちから投資の話を聞いたよ。どうする？':'45さい。まわりでも投資の話がよく出てくる。どうする？';
+  const opts=[
+    {k:'scam',t:'📈 すぐにもうかる投資',s:'SNSで話題！この銘柄なら1年で2倍！'},
+    {k:'index',t:'🌏 インデックス投資',s:'世界中の会社に少しずつ、長くコツコツつみたてる'},
+    {k:'none',t:'🏦 やめておく',s:'銀行の預金のままにする'},
+  ].sort(()=>Math.random()-.5);
+  $('chBtns').innerHTML='';
+  for(const o of opts){
+    const b=document.createElement('button'); b.className='go alt choice'; b.innerHTML=`${o.t}<small>${o.s}</small>`;
+    b.onclick=()=>pickChoice(o.k); $('chBtns').appendChild(b);
+  }
+  $('choiceAsk').hidden=false; $('choiceRes').hidden=true; $('choiceOv').hidden=false;
+}
+function pickChoice(k){
+  let title, text, lesson;
+  if(k==='scam'){
+    const before=savings; savings=Math.floor(savings*.05); if(invest==='index')invest='none';
+    title='📉 罠銘柄だった…'; text=`株価が暴落！ 貯金 ${fmt(before)}万 → ${fmt(savings)}万`;
+    lesson='「かならず」「すぐに2倍」はあやしいサイン。1つの銘柄に全部つっこむのはとても危険です。';
+    log.push(`罠銘柄で -${fmt(before-savings)}万`); sBad(); bump('sSave','flash');
+  }else if(k==='index'){
+    invest='index'; title='🌏 インデックス投資をはじめた';
+    text='これから毎年、貯金が投資で育っていく（下がる年もあるよ）';
+    lesson='世界中にひろく分散して、長くつづけるのがコツ。元本保証ではないので、下がってもあわてずに。';
+    log.push(`${age}さいでインデックス投資`); sGet();
+  }else{
+    title='🏦 預金のままにした'; text=invest==='index'?'インデックス投資はそのままつづけるよ':'お金はへらないけれど、ほとんどふえない';
+    lesson='預金は安全だけど、ほとんど利息がつきません。使う予定がないお金は、長期の分散投資も選択肢です。';
+  }
+  $('resTitle').textContent=title; $('resText').textContent=text; $('resLesson').textContent=lesson;
+  $('choiceAsk').hidden=true; $('choiceRes').hidden=false; hud();
+}
+$('resBtn').onclick=()=>{ $('choiceOv').hidden=true; phase='play'; };
+
+// ---------- ending ----------
+function endGame(){
+  phase='end'; firing=false; boss=null;
+  const assets=Math.round(savings);
+  let title, msg, aPts;
+  const hoard=assets>=4000||(assets>=1500&&joy<150);
+  if(hoard){ title='…貯金だけする人生だった'; aPts=40;
+    msg=`${fmt(assets)}万円ものこしたけど、天国にお金はもっていけない。お金は使ってこそ。やりたいことや思い出にも使おう。`; }
+  else if(assets<200){ title='老後のお金が足りなかった…'; aPts=0;
+    msg='老後は年金だけでは足りないことも。給料の一部をコツコツ貯金して、長期の投資も考えよう。'; }
+  else{ aPts=150;
+    if(joy>=300){ title='🌈 しあわせな人生！'; msg='使うときは使い、そなえるところはそなえた。バランスのとれた人生だったね。'; }
+    else{ title='まずまずの人生'; msg='老後のお金はちゃんとのこせた。もう少し、思い出やほしいものにお金を使ってもよかったかも。'; }
+  }
+  const score=joy+aPts;
+  let best=0; try{ best=+localStorage.getItem('moneyBest')||0; if(score>best)localStorage.setItem('moneyBest',score); }catch(e){}
+  $('verdict').textContent=title; $('verdictMsg').textContent=msg;
+  $('endRows').innerHTML=[
+    ['思い出・ほしいもの（まんぞく）',`${joy}`],
+    ['お財布にのこったお金',`${fmt(wallet)}万円`],
+    ['ムダ弾（外れたお金）',`${fmt(wasted)}万円`],
+    ['保険',insurance?INS[insurance].n:'入らなかった'],
+    ['投資',invest==='index'?'インデックス投資':'しなかった'],
+    ...log.slice(-6).map(l=>['',l]),
+  ].map(([a,b])=>`<span>${a}</span><b>${b}</b>`).join('');
+  $('endBought').textContent=bought.length?bought.join(''):'（なし）';
+  $('endScore').textContent=score;
+  $('endBest').textContent=score>best?'ハイスコア更新！🎉':`ハイスコア ${best}`;
+  $('endMoney').textContent='0'; $('endMore').hidden=true; $('endOv').hidden=false;
+  // count up, then reveal
+  const t1=performance.now();
+  (function up(now){ const k=Math.min(1,(now-t1)/1400); $('endMoney').textContent=fmt(assets*k*k);
+    if(k<1)requestAnimationFrame(up); else setTimeout(()=>{ $('endMore').hidden=false; hoard||assets<200?sBad():sWin(); },700); })(t1);
+}
+
+// ---------- update ----------
+function update(dt){
+  bgY+=dt*40;
+  for(const f of floats){ f.t+=dt; f.y-=dt*30; } floats=floats.filter(f=>f.t<1.3);
+  for(const p of parts){ p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy+=200*dt; p.life-=dt; } parts=parts.filter(p=>p.life>0);
+  if(banner){ banner.t+=dt; if(banner.t>banner.dur)banner=null; }
+  if(phase!=='play')return;
+
+  // player
+  const sp=260; let mx=0,my=0;
+  if(keys.ArrowLeft)mx--; if(keys.ArrowRight)mx++; if(keys.ArrowUp)my--; if(keys.ArrowDown)my++;
+  P.x=clamp(P.x+mx*sp*dt,18,VW-18); P.y=clamp(P.y+my*sp*dt,VH*.45,VH-26);
+  P.hurt=Math.max(0,P.hurt-dt*2);
+
+  // fire
+  fireT-=dt; noMoneyT-=dt;
+  if((firing||keys.Space) && fireT<=0){
+    if(wallet>=1){ wallet-=1; bullets.push({x:P.x,y:P.y-22}); fireT=.09; sShot(); }
+    else if(noMoneyT<=0){ float(P.x,P.y-40,'お金がない！','#FFB3B3',13); noMoneyT=1; fireT=.3; }
+  }
+  // age
+  if(!boss){ yearT+=dt; if(yearT>=YEAR_SEC){ yearT-=YEAR_SEC; yearTick(); if(phase!=='play')return; } }
+  doSpawn(dt);
+
+  for(const e of ents){
+    e.t+=dt; e.y+=e.vy*dt; e.x+=Math.cos(e.t*1.6+e.ph)*e.sway*dt;
+    if(e.home) e.x+=clamp(P.x-e.x,-1,1)*e.home*dt;
+    e.x=clamp(e.x,20,VW-20);
+    if(e.y>VH+40)e.dead=true;
+    if(!e.dead && Math.hypot(e.x-P.x,e.y-P.y)<e.r+14 && e.kind!=='good') collect(e);
+  }
+  for(const b of bullets){
+    b.y-=560*dt;
+    if(b.y<-10){ b.dead=true; wasted++; continue; }
+    for(const e of ents){
+      if(e.kind!=='good'||e.dead)continue;
+      if(Math.abs(b.x-e.x)<e.r && Math.abs(b.y-e.y)<e.r){ b.dead=true; e.hp--; e.flash=.08; if(e.hp<=0)buy(e); break; }
+    }
+    if(!b.dead&&boss&&Math.abs(b.x-boss.x)<42&&Math.abs(b.y-boss.y)<42){ b.dead=true; boss.hp--; boss.hit=.08; if(boss.hp<=0){ endBoss(true); } }
+  }
+  bullets=bullets.filter(b=>!b.dead); ents=ents.filter(e=>!e.dead);
+
+  if(boss){
+    const b=boss;
+    if(b.y<110) b.y+=dt*90;
+    b.x+=b.vx*dt; if(b.x<60||b.x>VW-60)b.vx*=-1; b.x=clamp(b.x,60,VW-60);
+    b.hit=Math.max(0,b.hit-dt); b.t-=dt; b.shotT-=dt;
+    if(b.shotT<=0){ b.shotT=.9; const a=Math.atan2(P.y-b.y,P.x-b.x); ebul.push({x:b.x,y:b.y+30,vx:Math.cos(a)*150,vy:Math.sin(a)*150,e:b.shot}); }
+    if(b.t<=0) endBoss(false);
+  }
+  for(const e of ebul){
+    e.x+=e.vx*dt; e.y+=e.vy*dt;
+    if(e.y>VH+20||e.x<-20||e.x>VW+20)e.dead=true;
+    else if(Math.hypot(e.x-P.x,e.y-P.y)<22){ e.dead=true; addSave(-3); float(P.x,P.y-30,'出費 -3万','#FFB3B3',12); P.hurt=1; tone(200,.08,'square',.04); }
+  }
+  ebul=ebul.filter(e=>!e.dead);
+  hud();
+}
+
+// ---------- draw ----------
+function lerpC(a,b,t){ const pa=a.match(/\w\w/g).map(h=>parseInt(h,16)), pb=b.match(/\w\w/g).map(h=>parseInt(h,16));
+  return '#'+pa.map((v,i)=>Math.round(v+(pb[i]-v)*t).toString(16).padStart(2,'0')).join(''); }
+function skyColors(){
+  const t=(age-START_AGE)/(END_AGE-START_AGE);
+  const stops=[[0,'8FD3FF','DFF4FF'],[.55,'7FC4F0','FFF1D6'],[.72,'F7A76C','FFE2B8'],[1,'5B4A8A','C9A6E0']];
+  for(let i=0;i<stops.length-1;i++){ const [a,a1,a2]=stops[i], [b,b1,b2]=stops[i+1];
+    if(t<=b){ const k=(t-a)/(b-a); return [lerpC(a1,b1,k),lerpC(a2,b2,k)]; } }
+  return ['#'+stops[3][1],'#'+stops[3][2]];
+}
+function emoji(e,x,y,size){ g.font=`${size}px ${EMOJI}`; g.textAlign='center'; g.textBaseline='middle'; g.fillText(e,x,y); }
+function label(s,x,y,size,color='#2A2440',bg='rgba(255,255,255,.85)'){
+  g.font=`800 ${size}px ${FONT}`; g.textAlign='center'; g.textBaseline='middle';
+  const w=g.measureText(s).width+10;
+  g.fillStyle=bg; g.beginPath(); g.roundRect(x-w/2,y-size*.7,w,size*1.4,size*.7); g.fill();
+  g.fillStyle=color; g.fillText(s,x,y+1);
+}
+function render(){
+  g.setTransform(scale*dpr,0,0,scale*dpr,0,0);
+  const [c1,c2]=skyColors(); const gr=g.createLinearGradient(0,0,0,VH); gr.addColorStop(0,c1); gr.addColorStop(1,c2);
+  g.fillStyle=gr; g.fillRect(0,0,VW,VH);
+  // clouds
+  g.fillStyle='rgba(255,255,255,.45)';
+  for(let i=0;i<7;i++){ const y=((i*97+bgY*(.5+i%3*.2))%(VH+80))-40, x=(i*131)%VW;
+    g.beginPath(); g.ellipse(x,y,34,12,0,0,Math.PI*2); g.ellipse(x+22,y-6,22,12,0,0,Math.PI*2); g.fill(); }
+  if(phase==='title'){ emoji('💰',VW/2,VH/2-40,70); emoji('🧑',VW/2,VH-80,40); return; }
+
+  // entities
+  for(const e of ents){
+    const d=e.data;
+    if(e.kind==='salary'){ emoji(age>=RETIRE?'👛':'💰',e.x,e.y,30); label(age>=RETIRE?'年金':'給料',e.x,e.y+24,11,'#5A3B00','rgba(255,226,122,.95)'); }
+    else if(e.kind==='good'){
+      g.globalAlpha=e.flash>0?.5:1; emoji(d.e,e.x,e.y,e.r*1.5); g.globalAlpha=1; e.flash=Math.max(0,(e.flash||0)-1/60);
+      label(`${d.n} ${d.p}万`,e.x,e.y+e.r+8,10);
+      if(e.hp<d.p){ g.fillStyle='rgba(0,0,0,.25)'; g.fillRect(e.x-18,e.y-e.r-8,36,4); g.fillStyle='#F6C343'; g.fillRect(e.x-18,e.y-e.r-8,36*(1-e.hp/d.p),4); }
+    }
+    else if(e.kind==='trap'){ emoji(d.e,e.x,e.y,32); label(d.n,e.x,e.y+26,10,'#fff','rgba(200,40,60,.9)'); label(d.tag,e.x,e.y-28,10,'#8A1030','rgba(255,240,245,.95)'); }
+    else if(e.kind==='ins'){ const it=INS[d]; emoji(it.e,e.x,e.y,32); label(it.n,e.x,e.y+26,10,'#fff','rgba(40,70,140,.9)'); label(it.tag,e.x,e.y-28,9.5,'#1D3A7A','rgba(235,243,255,.95)'); }
+    else if(e.kind==='career'){ emoji('💼',e.x,e.y,30); label('転職',e.x,e.y+24,11,'#fff','rgba(90,70,160,.9)'); }
+    else if(e.kind==='risk'){ emoji(d.e,e.x,e.y,30); label(d.n,e.x,e.y+24,11,'#fff','rgba(220,70,40,.92)'); }
+  }
+  // boss
+  if(boss){
+    const b=boss;
+    g.globalAlpha=b.hit>0?.6:1; emoji(b.e,b.x,b.y,70); g.globalAlpha=1;
+    label(b.n,b.x,b.y-50,13,'#fff','rgba(42,36,64,.9)');
+    const w=200, x=VW/2-w/2;
+    g.fillStyle='rgba(42,36,64,.8)'; g.beginPath(); g.roundRect(x-6,8,w+12,34,8); g.fill();
+    g.fillStyle='#3A3456'; g.fillRect(x,14,w,8); g.fillStyle='#FF6B6B'; g.fillRect(x,14,w*b.hp/b.max,8);
+    g.fillStyle='#3A3456'; g.fillRect(x,26,w,5); g.fillStyle='#F6C343'; g.fillRect(x,26,w*Math.max(0,b.t)/22,5);
+    g.font=`800 9px ${FONT}`; g.fillStyle='#fff'; g.textAlign='left'; g.textBaseline='top'; g.fillText(`のこり ${b.hp}万`,x,32);
+    g.textAlign='right'; g.fillText(`${Math.ceil(Math.max(0,b.t))}秒`,x+w,32);
+  }
+  for(const e of ebul) emoji(e.e,e.x,e.y,18);
+  // bullets
+  for(const b of bullets){ g.fillStyle='#F6C343'; g.strokeStyle='#B7820A'; g.lineWidth=1.5; g.beginPath(); g.arc(b.x,b.y,6,0,Math.PI*2); g.fill(); g.stroke();
+    g.fillStyle='#7A5200'; g.font=`800 8px ${FONT}`; g.textAlign='center'; g.textBaseline='middle'; g.fillText('¥',b.x,b.y+.5); }
+  // player
+  if(phase!=='end'){
+    const face=age>=RETIRE?'👴':age>=45?'🧔':'🧑';
+    if(P.hurt>0&&Math.floor(P.hurt*10)%2===0) g.globalAlpha=.4;
+    emoji(face,P.x,P.y,38); g.globalAlpha=1;
+  }else emoji('👼',VW/2,VH/2,80);
+  for(const p of parts){ g.globalAlpha=Math.max(0,Math.min(1,p.life)); g.fillStyle=p.c; g.beginPath(); g.arc(p.x,p.y,3,0,Math.PI*2); g.fill(); }
+  g.globalAlpha=1;
+  for(const f of floats){ g.globalAlpha=Math.max(0,1-f.t/1.3); g.font=`800 ${f.size}px ${FONT}`; g.textAlign='center'; g.textBaseline='middle';
+    g.lineWidth=3; g.strokeStyle='rgba(30,30,50,.75)'; g.strokeText(f.s,f.x,f.y); g.fillStyle=f.color; g.fillText(f.s,f.x,f.y); }
+  g.globalAlpha=1;
+  // banner
+  if(banner){
+    const a=Math.min(1,banner.t*5,(banner.dur-banner.t)*3), y=boss?160:14;
+    g.globalAlpha=Math.max(0,a);
+    const h=banner.lesson?84:50;
+    g.fillStyle='rgba(30,34,58,.9)'; g.beginPath(); g.roundRect(10,y,VW-20,h,12); g.fill();
+    g.textAlign='center'; g.textBaseline='top';
+    g.font=`800 15px ${FONT}`; g.fillStyle=banner.color; g.fillText(banner.title,VW/2,y+8);
+    g.font=`800 11px ${FONT}`; g.fillStyle='#fff'; wrap(banner.body,VW/2,y+29,VW-40,14);
+    if(banner.lesson){ g.font=`500 10px ${FONT}`; g.fillStyle='#FFE9A8'; wrap('💡 '+banner.lesson,VW/2,y+46,VW-40,13); }
+    g.globalAlpha=1;
+  }
+  // age progress
+  if(phase==='play'||phase==='choice'){
+    const t=(age-START_AGE+(boss?0:yearT/YEAR_SEC))/(END_AGE-START_AGE);
+    g.fillStyle='rgba(42,36,64,.25)'; g.fillRect(6,VH-6,VW-12,3); g.fillStyle='rgba(42,36,64,.7)'; g.fillRect(6,VH-6,(VW-12)*t,3);
+  }
+}
+function wrap(s,x,y,maxW,lh){
+  let line='', yy=y;
+  for(const ch of s){ if(g.measureText(line+ch).width>maxW){ g.fillText(line,x,yy); line=ch; yy+=lh; } else line+=ch; }
+  if(line)g.fillText(line,x,yy);
+}
+
+// ---------- layout ----------
+function layout(){
+  const st=$('stage'), w=st.clientWidth, h=st.clientHeight;
+  scale=Math.max(.4,Math.min(w/VW,h/VH)); dpr=Math.min(2,window.devicePixelRatio||1);
+  cv.style.width=Math.round(VW*scale)+'px'; cv.style.height=Math.round(VH*scale)+'px';
+  cv.width=Math.round(VW*scale*dpr); cv.height=Math.round(VH*scale*dpr);
+  const off=(w-VW*scale)/2, offY=h-Math.round(VH*scale);
+  $('fire').style.right=(off+10)+'px'; $('fire').style.bottom=(offY+10)+'px';
+  $('hint').style.left=(off+10)+'px'; $('hint').style.bottom=(offY+14)+'px';
+}
+addEventListener('resize',layout);
+
+// ---------- input ----------
+let drag=null;
+cv.addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); drag={id:e.pointerId,x:e.clientX,y:e.clientY}; cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointermove',e=>{
+  if(!drag||e.pointerId!==drag.id||phase!=='play')return;
+  const k=1.25/scale;
+  P.x=clamp(P.x+(e.clientX-drag.x)*k,18,VW-18); P.y=clamp(P.y+(e.clientY-drag.y)*k,VH*.45,VH-26);
+  drag.x=e.clientX; drag.y=e.clientY;
+});
+const endDrag=e=>{ if(drag&&e.pointerId===drag.id)drag=null; };
+cv.addEventListener('pointerup',endDrag); cv.addEventListener('pointercancel',endDrag);
+const fb=$('fire');
+fb.addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); fb.setPointerCapture(e.pointerId); firing=true; fb.classList.add('on'); });
+const stopFire=()=>{ firing=false; fb.classList.remove('on'); };
+fb.addEventListener('pointerup',stopFire); fb.addEventListener('pointercancel',stopFire); fb.addEventListener('lostpointercapture',stopFire);
+fb.addEventListener('contextmenu',e=>e.preventDefault());
+addEventListener('keydown',e=>{
+  if(e.code==='KeyP'||e.code==='Escape'){ togglePause(); return; }
+  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space'].includes(e.code)){ e.preventDefault(); keys[e.code]=true; ac(); }
+});
+addEventListener('keyup',e=>{ keys[e.code]=false; });
+
+// ---------- screens ----------
+function togglePause(){
+  if(phase!=='play')return;
+  paused=!paused; $('pauseOv').hidden=!paused; stopFire(); for(const k in keys)keys[k]=false;
+}
+function toTitle(){
+  phase='title'; paused=false; for(const id of ['endOv','pauseOv','choiceOv'])$(id).hidden=true; $('titleOv').hidden=false;
+  reset(); showBest();
+}
+function showBest(){ let b=0; try{b=+localStorage.getItem('moneyBest')||0;}catch(e){} $('bestTxt').textContent=b?`ハイスコア（人生まんぞく度） ${b}`:''; }
+$('startBtn').onclick=start; $('againBtn').onclick=start;
+$('toTitleBtn').onclick=toTitle; $('quitBtn').onclick=toTitle;
+$('resumeBtn').onclick=togglePause; $('pauseBtn').onclick=togglePause;
+$('muteBtn').onclick=()=>setMute(!muted);
+document.addEventListener('visibilitychange',()=>{ if(document.hidden&&!paused&&phase==='play')togglePause(); });
+
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(.05,(now-last)/1000); last=now;
+  if(!paused) update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+layout(); toTitle(); requestAnimationFrame(loop);
+
+// test hook
+window.__money={get s(){return {phase,age,wallet,savings,salary,joy,insurance,invest,boss:boss&&{n:boss.n,hp:boss.hp,t:boss.t},ents:ents.length,wasted,bought:bought.length,log};},
+  set(o){ if('age' in o)age=o.age; if('savings' in o)savings=o.savings; if('wallet' in o)wallet=o.wallet; if('joy' in o)joy=o.joy; if('insurance' in o)insurance=o.insurance; if('invest' in o)invest=o.invest; if('nextBoss' in o)nextBoss=o.nextBoss; if('yearT' in o)yearT=o.yearT; hud(); },
+  collect(kind,data){ collect({kind,data,x:VW/2,y:VH/2}); }, step(dt){ update(dt); }, fire(v){firing=v;}, get P(){return P;}, ents:()=>ents};
+})();
+</script>
+</body>
+</html>
