@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="ショートスリーパーを名乗る配信者が、視聴者にバレずに寝ながら24時間配信を乗りきるゲーム">
+<title>ねない配信</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&display=swap">
+<style>
+:root{
+  --bg:#12111A; --panel:#1C1B27; --panel2:#262436; --line:#34314A; --ink:#EEEAF7; --mute:#9A94B5;
+  --sleep:#8E7CFF; --sus:#FF9F43; --trust:#4ED39A; --red:#FF5470; --sc:#FFC23D;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);
+  font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#app{height:100%;box-sizing:border-box;max-width:560px;margin:0 auto;padding:8px 12px 10px;display:flex;flex-direction:column;gap:6px}
+#top{display:flex;align-items:center;gap:8px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800}
+#top h1{flex:1;margin:0;text-align:center;font-size:16px;font-weight:800}
+.mini{font:inherit;font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--panel);color:var(--ink);cursor:pointer}
+.mini:focus-visible{outline:2px solid var(--sleep);outline-offset:2px}
+#player{position:relative;border-radius:10px;overflow:hidden;background:#000;flex:none}
+#cv{display:block;width:100%;aspect-ratio:16/9}
+#eyeBtn{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);font:inherit;font-weight:800;font-size:17px;padding:10px 18px;border:0;border-radius:999px;
+  background:#FF5470;color:#fff;box-shadow:0 4px 0 #A8203A;cursor:pointer;touch-action:manipulation;animation:pulse .5s ease-in-out infinite alternate}
+@keyframes pulse{from{transform:translateX(-50%) scale(1)}to{transform:translateX(-50%) scale(1.07)}}
+#meters{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.m{background:var(--panel);border-radius:8px;padding:4px 8px}
+.m .row{display:flex;justify-content:space-between;font-size:10.5px;font-weight:800;color:var(--mute)}
+.m .row b{color:var(--ink);font-variant-numeric:tabular-nums}
+.bar{height:7px;border-radius:4px;background:#0C0B12;overflow:hidden;margin-top:3px}
+.bar i{display:block;height:100%;width:0;border-radius:4px;transition:width .2s}
+#mSleep i{background:var(--sleep)} #mSus i{background:var(--sus)} #mTrust i{background:var(--trust)}
+.m.warn{animation:warn .6s infinite alternate}
+@keyframes warn{to{background:#3A1E2A}}
+#chat{flex:1;min-height:90px;background:var(--panel);border-radius:10px;padding:6px 8px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;font-size:12px;line-height:1.35}
+.cm{display:flex;gap:6px;align-items:baseline;animation:in .2s}
+@keyframes in{from{opacity:0;transform:translateY(6px)}}
+.cm .u{color:var(--mute);font-weight:800;flex:none;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cm.me .u{color:#FF9FB2}
+.cm.warn .t{color:#FFB38A}
+.sc{background:linear-gradient(90deg,#5A3E00,#3A2A00);border:1px solid var(--sc);border-radius:8px;padding:5px 8px;display:flex;align-items:center;gap:8px}
+.sc .t{flex:1}
+.sc b{color:var(--sc)}
+.sc button{font:inherit;font-weight:800;font-size:12px;border:0;border-radius:999px;padding:5px 10px;background:var(--sc);color:#2A1D00;cursor:pointer}
+.sc button:disabled{opacity:.4;cursor:default}
+.sc.done{opacity:.55}
+#acts{display:flex;flex-direction:column;gap:6px}
+.grpT{font-size:10.5px;font-weight:800;color:var(--mute);display:flex;justify-content:space-between}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.grid.ex{grid-template-columns:repeat(3,1fr)}
+.a{position:relative;overflow:hidden;font:inherit;font-weight:800;font-size:11px;min-height:50px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--ink);cursor:pointer;padding:4px 2px;line-height:1.2;touch-action:manipulation}
+.a .ic{display:block;font-size:19px}
+.a.ex{background:#2A2340;border-color:#4A3D78}
+.a:disabled{opacity:.38;cursor:default}
+.a .cd{position:absolute;left:0;bottom:0;height:3px;background:var(--sleep);width:0}
+.a:not(:disabled):active{transform:translateY(2px)}
+.a:focus-visible{outline:2px solid var(--sleep);outline-offset:1px}
+#away{display:flex;flex-direction:column;gap:6px}
+#awayInfo{background:#241E3A;border-radius:10px;padding:8px 10px;font-size:12.5px}
+#awayInfo b{font-size:14px}
+#okBar{height:8px;border-radius:4px;background:#0C0B12;overflow:hidden;margin-top:6px}
+#okBar i{display:block;height:100%;width:0;background:#4ED39A}
+#backBtn{font:inherit;font-weight:800;font-size:17px;height:56px;border:0;border-radius:12px;background:#FF5470;color:#fff;box-shadow:0 4px 0 #A8203A;cursor:pointer}
+#backBtn:active{transform:translateY(3px);box-shadow:0 1px 0 #A8203A}
+.ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:14px;box-sizing:border-box;background:rgba(8,7,12,.82);overflow:auto;z-index:10}
+.card{background:#F6F2FF;color:#211C33;border-radius:16px;padding:18px 16px;width:100%;max-width:420px;margin:auto;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.card h2{margin:0 0 4px;font-size:23px;font-weight:800;text-align:center;line-height:1.3}
+.card .sub{text-align:center;font-size:12px;color:#6D6690;margin:0 0 8px}
+.card p{font-size:13px;line-height:1.6;margin:6px 0}
+.card ul{margin:6px 0;padding-left:1.2em;font-size:12.5px;line-height:1.6}
+.go{font:inherit;font-weight:800;font-size:17px;width:100%;min-height:50px;border:0;border-radius:12px;cursor:pointer;margin-top:8px;background:#6A55F0;color:#fff;box-shadow:0 4px 0 #4331B0}
+.go:active{transform:translateY(3px);box-shadow:0 1px 0 #4331B0}
+.go.alt{background:#E2DCF3;color:#211C33;box-shadow:0 4px 0 #BDB3DA}
+.go:focus-visible{outline:3px solid #FF5470;outline-offset:2px}
+.big{font-size:25px;font-weight:800;text-align:center;margin:4px 0;line-height:1.3}
+.rows{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:13px;margin:8px 0}
+.rows b{text-align:right;font-variant-numeric:tabular-nums}
+.note{font-size:11px!important;color:#6D6690;text-align:center}
+.back{display:block;text-align:center;margin-top:10px;font-size:13px;font-weight:800;color:#6D6690;text-decoration:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>ねない配信</h1>
+    <button class="mini" id="muteBtn">音 ON</button>
+    <button class="mini" id="pauseBtn" aria-label="一時停止">Ⅱ</button>
+  </div>
+
+  <div id="player">
+    <canvas id="cv" width="640" height="360"></canvas>
+    <button id="eyeBtn" hidden>👁 目を見開く！</button>
+  </div>
+
+  <div id="meters">
+    <div class="m" id="mSleep"><div class="row"><span>😪 眠気</span><b id="vSleep">0</b></div><div class="bar"><i></i></div></div>
+    <div class="m" id="mSus"><div class="row"><span>🤨 怪しさ</span><b id="vSus">0</b></div><div class="bar"><i></i></div></div>
+    <div class="m" id="mTrust"><div class="row"><span>🤝 信頼度</span><b id="vTrust">0</b></div><div class="bar"><i></i></div></div>
+  </div>
+
+  <div id="chat" aria-live="polite"></div>
+
+  <div id="acts">
+    <div class="grpT"><span>がんばって起きる</span></div>
+    <div class="grid" id="awakeGrid"></div>
+    <div class="grpT"><span>ごまかして、こっそり寝る</span><span id="lockTxt"></span></div>
+    <div class="grid ex" id="exGrid"></div>
+  </div>
+  <div id="away" hidden>
+    <div id="awayInfo"><b id="awayTitle"></b><div id="awayText"></div><div id="okBar"><i></i></div></div>
+    <button id="backBtn">📹 配信にもどる</button>
+  </div>
+</div>
+
+<div class="ov" id="titleOv">
+  <div class="card">
+    <h2>ねない配信</h2>
+    <p class="sub">― 24時間ショートスリーパー配信 ―</p>
+    <p>「1日45分睡眠」が売りの配信者・<b>ヨルオキ</b>。これから<b>24時間配信</b>に挑む。…でも本当はショートスリーパーじゃない。<b>視聴者にバレずに寝て</b>、セミナー開催までこぎつけろ！</p>
+    <ul>
+      <li>😪 <b>眠気</b>がたまると、まぶたが落ちてくる。<b>「目を見開く」</b>を連打してこらえろ。閉じきったら配信中に寝落ち…</li>
+      <li>☕ コーヒーやスクワットで眠気をごまかせる。でも効き目にはかぎりがある</li>
+      <li>🛁 お風呂やカメラ不調でごまかして、<b>こっそり寝る</b>と眠気が一気に下がる。ただし<b>長すぎると怪しまれる</b>。同じごまかしは連続で使えない</li>
+      <li>💰 スパチャ（投げ銭）はすぐ読もう。寝ていると読めない</li>
+      <li>🤝 <b>信頼度</b>が0になったら炎上してセミナー中止</li>
+    </ul>
+    <button class="go" id="startBtn">🔴 配信開始（10:00）</button>
+    <p class="note">約4分で24時間がすぎます。キーボード：Space 目を見開く ／ P ポーズ</p>
+    <p class="note" id="bestTxt"></p>
+    <a class="back" href="../">← ゲーム一覧にもどる</a>
+  </div>
+</div>
+
+<div class="ov" id="endOv" hidden>
+  <div class="card">
+    <p class="sub" id="endSub"></p>
+    <div class="big" id="endBig"></div>
+    <p id="endText" style="text-align:center"></p>
+    <div class="rows" id="endRows"></div>
+    <button class="go" id="againBtn">もう一度配信する</button>
+    <a class="back" href="../">← ゲーム一覧にもどる</a>
+  </div>
+</div>
+
+<div class="ov" id="pauseOv" hidden>
+  <div class="card" style="max-width:320px">
+    <h2>配信を一時停止</h2>
+    <p class="note">（ゲームの一時停止です）</p>
+    <button class="go" id="resumeBtn">つづける</button>
+    <button class="go alt" id="quitBtn">タイトルへ</button>
+  </div>
+</div>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const cv=$('cv'), g=cv.getContext('2d'); const W=640, H=360;
+const FONT='"M PLUS Rounded 1c",sans-serif';
+const HOUR=10;              // real seconds per stream hour
+const TOTAL=24*HOUR;
+const LOCK=12;              // seconds on camera before another excuse
+
+const AWAKE={
+  coffee:{icon:'☕',name:'コーヒー',cd:12},
+  energy:{icon:'⚡',name:'エナドリ',cd:28},
+  squat:{icon:'💪',name:'スクワット',cd:12},
+  slap:{icon:'👋',name:'顔をたたく',cd:2.5},
+  talk:{icon:'💬',name:'コメント読み',cd:6},
+};
+const EXCUSE={
+  camera:{icon:'📷',name:'カメラ不調',ok:8,rec:4,cd:35,say:'あれ、カメラの調子が…ちょっと直しますね！'},
+  toilet:{icon:'🚻',name:'トイレ',ok:6,rec:4.5,cd:30,say:'ちょっとトイレ行ってきます！'},
+  bath:{icon:'🛁',name:'お風呂',ok:16,rec:4,cd:70,say:'お風呂入ってきます！音声だけつないでおくね'},
+  cook:{icon:'🍳',name:'料理配信',ok:12,rec:3.2,cd:55,say:'夜食つくります！手元カメラに切り替え！'},
+  glasses:{icon:'🕶️',name:'サングラス',ok:10,rec:3,cd:50,say:'まぶしいのでサングラスかけますね'},
+  loop:{icon:'🔁',name:'録画ループ',ok:8,rec:6.5,cd:90,say:'（こっそり過去の映像を流す…）'},
+};
+const USERS=['よふかし太郎','ねむねむ','深夜の民','きりぬき班','セミナー行きたい','はじめまして','作業用BGM勢','朝活おじさん','コーヒー党','しろくま','ミカン','通りすがり','夜勤明け','ポテト','ちくわ','睡眠研究会','もち','ゆうれい部員','あくび','星空'];
+const CH={
+  normal:['今日も元気だね','ショートスリーパーすごい','何時間起きてるの？','セミナー申し込みました！','作業用に流してます','初見です','寝なくて平気なのすごすぎ','サムネから来ました','声が好き','このBGMなに？','がんばれー','明日のセミナー楽しみ'],
+  sleepy:['なんか眠そう？','目ぇ閉じかけてない？','まぶた重そう','いまあくびした？','ほんとにショートスリーパー？','反応おそくない？','目が半分だよ'],
+  night:['深夜組きた','この時間も起きてるのすごい','夜ふかし仲間','丑三つ時だ','眠くならないの？'],
+  morning:['おはよう！','朝から見てる','徹夜おつかれ…じゃなかった'],
+  coffee:['コーヒー何杯目？','カフェインすごそう'], energy:['エナドリ飲みすぎw','体大丈夫？'], squat:['筋トレ配信たすかる','フォームきれい','急にどうしたw'],
+  slap:['なんで顔たたいてるの？','眠いの？','気合いれてて草'], talk:['読まれた！','返事ありがとう！','ファンサありがとう'],
+  nod:['寝てるwww','え、寝落ち？','ショートスリーパー(笑)','切り抜き班はよ','おーい起きろ','いびき聞こえるんだけど'],
+  away:{camera:['カメラ直った？','天井映ってる'],toilet:['いってらー'],bath:['お風呂配信たすかる','ちゃぷちゃぷ'],cook:['何つくるの？','おいしそう'],glasses:['サングラス似合う','グラサン配信w'],loop:['…']},
+  long:{camera:['カメラまだ？','ずっと天井なんだけど','おーい','寝てない？'],toilet:['トイレ長くね？','大丈夫？','お腹こわした？'],bath:['長風呂すぎん？','のぼせてない？','ちゃぷ音しなくなった'],cook:['鍋しか映ってない','本人どこ？','焦げてない？'],glasses:['頭ゆれてない？','サングラスの下寝てるだろ','動かなくなった'],loop:['さっきと同じ動きじゃない？','ループしてる？','時計止まってない？']},
+};
+
+// ---------- audio ----------
+let AC=null, muted=false;
+try{muted=localStorage.getItem('sleeperMute')==='1';}catch(e){}
+function ac(){ if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}} if(AC&&AC.state==='suspended')AC.resume(); return AC; }
+function tone(f,d,type='sine',vol=.06,slide=0,delay=0){
+  if(muted)return; const a=ac(); if(!a)return;
+  const t=a.currentTime+delay, o=a.createOscillator(), v=a.createGain();
+  o.type=type; o.frequency.setValueAtTime(f,t); if(slide)o.frequency.exponentialRampToValueAtTime(f*slide,t+d);
+  v.gain.setValueAtTime(vol,t); v.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(v).connect(a.destination); o.start(t); o.stop(t+d+.02);
+}
+const sPing=()=>tone(1200,.05,'sine',.02);
+const sSC=()=>{ tone(988,.1,'triangle',.07); tone(1319,.18,'triangle',.07,0,.1); };
+const sGood=()=>{ tone(660,.08,'triangle',.06); tone(880,.1,'triangle',.06,0,.08); };
+const sBad=()=>tone(220,.3,'sawtooth',.06,.6);
+const sSip=()=>tone(300,.15,'sine',.06,1.6);
+const sSlap=()=>tone(160,.06,'square',.08,.5);
+const sEye=()=>tone(900,.04,'square',.03,1.3);
+const sAlarm=()=>{ for(let i=0;i<4;i++)tone(880,.1,'square',.06,0,i*.15); };
+function setMute(m){ muted=m; $('muteBtn').textContent=m?'音 OFF':'音 ON'; try{localStorage.setItem('sleeperMute',m?'1':'0');}catch(e){} }
+setMute(muted);
+
+// ---------- state ----------
+let phase='title', paused=false;
+let maxT=0, sayT=0, t, sleep, sus, trust, viewers, peak, hype, lid, closedT, away, awayT, lock, lastEx, cds, coffeeN, energyN, crashes, sinceSleep, chatT, scT, sc, stats, nodT, flash, cans, lastHour;
+const rr=(a,b)=>a+Math.random()*(b-a), clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), pick=a=>a[Math.floor(Math.random()*a.length)];
+
+function reset(){
+  maxT=0; t=0; sleep=25; sus=0; trust=70; hype=1; viewers=900; peak=0; lid=0; closedT=0; away=null; awayT=0; lock=0; lastEx=null;
+  cds={}; coffeeN=0; energyN=0; crashes=[]; sinceSleep=0; chatT=1; scT=rr(18,28); sc=null; nodT=0; flash=0; cans=0; lastHour=10;
+  stats={nod:0,sc:0,scMiss:0,excuse:0,slept:0,caught:0};
+  $('chat').innerHTML='';
+}
+function start(){
+  ac(); reset(); phase='play'; paused=false;
+  $('titleOv').hidden=true; $('endOv').hidden=true; $('pauseOv').hidden=true;
+  me('どうも！ヨルオキです！今日は24時間配信やります！寝ません！'); sGood(); ui();
+}
+
+// ---------- chat ----------
+function addMsg(u,text,cls=''){
+  const box=$('chat'), d=document.createElement('div'); d.className='cm '+cls;
+  d.innerHTML=`<span class="u"></span><span class="t"></span>`; d.children[0].textContent=u; d.children[1].textContent=text;
+  box.appendChild(d); while(box.children.length>14)box.removeChild(box.firstChild);
+}
+function me(text){ addMsg('ヨルオキ',text,'me'); }
+function say(text){ addMsg('💭',text,'warn'); }
+function viewer(text,warn){ addMsg(pick(USERS),text,warn?'warn':''); sPing(); }
+function spawnSC(){
+  const amt=pick([500,1000,1000,2000,5000,10000]);
+  const text=pick(['いつも元気もらってます！','セミナー絶対行きます','寝ない秘訣おしえて！','夜食代にどうぞ','24時間がんばって！','ショートスリーパーの証明たのしみ']);
+  const box=$('chat'), d=document.createElement('div'); d.className='sc';
+  d.innerHTML=`<span class="t"><b>¥${amt.toLocaleString()}</b> <span></span></span><button>読む</button>`;
+  d.querySelector('.t span').textContent=`${pick(USERS)}「${text}」`;
+  box.appendChild(d); while(box.children.length>14)box.removeChild(box.firstChild);
+  sc={el:d,t:7,amt}; sSC();
+  d.querySelector('button').onclick=()=>readSC();
+}
+function readSC(){
+  if(!sc||away||phase!=='play')return;
+  trust=Math.min(100,trust+2); hype=Math.min(2.4,hype+.06); stats.sc++;
+  sc.el.classList.add('done'); sc.el.querySelector('button').disabled=true; sc.el.querySelector('button').textContent='読んだ';
+  me(`スパチャありがとうございます！¥${sc.amt.toLocaleString()}！`); sGood(); sc=null;
+}
+
+// ---------- actions ----------
+function doAwake(k){
+  if(phase!=='play'||away||cds[k]>0)return;
+  ac(); cds[k]=AWAKE[k].cd; const eff=1/(1+sinceSleep/60);
+  if(k==='coffee'){ const v=Math.max(5,20*Math.pow(.85,coffeeN))*eff; coffeeN++; sleep-=v; cans++; me(coffeeN>5?'コーヒー…何杯目だっけ…':'コーヒーうまっ！'); sSip(); }
+  if(k==='energy'){ sleep-=30*eff; energyN++; cans++; crashes.push(24); me('エナドリ注入！！'); sSip(); }
+  if(k==='squat'){ sleep-=10*eff; hype=Math.min(2.4,hype+.06); me('眠気ざましにスクワットしまーす！いち、に…'); }
+  if(k==='slap'){ sleep-=5*eff; sus+=5; me('（パチン！）よし！'); sSlap(); }
+  if(k==='talk'){ sleep-=3*eff; sus-=5; hype=Math.min(2.4,hype+.03); me(`${pick(USERS)}さん、コメントありがとう！`); }
+  lid=0; sleep=clamp(sleep,0,100); sus=clamp(sus,0,100);
+  if(eff<.6&&k!=='talk') say(`ききめ ${Math.round(eff*100)}%…ねむい`);
+  if(Math.random()<.8) setTimeout(()=>{ if(phase==='play')viewer(pick(CH[k])); },500);
+  ui();
+}
+function doExcuse(k){
+  if(phase!=='play'||away||cds[k]>0||lock>0||lastEx===k)return;
+  ac(); away={k,...EXCUSE[k]}; awayT=0; stats.excuse++; lastEx=k; lid=0; closedT=0;
+  me(EXCUSE[k].say); sGood(); ui();
+}
+function comeBack(){
+  if(!away)return;
+  const k=away.k; cds[k]=EXCUSE[k].cd; lock=LOCK;
+  const over=awayT>away.ok;
+  me(over?pick(['ごめんごめん、おまたせ！','いやー長くなっちゃった！','はい戻りました！（汗）']):pick(['おまたせ！','戻りました！','はい、再開！']));
+  sinceSleep=Math.max(0,sinceSleep-awayT*8);
+  away=null; ui();
+}
+
+// ---------- events ----------
+function nodOff(){
+  stats.nod++; trust-=22; sus=60; sleep=55; hype=Math.min(2.4,hype+.35); lid=0; closedT=0; nodT=3; flash=1; sAlarm();
+  for(let i=0;i<4;i++) setTimeout(()=>{ if(phase==='play'||nodT>0) viewer(pick(CH.nod),true); },i*300);
+  setTimeout(()=>{ if(phase==='play') me('…はっ！？ ね、寝てないです！目を閉じて瞑想してただけ！'); },2600);
+}
+function caught(msg,dmg){
+  stats.caught++; trust-=dmg; sus=50; flash=1; sBad();
+  viewer(msg,true);
+  if(away){ me('あっ…えっと…戻りました！'); cds[away.k]=EXCUSE[away.k].cd; lock=LOCK; away=null; }
+}
+
+// ---------- update ----------
+function hourNow(){ return (10+t/HOUR)%24; }
+function update(dt){
+  if(phase!=='play')return;
+  t+=dt;
+  if(t>=TOTAL){ t=TOTAL; endGame(true); return; }
+  for(const k in cds) cds[k]=Math.max(0,cds[k]-dt);
+  lock=Math.max(0,lock-(away?0:dt));
+  flash=Math.max(0,flash-dt);
+  const h=hourNow();
+  // viewers follow time of day and hype
+  const day=.55+.45*Math.cos((h-21)/24*Math.PI*2);
+  hype+=(1-hype)*dt*.02;
+  viewers=Math.round((250+1500*day)*hype*(trust/70*.5+.5));
+  peak=Math.max(peak,viewers);
+  const hh=Math.floor(h); if(hh!==lastHour){ lastHour=hh; if(hh===2)viewer(pick(CH.night)); if(hh===7)viewer(pick(CH.morning)); }
+
+  if(nodT>0){ nodT-=dt; if(nodT<=0){ lid=0; } ui(); return; }
+
+  if(away){
+    awayT+=dt; sleep=Math.max(0,sleep-away.rec*dt); stats.slept+=dt;
+    if(awayT>away.ok){ const o=awayT-away.ok; sus+=(4+o*1.5)*dt; if(o>away.ok*.5) trust-=.6*dt; }
+    else sus=Math.max(0,sus-.5*dt);
+    if(away.k==='glasses'&&Math.random()<dt*.12){ sus+=8; viewer(pick(CH.long.glasses),true); }
+    if(away.k==='loop'&&awayT>2&&Math.random()<dt*.07){ caught('これ録画ループじゃん！！',20); }
+    if(away&&sus>=100) caught('ぜったい寝てるだろ！',15);
+  }else{
+    let rate=1.35;
+    if(h>=0&&h<6)rate*=1.8; else if(h>=13&&h<15)rate*=1.3;
+    sinceSleep+=dt; rate*=1+sinceSleep/80;
+    sleep=Math.min(100,sleep+rate*dt);
+    sus=Math.max(0,sus-1*dt); if(sus>40)trust-=.25*dt;
+    if(sleep>=99)maxT+=dt; else maxT=Math.max(0,maxT-dt*2);
+    if(maxT>12){ maxT=0; me('も、もう限界…'); nodOff(); ui(); return; }
+    // eyelids
+    if(sleep>=70){ lid+=dt*(.12+(sleep-70)/30*.55+maxT*.06); if(lid>.5)sus+=2*dt; }
+    else lid=Math.max(0,lid-dt*2);
+    if(lid>=1){ lid=1; closedT+=dt; if(closedT>1.2) nodOff(); } else closedT=0;
+    if(sus>=100) caught('ぜったい寝てるよね？',15);
+  }
+  for(let i=crashes.length-1;i>=0;i--){ crashes[i]-=dt; if(crashes[i]<=0){ crashes.splice(i,1); if(!away){ sleep=Math.min(100,sleep+14); me('あれ…カフェイン切れてきた…'); } } }
+  // chat
+  chatT-=dt*(viewers/900);
+  if(chatT<=0){ chatT=rr(1.3,2.6);
+    let pool=CH.normal, warn=false;
+    if(away){ const long=awayT>away.ok; pool=long?CH.long[away.k]:CH.away[away.k]; warn=long; }
+    else if(lid>.35||sleep>80){ pool=CH.sleepy; warn=true; }
+    else if(h<5&&Math.random()<.4) pool=CH.night;
+    viewer(pick(pool),warn);
+  }
+  // superchat
+  scT-=dt;
+  if(scT<=0){ scT=rr(20,34); if(!sc) spawnSC(); }
+  if(sc){ sc.t-=dt; if(sc.t<=0){ sc.el.classList.add('done'); const b=sc.el.querySelector('button'); b.disabled=true; b.textContent='見のがし'; trust-=4; stats.scMiss++; viewer('スパチャ無視された…',true); sBad(); sc=null; } }
+  trust=clamp(trust,0,100); sus=clamp(sus,0,100);
+  if(trust<=0){ endGame(false); return; }
+  ui();
+}
+
+// ---------- UI ----------
+function setMeter(id,v,warn){ const el=$(id); el.querySelector('i').style.width=v+'%'; el.querySelector('b').textContent=Math.round(v); el.classList.toggle('warn',!!warn); }
+function ui(){
+  setMeter('mSleep',sleep,sleep>=80); setMeter('mSus',sus,sus>=70); setMeter('mTrust',trust,trust<=25);
+  $('eyeBtn').hidden=!(phase==='play'&&!away&&nodT<=0&&lid>.15);
+  $('acts').hidden=!!away; $('away').hidden=!away;
+  for(const b of document.querySelectorAll('.a')){
+    const k=b.dataset.k, ex=!!EXCUSE[k], cd=cds[k]||0, max=(ex?EXCUSE[k]:AWAKE[k]).cd;
+    b.disabled=phase!=='play'||nodT>0||cd>0||(ex&&(lock>0||lastEx===k));
+    b.querySelector('.cd').style.width=(cd>0?cd/max*100:0)+'%';
+  }
+  $('lockTxt').textContent=lock>0?`連続では使えない：あと${Math.ceil(lock)}秒`:lastEx?`前回：${EXCUSE[lastEx].name}（次は別のを）`:'';
+  if(away){
+    $('awayTitle').textContent=`${away.icon} ${away.name}中… こっそり寝ています 💤`;
+    const left=away.ok-awayT;
+    $('awayText').textContent=left>0?`あと${Math.ceil(left)}秒は怪しまれない（眠気 ${Math.round(sleep)}）`:`長すぎる！怪しまれてるよ（+${Math.ceil(-left)}秒）`;
+    const bar=$('okBar').querySelector('i'); bar.style.width=clamp(awayT/away.ok,0,1)*100+'%'; bar.style.background=left>0?'#4ED39A':'#FF5470';
+  }
+}
+function buildButtons(){
+  const ag=$('awakeGrid'), eg=$('exGrid');
+  for(const [k,v] of Object.entries(AWAKE)){ const b=document.createElement('button'); b.className='a'; b.dataset.k=k; b.innerHTML=`<span class="ic">${v.icon}</span>${v.name}<span class="cd"></span>`; b.onclick=()=>doAwake(k); ag.appendChild(b); }
+  for(const [k,v] of Object.entries(EXCUSE)){ const b=document.createElement('button'); b.className='a ex'; b.dataset.k=k; b.innerHTML=`<span class="ic">${v.icon}</span>${v.name}<span class="cd"></span>`; b.onclick=()=>doExcuse(k); eg.appendChild(b); }
+}
+
+// ---------- drawing ----------
+function clockStr(){ const m=Math.floor((10*60+t/HOUR*60))%(24*60); return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`; }
+function room(){
+  const h=hourNow(), night=h<6||h>=19, dusk=(h>=17&&h<19)||(h>=5&&h<7);
+  g.fillStyle='#231F33'; g.fillRect(0,0,W,H);
+  // window
+  const sky=night?'#0C1030':dusk?'#E08A5A':'#8FCBF2';
+  g.fillStyle='#3A3450'; g.fillRect(430,40,160,120); g.fillStyle=sky; g.fillRect(438,48,144,104);
+  if(night){ g.fillStyle='#F4F1D0'; g.beginPath(); g.arc(540,80,12,0,Math.PI*2); g.fill(); g.fillStyle='#fff'; for(let i=0;i<6;i++)g.fillRect(450+i*22,60+(i%3)*25,2,2); }
+  else { g.fillStyle='rgba(255,255,255,.8)'; g.beginPath(); g.ellipse(480,90,22,8,0,0,Math.PI*2); g.fill(); }
+  g.fillStyle='#3A3450'; g.fillRect(508,48,4,104); g.fillRect(438,98,144,4);
+  // LED strip
+  const hue=(t*20)%360; g.fillStyle=`hsla(${hue},90%,60%,.5)`; g.fillRect(0,22,W,4);
+  g.fillStyle=`hsla(${hue},90%,60%,.06)`; g.fillRect(0,26,W,80);
+  // shelf + poster
+  g.fillStyle='#E9E3FF'; g.fillRect(60,50,110,70); g.fillStyle='#6A55F0'; g.font=`800 13px ${FONT}`; g.textAlign='center'; g.fillText('1日45分',115,80); g.fillText('睡眠法',115,98);
+  // desk
+  g.fillStyle='#4A3F5E'; g.fillRect(0,285,W,75); g.fillStyle='#5A4E70'; g.fillRect(0,280,W,8);
+  // cans pile
+  for(let i=0;i<Math.min(cans,14);i++){ const x=470+(i%7)*18, y=262-Math.floor(i/7)*24; g.fillStyle=i%2?'#3AA0FF':'#7A4A2A'; g.fillRect(x,y,12,22); g.fillStyle='#ddd'; g.fillRect(x,y,12,3); }
+  // mic
+  g.fillStyle='#222'; g.fillRect(150,230,6,52); g.beginPath(); g.roundRect(140,200,26,40,12); g.fill(); g.fillStyle='#555'; for(let i=0;i<4;i++)g.fillRect(144,208+i*7,18,2);
+}
+function streamer(o={}){
+  const cx=320, bob=o.nod?Math.sin(t*3)*6+6:Math.sin(t*1.5)*2, cy=180+bob+(o.nod?8:0);
+  // body
+  g.fillStyle='#FF6F91'; g.beginPath(); g.moveTo(cx-90,300); g.quadraticCurveTo(cx-80,230,cx,225); g.quadraticCurveTo(cx+80,230,cx+90,300); g.fill();
+  g.fillStyle='#fff'; g.fillRect(cx-3,240,6,28);
+  // head
+  g.fillStyle='#F5D5C0'; g.beginPath(); g.ellipse(cx,cy,52,58,o.nod?.08:0,0,Math.PI*2); g.fill();
+  // hair
+  g.fillStyle='#2E2A44'; g.beginPath(); g.ellipse(cx,cy-30,58,36,0,Math.PI,0); g.fill();
+  g.beginPath(); g.moveTo(cx-58,cy-30); g.quadraticCurveTo(cx-40,cy-10,cx-10,cy-34); g.quadraticCurveTo(cx+20,cy-12,cx+58,cy-30); g.fill();
+  // headset
+  g.strokeStyle='#222'; g.lineWidth=7; g.beginPath(); g.arc(cx,cy-6,60,Math.PI*1.1,Math.PI*1.9); g.stroke();
+  g.fillStyle='#222'; g.beginPath(); g.roundRect(cx-66,cy-14,16,34,6); g.roundRect(cx+50,cy-14,16,34,6); g.fill();
+  // eyes
+  const ey=cy+2, ex=20, l=o.glasses?0:clamp(o.lid||0,0,1);
+  if(o.glasses){ g.fillStyle='#111'; g.beginPath(); g.roundRect(cx-44,ey-12,36,22,8); g.roundRect(cx+8,ey-12,36,22,8); g.fill(); g.fillRect(cx-8,ey-6,16,4);
+    g.fillStyle='rgba(255,255,255,.3)'; g.fillRect(cx-38,ey-8,10,3); g.fillRect(cx+14,ey-8,10,3); }
+  else{
+    for(const k of [-1,1]){
+      g.fillStyle='#fff'; g.beginPath(); g.ellipse(cx+k*ex,ey,11,9,0,0,Math.PI*2); g.fill();
+      g.fillStyle='#2E2A44'; g.beginPath(); g.arc(cx+k*ex,ey+1,5.5,0,Math.PI*2); g.fill();
+      // eyelid
+      g.fillStyle='#EBC4AE'; g.fillRect(cx+k*ex-12,ey-10,24,20*l);
+      g.strokeStyle='#2E2A44'; g.lineWidth=2; g.beginPath(); g.moveTo(cx+k*ex-11,ey-10+19*l); g.lineTo(cx+k*ex+11,ey-10+19*l); g.stroke();
+    }
+    // eye bags
+    g.strokeStyle=`rgba(120,90,160,${clamp((sleep-40)/60,0,.8)})`; g.lineWidth=2;
+    for(const k of [-1,1]){ g.beginPath(); g.arc(cx+k*ex,ey+6,9,.2*Math.PI,.8*Math.PI); g.stroke(); }
+  }
+  // mouth
+  g.strokeStyle='#8A4A4A'; g.lineWidth=3; g.beginPath();
+  if(o.snore){ g.fillStyle='#8A4A4A'; g.ellipse(cx,cy+30,6,5,0,0,Math.PI*2); g.fill(); }
+  else if(o.lid>.6){ g.moveTo(cx-8,cy+30); g.lineTo(cx+8,cy+30); g.stroke(); }
+  else { g.arc(cx,cy+24,10,.15*Math.PI,.85*Math.PI); g.stroke(); }
+  if(o.snore){ g.fillStyle='#CFC6FF'; g.font=`800 ${22+Math.sin(t*4)*3}px ${FONT}`; g.textAlign='left'; g.fillText('Zzz…',cx+60,cy-50-Math.sin(t*2)*6); }
+}
+function card(icon,title,sub){
+  g.fillStyle='#161425'; g.fillRect(0,0,W,H);
+  g.textAlign='center'; g.font=`64px sans-serif`; g.fillText(icon,W/2,150);
+  g.fillStyle='#EEEAF7'; g.font=`800 26px ${FONT}`; g.fillText(title,W/2,210); g.fillStyle='#9A94B5'; g.font=`800 15px ${FONT}`; g.fillText(sub,W/2,240);
+}
+function render(){
+  g.setTransform(cv.width/W,0,0,cv.height/H,0,0);
+  if(phase==='title'){ room(); streamer({lid:0}); overlayUI(); return; }
+  if(away&&nodT<=0){
+    const k=away.k;
+    if(k==='camera'){ g.save(); g.translate(W/2,H/2); g.rotate(.35); g.translate(-W/2,-H/2); g.fillStyle='#E9E4DA'; g.fillRect(-200,-200,W+400,H+400); g.fillStyle='#fff'; g.beginPath(); g.ellipse(320,120,70,22,0,0,Math.PI*2); g.fill(); g.fillStyle='#CFC8BA'; g.fillRect(-200,250,W+400,6); g.restore();
+      g.fillStyle='rgba(0,0,0,.55)'; g.fillRect(0,300,W,40); g.fillStyle='#fff'; g.font=`800 16px ${FONT}`; g.textAlign='center'; g.fillText('※ カメラの調子が悪いです…少々お待ちください',W/2,326); }
+    else if(k==='toilet') card('🚻','トイレ休憩中','すぐもどります！');
+    else if(k==='bath'){ card('🛁','お風呂配信（音声のみ）','ちゃぷ…ちゃぷ…'); g.fillStyle='rgba(255,255,255,.25)'; for(let i=0;i<8;i++){ const y=(H-((t*40+i*50)%H)); g.beginPath(); g.arc(80+i*70,y,8+i%3*3,0,Math.PI*2); g.fill(); } }
+    else if(k==='cook'){ g.fillStyle='#2A2A2A'; g.fillRect(0,0,W,H); g.fillStyle='#555'; g.beginPath(); g.ellipse(W/2,250,170,50,0,0,Math.PI*2); g.fill(); g.fillStyle='#888'; g.beginPath(); g.ellipse(W/2,200,130,70,0,0,Math.PI*2); g.fill(); g.fillStyle='#C98A3A'; g.beginPath(); g.ellipse(W/2,190,110,44,0,0,Math.PI*2); g.fill();
+      g.fillStyle='rgba(255,255,255,.3)'; for(let i=0;i<6;i++){ g.beginPath(); g.arc(W/2-80+i*32+Math.sin(t*2+i)*8,120-((t*30+i*20)%80),12,0,Math.PI*2); g.fill(); }
+      g.fillStyle='#fff'; g.font=`800 16px ${FONT}`; g.textAlign='center'; g.fillText('🍳 手元カメラ：夜食づくり中',W/2,40); }
+    else if(k==='glasses'){ room(); streamer({glasses:true,nod:awayT>2}); }
+    else if(k==='loop'){ room(); const lt=t; t=(t%3)+100; streamer({lid:0}); t=lt; }
+  }else{
+    room(); streamer({lid:nodT>0?1:lid,snore:nodT>0});
+    if(nodT>0){ g.fillStyle=`rgba(255,40,80,${.25+.2*Math.sin(t*10)})`; g.fillRect(0,0,W,H); g.fillStyle='#fff'; g.font=`800 36px ${FONT}`; g.textAlign='center'; g.lineWidth=6; g.strokeStyle='#000'; g.strokeText('配信中に寝落ち！！',W/2,90); g.fillText('配信中に寝落ち！！',W/2,90); }
+  }
+  if(flash>0){ g.fillStyle=`rgba(255,255,255,${flash*.5})`; g.fillRect(0,0,W,H); }
+  overlayUI();
+}
+function overlayUI(){
+  g.fillStyle='#E0245E'; g.beginPath(); g.roundRect(12,12,90,36,8); g.fill(); g.fillStyle='#fff'; g.font=`800 21px ${FONT}`; g.textAlign='left'; g.textBaseline='middle'; g.fillText('● LIVE',20,31);
+  g.fillStyle='rgba(0,0,0,.6)'; g.beginPath(); g.roundRect(108,12,150,36,8); g.fill(); g.fillStyle='#fff'; g.font=`800 21px ${FONT}`; g.fillText(clockStr(),120,31);
+  g.font=`800 13px ${FONT}`; g.fillStyle='rgba(255,255,255,.75)'; g.fillText('24時間配信',184,31);
+  g.fillStyle='rgba(0,0,0,.6)'; g.beginPath(); g.roundRect(W-176,12,164,36,8); g.fill(); g.fillStyle='#fff'; g.font=`800 21px ${FONT}`; g.textAlign='right'; g.fillText(`👀 ${(phase==='title'?1234:viewers).toLocaleString()}`,W-22,31);
+  g.textBaseline='alphabetic';
+  g.fillStyle='rgba(255,255,255,.2)'; g.fillRect(0,H-6,W,6); g.fillStyle='#E0245E'; g.fillRect(0,H-6,W*(t/TOTAL||0),6);
+}
+// ---------- end ----------
+function endGame(done){
+  phase='end'; away=null; ui();
+  const sec=stats.slept, score=done?Math.round(trust*100+peak):0;
+  let title, text, sub;
+  if(!done){ title='🔥 炎上… セミナー中止'; sub=`${clockStr()} に配信終了`; text='「ショートスリーパーは嘘だった」と切り抜きが拡散。セミナーは中止になった…'; }
+  else if(trust>=60){ title='🎉 セミナー満員御礼！'; sub='24時間配信 達成'; text='「本物のショートスリーパーだ！」と話題に。セミナーは満席！（ほんとは寝てたけど）'; }
+  else if(trust>=30){ title='😅 セミナー開催…ちょっと空席'; sub='24時間配信 達成'; text='なんとか完走。でも「ほんとは寝てない？」の声もちらほら…'; }
+  else { title='😰 ギリギリ完走'; sub='24時間配信 達成'; text='完走はしたけど疑惑だらけ。セミナーの参加者はごくわずか…'; }
+  let best=0; try{ best=+localStorage.getItem('sleeperBest')||0; if(score>best)localStorage.setItem('sleeperBest',score); }catch(e){}
+  $('endSub').textContent=sub; $('endBig').textContent=title; $('endText').textContent=text;
+  $('endRows').innerHTML=[
+    ['信頼度',`${Math.round(trust)}`],['最高同時視聴者',`${peak.toLocaleString()}人`],
+    ['こっそり寝た時間',`約${Math.round(sec/HOUR*60)}分`],['配信中の寝落ち',`${stats.nod}回`],['バレた・怪しまれた',`${stats.caught}回`],
+    ['読んだスパチャ',`${stats.sc}件（見のがし ${stats.scMiss}件）`],['ごまかした回数',`${stats.excuse}回`],
+    ['スコア',done?`${score.toLocaleString()}${score>best?'（ベスト！）':''}`:'―'],
+  ].map(([a,b])=>`<span>${a}</span><b>${b}</b>`).join('');
+  done&&trust>=30?sGood():sBad();
+  setTimeout(()=>$('endOv').hidden=false,done?300:1200);
+}
+
+// ---------- input & screens ----------
+function eye(){ if(phase==='play'&&!away&&nodT<=0&&lid>0){ lid=Math.max(0,lid-.34); sEye(); ui(); } }
+$('eyeBtn').addEventListener('pointerdown',e=>{ e.preventDefault(); eye(); });
+$('backBtn').onclick=comeBack;
+addEventListener('keydown',e=>{
+  if(e.code==='Space'){ e.preventDefault(); eye(); }
+  if(e.code==='KeyP'||e.code==='Escape') togglePause();
+  if(e.code==='Enter'&&away) comeBack();
+});
+function togglePause(){ if(phase!=='play')return; paused=!paused; $('pauseOv').hidden=!paused; }
+function toTitle(){ phase='title'; paused=false; $('pauseOv').hidden=true; $('endOv').hidden=true; $('titleOv').hidden=false; reset(); ui(); showBest(); }
+function showBest(){ let b=0; try{b=+localStorage.getItem('sleeperBest')||0;}catch(e){} $('bestTxt').textContent=b?`ベストスコア ${b.toLocaleString()}`:''; }
+$('startBtn').onclick=start; $('againBtn').onclick=start;
+$('quitBtn').onclick=toTitle; $('resumeBtn').onclick=togglePause; $('pauseBtn').onclick=togglePause;
+$('muteBtn').onclick=()=>setMute(!muted);
+document.addEventListener('visibilitychange',()=>{ if(document.hidden&&!paused&&phase==='play')togglePause(); });
+function fitCanvas(){ const w=cv.clientWidth, d=Math.min(2,devicePixelRatio||1); cv.width=Math.round(w*d); cv.height=Math.round(w*9/16*d); }
+addEventListener('resize',fitCanvas);
+
+buildButtons(); reset(); fitCanvas(); toTitle();
+let last=performance.now();
+function loop(now){ const dt=Math.min(.05,(now-last)/1000); last=now; if(!paused)update(dt); render(); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+
+// test hook
+window.__sleeper={get s(){return {phase,t,sleep,sus,trust,viewers,peak,lid,away:away&&away.k,awayT,lock,lastEx,stats:{...stats}};},
+  step(dt){update(dt);}, awake:doAwake, excuse:doExcuse, back:comeBack, eye, readSC, set(o){ if('sleep' in o)sleep=o.sleep; if('trust' in o)trust=o.trust; if('t' in o)t=o.t; if('sus' in o)sus=o.sus; }};
+})();
+</script>
+</body>
+</html>
