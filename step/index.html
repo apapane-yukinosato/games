@@ -133,9 +133,23 @@ function degNote(song,deg,oct=0){ const sc=SCALES[song.scale], n=sc.length, o=Ma
 function section(song,bar){ const B=song.bars; if(bar<4)return'intro'; if(bar>=B-4)return'outro'; if(bar>=B/2-2&&bar<B/2+2)return'break'; return 'main'; }
 function composeSong(song){
   const r=rng(song.seed), ev=[], mel=[];
-  // melody motif: 2 bars on a 16th grid
-  const makeMotif=()=>{ const m=[]; let deg=r()*4|0; for(let s=0;s<32;s++){ const strong=s%4===0, p=strong?.62:s%2===0?.34:.12; if(r()<p){ deg+=Math.round((r()-.5)*4); deg=Math.max(-2,Math.min(9,deg)); let len=1; while(len<8&&s+len<32&&r()<.45)len++; m.push({s,deg,len}); s+=len-1; } } return m; };
-  const motifs=[makeMotif(),makeMotif()];
+  // melody: rhythms come from fixed on-beat patterns (16th grid, [start,len]) so the tune locks to the beat
+  const pick=a=>a[r()*a.length|0];
+  const RHY=[[[0,4],[4,4],[8,4],[12,4]], [[0,4],[4,2],[6,2],[8,4],[12,4]], [[0,2],[2,2],[4,4],[8,2],[10,2],[12,4]],
+    [[0,6],[6,2],[8,8]], [[0,4],[4,4],[8,8]], [[0,2],[2,2],[4,2],[6,2],[8,4],[12,4]], [[0,4],[4,2],[6,2],[8,2],[10,2],[12,4]]];
+  const RHY16=[[[0,2],[2,1],[3,1],[4,4],[8,2],[10,2],[12,4]], [[0,4],[4,1],[5,1],[6,2],[8,4],[12,4]]];
+  const RHYEND=[[[0,4],[4,4],[8,8]], [[0,2],[2,2],[4,4],[8,8]], [[0,4],[4,2],[6,2],[8,8]]];
+  const CT=[-3,0,2,4,7,9];                       // chord tones in scale steps above the chord root
+  let prev=2;
+  const pitchBar=(rhy,end)=>rhy.map(([st,len],i)=>{
+    if(end&&i===rhy.length-1){ prev=Math.abs(prev)<=Math.abs(prev-7)?0:7; }                 // cadence on the root
+    else if(st%4===0){ const near=CT.filter(d=>Math.abs(d-prev)<=4&&d!==prev); prev=near.length?pick(near):pick(CT); } // beats: chord tones
+    else { prev=Math.max(-3,Math.min(9,prev+pick([-1,1,-1,1,-2,2]))); }                     // passing steps
+    return {s:st,deg:prev,len};
+  });
+  const rhythm=()=>song.bpm<=150&&r()<.25?pick(RHY16):pick(RHY);
+  const makeMotif=end=>{ const b1=pitchBar(rhythm()), b2=pitchBar(end?pick(RHYEND):rhythm(),end); return [b1,b2]; };
+  const phrase=[makeMotif(), makeMotif(), null, makeMotif(true)]; phrase[2]=phrase[0];   // A B A C
   for(let bar=0;bar<song.bars;bar++){
     const sec=section(song,bar), chord=song.prog[bar%4], b0=bar*4;
     // drums
@@ -152,10 +166,9 @@ function composeSong(song){
     ev.push({t:b0,type:'pad',notes:[0,2,4].map(k=>degNote(song,chord+k,-1)),dur:4});
     // lead melody (main + break)
     if(sec==='main'||sec==='break'){
-      const phraseBar=bar%8, motif=motifs[(Math.floor(bar/8)+(phraseBar>=4?1:0))%2], half=bar%2;
-      for(const n of motif){ if((n.s<16)!==(half===0))continue; const s=n.s%16; const t=b0+s/4;
-        let deg=n.deg+chord; if(phraseBar===7&&s>=12)deg=chord+7;
-        const midi=degNote(song,deg,0), dur=n.len/4;
+      const phraseBar=bar%8, motifBar=phrase[phraseBar>>1][phraseBar&1];
+      for(const n of motifBar){ const s=n.s, t=b0+s/4;
+        const midi=degNote(song,n.deg+chord,0), dur=n.len/4;
         ev.push({t,type:'lead',midi,dur}); mel.push({t,midi,dur,step:s}); }
     }
   }
@@ -186,7 +199,7 @@ function makeChart(song,comp,diff){
     if((lane===lastLane&&c.t-last<1)||(lane===prev2&&diff===2&&r()<.5)) lane=(lane+1+(r()*3|0))%4;
     const n={t:LEAD+c.t*spb,lane,beat:c.t,len:0};
     // freeze arrows on long melody notes
-    if(diff>=1&&c.dur>=(diff===2?1:1.5)&&r()<(diff===2?.4:.6)) n.len=Math.min(c.dur,2)*spb;
+    if(diff>=1&&c.dur>=2&&r()<(diff===2?.5:.35)) n.len=Math.min(c.dur,2)*spb;
     notes.push(n);
     // jumps (two arrows) at phrase starts
     const bar=Math.floor(c.t/4);
@@ -425,7 +438,7 @@ requestAnimationFrame(loop);
 
 // test hook: fake clock lets tests step through a song deterministically
 window.__step={setAuto, get s(){return {phase,auto,song:song&&song.id,diff,score:Math.round(score),stats:{...stats},combo,maxCombo,life,notes:notes&&notes.length,failed};},
-  useFakeClock(){ fake=0; }, step(dt){ fake+=dt; update(dt); }, time:()=>songTime(), notes:()=>notes, hit, release, setSong(i,d){ songI=i; diff=d; buildMenu(); }};
+  useFakeClock(){ fake=0; }, step(dt){ fake+=dt; update(dt); }, time:()=>songTime(), notes:()=>notes, comp:()=>comp, hit, release, setSong(i,d){ songI=i; diff=d; buildMenu(); }};
 })();
 </script>
 </body>
