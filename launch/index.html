@@ -20,6 +20,7 @@ body{background:var(--bg);color:var(--ink);
 #top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800}
 #top h1{flex:1;margin:0;text-align:center;font-size:17px;font-weight:800}
 .mini{font:inherit;font-size:12px;font-weight:800;border:0;border-radius:999px;padding:6px 10px;background:var(--card);color:var(--ink);box-shadow:0 2px 0 #9CC8DE;cursor:pointer}
+.mini[aria-pressed=true]{background:#6A55F0;color:#fff}
 .mini:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
 #stage{position:relative;flex:1;min-height:0;border-radius:14px;overflow:hidden;box-shadow:0 4px 0 #9CC8DE}
 #cv{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
@@ -43,6 +44,7 @@ body{background:var(--bg);color:var(--ink);
   <div id="top">
     <a href="../">← 一覧</a>
     <h1>コギ・ランチャー</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false">🤖 オート</button>
     <button class="mini" id="muteBtn">音 ON</button>
     <button class="mini" id="retryBtn">やりなおす</button>
   </div>
@@ -257,6 +259,7 @@ function update(dt){
     if(intro<=0){ phase='aim'; }
   }else if(phase==='aim'){
     if(!pan) camX+=(0-camX)*Math.min(1,dt*4);
+    if(auto&&!aim) autoAim(dt);
   }else if(phase==='fly'){
     const steps=4; for(let i=0;i<steps&&phase==='fly';i++) physics(dt/steps);
     if(Math.floor(tNow*20)!==Math.floor((tNow-dt)*20)) trail.push({x:dog.x,y:dog.y});
@@ -278,6 +281,58 @@ function finish(){
   $('endRows').innerHTML=[['わった風船',`${pops} / ${total}`],['つかった発射',`${3-shots} 回`]].map(([a,b])=>`<span>${a}</span><b>${b}</b>`).join('');
   $('endBest').textContent=score>best?'ベスト更新！':`ベスト ${best.toLocaleString()}`;
   setTimeout(()=>{ if(phase==='end')$('endOv').hidden=false; },500);
+  if(auto) setTimeout(()=>{ if(auto&&phase==='end') newGame(); },4000);
+}
+
+// ---------- auto ----------
+let auto=false, autoShot=null;
+function setAuto(v){ auto=v; $('autoBtn').setAttribute('aria-pressed',v); autoShot=null; if(!v&&dog&&dog.state==='ready'){ dog.x=SLING.x; dog.y=SLING.y; } }
+function balloonValue(b){ return b.type==='gold'?500:b.type==='bomb'?200:b.type==='rainbow'?300:b.r>30?250:100; }
+function predict(px,py){
+  // light simulation of one shot on copies of the stage; returns the expected points
+  const d={x:SLING.x,y:SLING.y,vx:px*POWER,vy:py*POWER};
+  const bl=blocks.filter(b=>!b.broken).map(b=>({...b})), bs=balloons.map(b=>({x:b.x,y:b.y,r:b.r,hp:b.hp,type:b.type,bx:b.bx,by:b.by,ph:b.ph,move:b.move,alive:true}));
+  let val=0, combo=0, restT=0; const dt=1/90;
+  for(let t=0;t<7;t+=dt){
+    d.vy+=GRAV*dt; for(const f of fans) if(d.x>f.x&&d.x<f.x+f.w&&d.y>f.y&&d.y<f.y+f.h) d.vy-=2300*dt;
+    d.x+=d.vx*dt; d.y+=d.vy*dt; let support=false;
+    for(const b of [...bl,{x:-500,y:GROUND,w:WW+1000,h:200,type:'ground'}]){
+      if(b.broken)continue;
+      const nx=clamp(d.x,b.x,b.x+b.w), ny=clamp(d.y,b.y,b.y+b.h), dx=d.x-nx, dy=d.y-ny, dist=Math.hypot(dx,dy); if(dist>=R)continue;
+      const n=dist>.001?{x:dx/dist,y:dy/dist}:{x:0,y:-1}; d.x+=n.x*(R-dist); d.y+=n.y*(R-dist);
+      const vn=d.vx*n.x+d.vy*n.y; if(vn>=0)continue;
+      if(b.type==='wood'&&-vn>430){ b.broken=true; val+=50; d.vx*=.7; d.vy*=.7; continue; }
+      const e=b.type==='tramp'&&n.y<-.5?1.15:b.type==='ground'?.32:b.type==='plat'?.35:.45;
+      d.vx-=(1+e)*vn*n.x; d.vy-=(1+e)*vn*n.y; if(b.type==='tramp'&&n.y<-.5)d.vy=Math.min(d.vy,-620);
+      if(n.y<-.6){ support=true; d.vx*=1-Math.min(1,2.2*dt); }
+    }
+    for(const b of bs){
+      if(!b.alive)continue;
+      const ph=b.ph+t, bx=b.move?b.bx+Math.sin(ph*b.move.sp)*b.move.ax:b.x, by=b.move?b.by+Math.cos(ph*b.move.sp)*b.move.ay:b.y;
+      if(Math.hypot(bx-d.x,by-d.y)<b.r+R-4){
+        if(b.hp>1){ b.hp--; b.r=24; const a=Math.atan2(d.y-by,d.x-bx), sp=Math.hypot(d.vx,d.vy)*.7; d.vx=Math.cos(a)*sp; d.vy=Math.sin(a)*sp; continue; }
+        b.alive=false; combo++; val+=balloonValue(b)*(1+(combo-1)*.5);
+        if(b.type==='bomb') for(const o of bs) if(o.alive&&Math.hypot(o.x-bx,o.y-by)<170){ o.alive=false; combo++; val+=balloonValue(o)*(1+(combo-1)*.5); }
+      }
+    }
+    if(support&&Math.hypot(d.vx,d.vy)<40){ restT+=dt; if(restT>.4)break; } else restT=0;
+    if(d.x<-80||d.x>WW+80||d.y>WH+100)break;
+  }
+  return val;
+}
+function planShot(){
+  let best={v:-1,px:90,py:-90};
+  for(let deg=8;deg<=80;deg+=4) for(let pw=60;pw<=MAXPULL;pw+=10){
+    const a=deg*Math.PI/180, px=pw*Math.cos(a), py=-pw*Math.sin(a), v=predict(px,py)+Math.random()*5;
+    if(v>best.v)best={v,px,py};
+  }
+  return best;
+}
+function autoAim(dt){
+  if(!autoShot){ autoShot={...planShot(),t:0}; }
+  autoShot.t+=dt; const k=Math.min(1,autoShot.t/.8), e=1-(1-k)*(1-k);
+  dog.x=SLING.x-autoShot.px*e; dog.y=SLING.y-autoShot.py*e;
+  if(autoShot.t>=1.1){ const s=autoShot; autoShot=null; dog.x=SLING.x; dog.y=SLING.y; launch(s.px,s.py); }
 }
 
 // ---------- draw ----------
@@ -396,7 +451,8 @@ function hud(){
     g.fillStyle='#EE8B32'; g.beginPath(); g.arc(mx+dog.x*k,my+4+dog.y*k,2.5,0,Math.PI*2); g.fill();
   }
   g.fillStyle='rgba(59,42,30,.8)'; g.font=`800 12px ${FONT}`; g.textAlign='center';
-  if(phase==='aim'&&!aim) g.fillText('コーギーを引っぱって、はなそう！',VW/2,VH-16);
+  if(auto) { g.textAlign='right'; g.fillStyle='#6A55F0'; g.fillText('🤖 AUTO',VW-12,VH-16); g.textAlign='center'; g.fillStyle='rgba(59,42,30,.8)'; }
+  if(phase==='aim'&&!aim&&!auto) g.fillText('コーギーを引っぱって、はなそう！',VW/2,VH-16);
   if(phase==='fly'&&!dashUsed) g.fillText('タップで ワン！ダッシュ',VW/2,VH-16);
   if(phase==='intro') g.fillText(`風船 ${balloons.length}こ。ぜんぶ割れるかな？`,VW/2,VH-16);
 }
@@ -415,6 +471,7 @@ addEventListener('resize',layout);
 function toWorld(e){ const r=cv.getBoundingClientRect(); return {x:(e.clientX-r.left)/scale+camX, y:(e.clientY-r.top)/scale-OFF}; }
 cv.addEventListener('pointerdown',e=>{
   ac(); const p=toWorld(e);
+  if(auto&&phase!=='intro'){ setAuto(false); }
   if(phase==='intro'){ intro=0; camX=0; phase='aim'; return; }
   if(phase==='fly'){ dash(); return; }
   if(phase!=='aim')return;
@@ -447,6 +504,8 @@ $('againBtn').onclick=()=>newGame();
 $('sameBtn').onclick=()=>newGame(seed);
 $('retryBtn').onclick=()=>{ if(phase!=='title') newGame(seed); };
 $('muteBtn').onclick=()=>setMute(!muted);
+$('autoBtn').onclick=()=>{ ac(); setAuto(!auto); };
+addEventListener('keydown',e=>{ if(e.code==='KeyO') setAuto(!auto); });
 
 layout(); newGame(); phase='title'; camX=0; $('titleOv').hidden=false; showBest();
 let last=performance.now();
@@ -454,7 +513,7 @@ function loop(now){ const dt=Math.min(.033,(now-last)/1000); last=now; update(dt
 requestAnimationFrame(loop);
 
 // test hook
-window.__launch={get s(){return {phase,shots,score,pops,total,balloons:balloons.length,dog:{x:dog.x,y:dog.y,state:dog.state},camX,VW};},
+window.__launch={setAuto, get s(){return {auto,phase,shots,score,pops,total,balloons:balloons.length,dog:{x:dog.x,y:dog.y,state:dog.state},camX,VW};},
   shoot(px,py){ if(phase==='intro'){intro=0;phase='aim';} if(phase==='aim')launch(px,py); }, dash, step(dt){update(dt);}, balloonsPos:()=>balloons.map(b=>({x:b.x,y:b.y,type:b.type}))};
 })();
 </script>
