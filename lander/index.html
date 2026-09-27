@@ -20,6 +20,7 @@ body{background:var(--bg);color:var(--ink);
 #top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800}
 #top h1{flex:1;margin:0;text-align:center;font-size:16px;font-weight:800}
 .mini{font:inherit;font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--panel);color:var(--ink);cursor:pointer}
+.mini[aria-pressed=true]{background:#5B6CF0;border-color:#8C99FF}
 .mini:focus-visible{outline:2px solid var(--warn);outline-offset:2px}
 #stage{position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden;background:#000}
 #cv{display:block;width:100%;height:100%;touch-action:none}
@@ -63,6 +64,7 @@ body{background:var(--bg);color:var(--ink);
   <div id="top">
     <a href="../">← 一覧</a>
     <h1>プラネット・ランダー</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false">🤖 オート</button>
     <button class="mini" id="muteBtn">音 ON</button>
     <button class="mini" id="menuBtn">星をえらぶ</button>
   </div>
@@ -202,6 +204,7 @@ function update(dt){
   if(phase==='boom'){ boomT-=dt; if(boomT<=0) showEnd(); return; }
   if(phase!=='play')return;
   const s=ship;
+  if(auto) autopilot();
   if(keys.left)s.a-=2.6*dt; if(keys.right)s.a+=2.6*dt;
   s.a=((s.a+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
   const firing=keys.thrust&&s.fuel>0;
@@ -256,6 +259,25 @@ function crash(reason){
   engine(false); ship.dead=true; phase='boom'; boomT=1.3; sBoom();
   for(let k=0;k<50;k++){ const a=Math.random()*Math.PI*2, v=rr(40,260); parts.push({x:ship.x,y:ship.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,t:0,life:rr(.6,1.3),c:['#FFD27A','#FF7A3A','#CCCCCC'][k%3],r:rr(2,5),g:120}); }
   result={ok:false,reason};
+}
+
+// ---------- auto (autopilot) ----------
+let auto=false, pwm=0;
+function setAuto(v){ auto=v; $('autoBtn').setAttribute('aria-pressed',v); if(!v){ keys.left=keys.right=keys.thrust=false; } }
+function autopilot(){
+  const sh=ship; let tx,ty;
+  if(pad){ tx=(pad.x1+pad.x2)/2; ty=pad.y; } else { tx=platform.x+platform.w/2; ty=platform.y; }
+  const alt=ty-(sh.y+18), dx=tx-sh.x, G=gravityVec(), heavy=G.y>70, sun=P.id==='sun';
+  // dodge solar flares that are about to erupt near the ship
+  let dodge=0; if(P.flares) for(const f of flares){ if(Math.abs(f.x-sh.x)<55&&f.t<f.warn+.9) dodge+=(sh.x<f.x?-1:1)*90; }
+  const vxD=Math.max(-90,Math.min(90,dx*.8+dodge));
+  const vyD=(Math.abs(dx)>14&&!sun)?Math.max(-40,Math.min(heavy?40:60,(alt-70)*.5)):(sun?Math.max(30,Math.min(110,alt*.6)):Math.max(heavy?10:15,Math.min(heavy?90:120,alt*(heavy?.35:.45))));
+  const Tx=(vxD-sh.vx)*2.2-G.x, Ty=(vyD-sh.vy)*2.2-G.y;
+  let aDes=Math.max(-.7,Math.min(.7,Math.atan2(Tx,-Ty))); if(alt<24&&Math.abs(dx)<20)aDes=0;
+  const diff=aDes-sh.a;
+  keys.left=diff<-.03; keys.right=diff>.03;
+  const want=(Math.abs(Math.atan2(Tx,-Ty))<1.3||Math.abs(Tx)>40)&&Math.abs(diff)<.35;
+  pwm+=want?Math.min(1,Math.hypot(Tx,Ty)/sh.thr):0; keys.thrust=pwm>=1; if(pwm>=1)pwm-=1; if(!want)pwm=0;
 }
 
 // ---------- drawing ----------
@@ -339,6 +361,7 @@ function hud(){
   if(P.wind){ const w=P.wind[0]+Math.sin(windT*.7)*P.wind[1]; g.fillText(`風 ${w>0?'→':'←'}${Math.abs(w/PX*2).toFixed(0)}m/s`,110,66); }
   if(P.heat){ g.fillText('熱',184,66); g.fillStyle='#1A2244'; g.fillRect(204,58,100,10); g.fillStyle=heat>70?'#FF6178':'#FFB040'; g.fillRect(204,58,heat,10); }
   if(msgT>0){ g.globalAlpha=Math.min(1,msgT*2); g.font=`800 16px ${FONT}`; g.textAlign='center'; g.fillStyle=msgBad?'#FF6178':'#FFE9A0'; g.fillText(msgS,W/2,110); g.globalAlpha=1; }
+  if(auto){ g.font=`800 12px ${FONT}`; g.textAlign='right'; g.fillStyle='#A9B4FF'; g.fillText('🤖 AUTO',W-16,94); }
   if(phase==='play'&&t<3.2){ g.globalAlpha=Math.min(1,(3.2-t)*1.5); g.font=`800 14px ${FONT}`; g.textAlign='center'; g.fillStyle='#fff'; g.lineWidth=4; g.strokeStyle='rgba(0,0,0,.6)'; g.strokeText(P.tip,W/2,140); g.fillText(P.tip,W/2,140); g.globalAlpha=1; }
   // off-screen marker
   if(s.y<0&&!s.dead){ g.fillStyle='#FFC24A'; g.beginPath(); g.moveTo(s.x,4); g.lineTo(s.x-6,14); g.lineTo(s.x+6,14); g.fill(); }
@@ -354,6 +377,7 @@ function render(){
 
 // ---------- end ----------
 function showEnd(){
+  if(!result||phase==='end'||phase==='play'||phase==='menu')return;
   phase='end';
   const r=result;
   $('endSub').textContent=`${P.icon} ${P.name}`;
@@ -365,6 +389,7 @@ function showEnd(){
   $('nextBtn').hidden=!(r.ok&&pi<PLANETS.length-1);
   $('endOv').hidden=false;
   buildMenu();
+  if(auto){ const again=!r.ok, nxt=r.ok&&pi<PLANETS.length-1?pi+1:r.ok?0:pi; setTimeout(()=>{ if(auto&&phase==='end') startPlanet(again?pi:nxt); },2600); }
 }
 
 // ---------- menu ----------
@@ -392,18 +417,19 @@ function layout(){
 addEventListener('resize',layout);
 for(const b of document.querySelectorAll('.b')){
   const k=b.dataset.k;
-  b.addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); b.setPointerCapture(e.pointerId); b.classList.add('on'); keys[k]=true; });
+  b.addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); if(auto)setAuto(false); b.setPointerCapture(e.pointerId); b.classList.add('on'); keys[k]=true; });
   const up=()=>{ b.classList.remove('on'); keys[k]=false; };
   b.addEventListener('pointerup',up); b.addEventListener('pointercancel',up); b.addEventListener('lostpointercapture',up);
   b.addEventListener('contextmenu',e=>e.preventDefault());
 }
 const KEYS={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowUp:'thrust',KeyW:'thrust',Space:'thrust'};
-addEventListener('keydown',e=>{ const k=KEYS[e.code]; if(k){ e.preventDefault(); ac(); keys[k]=true; } if(e.code==='KeyR'&&P&&phase!=='menu')startPlanet(pi); });
+addEventListener('keydown',e=>{ if(e.code==='KeyO'){ setAuto(!auto); return; } const k=KEYS[e.code]; if(k){ e.preventDefault(); ac(); if(auto)setAuto(false); keys[k]=true; } if(e.code==='KeyR'&&P&&phase!=='menu')startPlanet(pi); });
 addEventListener('keyup',e=>{ const k=KEYS[e.code]; if(k)keys[k]=false; });
 $('nextBtn').onclick=()=>startPlanet(pi+1);
 $('againBtn').onclick=()=>startPlanet(pi);
 $('toMenuBtn').onclick=toMenu; $('menuBtn').onclick=toMenu;
 $('muteBtn').onclick=()=>setMute(!muted);
+$('autoBtn').onclick=()=>{ ac(); setAuto(!auto); };
 document.addEventListener('visibilitychange',()=>{ if(document.hidden){ for(const k in keys)keys[k]=false; engine(false); } });
 
 setMute(muted); layout(); buildMenu();
