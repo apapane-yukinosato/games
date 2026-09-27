@@ -31,6 +31,7 @@ button:focus-visible{outline:3px solid var(--grape);outline-offset:3px;}
 .tc{position:absolute;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));display:flex;gap:8px;align-items:center;pointer-events:auto;}
 #time{background:var(--ink);color:var(--cream);border-radius:10px;padding:4px 12px;font-weight:800;font-size:18px;font-variant-numeric:tabular-nums;letter-spacing:.02em;}
 a.mini{color:var(--ink);text-decoration:none;white-space:nowrap}
+.mini[aria-pressed="true"]{background:var(--lemon);}
 .backlink{display:table;margin-top:8px;pointer-events:auto}
 .mini{background:var(--cream);border:3px solid var(--ink);border-radius:10px;font-weight:800;font-size:13px;padding:4px 8px;box-shadow:2px 2px 0 var(--ink);}
 .tr{position:absolute;right:calc(14px + env(safe-area-inset-right,0px));top:calc(10px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
@@ -112,6 +113,7 @@ tr.me td{background:var(--lemon);}
       <div id="rank" class="rx">6<small>位</small></div>
       <div id="lap">ラップ 1/3</div>
       <a class="mini backlink" href="../">← 一覧</a>
+      <button id="autoBtn" class="mini backlink" aria-pressed="false">🤖 オート</button>
     </div>
     <div class="tc">
       <div id="time">0:00.00</div>
@@ -153,6 +155,7 @@ tr.me td{background:var(--lemon);}
         <button id="d2" data-d="2" aria-pressed="false">むずかしい</button>
       </div>
       <button id="startBtn" class="big">スタート!</button>
+      <button id="autoStartBtn" class="big alt">🤖 オートで走る</button>
       <div class="help">
         <b>キーボード</b><span><kbd>←</kbd><kbd>→</kbd> ハンドル　<kbd>↑</kbd> アクセル　<kbd>↓</kbd> ブレーキ</span>
         <b></b><span><kbd>Space</kbd> ドリフト　<kbd>X</kbd> アイテム　<kbd>P</kbd> 一時停止</span>
@@ -387,6 +390,8 @@ const keys={};let touchMode=false;const touch={l:false,r:false,d:false,b:false};
 addEventListener("keydown",e=>{
   if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].includes(e.code)&&state!=="title")e.preventDefault();
   if(!keys[e.code]){
+    if(e.code==="KeyO"){setAuto(!auto);}
+    if(auto&&["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space","KeyA","KeyD","KeyW","KeyS"].includes(e.code))setAuto(false);
     if((e.code==="KeyX"||e.code==="KeyZ")&&state==="race")useItem(player);
     if((e.code==="KeyP"||e.code==="Escape")&&(state==="race"||state==="countdown"))togglePause();
   }
@@ -399,7 +404,7 @@ addEventListener("touchstart",enableTouch,{passive:true});
 if(window.matchMedia&&matchMedia("(pointer:coarse)").matches)enableTouch();
 document.querySelectorAll("#touch .tb").forEach(b=>{
   const k=b.dataset.k;
-  const on=e=>{e.preventDefault();initAudio();b.classList.add("on");if(k==="i"){if(state==="race")useItem(player);}else touch[k]=true;try{b.setPointerCapture(e.pointerId);}catch(_){}};
+  const on=e=>{e.preventDefault();initAudio();if(auto)setAuto(false);b.classList.add("on");if(k==="i"){if(state==="race")useItem(player);}else touch[k]=true;try{b.setPointerCapture(e.pointerId);}catch(_){}};
   const off=()=>{b.classList.remove("on");if(k!=="i")touch[k]=false;};
   b.addEventListener("pointerdown",on);b.addEventListener("pointerup",off);b.addEventListener("pointercancel",off);b.addEventListener("lostpointercapture",off);
   b.addEventListener("contextmenu",e=>e.preventDefault());
@@ -626,6 +631,7 @@ function showResults(){
   $("resSub").textContent="タイム "+fmt(player.finishTime)+(best?"　ベスト "+fmt(best):"")+"　（"+["かんたん","ふつう","むずかしい"][diff]+"）";
   $("resTable").innerHTML=order.map((k,i)=>'<tr class="'+(k.isPlayer?"me":"")+'"><td>'+(i+1)+'位</td><td><span class="dotc" style="background:'+k.ch.css+'"></span>'+k.name+(k.isPlayer?"（あなた）":"")+'</td><td>'+(k.finished?fmt(k.finishTime):"走行中")+"</td></tr>").join("");
   $("result").hidden=false;$("hud").hidden=true;state="result";
+  if(auto)setTimeout(()=>{if(auto&&state==="result")startRace();},5000);
 }
 function togglePause(){if(state!=="race"&&state!=="countdown"&&!paused)return;paused=!paused;$("pause").hidden=!paused;if(ac){paused?ac.suspend():ac.resume();}}
 function toTitle(){state="title";paused=false;$("pause").hidden=true;$("result").hidden=true;$("hud").hidden=true;$("title").hidden=false;if(engG)engG.gain.value=0;updBest();}
@@ -641,6 +647,10 @@ $("startBtn").onclick=startRace;$("retryBtn").onclick=startRace;$("retryBtn2").o
 $("toTitleBtn").onclick=toTitle;$("quitBtn").onclick=()=>{if(ac&&ac.state==="suspended")ac.resume();toTitle();};
 $("resumeBtn").onclick=togglePause;$("pauseBtn").onclick=togglePause;
 $("muteBtn").onclick=()=>{initAudio();setMute(!muted);};
+let auto=false;
+function setAuto(v){auto=v;$("autoBtn").setAttribute("aria-pressed",v?"true":"false");if(v&&state==="title")startRace();}
+$("autoBtn").onclick=()=>{initAudio();setAuto(!auto);};
+$("autoStartBtn").onclick=()=>{initAudio();setAuto(true);};
 setupRace();
 
 /* ---------- loop ---------- */
@@ -661,7 +671,7 @@ function frame(now){
 
   if(state==="countdown"){
     countT-=dt;const c=Math.ceil(countT);
-    const inp=playerInput();
+    const inp=auto?{throttle:countT<.95?1:0}:playerInput();
     if(inp.throttle&&accelDownAt===null)accelDownAt=countT;if(!inp.throttle)accelDownAt=null;
     if(c!==lastCount&&c>=1&&c<=3){lastCount=c;showMsg(String(c),.9);sfx.count();}
     if(countT<=0){state="race";showMsg("GO!",.9);sfx.go();
@@ -676,8 +686,9 @@ function frame(now){
     const lead=rankCache[0];
     for(const k of karts){
       let inp,mult=1;
-      if(k.isPlayer&&state==="race")inp=playerInput();
+      if(k.isPlayer&&state==="race"&&!auto)inp=playerInput();
       else{inp=aiInput(k,dt);
+        if(k.isPlayer&&auto&&k.item&&k.roll<=0){k.ai.itemT-=dt;if(k.ai.itemT<=0){k.ai.itemT=1+Math.random()*2;useItem(k);}}
         if(!k.isPlayer){const gap=(player.rankVal-k.rankVal)/N;mult=Math.max(.9,Math.min(1.12,1+gap*.5));
           if(k.item&&k.roll<=0){k.ai.itemT-=dt;if(k.ai.itemT<=0){if(k.item.type==="homing"&&k===lead)k.ai.itemT=2;else useItem(k);}}}}
       if(k.roll>0){k.roll-=dt;if(Math.random()<.3&&k.isPlayer)sfx.roll();if(k.roll<=0){k.item=rollItem(k);if(k.isPlayer)sfx.item();}}

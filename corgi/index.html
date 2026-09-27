@@ -22,6 +22,10 @@ body{margin:0;background:var(--navy);color:var(--paper);
   overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #app{height:100%;box-sizing:border-box;max-width:980px;margin:0 auto;padding-inline:16px;padding-block:10px 12px;
   display:flex;flex-direction:column;justify-content:center;gap:10px}
+.toprow{display:flex;justify-content:space-between;align-items:center}
+.autoBtn{font:inherit;font-size:12px;font-weight:800;border:0;border-radius:999px;padding:5px 11px;background:var(--navy2);color:var(--paper);cursor:pointer}
+.autoBtn[aria-pressed=true]{background:var(--yellow);color:var(--navy)}
+.autoBtn:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
 .toplink{align-self:flex-start;font-size:13px;font-weight:800;color:var(--mute);text-decoration:none}
 .toplink:hover{color:var(--paper)}
 .hud{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:end}
@@ -93,7 +97,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 <body>
 
 <div id="app">
-  <a class="toplink" href="../">← ゲーム一覧</a>
+  <div class="toprow"><a class="toplink" href="../">← ゲーム一覧</a><button class="autoBtn" id="autoBtn" aria-pressed="false">🤖 オート</button></div>
   <div class="hud">
     <div>
       <div class="lbl">スコア</div>
@@ -268,6 +272,7 @@ function busyNear(a,b){
 
 /* ---------- update ---------- */
 function update(dt){
+  if(auto) autoWalk(dt);
   G.time+=dt; G.t+=dt; if(G.tug>0)G.tug-=dt;
   const walk=walking(), st=G.state;
 
@@ -349,7 +354,10 @@ cv.addEventListener('pointerdown',e=>{
     const px=CX+(p.wx-G.dist), py=FY-p.h-7;
     const d=Math.hypot(px-ux,py-uy); if(d<bd){bd=d;best=p;}
   }
-  if(best&&bd<40){
+  if(best&&bd<40){ if(auto)setAuto(false); tapPoop(best); }
+});
+function tapPoop(best){
+  {
     if(best.st==='ground'){
       best.st='picked';best.t=0;addScore(100);G.stats.pick++;
       fx('+100','#2F3A6B',best.wx,40);toast('うんちを拾った！','');sfx('pick');
@@ -358,7 +366,7 @@ cv.addEventListener('pointerdown',e=>{
       fx('+300','#2F3A6B',best.wx,55);toast('空中キャッチ！ +300','good');sfx('catch');
     }
   }
-});
+}
 
 /* ---------- drawing helpers ---------- */
 function rr(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();}
@@ -701,12 +709,13 @@ function endGame(ok){
   let best=0; try{best=+localStorage.getItem('corgiBest')||0; if(s>best){localStorage.setItem('corgiBest',s);}}catch(e){}
   $('endBest').textContent=s>best?'自己ベスト更新！':'自己ベスト：'+best+'点';
   $('endOv').hidden=false; hud();
+  if(auto) setTimeout(()=>{ if(auto&&!running) start(); },5000);
 }
 $('startBtn').addEventListener('click',start);
 $('againBtn').addEventListener('click',start);
 
 function hold(b,on,off){
-  b.addEventListener('pointerdown',e=>{e.preventDefault();try{b.setPointerCapture(e.pointerId);}catch(_){ } b.classList.add('on');on();});
+  b.addEventListener('pointerdown',e=>{e.preventDefault(); if(auto)setAuto(false);try{b.setPointerCapture(e.pointerId);}catch(_){ } b.classList.add('on');on();});
   ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>b.addEventListener(ev,()=>{b.classList.remove('on');off&&off();}));
   b.addEventListener('contextmenu',e=>e.preventDefault());
 }
@@ -716,6 +725,8 @@ hold(el.lead,doPull);
 
 window.addEventListener('keydown',e=>{
   const k=e.code;
+  if(k==='KeyO'){ setAuto(!auto); return; }
+  if(auto&&['ArrowRight','KeyD','ArrowUp','Space','KeyW','ArrowDown','KeyS','KeyX'].includes(k)) setAuto(false);
   if(k==='ArrowRight'||k==='KeyD'){inp.key=true;e.preventDefault();}
   else if(k==='ArrowUp'||k==='Space'||k==='KeyW'){if(!e.repeat)doJump();e.preventDefault();}
   else if(k==='ArrowDown'||k==='KeyS'||k==='KeyX'){if(!e.repeat)doPull();e.preventDefault();}
@@ -723,6 +734,21 @@ window.addEventListener('keydown',e=>{
 });
 window.addEventListener('keyup',e=>{if(e.code==='ArrowRight'||e.code==='KeyD')inp.key=false;});
 window.addEventListener('blur',()=>{inp.key=false;inp.btn=false;});
+
+/* ---------- auto ---------- */
+let auto=false, autoPullT=0;
+function setAuto(v){ auto=v; $('autoBtn').setAttribute('aria-pressed',v); inp.btn=false; if(v&&!running)start(); }
+$('autoBtn').addEventListener('click',()=>{ initAudio(); setAuto(!auto); });
+function autoWalk(dt){
+  const st=G.state;
+  inp.btn=st==='walk';
+  if(st==='lunge'){ autoPullT+=dt; if(autoPullT>.12){ autoPullT=0; doPull(); } return; }
+  autoPullT=0;
+  if(st==='walk'&&!G.air){
+    for(const o of G.objs){ const d=o.wx-G.dist; if(o.type==='ditch'&&d>14&&d<30){ doJump(); break; } }
+  }
+  for(const p of G.poops){ if((p.st==='fall'||(p.st==='emerge'&&p.t>.45))&&Math.random()<.12){ tapPoop(p); break; } if(p.st==='ground'&&CX+(p.wx-G.dist)<60){ tapPoop(p); break; } }
+}
 
 /* ---------- sound ---------- */
 let AC=null;

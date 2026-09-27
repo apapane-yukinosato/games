@@ -22,8 +22,9 @@ body{background:var(--bg);color:#fff;
 #app{height:100%;box-sizing:border-box;max-width:520px;margin:0 auto;padding:8px 16px 12px;display:flex;flex-direction:column;gap:6px}
 #top{display:flex;align-items:center;gap:8px}
 #top a{color:var(--soft);text-decoration:none;font-size:13px;font-weight:800}
-#top h1{flex:1;margin:0;text-align:center;font-size:17px;font-weight:800;letter-spacing:.04em}
+#top h1{flex:1;margin:0;text-align:center;font-size:17px;font-weight:800;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .mini{font:inherit;font-size:12px;font-weight:800;border:0;border-radius:999px;padding:6px 10px;background:var(--bg2);color:#fff;cursor:pointer}
+.mini[aria-pressed=true]{background:#E0A83A;color:#2A2440}
 .mini:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 #hud{display:grid;grid-template-columns:.8fr 1fr 1.2fr;gap:6px}
 .st{background:var(--bg2);border-radius:10px;padding:5px 8px}
@@ -75,6 +76,7 @@ body{background:var(--bg);color:#fff;
   <div id="top">
     <a href="../">← 一覧</a>
     <h1>人生マネーシューター</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false">🤖 オート</button>
     <button class="mini" id="muteBtn">音 ON</button>
     <button class="mini" id="pauseBtn" aria-label="一時停止">Ⅱ</button>
   </div>
@@ -411,11 +413,14 @@ function showChoiceOv(title,text,opts){
     btn.onclick=()=>pickChoice(o.k); $('chBtns').appendChild(btn);
   }
   $('choiceAsk').hidden=false; $('choiceRes').hidden=true; $('choiceOv').hidden=false;
+  if(auto){ const short=choiceKind==='withdraw'&&pendingBoss&&wallet+savings<pendingBoss.cost*.8;
+    const pick=opts.find(o=>(short?['index','no','withdraw']:['index','no','keep']).includes(o.k))||opts[0]; setTimeout(()=>{ if(auto&&phase==='choice'&&!$('choiceAsk').hidden) pickChoice(pick.k); },1800); }
 }
 // 選択の結果表示を共通化
 function showChoiceResult(title,text,lesson){
   $('resTitle').textContent=title; $('resText').textContent=text; $('resLesson').textContent=lesson;
   $('choiceAsk').hidden=true; $('choiceRes').hidden=false; hud();
+  if(auto) setTimeout(()=>{ if(auto&&phase==='choice'&&!$('choiceRes').hidden) $('resBtn').click(); },2600);
 }
 function openChoice(n){
   choiceKind='life'; choiceNo=n; phase='choice'; firing=false; $('fire').classList.remove('on');
@@ -504,6 +509,7 @@ $('resBtn').onclick=()=>{
 // ---------- ending ----------
 function endGame(){
   phase='end'; firing=false; boss=null;
+  if(auto) setTimeout(()=>{ if(auto&&phase==='end') start(); },9000);
   const assets=Math.round(savings+investBal);
   let title, msg, aPts;
   const hoard=assets>=4000||(assets>=1500&&joy<150);
@@ -547,6 +553,7 @@ function update(dt){
   if(banner){ banner.t+=dt; if(banner.t>banner.dur)banner=null; }
   if(phase!=='play')return;
 
+  if(auto) autoLife(dt);
   // player（左右にしか動かない。P.yは固定）
   const sp=260; let mx=0;
   if(keys.ArrowLeft)mx--; if(keys.ArrowRight)mx++;
@@ -715,7 +722,7 @@ addEventListener('resize',layout);
 
 // ---------- input ----------
 let drag=null;
-cv.addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); drag={id:e.pointerId,x:e.clientX,y:e.clientY}; cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); if(auto)setAuto(false); drag={id:e.pointerId,x:e.clientX,y:e.clientY}; cv.setPointerCapture(e.pointerId); });
 cv.addEventListener('pointermove',e=>{
   if(!drag||e.pointerId!==drag.id||phase!=='play')return;
   const k=1.25/scale;
@@ -725,13 +732,14 @@ cv.addEventListener('pointermove',e=>{
 const endDrag=e=>{ if(drag&&e.pointerId===drag.id)drag=null; };
 cv.addEventListener('pointerup',endDrag); cv.addEventListener('pointercancel',endDrag);
 const fb=$('fire');
-fb.addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); fb.setPointerCapture(e.pointerId); firing=true; fb.classList.add('on'); });
+fb.addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); if(auto)setAuto(false); fb.setPointerCapture(e.pointerId); firing=true; fb.classList.add('on'); });
 const stopFire=()=>{ firing=false; fb.classList.remove('on'); };
 fb.addEventListener('pointerup',stopFire); fb.addEventListener('pointercancel',stopFire); fb.addEventListener('lostpointercapture',stopFire);
 fb.addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('keydown',e=>{
   if(e.code==='KeyP'||e.code==='Escape'){ togglePause(); return; }
-  if(['ArrowLeft','ArrowRight','Space'].includes(e.code)){ e.preventDefault(); keys[e.code]=true; ac(); }
+  if(e.code==='KeyO'){ setAuto(!auto); return; }
+  if(['ArrowLeft','ArrowRight','Space'].includes(e.code)){ e.preventDefault(); if(auto)setAuto(false); keys[e.code]=true; ac(); }
 });
 addEventListener('keyup',e=>{ keys[e.code]=false; });
 
@@ -749,6 +757,41 @@ $('startBtn').onclick=start; $('againBtn').onclick=start;
 $('toTitleBtn').onclick=toTitle; $('quitBtn').onclick=toTitle;
 $('resumeBtn').onclick=togglePause; $('pauseBtn').onclick=togglePause;
 $('muteBtn').onclick=()=>setMute(!muted);
+$('autoBtn').onclick=()=>{ ac(); setAuto(!auto); };
+
+// ---------- auto (かしこい人生) ----------
+let auto=false;
+function setAuto(v){ auto=v; $('autoBtn').setAttribute('aria-pressed',v); keys.ArrowLeft=keys.ArrowRight=false; firing=false; if(v&&phase==='title')start(); }
+function autoLife(dt){
+  keys.ArrowLeft=keys.ArrowRight=false; firing=false;
+  const isBad=e=>e.kind==='trap'||e.kind==='risk'||(e.kind==='ins'&&e.data!=='good');
+  const isGet=e=>['salary','bonus','career'].includes(e.kind)||(e.kind==='ins'&&e.data==='good'&&insurance!=='good');
+  const bad=ents.filter(e=>isBad(e)&&e.y>P.y-320&&e.y<P.y+25);
+  const danger=x=>bad.reduce((m,e)=>{ const tA=Math.max(0,(P.y-e.y)/Math.max(30,e.vy)), drift=(e.home||0)*tA*.6+14; return Math.max(m,Math.abs(e.x-x)<e.r+34+drift?(tA<1.4?3:1):0); },0);
+  const bv=bulletValue(), nb=BOSSES[nextBoss], reserve=age>=58?1e9:(nb&&age>=nb.age-3?nb.cost+20:60);
+  // things to pick up, then goods worth buying with pocket money (never from savings)
+  let target=null, score=-1;
+  for(const e of ents){
+    if(e.y>P.y+10||e.y<P.y-420)continue;
+    let v=0;
+    if(isGet(e)) v=e.kind==='bonus'?5:e.kind==='ins'?4:e.kind==='career'?2:3;
+    else if(e.kind==='good'&&!boss&&wallet-e.hp>=reserve&&wallet>=bv) v=1.5+Math.min(2,e.data.j/10);
+    if(!v||danger(e.x)>=3)continue;
+    const tArr=(P.y-e.y)/Math.max(30,e.vy), tReach=Math.abs(e.x-P.x)/260;
+    if(tReach>tArr+.15)continue;
+    v-=tArr*.9+tReach*.3;
+    if(v>score){ score=v; target=e; }
+  }
+  let tx=boss?boss.x:target?target.x:P.x;
+  if(danger(P.x)||danger(tx)>=3){ // move to the safest reachable spot, close to the goal
+    let bx=P.x, bs=1e9; for(let x=18;x<=VW-18;x+=18){ const sc=danger(x)*400+Math.abs(x-tx)*.6+Math.abs(x-P.x)*.4; if(sc<bs){bs=sc;bx=x;} } tx=bx;
+  }
+  for(const e of ebul) if(Math.abs(e.x-P.x)<24&&e.y>P.y-120&&e.y<P.y) tx=P.x+(e.x<P.x?50:-50);
+  if(Math.abs(tx-P.x)>6){ if(tx<P.x)keys.ArrowLeft=true; else keys.ArrowRight=true; }
+  // fire only at a target above us that we can pay for from the wallet
+  if(boss){ firing=Math.abs(boss.x-P.x)<30&&wallet+savings>=bv; }
+  else firing=wallet-reserve>=bv&&ents.some(e=>e.kind==='good'&&Math.abs(e.x-P.x)<e.r*.8&&e.y<P.y&&wallet-e.hp>=reserve);
+}
 document.addEventListener('visibilitychange',()=>{ if(document.hidden&&!paused&&phase==='play')togglePause(); });
 
 let last=performance.now();
@@ -761,7 +804,7 @@ function loop(now){
 layout(); toTitle(); requestAnimationFrame(loop);
 
 // test hook
-window.__money={get s(){return {phase,age,wallet,savings,salary,joy,insurance,invest,investBal,debt,bulletValue:bulletValue(),boss:boss&&{n:boss.n,hp:boss.hp,t:boss.t},ents:ents.length,wasted,bought:bought.length,log};},
+window.__money={setAuto, get s(){return {auto,phase,age,wallet,savings,salary,joy,insurance,invest,investBal,debt,bulletValue:bulletValue(),boss:boss&&{n:boss.n,hp:boss.hp,t:boss.t},ents:ents.length,wasted,bought:bought.length,log};},
   set(o){ if('age' in o)age=o.age; if('savings' in o)savings=o.savings; if('wallet' in o)wallet=o.wallet; if('joy' in o)joy=o.joy; if('insurance' in o)insurance=o.insurance; if('invest' in o)invest=o.invest; if('investBal' in o)investBal=o.investBal; if('debt' in o)debt=o.debt; if('nextBoss' in o)nextBoss=o.nextBoss; if('yearT' in o)yearT=o.yearT; hud(); },
   collect(kind,data){ collect({kind,data,x:VW/2,y:VH/2}); }, step(dt){ update(dt); }, fire(v){firing=v;}, get P(){return P;}, ents:()=>ents, bullets:()=>bullets};
 })();

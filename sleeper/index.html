@@ -22,8 +22,9 @@ body{background:var(--bg);color:var(--ink);
 #app{height:100%;box-sizing:border-box;max-width:560px;margin:0 auto;padding:8px 12px 10px;display:flex;flex-direction:column;gap:6px}
 #top{display:flex;align-items:center;gap:8px}
 #top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800}
-#top h1{flex:1;margin:0;text-align:center;font-size:16px;font-weight:800}
+#top h1{flex:1;margin:0;text-align:center;font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .mini{font:inherit;font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--panel);color:var(--ink);cursor:pointer}
+.mini[aria-pressed=true]{background:#6A55F0;border-color:#8C7CFF}
 .mini:focus-visible{outline:2px solid var(--sleep);outline-offset:2px}
 #player{position:relative;border-radius:10px;overflow:hidden;background:#000;flex:none}
 #cv{display:block;width:100%;aspect-ratio:16/9}
@@ -91,6 +92,7 @@ body{background:var(--bg);color:var(--ink);
   <div id="top">
     <a href="../">← 一覧</a>
     <h1>ねない配信</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false">🤖 オート</button>
     <button class="mini" id="muteBtn">音 ON</button>
     <button class="mini" id="pauseBtn" aria-label="一時停止">Ⅱ</button>
   </div>
@@ -133,6 +135,7 @@ body{background:var(--bg);color:var(--ink);
       <li>🤝 <b>信頼度</b>が0になったら炎上してセミナー中止</li>
     </ul>
     <button class="go" id="startBtn">🔴 配信開始（10:00）</button>
+    <button class="go alt" id="autoStartBtn">🤖 オートで見る</button>
     <p class="note">約4分で24時間がすぎます。キーボード：Space 目を見開く ／ P ポーズ</p>
     <p class="note" id="bestTxt"></p>
     <a class="back" href="../">← ゲーム一覧にもどる</a>
@@ -305,6 +308,7 @@ function caught(msg,dmg){
 function hourNow(){ return (10+t/HOUR)%24; }
 function update(dt){
   if(phase!=='play')return;
+  if(auto) autoPlay(dt);
   t+=dt;
   if(t>=TOTAL){ t=TOTAL; endGame(true); return; }
   for(const k in cds) cds[k]=Math.max(0,cds[k]-dt);
@@ -497,6 +501,7 @@ function endGame(done){
   ].map(([a,b])=>`<span>${a}</span><b>${b}</b>`).join('');
   done&&trust>=30?sGood():sBad();
   setTimeout(()=>$('endOv').hidden=false,done?300:1200);
+  if(auto) setTimeout(()=>{ if(auto&&phase==='end') start(); },5500);
 }
 
 // ---------- input & screens ----------
@@ -514,6 +519,26 @@ function showBest(){ let b=0; try{b=+localStorage.getItem('sleeperBest')||0;}cat
 $('startBtn').onclick=start; $('againBtn').onclick=start;
 $('quitBtn').onclick=toTitle; $('resumeBtn').onclick=togglePause; $('pauseBtn').onclick=togglePause;
 $('muteBtn').onclick=()=>setMute(!muted);
+$('autoBtn').onclick=()=>{ ac(); setAuto(!auto); };
+$('autoStartBtn').onclick=()=>{ ac(); setAuto(true); };
+addEventListener('keydown',e=>{ if(e.code==='KeyO') setAuto(!auto); });
+for(const b of document.querySelectorAll('.a,#backBtn,#eyeBtn')) b.addEventListener('pointerdown',e=>{ if(auto&&e.isTrusted) setAuto(false); },true);
+
+// ---------- auto ----------
+let auto=false, autoT=0;
+const EX_ORDER=['bath','cook','camera','glasses','toilet','loop'];
+function setAuto(v){ auto=v; $('autoBtn').setAttribute('aria-pressed',v); if(v&&phase==='title')start(); }
+function autoPlay(dt){
+  autoT+=dt; if(autoT<.25)return; autoT=0;
+  if(nodT>0)return;
+  if(!away&&lid>.25){ eye(); return; }
+  if(sc&&!away&&sc.t<6){ readSC(); return; }
+  if(away){ if(awayT>=away.ok-.6||sleep<3||sus>55) comeBack(); return; }
+  if(sleep>55&&lock<=0&&sus<60){ for(const k of EX_ORDER){ if(!cds[k]&&lastEx!==k){ doExcuse(k); if(away)return; } } }
+  if(sleep>45){ for(const k of ['coffee','energy','squat','talk']) if(!cds[k]){ doAwake(k); return; } }
+  if(sus>40&&!cds.talk){ doAwake('talk'); return; }
+  if(sleep>70&&sus<50&&!cds.slap){ doAwake('slap'); }
+}
 document.addEventListener('visibilitychange',()=>{ if(document.hidden&&!paused&&phase==='play')togglePause(); });
 function fitCanvas(){ const w=cv.clientWidth, d=Math.min(2,devicePixelRatio||1); cv.width=Math.round(w*d); cv.height=Math.round(w*9/16*d); }
 addEventListener('resize',fitCanvas);
@@ -524,7 +549,7 @@ function loop(now){ const dt=Math.min(.05,(now-last)/1000); last=now; if(!paused
 requestAnimationFrame(loop);
 
 // test hook
-window.__sleeper={get s(){return {phase,t,sleep,sus,trust,viewers,peak,lid,away:away&&away.k,awayT,lock,lastEx,stats:{...stats}};},
+window.__sleeper={setAuto, get s(){return {auto,phase,t,sleep,sus,trust,viewers,peak,lid,away:away&&away.k,awayT,lock,lastEx,stats:{...stats}};},
   step(dt){update(dt);}, awake:doAwake, excuse:doExcuse, back:comeBack, eye, readSC, set(o){ if('sleep' in o)sleep=o.sleep; if('trust' in o)trust=o.trust; if('t' in o)t=o.t; if('sus' in o)sus=o.sus; }};
 })();
 </script>
