@@ -23,8 +23,9 @@ body{background:var(--bg);color:var(--paper);
 #app{height:100%;box-sizing:border-box;max-width:520px;margin:0 auto;padding:8px 16px 12px;display:flex;flex-direction:column;gap:8px}
 #top{display:flex;align-items:center;gap:8px}
 #top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800}
-#top h1{flex:1;margin:0;text-align:center;font-size:18px;font-weight:800;letter-spacing:.2em}
+#top h1{flex:1;margin:0;text-align:center;font-size:18px;font-weight:800;letter-spacing:.2em;white-space:nowrap;overflow:hidden;min-width:0}
 .mini{font:inherit;font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--panel);color:var(--paper);cursor:pointer}
+.mini[aria-pressed=true]{background:#8E2A1D;border-color:#C9A45C}
 .mini:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 #stage{position:relative;flex:1;min-height:0;display:flex;align-items:flex-start;justify-content:center}
 #cv{display:block;border-radius:10px;touch-action:none;background:#000}
@@ -68,6 +69,7 @@ body{background:var(--bg);color:var(--paper);
   <div id="top">
     <a href="../">← 一覧</a>
     <h1 class="min">一本</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false">🤖 オート</button>
     <button class="mini" id="muteBtn">音 ON</button>
     <button class="mini" id="pauseBtn" aria-label="一時停止">Ⅱ</button>
   </div>
@@ -345,6 +347,7 @@ function afterDecision(){
     $('rNext').onclick=()=>{ hideOv(); newMatch(); }; $('rAlt').onclick=startRun;
   }
   $('resultOv').hidden=false;
+  if(auto) setTimeout(()=>{ if(auto&&!$('resultOv').hidden) $('rNext').click(); },2800);
 }
 
 // ---------- update ----------
@@ -366,6 +369,7 @@ function update(rdt){
   }
   if(clock>0){ clock=Math.max(0,clock-dt); if(clock===0) say('延長',VX,90,'#C9A45C',22); }
   updateOpp(dt);
+  if(auto&&!ended) autoFight(dt);
   // heartbeat: faster with danger
   const danger=clamp(d*1.1+(o.state==='attack'?.5:0)+(L().boss?.25:0),0,1.2);
   hbT-=rdt; if(hbT<=0){ sHeart(.12+danger*.1); hbT=lerp(1.1,.42,danger/1.2); }
@@ -601,7 +605,7 @@ addEventListener('resize',layout);
 const ACT={men:()=>strike('men'),kote:()=>strike('kote'),do:()=>strike('do'),fwd:()=>move(1),back:()=>move(-1)};
 for(const b of document.querySelectorAll('.b')){
   const k=b.dataset.k;
-  b.addEventListener('pointerdown',e=>{ e.preventDefault(); b.classList.add('on'); ACT[k](); });
+  b.addEventListener('pointerdown',e=>{ e.preventDefault(); if(auto)setAuto(false); b.classList.add('on'); ACT[k](); });
   const up=()=>b.classList.remove('on');
   b.addEventListener('pointerup',up); b.addEventListener('pointercancel',up); b.addEventListener('pointerleave',up);
   b.addEventListener('contextmenu',e=>e.preventDefault());
@@ -609,7 +613,8 @@ for(const b of document.querySelectorAll('.b')){
 const KEYS={KeyZ:'kote',KeyX:'men',KeyC:'do',ArrowUp:'fwd',KeyW:'fwd',ArrowDown:'back',KeyS:'back',KeyJ:'kote',KeyK:'men',KeyL:'do'};
 addEventListener('keydown',e=>{
   if(e.code==='KeyP'||e.code==='Escape'){ togglePause(); return; }
-  const k=KEYS[e.code]; if(!k)return; e.preventDefault(); if(e.repeat)return; ACT[k]();
+  if(e.code==='KeyO'){ setAuto(!auto); return; }
+  const k=KEYS[e.code]; if(!k)return; e.preventDefault(); if(e.repeat)return; if(auto)setAuto(false); ACT[k]();
 });
 
 // ---------- screens ----------
@@ -620,6 +625,19 @@ $('startBtn').onclick=startRun;
 $('resumeBtn').onclick=togglePause; $('pauseBtn').onclick=togglePause;
 $('quitBtn').onclick=toTitle;
 $('muteBtn').onclick=()=>setMute(!muted);
+$('autoBtn').onclick=()=>{ ac(); setAuto(!auto); };
+
+// ---------- auto ----------
+let auto=false, seen='', seenT=0, acted='', react=.3;
+function setAuto(v){ auto=v; $('autoBtn').setAttribute('aria-pressed',v); if(v&&phase==='title')startRun(); }
+function autoFight(dt){
+  const key=o.state+(o.kind||'')+(o.stage||'')+Math.floor(o.next||0);
+  if(key!==seen){ seen=key; seenT=0; react=.24+Math.random()*.12; } else seenT+=dt;
+  if(o.state==='kamae'&&d+o.lunge<.36&&pl.step<=0){ move(1); return; }
+  if(seenT<react||acted===seen)return;
+  if(o.state==='suki'){ acted=seen; strike(o.kind); }
+  else if(o.state==='attack'&&o.stage==='wind'){ acted=seen; strike(o.kind==='men'?'do':'kote'); }
+}
 document.addEventListener('visibilitychange',()=>{ if(document.hidden&&!paused)togglePause(); });
 setMute(muted);
 
@@ -634,7 +652,7 @@ newMatch(); phase='title';
 layout(); toTitle(); requestAnimationFrame(loop);
 
 // test hook
-window.__kendo={get s(){return {phase,stage,d,o:{state:o.state,kind:o.kind,t:o.t,stage:o.stage,dur:o.dur},ended:ended&&{...ended},retries};},
+window.__kendo={setAuto, get s(){return {auto,phase,stage,d,o:{state:o.state,kind:o.kind,t:o.t,stage:o.stage,dur:o.dur},ended:ended&&{...ended},retries};},
   step(dt){update(dt);}, act(k){ACT[k]();}, setStage(n){stage=n;newMatch();}, force(state,kind){ o.state=state; o.kind=kind; o.t=.1; o.stage='wind'; o.dur=L().wind; if(state==='suki')setPose(kind+'Open',.1); }};
 })();
 </script>
