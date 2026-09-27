@@ -25,6 +25,7 @@ body{background:var(--bg);color:var(--ink);
 #head h1{flex:1;margin:0;text-align:center;font-size:20px;font-weight:800;letter-spacing:.06em}
 .mini{font:inherit;font-size:12px;font-weight:800;border:0;border-radius:999px;padding:6px 10px;background:var(--card);color:var(--ink);
   box-shadow:0 2px 0 #d9c3a3;cursor:pointer}
+.mini[aria-pressed=true]{background:#6A55F0;color:#fff;box-shadow:0 2px 0 #4331B0}
 .mini:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
 #main{flex:1;min-height:0;display:flex;justify-content:center;align-items:flex-start;gap:12px}
 #well{position:relative;border-radius:14px;overflow:hidden;box-shadow:0 6px 0 #d9c3a3;background:var(--well);flex:none}
@@ -76,6 +77,7 @@ aside{width:96px;flex:none;display:flex;flex-direction:column;gap:10px}
   <div id="head">
     <a href="../">← 一覧</a>
     <h1>コギコギ</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false">🤖 オート</button>
     <button class="mini" id="muteBtn">音 ON</button>
     <button class="mini" id="pauseBtn" aria-label="一時停止">Ⅱ</button>
   </div>
@@ -102,7 +104,8 @@ aside{width:96px;flex:none;display:flex;flex-direction:column;gap:10px}
           </div>
           <button class="go" id="startBtn">スタート</button>
           <p id="bestTxt"></p>
-          <p class="keys">キーボード：← → いどう ／ ↓ はやく落とす ／ Z・X・↑ かいてん ／ P ポーズ</p>
+          <p class="keys">キーボード：← → いどう ／ ↓ はやく落とす ／ Z・X・↑ かいてん ／ P ポーズ ／ O オート</p>
+          <p class="keys">🤖 オートにすると、コンピューターが連鎖を組んでくれるよ</p>
           <a class="back" href="../">← ゲーム一覧にもどる</a>
         </div>
       </div>
@@ -273,7 +276,7 @@ function lockPiece(){
   const y=cur.y2/2;
   const cells=[[cur.x,y,cur.a],[cur.x+DX[cur.rot],y+DY[cur.rot],cur.b]];
   for(const [x,yy,c] of cells) if(yy>=0) grid[yy][x]=c;   // above the 13th row vanishes
-  cur=null; sLand(); chain=0; if(STAGES[stage].boss)bossTimer++; hud();
+  cur=null; sLand(); chain=0; if(STAGES[stage].boss)bossTimer++; if(auto)held.down=false; hud();
   startGravity();
 }
 function startGravity(){
@@ -381,6 +384,7 @@ function stageClear(){
   $('stBtn').textContent=STAGES[next].boss?'ボスとたたかう':'つぎのステージへ';
   tone(660,.12,'triangle',.08); tone(880,.12,'triangle',.08,0,.12); tone(1320,.25,'triangle',.08,0,.24);
   setTimeout(()=>{ if(phase==='stage') $('stageOv').hidden=false; },700);
+  setTimeout(()=>{ if(phase==='stage'&&auto){ startStage(stage+1); } },2400);
 }
 function saveBest(){
   let best=0, bestC=0;
@@ -430,6 +434,7 @@ function update(dt){
   if(phase==='over'){ overT+=dt; return; }
 
   if(phase==='fall'){
+    if(auto) autoStep(dt);
     if(dasDir){ dasT+=dt; while(dasT>=170){ dasT-=45; if(!move(dasDir))break; } }
     const iv=held.down?22:fallInterval();
     if(fits(cur.x,cur.y2+1,cur.rot)){
@@ -608,6 +613,7 @@ function render(now){
   if(boss&&!$('bossBox').hidden){ const bw=bossC.clientWidth, bh=bossC.clientHeight;
     if(bossC.width!==bw*dpr){ bossC.width=bw*dpr; bossC.height=bh*dpr; }
     bg.setTransform(dpr,0,0,dpr,0,0); drawBoss(bg,bw,bh,now); }
+  if(auto&&phase!=='title'){ g.font=`800 ${Math.round(cs*.36)}px "M PLUS Rounded 1c",sans-serif`; g.textAlign='right'; g.textBaseline='top'; g.fillStyle='rgba(255,255,255,.75)'; g.fillText(`🤖 AUTO${plan&&plan.goal?'  ねらい'+plan.goal+'れんさ':''}`,w-6,cs*.55); }
   if(phase==='over'){ g.fillStyle=`rgba(46,42,79,${Math.min(.5,overT/1500)})`; g.fillRect(0,0,w,h); }
 }
 function drawNext(){
@@ -634,9 +640,110 @@ function layout(){
 }
 window.addEventListener('resize',layout);
 
+
+// ---------- auto (AI) ----------
+let auto=false, plan=null, planFor=null, autoT=0, autoTries=0;
+function setAuto(v){ auto=v; $('autoBtn').setAttribute('aria-pressed',v); plan=null; planFor=null; if(!v)held.down=false; }
+const cloneB=b=>b.map(r=>r.slice());
+function simGravity(b){ for(let x=0;x<W;x++){ let w=H-1; for(let y=H-1;y>=0;y--){ const c=b[y][x]; if(c<0)continue; if(y!==w){ b[w][x]=c; b[y][x]=-1; } w--; } } }
+function simGroups(b){
+  const seen=Array.from({length:H},()=>Array(W).fill(false)), out=[];
+  for(let y=1;y<H;y++)for(let x=0;x<W;x++){
+    const c=b[y][x]; if(c<0||c===OJ||seen[y][x])continue;
+    const st=[[x,y]], cells=[]; seen[y][x]=true;
+    while(st.length){ const [cx,cy]=st.pop(); cells.push([cx,cy]);
+      for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ const nx=cx+dx, ny=cy+dy;
+        if(nx<0||nx>=W||ny<1||ny>=H||seen[ny][nx]||b[ny][nx]!==c)continue; seen[ny][nx]=true; st.push([nx,ny]); } }
+    out.push({c,cells});
+  }
+  return out;
+}
+function simResolve(b){
+  let ch=0, sc=0;
+  for(;;){
+    simGravity(b);
+    const gs=simGroups(b).filter(gr=>gr.cells.length>=4); if(!gs.length)break;
+    ch++; const n=gs.reduce((s,gr)=>s+gr.cells.length,0), cols=new Set(gs.map(gr=>gr.c)).size;
+    let bonus=CHAIN_B[Math.min(ch-1,CHAIN_B.length-1)]+gs.reduce((s,gr)=>s+connB(gr.cells.length),0)+COLOR_B[cols-1];
+    sc+=10*n*Math.min(999,Math.max(1,bonus));
+    for(const gr of gs)for(const [x,y] of gr.cells){ b[y][x]=-1;
+      for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ const nx=x+dx, ny=y+dy; if(nx>=0&&nx<W&&ny>=1&&ny<H&&b[ny][nx]===OJ)b[ny][nx]=-1; } }
+  }
+  return {ch,sc};
+}
+function simPlace(b,x,rot,a,c){
+  const cx=x+DX[rot]; if(cx<0||cx>=W)return false;
+  const put=(col,color)=>{ let y=H-1; while(y>=0&&b[y][col]!==-1)y--; if(y>=0)b[y][col]=color; };
+  if(rot===0){ put(x,a); put(x,c); } else if(rot===2){ put(x,c); put(x,a); } else { put(x,a); put(cx,c); }
+  return true;
+}
+function reachable(b,x,rot){
+  const cx=x+DX[rot]; const lo=Math.min(2,x,cx), hi=Math.max(2,x,cx);
+  for(let c=lo;c<=hi;c++) if(b[1][c]!==-1||b[2][c]!==-1&&c!==x&&c!==cx) return false;
+  return true;
+}
+function placements(a,c){ const out=[]; for(let rot=0;rot<4;rot++){ if(a===c&&rot>=2)continue; for(let x=0;x<W;x++){ const cx=x+DX[rot]; if(cx>=0&&cx<W)out.push([x,rot]); } } return out; }
+function colHeights(b){ const h=[]; for(let x=0;x<W;x++){ let y=0; while(y<H&&b[y][x]===-1)y++; h.push(H-y); } return h; }
+function potential(b,hs){
+  let best=0;
+  for(let x=0;x<W;x++){
+    if(hs[x]>=11)continue; const ty=H-1-hs[x];
+    const cand=new Set(); for(const [dx,dy] of [[-1,0],[1,0],[0,1]]){ const nx=x+dx, ny=ty+dy; if(nx>=0&&nx<W&&ny<H&&ny>=1){ const v=b[ny][nx]; if(v>=0&&v!==OJ)cand.add(v); } }
+    for(const col of cand){
+      for(const k of [1,2]){ const t=cloneB(b); for(let i=0;i<k;i++){ let y=H-1; while(y>=0&&t[y][x]!==-1)y--; if(y>=1)t[y][x]=col; }
+        const r=simResolve(t); if(r.ch){ const v=r.ch*10-k; if(v>best)best=v; break; } }
+    }
+  }
+  return best/10;
+}
+function evalBoard(b){
+  if(b[1][2]!==-1)return -1e9;
+  const hs=colHeights(b); let v=0;
+  for(const gr of simGroups(b)){ const n=gr.cells.length; if(n===2)v+=10; else if(n===3)v+=26; }
+  const pot=potential(b,hs); v+=pot*pot*40+pot*20;
+  for(let x=0;x<W;x++){ v-=hs[x]*hs[x]*.7; if(x<W-1)v-=Math.abs(hs[x]-hs[x+1])*5; }
+  if(hs[2]>=7)v-=(hs[2]-6)*400; if(hs[1]>=10||hs[3]>=10)v-=300;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++) if(b[y][x]===OJ)v-=6;
+  return v;
+}
+function chainGoal(){ return DIFF[diff].n===3?4:5; }
+function think(){
+  const b0=cloneB(grid), p=cur, n=queue[0], hs0=colHeights(b0);
+  const danger=Math.max(...hs0)>=(DIFF[diff].n===5?8:9)||hs0[2]>=7||(STAGES[stage].boss&&pending>=5&&bossTimer>=BOSS[diff].every-1);
+  const goal=chainGoal();
+  const chainVal=(r,mul)=> (r.ch>=goal||danger) ? (2500*r.ch+r.sc)*mul : (-500+r.ch*60)*mul;
+  let best=-Infinity, bestP=[2,0];
+  for(const [x1,r1] of placements(p.a,p.b)){
+    if(!reachable(b0,x1,r1))continue;
+    const b1=cloneB(b0); simPlace(b1,x1,r1,p.a,p.b); const res1=simResolve(b1);
+    if(b1[1][2]!==-1)continue;
+    const v1=res1.ch?chainVal(res1,1):0;
+    let best2=-Infinity;
+    for(const [x2,r2] of placements(n.a,n.b)){
+      if(!reachable(b1,x2,r2))continue;
+      const b2=cloneB(b1); simPlace(b2,x2,r2,n.a,n.b); const res2=simResolve(b2);
+      const v2=res2.ch?chainVal(res2,.9)+evalBoard(b2)*.3:evalBoard(b2);
+      if(v2>best2)best2=v2;
+    }
+    if(best2===-Infinity)best2=evalBoard(b1);
+    const total=v1+best2;
+    if(total>best){ best=total; bestP=[x1,r1]; }
+  }
+  return {x:bestP[0],rot:bestP[1],goal};
+}
+function autoStep(dt){
+  if(!cur)return;
+  if(planFor!==cur){ planFor=cur; plan=think(); autoT=-120; autoTries=0; held.down=false; }
+  autoT+=dt; if(autoT<90)return; autoT=0;
+  if(cur.rot!==plan.rot){ rotate(1); if(++autoTries>8){ plan.rot=cur.rot; } return; }
+  if(cur.x!==plan.x){ if(!move(Math.sign(plan.x-cur.x))){ if(++autoTries>12)plan.x=cur.x; } return; }
+  held.down=true;
+}
+
 // ---------- input ----------
 function press(k){
   ac();
+  if(auto&&phase!=='title'){ setAuto(false); texts.push({t:0,x:3*cs,y:3*cs,s:'手動にもどしたよ',big:false,sub:''}); }
   if(k==='left'||k==='right'){ held[k]=true; const d=k==='left'?-1:1; dasDir=d; dasT=0; move(d); }
   else if(k==='down'){ held.down=true; }
   else if(k==='rr'){ rotate(1); }
@@ -649,6 +756,7 @@ const KEYS={ArrowLeft:'left',ArrowRight:'right',ArrowDown:'down',ArrowUp:'rr',Ke
 addEventListener('keydown',e=>{
   if(e.code==='KeyP'||e.code==='Escape'){ togglePause(); e.preventDefault(); return; }
   if(e.code==='Enter'&&phase==='title'){ start(); return; }
+  if(e.code==='KeyO'){ setAuto(!auto); return; }
   const k=KEYS[e.code]; if(!k)return; e.preventDefault(); if(e.repeat)return; press(k);
 });
 addEventListener('keyup',e=>{ const k=KEYS[e.code]; if(k)release(k); });
@@ -659,7 +767,7 @@ for(const b of document.querySelectorAll('.pb')){
   b.addEventListener('pointerup',up); b.addEventListener('pointercancel',up); b.addEventListener('lostpointercapture',up);
   b.addEventListener('contextmenu',e=>e.preventDefault());
 }
-field.addEventListener('pointerdown',e=>{ if(phase==='fall'){ e.preventDefault(); ac(); rotate(1); } });
+field.addEventListener('pointerdown',e=>{ if(phase==='fall'&&!auto){ e.preventDefault(); ac(); rotate(1); } });
 
 // ---------- screens ----------
 let paused=false;
@@ -688,6 +796,7 @@ $('startBtn').onclick=start; $('stBtn').onclick=()=>{ ac(); startStage(stage+1);
 $('toTitleBtn').onclick=toTitle; $('quitBtn').onclick=toTitle;
 $('resumeBtn').onclick=togglePause; $('pauseBtn').onclick=togglePause;
 $('muteBtn').onclick=()=>setMute(!muted);
+$('autoBtn').onclick=()=>{ ac(); setAuto(!auto); };
 document.addEventListener('visibilitychange',()=>{ if(document.hidden&&!paused)togglePause(); });
 
 function demo(){
@@ -706,7 +815,7 @@ function loop(now){
 layout(); toTitle(); requestAnimationFrame(loop);
 
 // test hook
-window.__kogi={get state(){return {grid,cur,phase,score,chain,maxChain,stage,bossHP,pending,bossTimer};}, set(gr){grid=gr;}, afterDrop:()=>{chain=0;startGravity();}, stage:n=>startStage(n), setScore:v=>{score=v;hud();}, setTimer:v=>{bossTimer=v;}};
+window.__kogi={setAuto, think:()=>think(), step:dt=>update(dt), setDiff:d=>{diff=d;}, get state(){return {grid,cur,phase,score,chain,maxChain,stage,bossHP,pending,bossTimer,auto};}, set(gr){grid=gr;}, afterDrop:()=>{chain=0;startGravity();}, stage:n=>startStage(n), setScore:v=>{score=v;hud();}, setTimer:v=>{bossTimer=v;}};
 })();
 </script>
 </body>
