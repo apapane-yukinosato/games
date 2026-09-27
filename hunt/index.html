@@ -23,8 +23,9 @@ body{background:var(--bg);color:var(--paper);
 #app{height:100%;box-sizing:border-box;max-width:900px;margin:0 auto;padding:8px 16px 12px;display:flex;flex-direction:column;gap:8px}
 #top{display:flex;align-items:center;gap:8px}
 #top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800}
-#top h1{flex:1;margin:0;text-align:center;font-size:18px;letter-spacing:.08em}
+#top h1{flex:1;margin:0;text-align:center;font-size:18px;letter-spacing:.08em;white-space:nowrap;overflow:hidden;min-width:0}
 .mini{font:inherit;font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--panel);color:var(--paper);cursor:pointer}
+.mini[aria-pressed=true]{background:#8E2A1D;border-color:#E0A83A}
 .mini:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 #stage{position:relative;flex:1;min-height:0;display:flex;align-items:flex-start;justify-content:center}
 #cv{display:block;border-radius:10px;touch-action:none;background:#000}
@@ -68,6 +69,7 @@ body{background:var(--bg);color:var(--paper);
   <div id="top">
     <a href="../">← 一覧</a>
     <h1 class="disp">竜狩り</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false">🤖 オート</button>
     <button class="mini" id="muteBtn">音 ON</button>
     <button class="mini" id="pauseBtn" aria-label="一時停止">Ⅱ</button>
   </div>
@@ -440,6 +442,7 @@ function update(dt){
   for(const m of msgs)m.t+=dt; msgs=msgs.filter(m=>m.t<m.d);
   if(phase!=='play'){ atkEdge=dodgeEdge=false; return; }
   questT+=dt;
+  if(auto) autoHunt(dt);
   updatePlayer(dt);
   updateMonster(dt);
   // projectiles
@@ -487,6 +490,7 @@ function endQuest(win){
     $('endText').textContent=`3回力尽きてしまった…　グレンドラの体力はのこり ${Math.round(M.hp/MON_HP*100)}%`;
   }
   setTimeout(()=>$('endOv').hidden=false,win?600:200);
+  if(auto) setTimeout(()=>{ if(auto&&phase==='end') newQuest(); },5000);
 }
 
 // ---------- drawing ----------
@@ -696,7 +700,7 @@ function press(k,down){
 }
 for(const b of document.querySelectorAll('.b')){
   const k=b.dataset.k;
-  b.addEventListener('pointerdown',e=>{ e.preventDefault(); b.setPointerCapture(e.pointerId); b.classList.add('on'); press(k,true); });
+  b.addEventListener('pointerdown',e=>{ e.preventDefault(); if(auto)setAuto(false); b.setPointerCapture(e.pointerId); b.classList.add('on'); press(k,true); });
   const up=()=>{ if(b.classList.contains('on')){ b.classList.remove('on'); press(k,false); } };
   b.addEventListener('pointerup',up); b.addEventListener('pointercancel',up); b.addEventListener('lostpointercapture',up);
   b.addEventListener('contextmenu',e=>e.preventDefault());
@@ -704,7 +708,8 @@ for(const b of document.querySelectorAll('.b')){
 const KEYS={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',KeyZ:'atk',KeyJ:'atk',KeyX:'dodge',KeyK:'dodge',Space:'dodge'};
 addEventListener('keydown',e=>{
   if(e.code==='KeyP'||e.code==='Escape'){ togglePause(); return; }
-  const k=KEYS[e.code]; if(!k)return; e.preventDefault(); if(e.repeat)return; press(k,true);
+  if(e.code==='KeyO'){ setAuto(!auto); return; }
+  const k=KEYS[e.code]; if(!k)return; e.preventDefault(); if(e.repeat)return; if(auto)setAuto(false); press(k,true);
 });
 addEventListener('keyup',e=>{ const k=KEYS[e.code]; if(k)press(k,false); });
 
@@ -723,6 +728,58 @@ $('againBtn').onclick=()=>newQuest();
 $('toTitleBtn').onclick=toTitle; $('quitBtn').onclick=toTitle;
 $('resumeBtn').onclick=togglePause; $('pauseBtn').onclick=togglePause;
 $('muteBtn').onclick=()=>setMute(!muted);
+$('autoBtn').onclick=()=>{ ac(); setAuto(!auto); };
+
+// ---------- auto (hunter AI) ----------
+let auto=false, pokeT=0, gsTarget=1;
+function setAuto(v){ auto=v; $('autoBtn').setAttribute('aria-pressed',v); keys.left=keys.right=keys.atk=false; if(v&&phase==='title')newQuest(); }
+function autoHunt(dt){
+  const hold={left:false,right:false,atk:false};
+  const done=()=>{ if(keys.atk&&!hold.atk)atkRelease=true; if(!keys.atk&&hold.atk)atkEdge=true; keys.left=hold.left; keys.right=hold.right; keys.atk=hold.atk; };
+  if(P.state==='dead'||M.dead){ return done(); }
+  const dx=M.x-P.x, dist=Math.abs(dx), dir=Math.sign(dx)||1, a=M.atk, st=M.state;
+  const go=d=>{ if(d>0)hold.right=true; else hold.left=true; };
+  const canRoll=P.st>=25&&(P.state==='idle'||P.state==='run'||P.state==='charge'||(P.state==='attack'&&weapon!=='gs'));
+  const roll=towardDir=>{ if(weapon==='lance'){ go(dir); } else go(towardDir); dodgeEdge=true; };
+  // incoming fireball
+  const fb=shots.find(s=>s.enemy&&Math.sign(P.x-s.x)===Math.sign(s.vx)&&Math.abs(s.x-P.x)<75);
+  if(fb&&canRoll){ roll(Math.sign(fb.x-P.x)||dir); return done(); }
+  // telegraphed attacks
+  if((st==='wind'||st==='act'||st==='roar')&&a!==null||st==='roar'){
+    const type=a?a.type:'roar', range={bite:230,tail:260,charge:680,fire:0,slam:340,roar:210}[type];
+    const cornered=(P.x<150&&dir>0)||(P.x>WORLD-150&&dir<0);
+    if(dist<range){
+      const late=st==='act'||st==='roar'||(st==='wind'&&M.t>=a.wind*(type==='charge'?.8:.55));
+      if(type==='charge'){ if(late&&dist<230&&canRoll){ roll(dir); } else if(dist>230) go(-dir); }
+      else if(type==='slam'){ if(M.jump&&canRoll&&Math.abs(M.jump.tx-P.x)<170&&M.jump.t>.45) roll(Math.sign(P.x-M.jump.tx)||-dir); else go(Math.sign(P.x-(M.jump?M.jump.tx:M.x))||-dir); }
+      else if(late&&canRoll){ roll(cornered?dir:-dir); }
+      else if(!cornered) go(-dir);
+      if(weapon==='bow'&&P.f===dir&&P.reload<=0&&(dist>200||(type!=='bite'&&type!=='tail'&&dist>140)))hold.atk=true;
+      return done();
+    }
+  }
+  // pick up items when safe
+  const it=items.find(i=>i.y>=GY-11&&Math.abs(i.x-P.x)<320&&(i.type!=='potion'||P.hp<P_HP*.85));
+  if(it&&st!=='wind'&&st!=='act'&&Math.abs(it.x-M.x)>90){ go(Math.sign(it.x-P.x)); return done(); }
+  // fight
+  const chance=st==='flinch'||st==='down'||st==='rec'||st==='idle';
+  if(weapon==='gs'){
+    if(P.state==='charge'){ hold.atk=P.lv<gsTarget&&(st!=='wind'); if(Math.sign(dx)!==P.f)hold.atk=false; return done(); }
+    if(dist>85) go(dir); else if(dist<45) go(-dir);
+    else if(chance&&P.f===dir&&(P.state==='idle'||P.state==='run')){ gsTarget=st==='down'?3:st==='flinch'||(st==='idle'&&M.next>1.2)?2:1; hold.atk=true; }
+    else if(P.f!==dir) go(dir);
+  }else if(weapon==='lance'){
+    if(dist>95) go(dir); else if(dist<40) go(-dir);
+    else if(P.f!==dir) go(dir);
+    else { pokeT-=dt; if(pokeT<=0){ pokeT=.3; atkEdge=true; } hold.atk=true; }
+  }else{
+    const want=210;
+    if(dist>want+60) go(dir); else if(dist<want-70) go(-dir);
+    if(P.f!==dir&&!keys.atk) go(dir);
+    hold.atk=P.reload<=0&&P.f===dir&&dist<want+120;
+  }
+  done();
+}
 document.addEventListener('visibilitychange',()=>{ if(document.hidden&&!paused&&phase==='play')togglePause(); });
 
 let last=performance.now();
@@ -736,7 +793,7 @@ newQuest(); phase='title'; camX=0;
 layout(); toTitle(); requestAnimationFrame(loop);
 
 // test hook
-window.__hunt={get s(){return {phase,weapon,P:{x:P.x,hp:P.hp,st:P.st,state:P.state,atkUp:P.atkUp,defUp:P.defUp,ammo:P.ammo},M:{x:M.x,hp:M.hp,state:M.state,atk:M.atk&&M.atk.type,enraged:M.enraged,flinches:M.flinches},items:items.map(i=>i.type),faints,questT};},
+window.__hunt={setAuto, get s(){return {auto,phase,weapon,P:{x:P.x,hp:P.hp,st:P.st,state:P.state,atkUp:P.atkUp,defUp:P.defUp,ammo:P.ammo},M:{x:M.x,hp:M.hp,state:M.state,atk:M.atk&&M.atk.type,enraged:M.enraged,flinches:M.flinches},items:items.map(i=>i.type),faints,questT};},
   step(dt){update(dt);}, key(k,d){press(k,d);}, setWeapon(w){weapon=w;}, set(o){ if(o.mhp!=null)M.hp=o.mhp; if(o.px!=null)P.x=o.px; if(o.mx!=null)M.x=o.mx; if(o.php!=null)P.hp=o.php; if(o.next!=null)M.next=o.next; }, drop(){dropItem();}};
 })();
 </script>
