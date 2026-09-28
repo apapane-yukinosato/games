@@ -5,6 +5,7 @@ GitHub Pages で公開している、ブラウザで遊べる小さなゲーム�
 ## 構成
 
 - `index.html` … ゲーム一覧のメニュー。ゲームを追加したら `<li>` のカードを1つ足す
+- `README.md` … ゲーム一覧の表（URL つき）。ゲームを追加したら1行足す。公開 URL は https://apapane-yukinosato.github.io/games/
 - `<game>/index.html` … 1ゲーム＝1フォルダ＝1ファイル（HTML/CSS/JS をすべて1ファイルに入れる）
 - 外部ライブラリは基本なし（`candy/` だけ three.js を CDN から読む）。音は WebAudio で合成する
 
