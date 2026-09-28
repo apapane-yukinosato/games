@@ -20,7 +20,6 @@
 | 🎈 | コギ・ランチャー | https://apapane-yukinosato.github.io/games/launch/ | パチンコでコーギーを飛ばして風船をわる。3回の発射でハイスコアをめざす。 |
 | 🚀 | プラネット・ランダー | https://apapane-yukinosato.github.io/games/lander/ | 月・火星・地球・土星・木星・太陽・ブラックホールにスペースシャトルで着陸。星ごとに重力がちがう。燃料に気をつけて。 |
 | 🎵 | コギ・ステップ！ | https://apapane-yukinosato.github.io/games/step/ | ダンスダンスレボリューション風の音ゲー。流れてくる矢印に合わせて ←↓↑→。3曲×3段階、長押しのフリーズ矢印も。 |
-| 🌉 | 井河家の橋わたり | https://apapane-yukinosato.github.io/games/igawa/ | 狼・ヤギ・キャベツみたいな川わたりパズル。けんかする兄妹やポチとタマを、ルールを守って橋のむこうへ渡す。全6ステージ、夜の橋は時間制限つき。 |
 
 ## 🤖 オートモード
 
@@ -51,7 +50,6 @@ games/
 ├── launch/         … コギ・ランチャー
 ├── lander/         … プラネット・ランダー
 ├── step/           … コギ・ステップ！
-├── igawa/          … 井河家の橋わたり
 └── CLAUDE.md       … ゲームを作るときのルール
 ```
 
