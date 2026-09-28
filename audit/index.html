@@ -19,6 +19,7 @@ button{font:inherit;color:inherit}
 #top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
 #top h1{flex:1;margin:0;text-align:center;font-size:18px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--panel);cursor:pointer;white-space:nowrap}
+.mini:disabled{opacity:.5;cursor:not-allowed}
 .mini[aria-pressed=true]{background:var(--red);border-color:var(--red);color:#fff}
 button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 #game{position:relative}
@@ -74,7 +75,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   <div id="top">
     <a href="../">← 一覧</a>
     <h1>監査部、出動。</h1>
-    <button class="mini" id="autoBtn" aria-pressed="false" title="Oキー">🤖 オート</button>
+    <button class="mini" id="autoBtn" aria-pressed="false" title="オートモードは準備中（鍵がかかっています）" disabled>🔒 オート</button>
     <button class="mini" id="muteBtn">音 ON</button>
   </div>
   <div id="game">
@@ -118,7 +119,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
         </details>
         <div class="vbtn">
           <button class="big red" id="startBtn">▶ 出動する</button>
-          <button class="big gray" id="autoStartBtn">🤖 オートで見る</button>
+          <button class="big gray" id="autoStartBtn" disabled>🔒 オートモードは準備中</button>
         </div>
         <p class="sub2" id="bestLine" style="margin-top:8px"></p>
         <a class="back" href="../">← ゲーム一覧にもどる</a>
@@ -366,7 +367,8 @@ function endGame(why){
 function clock(t){ const d=Math.min(DAYS-1,t/DAY|0), m=Math.floor((t-d*DAY)/DAY*540); return `${d+1}日目 ${9+(m/60|0)}:${String(m%60).padStart(2,'0')}`; }
 
 // ---------- auto ----------
-function setAuto(v){ auto=v; $('autoBtn').setAttribute('aria-pressed',v); autoT=0; if(v&&phase!=='play') start(); }
+const AUTO_LOCKED=true;   // auto mode is locked for now (the AI stays for tests)
+function setAuto(v,force){ if(v&&AUTO_LOCKED&&!force) return; auto=v; $('autoBtn').setAttribute('aria-pressed',v); autoT=0; if(v&&phase!=='play') start(); }
 function user(){ if(auto) setAuto(false); }
 function pathLen(tx,ty){ const p=findPath(G.p.x,G.p.y,tx,ty,'p'); return p?p.length:999; }
 function autoTick(dt){
@@ -584,7 +586,7 @@ requestAnimationFrame(loop);
 // test hook
 window.__audit={
   get s(){ return G&&{phase,t:G.t,urami:G.urami,maxU:G.maxU,points:G.points,lv:G.lv,ev:{...G.ev},ledger:G.ledger,end:G.end,threats:G.threats,p:{x:G.p.x,y:G.p.y,carry:G.p.carry.length,busy:!!G.p.busy},golem:G.golem.state,coffee:G.golem.coffee,walls:{...G.walls},returnees:G.returnees.length,auto,stock:Object.fromEntries(DEPTS.map(d=>[d.id,G.dept[d.id].stock])),near:(nearDept()||{}).id,boss:{...G.boss}}; },
-  setAuto, start, seed(n){ rand=rng(n); }, manual(v=true){ manualClock=v; }, step(dt){ update(dt); if(G&&phase==='play') renderUI(); },
+  setAuto:v=>setAuto(v,true), start, seed(n){ rand=rng(n); }, manual(v=true){ manualClock=v; }, step(dt){ update(dt); if(G&&phase==='play') renderUI(); },
   ask, threaten, golem:golemCmd, nav:navTo, evidence,
 };
 })();
