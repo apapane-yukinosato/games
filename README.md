@@ -20,6 +20,7 @@
 | 🎈 | コギ・ランチャー | https://apapane-yukinosato.github.io/games/launch/ | パチンコでコーギーを飛ばして風船をわる。3回の発射でハイスコアをめざす。 |
 | 🚀 | プラネット・ランダー | https://apapane-yukinosato.github.io/games/lander/ | 月・火星・地球・土星・木星・太陽・ブラックホールにスペースシャトルで着陸。星ごとに重力がちがう。燃料に気をつけて。 |
 | 🎵 | コギ・ステップ！ | https://apapane-yukinosato.github.io/games/step/ | ダンスダンスレボリューション風の音ゲー。流れてくる矢印に合わせて ←↓↑→。3曲×3段階、長押しのフリーズ矢印も。 |
+| 📋 | 監査部、出動。 | https://apapane-yukinosato.github.io/games/audit/ | 監査部が各部署をまわって監査資料を集め、監査室を大きくする。お願いか恫喝か、ゴーレムは使い方しだい。最後は役員室の裏帳簿。 |
 
 ## 🤖 オートモード
 
@@ -50,6 +51,7 @@ games/
 ├── launch/         … コギ・ランチャー
 ├── lander/         … プラネット・ランダー
 ├── step/           … コギ・ステップ！
+├── audit/          … 監査部、出動。
 └── CLAUDE.md       … ゲームを作るときのルール
 ```
 
