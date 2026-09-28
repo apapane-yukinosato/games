@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="銀河マップでワープし、コクピット視点で敵部隊と戦う。基地と惑星を守り、暗黒惑星を破壊せよ。">
+<title>スターガード</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&display=swap">
+<style>
+:root{ --bg:#05060F; --panel:#121632; --line:#2A3170; --ink:#E8ECFF; --mute:#8E97C8; --red:#FF4B5C; --gold:#FFD54A; --cyan:#4FE3FF; color-scheme:dark; }
+[hidden]{display:none!important}
+html,body{min-height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;overscroll-behavior:none}
+button{font:inherit;color:inherit}
+#app{max-width:640px;margin:0 auto;padding:8px 10px 14px;box-sizing:border-box}
+#top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:18px;font-weight:800;letter-spacing:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--panel);cursor:pointer;white-space:nowrap}
+.mini[aria-pressed=true]{background:var(--red);border-color:var(--red);color:#fff}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#game{position:relative}
+#cv{display:block;width:100%;aspect-ratio:4/3.3;border-radius:10px;background:#000;touch-action:none}
+#bar{display:flex;gap:6px;margin:6px 0}
+.cmd{flex:1;min-height:40px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-weight:800;font-size:13px;cursor:pointer}
+.cmd:disabled{opacity:.35;cursor:not-allowed}
+.cmd.hot{background:#2B3AA0;border-color:var(--cyan)}
+#pad{display:flex;justify-content:space-between;align-items:center;gap:10px;touch-action:none}
+#dpad{position:relative;width:150px;height:150px;flex:none;touch-action:none;border-radius:50%;background:radial-gradient(circle,#1B2150 0 45%,#101430 46%);border:2px solid var(--line)}
+#dpad span{position:absolute;font-size:18px;color:var(--mute);pointer-events:none}
+#dpad .u{left:66px;top:6px}#dpad .d{left:66px;bottom:6px}#dpad .l{left:8px;top:62px}#dpad .r{right:8px;top:62px}
+#knob{position:absolute;left:55px;top:55px;width:40px;height:40px;border-radius:50%;background:#3A4AB0;pointer-events:none;transition:transform .05s}
+#fireBtn{width:110px;height:110px;border-radius:50%;border:0;background:radial-gradient(circle at 35% 30%,#FF8A95,#C81E36);box-shadow:0 6px 0 #6E0E1C;font-weight:800;font-size:18px;touch-action:none;flex:none;color:#fff}
+#fireBtn.on{transform:translateY(4px);box-shadow:0 2px 0 #6E0E1C}
+.help{flex:1;text-align:center;font-size:11px;color:var(--mute);line-height:1.5}
+.ov{position:absolute;top:0;left:0;right:0;min-height:100%;display:flex;align-items:flex-start;justify-content:center;background:rgba(2,3,10,.72);z-index:5;border-radius:10px}
+.box{background:#0E1230;border:1px solid var(--line);border-radius:16px;padding:14px;width:100%;box-sizing:border-box;margin:0 auto}
+.box h2{margin:0;text-align:center;font-size:30px;font-weight:800;letter-spacing:4px;color:var(--cyan);text-shadow:0 0 12px rgba(79,227,255,.6)}
+.sub2{text-align:center;font-size:12px;color:var(--mute);margin:6px 0 10px;line-height:1.6}
+.modes{display:grid;gap:6px}
+.md{display:grid;grid-template-columns:1fr auto;gap:2px 8px;text-align:left;border:2px solid var(--line);border-radius:12px;background:#151A44;padding:8px 10px;cursor:pointer}
+.md b{font-size:15px}.md span{font-size:11px;color:var(--mute);grid-column:1}.md i{grid-row:1/3;grid-column:2;align-self:center;font-style:normal;font-size:12px;color:var(--gold)}
+.md[aria-pressed=true]{border-color:var(--cyan);background:#1E2A70}
+.big{width:100%;font-weight:800;font-size:17px;min-height:50px;border:0;border-radius:14px;cursor:pointer;background:var(--red);color:#fff;box-shadow:0 4px 0 #7A1020;margin-top:8px}
+.big.alt{background:#2A3170;box-shadow:0 4px 0 #161B45}
+.big:active{transform:translateY(3px);box-shadow:none}
+details{font-size:12px;line-height:1.6;background:#151A44;border-radius:10px;padding:6px 10px;margin:8px 0}
+summary{font-weight:800;cursor:pointer}
+details ul{margin:4px 0;padding-left:18px}
+.rows{display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:13px;margin:10px 0}
+.rows b{text-align:right;font-variant-numeric:tabular-nums}
+.rank{text-align:center;font-size:40px;font-weight:800;color:var(--gold);letter-spacing:4px}
+.back{display:block;text-align:center;margin-top:10px;font-size:13px;font-weight:800;color:var(--mute);text-decoration:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>STAR GUARD</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false" title="Oキー">🤖 オート</button>
+    <button class="mini" id="muteBtn">音 ON</button>
+  </div>
+  <div id="game">
+    <canvas id="cv" aria-label="コクピットと宇宙のようす"></canvas>
+    <div id="bar">
+      <button class="cmd" id="mapBtn">🗺 マップ</button>
+      <button class="cmd" id="slowBtn">▼ 減速</button>
+      <button class="cmd" id="fastBtn">▲ 加速</button>
+      <button class="cmd" id="warpBtn">⚡ ワープ</button>
+    </div>
+    <div id="pad">
+      <div id="dpad" aria-label="操縦かん"><span class="u">▲</span><span class="d">▼</span><span class="l">◀</span><span class="r">▶</span><div id="knob"></div></div>
+      <div class="help" id="help">PC：矢印キーで旋回、スペースで発射<br>W/S で加速・減速、M でマップ</div>
+      <button id="fireBtn" aria-label="発射">FIRE</button>
+    </div>
+
+    <div class="ov" id="titleOv">
+      <div class="box">
+        <h2>STAR GUARD</h2>
+        <p class="sub2">銀河に侵攻してきたゾルグ軍を迎え撃て。<br>マップでワープ先を選び、コクピットから敵部隊を撃ち落とす。</p>
+        <div class="modes" id="modes"></div>
+        <button class="big" id="startBtn">▶ 発進</button>
+        <button class="big alt" id="autoStartBtn">🤖 オートで見る</button>
+        <details>
+          <summary>あそびかた</summary>
+          <ul>
+            <li><b>マップ</b>：8×8の銀河。行き先のマスをタップして「ワープ」。遠いほどエネルギーと時間を使う</li>
+            <li>🟥 敵部隊は時間がたつと動き、🟩基地や🔵惑星のとなりに来ると攻撃する。放っておくと破壊される</li>
+            <li>敵のいるマスへワープすると<b>戦闘</b>。操縦かんで旋回し、FIRE で撃つ。敵の弾も撃ち落とせる</li>
+            <li>エネルギーは発射・被弾・ワープで減る。0 になるとゲームオーバー。基地にワープすると補給と修理</li>
+            <li>シールドが切れたまま撃たれると、レーダー・エンジン・コンピュータ・照準が故障する</li>
+            <li>🪨 小惑星帯はワープの通り道にあると引っかかる</li>
+            <li>アドベンチャー：惑星をまわって<b>キーを7つ</b>集めると暗黒惑星の場所がわかる。破壊された惑星の残骸からもキーは拾える</li>
+          </ul>
+        </details>
+        <a class="back" href="../">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+
+    <div class="ov" id="resultOv" hidden>
+      <div class="box">
+        <h2 id="rTitle">MISSION CLEAR</h2>
+        <p class="sub2" id="rMsg"></p>
+        <div class="rank" id="rRank"></div>
+        <div class="rows" id="rRows"></div>
+        <button class="big" id="againBtn">もう一度</button>
+        <button class="big alt" id="toTitleBtn">モードをえらぶ</button>
+        <a class="back" href="../">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const GW=8;
+const MODES=[
+  {name:'トレーニング',desc:'基地2・敵部隊4。まずはここで操縦に慣れよう',bases:2,planets:0,rocks:0,fleets:4,ships:[2,3],types:['f']},
+  {name:'コマンド',desc:'基地4・惑星6・小惑星帯2・敵部隊8。基地と惑星を守れ',bases:4,planets:6,rocks:2,fleets:8,ships:[2,4],types:['f','f','b']},
+  {name:'アドベンチャー',desc:'惑星8・キー7つ。暗黒惑星を破壊せよ',bases:4,planets:8,rocks:4,fleets:10,ships:[3,4],types:['f','b','b','c'],keys:true},
+];
+const ETYPE={f:{name:'ファイター',hp:1,speed:170,cd:2.3,col:'#4FE3FF',size:26,pts:100},b:{name:'ボンバー',hp:2,speed:115,cd:1.5,col:'#FF9A3C',size:32,pts:200},c:{name:'指揮艦',hp:4,speed:135,cd:1.0,col:'#E35BFF',size:44,pts:500},d:{name:'防衛機',hp:1,speed:190,cd:2.0,col:'#9DFF6A',size:24,pts:100}};
+const PLANET_NAMES=['地球','マーズ','ジュピタ','サターン','ウラヌ','ネプト','プルト','ヴィーナ'];
+const KEY_COL=['#FF4B5C','#FF9A3C','#FFE14D','#5BE37A','#4FB7FF','#6A6BFF','#B35BFF'];
+const SUBS={radar:'レーダー',engine:'エンジン',computer:'コンピュータ',scope:'照準'};
+const DAY_PER_TICK=2;
+
+let rand=Math.random;
+function rng(seed){ return ()=>{ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+const cheb=(a,b)=>Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y));
+const same=(a,b)=>a.x===b.x&&a.y===b.y;
+
+// ---------- game state ----------
+let S=null, phase='title', modeSel=1, auto=false, autoT=0, manualClock=false, paused=false;
+let best={}; try{ best=JSON.parse(localStorage.getItem('sgBest')||'{}')||{}; }catch(e){}
+function newGame(mode){
+  const M=MODES[mode], used=new Set(), key=(x,y)=>x+','+y;
+  const free=(minDist,others)=>{ for(let md=minDist;md>=0;md--) for(let k=0;k<300;k++){ const x=rand()*GW|0, y=rand()*GW|0; if(used.has(key(x,y))) continue; if(others&&others.some(o=>cheb(o,{x,y})<md)) continue; used.add(key(x,y)); return {x,y}; }
+    for(let y=0;y<GW;y++) for(let x=0;x<GW;x++) if(!used.has(key(x,y))){ used.add(key(x,y)); return {x,y}; } };
+  const bases=[]; for(let i=0;i<M.bases;i++) bases.push({...free(3,bases),hp:5,max:5,name:'ABCD'[i]});
+  const planets=[]; for(let i=0;i<M.planets;i++) planets.push({...free(2,[...bases,...planets]),hp:M.keys&&i===0?8:4,max:M.keys&&i===0?8:4,name:PLANET_NAMES[i],earth:M.keys&&i===0,key:M.keys&&i>0?i-1:-1,got:false});
+  const rocks=[]; for(let i=0;i<M.rocks;i++) rocks.push(free(2,[...bases,...planets,...rocks]));
+  const fleets=[]; const home=[...bases,...planets];
+  for(let i=0;i<M.fleets;i++){ let p=null; if(M.keys){ for(let k=0;k<60&&!p;k++){ const c=free(3,home); if(cheb(c,planets[0])>=4) p=c; else used.delete(c.x+','+c.y); } } if(!p) p=free(3,home); fleets.push(makeFleet(p,M)); }
+  const dark=M.keys?{...free(3,bases),hp:40,known:false}:null;
+  S={mode,M,day:0,nextTick:DAY_PER_TICK,energy:9999,shield:100,shieldT:0,dmg:{radar:0,engine:0,computer:0,scope:0},keys:0,kills:0,score:0,
+     pos:{x:bases[0].x,y:bases[0].y},cursor:{x:bases[0].x,y:bases[0].y},bases,planets,rocks,fleets,dark,spawnT:6,
+     scene:'space',kind:'empty',mapOpen:true,speed:1,yawV:0,pitchV:0,fireCd:0,objs:null,msgs:[],sceneT:0,warp:null,end:null,lastFleet:null};
+  init3D('dock'); S.objs.base.done=1; S.objs.base.pos.z=260; S.mapOpen=true; say('基地で発進準備完了。マップで敵部隊を選んでワープせよ');
+}
+function makeFleet(p,M){ const n=M.ships[0]+(rand()*(M.ships[1]-M.ships[0]+1)|0); const ships=[]; for(let i=0;i<n;i++) ships.push(M.types[rand()*M.types.length|0]); return {x:p.x,y:p.y,ships,id:rand()}; }
+function say(t){ S.msgs.push({t,life:4}); if(S.msgs.length>3) S.msgs.shift(); }
+const fleetAt=p=>S.fleets.find(f=>same(f,p));
+const baseAt=p=>S.bases.find(b=>b.hp>0&&same(b,p));
+const planetAt=p=>S.planets.find(q=>same(q,p));
+const rockAt=p=>S.rocks.find(r=>same(r,p));
+const darkAt=p=>S.dark&&S.dark.known&&S.dark.hp>0&&same(S.dark,p);
+
+// ---------- time & enemy fleets ----------
+function advance(days){
+  S.day+=days;
+  while(S.day>=S.nextTick&&!S.end){ S.nextTick+=DAY_PER_TICK; enemyTick(); }
+}
+function enemyTick(){
+  const targets=[...S.bases.filter(b=>b.hp>0),...S.planets.filter(p=>p.hp>0)];
+  for(const f of S.fleets){
+    if(same(f,S.pos)&&S.kind==='fight') continue; // engaged with the player
+    let t=null, td=99; for(const o of targets){ const d=cheb(f,o); if(d<td){ td=d; t=o; } }
+    if(!t) continue;
+    if(td<=1){ t.hp=Math.max(0,t.hp-1); if(t.hp>0) say(`${t.name?(t.earth||t.key>=0||S.planets.includes(t)?'惑星'+t.name:'基地'+t.name):''}が攻撃を受けている！（のこり${t.hp}）`);
+      else { say(`${S.planets.includes(t)?'惑星'+t.name:'基地'+t.name}が破壊された…`); sfx('bad'); } continue; }
+    let bx=f.x, by=f.y, bd=td;
+    for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ const n={x:f.x+dx,y:f.y+dy}; if(n.x<0||n.y<0||n.x>=GW||n.y>=GW) continue;
+      if(rockAt(n)||S.fleets.some(o=>o!==f&&same(o,n))||S.bases.some(b=>same(b,n))||S.planets.some(p=>same(p,n))) continue;
+      const d=cheb(n,t)+(rand()*.2); if(d<bd){ bd=d; bx=n.x; by=n.y; } }
+    f.x=bx; f.y=by;
+  }
+  // adventure: the dark planet keeps sending fleets
+  if(S.dark&&S.dark.hp>0){ S.spawnT-=DAY_PER_TICK; if(S.spawnT<=0&&S.fleets.length<5){ S.spawnT=7; const p={x:S.dark.x,y:S.dark.y}; if(!S.fleets.some(f=>same(f,p))&&!same(p,S.pos)){ S.fleets.push(makeFleet(p,S.M)); say('暗黒惑星から新たな敵部隊が出撃した'); } } }
+  checkEnd();
+  // a fleet moved onto the player
+  if(!S.end&&S.kind!=='fight'&&!S.warp){ const f=fleetAt(S.pos); if(f){ say('敵部隊が接近！迎撃せよ'); S.mapOpen=false; init3D('fight'); } }
+}
+function checkEnd(){
+  if(S.end) return;
+  if(S.bases.every(b=>b.hp<=0)) return finish(false,'すべての基地が破壊された');
+  if(S.energy<=0) return finish(false,'エネルギーが尽きた');
+  if(!S.M.keys&&S.fleets.length===0) return finish(true,'敵部隊を全滅させた！');
+  if(S.M.keys&&S.dark.hp<=0) return finish(true,'暗黒惑星を破壊した！');
+}
+
+// ---------- warp ----------
+function pathCells(a,b){ const out=[]; const n=Math.max(Math.abs(b.x-a.x),Math.abs(b.y-a.y)); for(let i=1;i<=n;i++) out.push({x:Math.round(a.x+(b.x-a.x)*i/n),y:Math.round(a.y+(b.y-a.y)*i/n)}); return out; }
+const maxJump=()=>S.dmg.engine?2:7;
+function warpCost(to){ const d=cheb(S.pos,to); return {d,e:150+d*130,days:.3+d*.35}; }
+function warpTo(to){
+  if(!S||S.end||S.warp) return false; if(same(to,S.pos)) { S.mapOpen=false; return false; }
+  let d=cheb(S.pos,to); if(d>maxJump()){ say(`エンジン故障中！${maxJump()}マスまでしかワープできない`); sfx('no'); return false; }
+  // stop early inside an asteroid belt on the way
+  const cells=pathCells(S.pos,to); let dest=to;
+  for(const c of cells){ if(rockAt(c)&&!same(c,to)){ dest=c; break; } }
+  const c=warpCost(dest); S.energy-=c.e;
+  if(S.kind==='fight'){ const f=fleetAt(S.pos); if(f) f.ships=S.objs.enemies.filter(e=>!e.dead).map(e=>e.type); if(f&&!f.ships.length) S.fleets=S.fleets.filter(x=>x!==f); }
+  S.warp={to:dest,t:0,dur:1.1+c.d*.08,stopped:!same(dest,to)}; S.mapOpen=false; sfx('warp');
+  return true;
+}
+function arrive(){
+  const w=S.warp; S.warp=null; S.pos={...w.to}; S.cursor={...w.to};
+  advance(warpCost(w.to).days*0); // time was advanced during the warp
+  if(S.end) return;
+  if(w.stopped) say('小惑星帯に引っかかった！');
+  const f=fleetAt(S.pos);
+  if(f) return init3D('fight');
+  if(darkAt(S.pos)) return init3D('dark');
+  if(rockAt(S.pos)) return init3D('rocks');
+  if(baseAt(S.pos)) return init3D('dock');
+  const pl=planetAt(S.pos); if(pl) return init3D('planet');
+  init3D('empty');
+}
+
+// ---------- 3D space ----------
+function v3(x,y,z){ return {x,y,z}; }
+function init3D(kind){
+  S.kind=kind; S.sceneT=0; S.speed=kind==='dock'?0:1;
+  const o={enemies:[],ebul:[],torps:[],rocks:[],stars:[],dust:[],planet:null,base:null,dark:null,booms:[]};
+  for(let i=0;i<220;i++){ const u=rand()*2-1, a=rand()*Math.PI*2, r=Math.sqrt(1-u*u); o.stars.push(v3(r*Math.cos(a),u,r*Math.sin(a))); }
+  for(let i=0;i<40;i++) o.dust.push(v3((rand()-.5)*800,(rand()-.5)*800,rand()*900));
+  S.objs=o;
+  if(kind==='fight'){ const f=fleetAt(S.pos); S.lastFleet=f; f.ships.forEach((t,i)=>spawnEnemy(t,i,f.ships.length)); say(`敵部隊と交戦開始！（${f.ships.length}機）`); sfx('alarm'); }
+  if(kind==='planet'){ const p=planetAt(S.pos); o.planet={pos:v3(300,120,1600),r:170,p}; say(p.hp>0?`惑星${p.name}に接近中`:`惑星${p.name}の残骸`); }
+  if(kind==='dock'){ o.base={pos:v3(0,-20,700),r:90}; }
+  if(kind==='dark'){ o.dark={pos:v3(0,0,950),r:280}; say('暗黒惑星だ！中心のコアを撃ちまくれ'); sfx('alarm'); }
+  if(kind==='rocks'){ S.rockT=16; }
+  if(kind==='empty') say('このあたりに敵はいない');
+}
+function spawnEnemy(type,i,n){
+  const T=ETYPE[type], a=(i-(n-1)/2)*.5+(rand()-.5)*.3, el=(rand()-.5)*.5, d=750+rand()*300;
+  S.objs.enemies.push({type,pos:v3(Math.sin(a)*d,Math.sin(el)*d*.5,Math.cos(a)*d),vel:v3(0,0,0),hp:T.hp,cd:1.2+rand()*T.cd,orbit:rand()<.5?1:-1,jit:rand()*9});
+}
+function allVecs(o,fn){
+  for(const e of o.enemies){ fn(e.pos); fn(e.vel); }
+  for(const b of o.ebul){ fn(b.pos); fn(b.vel); }
+  for(const t of o.torps){ fn(t.pos); fn(t.vel); }
+  for(const r of o.rocks){ fn(r.pos); fn(r.vel); }
+  for(const b of o.booms) fn(b.pos);
+  for(const s of o.dust) fn(s);
+  for(const k of ['planet','base','dark']) if(o[k]) fn(o[k].pos);
+}
+function rotateWorld(yaw,pitch){
+  const cy=Math.cos(yaw), sy=Math.sin(yaw), cp=Math.cos(pitch), sp=Math.sin(pitch);
+  const rot=v=>{ let x=v.x*cy-v.z*sy, z=v.x*sy+v.z*cy; v.x=x; v.z=z; let y=v.y*cp-v.z*sp; z=v.y*sp+v.z*cp; v.y=y; v.z=z; };
+  allVecs(S.objs,rot); for(const s of S.objs.stars) rot(s);
+}
+const len=v=>Math.hypot(v.x,v.y,v.z);
+function fire(){
+  if(!S||S.mapOpen||S.warp||S.fireCd>0||S.kind==='dock') return;
+  if(S.objs.torps.length>=5) return;
+  S.fireCd=S.dmg.computer?.45:.2; S.energy-=8;
+  S.objs.torps.push({pos:v3(0,-6,12),vel:v3(0,0,1000),life:1.3}); sfx('shot');
+}
+function hitPlayer(power){
+  S.energy-=power*2; S.shieldT=0; sfx('hit'); S.flash=.25;
+  if(S.shield>=20){ S.shield-=power; if(S.shield<0) S.shield=0; return; }
+  S.shield=0;
+  const ok=Object.keys(S.dmg).filter(k=>!S.dmg[k]);
+  if(!ok.length){ S.energy-=600; say('機体に大ダメージ！'); return; }
+  const k=ok[rand()*ok.length|0]; S.dmg[k]=1; say(`⚠ ${SUBS[k]}が故障した！基地で修理しよう`); sfx('bad');
+}
+function boom(pos,size,col){ S.objs.booms.push({pos:{...pos},t:0,size,col}); }
+
+function update3D(dt,input){
+  const o=S.objs; S.sceneT+=dt;
+  // steering
+  const turn=1.7, acc=6;
+  S.yawV+=((input.x||0)*turn-S.yawV)*Math.min(1,acc*dt); S.pitchV+=((input.y||0)*turn-S.pitchV)*Math.min(1,acc*dt);
+  rotateWorld(S.yawV*dt,S.pitchV*dt);
+  const maxSp=S.dmg.engine?1:3, spd=[0,120,220,340][Math.min(S.speed,maxSp)];
+  const mv=v=>{ v.z-=spd*dt; };
+  for(const e of o.enemies) mv(e.pos); for(const b of o.ebul) mv(b.pos); for(const r of o.rocks) mv(r.pos); for(const b of o.booms) mv(b.pos);
+  for(const k of ['planet','base','dark']) if(o[k]) mv(o[k].pos);
+  for(const d of o.dust){ mv(d); if(d.z<5){ d.x=(rand()-.5)*800; d.y=(rand()-.5)*800; d.z=900; } if(d.z>950) d.z=10; }
+  S.energy-=dt*(1.2+spd/220);
+  S.fireCd=Math.max(0,S.fireCd-dt);
+  S.shieldT+=dt; if(S.shieldT>1.4&&S.shield<100){ const g=Math.min(100-S.shield,dt*14); S.shield+=g; S.energy-=g*1.5; }
+  // torpedoes
+  for(const t of o.torps){ t.pos.x+=t.vel.x*dt; t.pos.y+=t.vel.y*dt; t.pos.z+=t.vel.z*dt; t.life-=dt; }
+  // enemies
+  for(const e of o.enemies){ if(e.dead) continue; const T=ETYPE[e.type], p=e.pos, d=len(p)||1;
+    let want;
+    if(d>420) want=v3(-p.x/d,-p.y/d,-p.z/d);
+    else if(d<170) want=v3(p.x/d,p.y/d,p.z/d);
+    else { const tx=-p.z*e.orbit, tz=p.x*e.orbit, tl=Math.hypot(tx,tz)||1; want=v3(tx/tl,Math.sin(S.sceneT*1.3+e.jit)*.5,tz/tl); }
+    e.vel.x+=(want.x*T.speed-e.vel.x)*Math.min(1,dt*1.4); e.vel.y+=(want.y*T.speed-e.vel.y)*Math.min(1,dt*1.4); e.vel.z+=(want.z*T.speed-e.vel.z)*Math.min(1,dt*1.4);
+    p.x+=e.vel.x*dt; p.y+=e.vel.y*dt; p.z+=e.vel.z*dt;
+    e.cd-=dt; if(e.cd<=0&&d<850){ e.cd=T.cd*(.8+rand()*.5); const off=v3((rand()-.5)*70,(rand()-.5)*70,0), tx=off.x-p.x, ty=off.y-p.y, tz=-p.z, tl=Math.hypot(tx,ty,tz)||1, sp=240;
+      o.ebul.push({pos:{...p},vel:v3(tx/tl*sp,ty/tl*sp,tz/tl*sp),life:6,r:10}); if(p.z>0) sfx('eshot'); } }
+  // dark planet: defenders and big shots
+  if(o.dark){ S.darkT=(S.darkT||0)-dt; if(S.darkT<=0&&o.enemies.filter(e=>!e.dead).length<5){ S.darkT=5; const a=(rand()-.5)*1.2; o.enemies.push({type:'d',pos:v3(o.dark.pos.x+Math.sin(a)*300,o.dark.pos.y,o.dark.pos.z-200),vel:v3(0,0,0),hp:1,cd:2,orbit:rand()<.5?1:-1,jit:rand()*9}); }
+    S.darkShot=(S.darkShot||2)-dt; if(S.darkShot<=0){ S.darkShot=2.2; const p=o.dark.pos, tl=len(p)||1; o.ebul.push({pos:{...p},vel:v3(-p.x/tl*170,-p.y/tl*170,-p.z/tl*170),life:10,r:22,big:1}); } }
+  // enemy bullets
+  for(const b of o.ebul){ b.pos.x+=b.vel.x*dt; b.pos.y+=b.vel.y*dt; b.pos.z+=b.vel.z*dt; b.life-=dt; if(len(b.pos)<24){ b.life=0; hitPlayer(b.big?40:26); } }
+  // rocks
+  if(S.kind==='rocks'){ S.rockT-=dt; if(S.rockT>0&&rand()<dt*2.4) o.rocks.push({pos:v3((rand()-.5)*500,(rand()-.5)*380,1000),vel:v3((rand()-.5)*30,(rand()-.5)*30,-120-rand()*80),r:22+rand()*26,rot:rand()*6});
+    if(S.rockT<=0&&S.rockT+dt>0){ say('小惑星帯を抜けた'); } }
+  for(const r of o.rocks){ r.pos.x+=r.vel.x*dt; r.pos.y+=r.vel.y*dt; r.pos.z+=r.vel.z*dt; r.rot+=dt; if(len(r.pos)<r.r+18){ r.dead=1; hitPlayer(30); boom(r.pos,r.r,'#AA9988'); } }
+  // torpedo hits
+  for(const t of o.torps){ if(t.life<=0) continue;
+    for(const e of o.enemies){ if(e.dead) continue; const dx=t.pos.x-e.pos.x, dy=t.pos.y-e.pos.y, dz=t.pos.z-e.pos.z; if(dx*dx+dy*dy+dz*dz<(ETYPE[e.type].size+10)**2){ t.life=0; e.hp--; boom(t.pos,12,'#fff');
+      if(e.hp<=0){ e.dead=1; S.kills++; S.score+=ETYPE[e.type].pts; boom(e.pos,ETYPE[e.type].size*1.6,ETYPE[e.type].col); sfx('boom'); } else sfx('tink'); break; } }
+    if(t.life<=0) continue;
+    for(const b of o.ebul){ if(b.life<=0) continue; const dx=t.pos.x-b.pos.x, dy=t.pos.y-b.pos.y, dz=t.pos.z-b.pos.z; if(dx*dx+dy*dy+dz*dz<(b.r+16)**2){ t.life=0; b.life=0; boom(b.pos,10,'#FFD54A'); S.score+=10; sfx('tink'); break; } }
+    if(t.life<=0) continue;
+    for(const r of o.rocks){ if(r.dead) continue; const dx=t.pos.x-r.pos.x, dy=t.pos.y-r.pos.y, dz=t.pos.z-r.pos.z; if(dx*dx+dy*dy+dz*dz<(r.r+8)**2){ t.life=0; r.dead=1; boom(r.pos,r.r,'#AA9988'); S.score+=20; sfx('boom'); break; } }
+    if(o.dark&&t.life>0){ const d=o.dark, dx=t.pos.x-d.pos.x, dy=t.pos.y-d.pos.y, dz=t.pos.z-d.pos.z; if(dx*dx+dy*dy+dz*dz<(d.r*.45)**2){ t.life=0; S.dark.hp--; boom(t.pos,20,'#FF4B5C'); sfx('tink');
+      if(S.dark.hp<=0){ for(let i=0;i<8;i++) boom(v3(d.pos.x+(rand()-.5)*d.r,d.pos.y+(rand()-.5)*d.r,d.pos.z+(rand()-.5)*d.r),120,'#FF7A3C'); S.score+=5000; sfx('bigboom'); S.objs.dark=null; say('暗黒惑星、崩壊！'); setTimeout(()=>{ if(S&&!S.end) checkEnd(); },1600); } } }
+  }
+  o.torps=o.torps.filter(t=>t.life>0); o.ebul=o.ebul.filter(b=>b.life>0&&b.pos.z>-400); o.rocks=o.rocks.filter(r=>!r.dead&&r.pos.z>-200);
+  for(const b of o.booms) b.t+=dt; o.booms=o.booms.filter(b=>b.t<.7);
+  // fleet destroyed?
+  if(S.kind==='fight'&&o.enemies.length&&o.enemies.every(e=>e.dead)){ S.fleets=S.fleets.filter(f=>!same(f,S.pos)); S.kind='empty'; S.score+=300; say('敵部隊を全滅させた！'); sfx('clear'); S.afterT=2.2; checkEnd(); }
+  o.enemies=o.enemies.filter(e=>!e.dead||S.kind!=='dark');
+  // planet approach
+  if(o.planet&&!o.planet.done&&len(o.planet.pos)<o.planet.r+180){ o.planet.done=1; const p=o.planet.p;
+    if(p.key>=0&&!p.got){ p.got=true; S.keys++; S.score+=500; say(`🔑 キー「${'ROYGBIV'[p.key]}」を手に入れた！（${S.keys}/7）`); sfx('key');
+      if(S.keys>=7&&!S.dark.known){ S.dark.known=true; say('7つのキーが共鳴…暗黒惑星の場所がわかった！'); } }
+    else say(p.earth?'地球：「キーを7つ集めて暗黒惑星をたたけ！」':'この惑星にキーはない'); S.afterT=2.2; }
+  // docking
+  if(o.base&&!o.base.done){ o.base.pos.z-=dt*260; if(o.base.pos.z<160){ o.base.done=1; dock(); S.afterT=1.6; } }
+  if(S.afterT!=null){ S.afterT-=dt; if(S.afterT<=0){ S.afterT=null; if(!S.end) S.mapOpen=true; } }
+  if(S.energy<=0) checkEnd();
+}
+function dock(){
+  const repaired=Object.keys(S.dmg).filter(k=>S.dmg[k]).map(k=>SUBS[k]);
+  S.energy=9999; S.shield=100; for(const k in S.dmg) S.dmg[k]=0; advance(.5);
+  say(`基地で補給完了${repaired.length?`・${repaired.join('・')}を修理`:''}`); sfx('dock');
+}
+
+// ---------- main update ----------
+const input={x:0,y:0,fire:false};
+let keys={};
+function update(dt){
+  if(phase!=='play'||paused||!S||S.end) { if(phase==='result'&&auto){ autoT+=dt; if(autoT>6){ start(S?S.mode:modeSel); } } return; }
+  for(const m of S.msgs) m.life-=dt; S.msgs=S.msgs.filter(m=>m.life>0);
+  if(S.flash) S.flash=Math.max(0,S.flash-dt);
+  if(S.warp){ S.warp.t+=dt; advance(dt/S.warp.dur*warpCost(S.warp.to).days); if(S.warp&&S.warp.t>=S.warp.dur) arrive(); checkEnd(); if(auto) autoTick(dt); return; }
+  if(auto) autoTick(dt);
+  if(S.mapOpen){ return; }
+  let ix=input.x, iy=input.y;
+  if(!auto){ ix=(keys.ArrowRight?1:0)-(keys.ArrowLeft?1:0)||input.x; iy=(keys.ArrowUp?1:0)-(keys.ArrowDown?1:0)||input.y; }
+  update3D(dt,{x:ix,y:iy});
+  if((input.fire||keys.Space||keys.KeyZ)&&!auto) fire();
+  advance(dt/20);
+  checkEnd();
+}
+function finish(win,why){
+  if(S.end) return; S.end=win?'win':'lose'; phase='result'; autoT=0;
+  const alive=S.bases.filter(b=>b.hp>0).length*500+S.planets.filter(p=>p.hp>0).length*300;
+  const total=Math.max(0,Math.round(S.score+(win?alive+Math.max(0,3000-S.day*60):0)));
+  S.total=total;
+  const rank=!win?'—':total>=[4500,9000,18000][S.mode]?'S':total>=[3200,6500,13000][S.mode]?'A':total>=[2200,4500,9000][S.mode]?'B':'C';
+  const k='m'+S.mode; if(!auto&&win&&total>(best[k]||0)){ best[k]=total; try{ localStorage.setItem('sgBest',JSON.stringify(best)); }catch(e){} }
+  $('rTitle').textContent=win?'MISSION CLEAR':'GAME OVER';
+  $('rTitle').style.color=win?'var(--cyan)':'var(--red)';
+  $('rMsg').textContent=`${MODES[S.mode].name}：${why}${auto?'　🤖 オート':''}`;
+  $('rRank').textContent=win?`RANK ${rank}`:'';
+  $('rRows').innerHTML=[['スコア',total.toLocaleString()],['撃墜数',S.kills+' 機'],['経過日数',S.day.toFixed(1)+' 日'],['のこった基地',S.bases.filter(b=>b.hp>0).length+' / '+S.bases.length],...(S.planets.length?[['のこった惑星',S.planets.filter(p=>p.hp>0).length+' / '+S.planets.length]]:[]),...(S.M.keys?[['キー',S.keys+' / 7']]:[]),['ベスト',(best['m'+S.mode]||0).toLocaleString()]].map(([a,b])=>`<span>${a}</span><b>${b}</b>`).join('');
+  setTimeout(()=>{ if(phase==='result') $('resultOv').hidden=false; },900);
+  sfx(win?'clear':'bad');
+}
+
+// ---------- auto pilot ----------
+function setAuto(v){ auto=v; $('autoBtn').setAttribute('aria-pressed',v); autoT=0; if(v&&phase!=='play') start(phase==='result'&&S?S.mode:modeSel); }
+function user(){ if(auto) setAuto(false); }
+function autoTarget(){
+  const P=S.pos, dmg=Object.values(S.dmg).some(v=>v);
+  const bases=S.bases.filter(b=>b.hp>0);
+  const nearBase=bases.slice().sort((a,b)=>cheb(P,a)-cheb(P,b))[0];
+  if((S.energy<3600||dmg)&&nearBase) return nearBase;
+  if(S.M.keys&&S.dark.known&&S.dark.hp>0&&S.energy>6000&&!dmg) return S.dark;
+  let best=null, bs=1e9;
+  const targets=[...bases,...S.planets.filter(p=>p.hp>0)];
+  for(const f of S.fleets){ const threat=Math.min(...targets.map(t=>cheb(f,t))); let sc=cheb(P,f)+threat*.7; if(threat<=1) sc-=2.5; if(S.M.keys&&S.planets[0].hp>0&&cheb(f,S.planets[0])<=3) sc-=4; if(sc<bs){ bs=sc; best=f; } }
+  if(S.M.keys&&S.keys<7){ for(const p of S.planets){ if(p.key<0||p.got||fleetAt(p)) continue; const sc=cheb(P,p)+1.2; if(sc<bs){ bs=sc; best=p; } } }
+  if(!best&&nearBase&&S.energy<9500) return nearBase;
+  if(!best&&S.M.keys&&S.dark.known&&S.dark.hp>0) return S.dark;
+  return best;
+}
+function autoHop(t){
+  // pick a reachable hop (engine limit, avoid asteroid belts on the way)
+  const mj=maxJump(); let bestC=null, bd=1e9;
+  for(let y=0;y<GW;y++) for(let x=0;x<GW;x++){ const c={x,y}, d=cheb(S.pos,c); if(!d||d>mj) continue;
+    const cells=pathCells(S.pos,c); if(cells.some(k=>rockAt(k))) continue;
+    if(fleetAt(c)&&!same(c,t)) continue;
+    const rem=cheb(c,t)*3+d*.6+(same(c,t)?-5:0); if(rem<bd){ bd=rem; bestC=c; } }
+  return bestC||t;
+}
+function autoTick(dt){
+  autoT+=dt;
+  if(S.warp) return;
+  if(S.mapOpen){ if(autoT<.7) return; autoT=0; const t=autoTarget(); if(!t) return; const hop=autoHop(t); S.cursor={x:hop.x,y:hop.y}; if(same(hop,S.pos)){ S.mapOpen=false; init3D(fleetAt(S.pos)?'fight':'empty'); return; } warpTo(hop); return; }
+  // cockpit: retreat to refuel if the dark planet battle drags on
+  if(S.kind==='dark'&&S.energy<2600){ S.mapOpen=true; autoT=0; return; }
+  // cockpit: choose something to aim at
+  const o=S.objs; let tgt=null, td=1e9;
+  for(const b of o.ebul){ const d=len(b.pos); if(b.pos.z>30&&d<420&&d<td){ td=d-120; tgt=b.pos; } }
+  for(const e of o.enemies){ if(e.dead) continue; const d=len(e.pos); if(d<td){ td=d; tgt=e.pos; } }
+  for(const r of o.rocks){ const d=len(r.pos); if(r.pos.z>0&&d<500&&d<td){ td=d; tgt=r.pos; } }
+  if(!tgt&&o.dark) tgt=o.dark.pos;
+  if(!tgt&&o.planet&&!o.planet.done) tgt=o.planet.pos;
+  if(tgt){ const yaw=Math.atan2(tgt.x,tgt.z), pitch=Math.atan2(tgt.y,Math.hypot(tgt.x,tgt.z));
+    input.x=Math.max(-1,Math.min(1,yaw*2.4)); input.y=Math.max(-1,Math.min(1,pitch*2.4));
+    const aim=Math.hypot(yaw,pitch); if(aim<.06&&len(tgt)<1100&&!(o.planet&&tgt===o.planet.pos)) fire();
+    S.speed=o.planet?3:o.dark?(len(o.dark.pos)>650?2:0):(len(tgt)>600?2:1); }
+  else { input.x=0; input.y=0; }
+  if(!o.enemies.some(e=>!e.dead)&&!o.dark&&!(o.planet&&!o.planet.done)&&!(o.base&&!o.base.done)&&!(S.kind==='rocks'&&S.rockT>0)&&S.afterT==null){ S.mapOpen=true; autoT=0; }
+}
+
+// ---------- drawing ----------
+const cv=$('cv'), g=cv.getContext('2d');
+function proj(p,W,H,f){ if(p.z<8) return null; return {x:W/2+p.x/p.z*f,y:H/2-p.y/p.z*f,s:f/p.z}; }
+function drawShip(e,W,H,f){
+  const T=ETYPE[e.type], q=proj(e.pos,W,H,f); if(!q) return; const s=Math.max(1.5,T.size*q.s);
+  g.save(); g.translate(q.x,q.y); g.strokeStyle=T.col; g.fillStyle=T.col+'33'; g.lineWidth=Math.max(1,s*.08);
+  g.beginPath();
+  if(e.type==='f'||e.type==='d'){ g.moveTo(0,-s*.5); g.lineTo(s*.9,s*.3); g.lineTo(0,s*.1); g.lineTo(-s*.9,s*.3); g.closePath(); }
+  else if(e.type==='b'){ for(let i=0;i<6;i++){ const a=i/6*Math.PI*2; g.lineTo(Math.cos(a)*s*.7,Math.sin(a)*s*.45); } g.closePath(); g.moveTo(-s*1.1,0); g.lineTo(s*1.1,0); }
+  else { g.moveTo(-s,-s*.6); g.lineTo(s,s*.6); g.moveTo(s,-s*.6); g.lineTo(-s,s*.6); g.moveTo(s*.35,0); g.arc(0,0,s*.35,0,7); }
+  g.fill(); g.stroke();
+  if(s>3){ g.fillStyle='#fff'; g.beginPath(); g.arc(0,0,Math.max(1,s*.08),0,7); g.fill(); }
+  g.restore();
+}
+function draw(){
+  const dpr=Math.min(2,devicePixelRatio||1), W=cv.clientWidth, H=cv.clientHeight;
+  if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){ cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); }
+  g.setTransform(dpr,0,0,dpr,0,0);
+  const VH=H*.74, now=performance.now()/1000;
+  g.fillStyle='#000'; g.fillRect(0,0,W,H);
+  if(!S){ drawTitleStars(W,VH,now); drawPanel(W,H,VH); return; }
+  g.save(); g.beginPath(); g.rect(0,0,W,VH); g.clip();
+  if(S.mapOpen&&!S.warp) drawMap(W,VH,now); else draw3D(W,VH,now);
+  g.restore();
+  drawPanel(W,H,VH,now);
+}
+function drawTitleStars(W,H,now){ g.fillStyle='#fff'; for(let i=0;i<120;i++){ const x=(i*97.3)%W, y=(i*53.7+now*10*(i%3+1))%H; g.fillRect(x,y,1.5,1.5); } }
+function draw3D(W,H,now){
+  const f=W*.9, o=S.objs;
+  // stars
+  g.fillStyle='#fff';
+  const streak=S.warp?Math.min(1,S.warp.t/.4)*Math.min(1,(S.warp.dur-S.warp.t)/.3+.2):0;
+  for(const s of o.stars){ if(s.z<=.05) continue; const x=W/2+s.x/s.z*f, y=H/2-s.y/s.z*f; if(x<-5||x>W+5||y<-5||y>H+5) continue;
+    if(streak>0){ g.strokeStyle='rgba(180,220,255,.8)'; g.lineWidth=1.2; g.beginPath(); g.moveTo(x,y); g.lineTo(W/2+(x-W/2)*(1+streak*1.5),H/2+(y-H/2)*(1+streak*1.5)); g.stroke(); }
+    else g.fillRect(x,y,1.3,1.3); }
+  if(S.warp){ g.fillStyle=`rgba(120,180,255,${.15*streak})`; g.fillRect(0,0,W,H); g.fillStyle='#BFE3FF'; g.font=`800 ${W*.05}px "M PLUS Rounded 1c",sans-serif`; g.textAlign='center'; g.fillText('WARP',W/2,H*.2); return; }
+  for(const d of o.dust){ const q=proj(d,W,H,f); if(!q) continue; g.fillStyle=`rgba(150,170,220,${Math.min(.7,q.s*.6)})`; g.fillRect(q.x,q.y,1+q.s,1+q.s); }
+  // planet / base / dark planet
+  if(o.planet){ const q=proj(o.planet.pos,W,H,f); if(q){ const r=o.planet.r*q.s, p=o.planet.p; const gr=g.createRadialGradient(q.x-r*.3,q.y-r*.3,r*.1,q.x,q.y,r);
+    gr.addColorStop(0,p.hp>0?(p.earth?'#8FD3FF':'#FFD9A0'):'#777'); gr.addColorStop(1,p.hp>0?(p.earth?'#1A5FB0':'#A0522D'):'#222'); g.fillStyle=gr; g.beginPath(); g.arc(q.x,q.y,r,0,7); g.fill();
+    if(p.earth&&p.hp>0){ g.fillStyle='rgba(60,170,90,.7)'; g.beginPath(); g.ellipse(q.x-r*.2,q.y,r*.35,r*.25,.5,0,7); g.fill(); } } }
+  if(o.base){ const q=proj(o.base.pos,W,H,f); if(q){ const r=o.base.r*q.s; g.strokeStyle='#7CFFB0'; g.lineWidth=Math.max(1,r*.06); g.beginPath(); g.ellipse(q.x,q.y,r,r*.35,0,0,7); g.stroke(); g.fillStyle='#2D6B4A'; g.fillRect(q.x-r*.15,q.y-r*.7,r*.3,r*1.4); g.fillStyle='#FFD54A'; if(Math.sin(now*6)>0) g.fillRect(q.x-r*.05,q.y-r*.8,r*.1,r*.1); } }
+  if(o.dark){ const q=proj(o.dark.pos,W,H,f); if(q){ const r=o.dark.r*q.s; const gr=g.createRadialGradient(q.x,q.y,r*.1,q.x,q.y,r); gr.addColorStop(0,'#3A0A30'); gr.addColorStop(1,'#0A0010'); g.fillStyle=gr; g.beginPath(); g.arc(q.x,q.y,r,0,7); g.fill(); g.strokeStyle='#8A2BE2'; g.lineWidth=2; g.stroke();
+    const core=r*.45*(1+Math.sin(now*5)*.08); const cg=g.createRadialGradient(q.x,q.y,0,q.x,q.y,core); cg.addColorStop(0,'#FFF'); cg.addColorStop(.3,'#FF4B5C'); cg.addColorStop(1,'rgba(255,75,92,0)'); g.fillStyle=cg; g.beginPath(); g.arc(q.x,q.y,core,0,7); g.fill(); } }
+  // rocks
+  for(const r of o.rocks){ const q=proj(r.pos,W,H,f); if(!q) continue; const s=r.r*q.s; g.save(); g.translate(q.x,q.y); g.rotate(r.rot); g.fillStyle='#6B5E52'; g.strokeStyle='#A89886'; g.beginPath(); for(let i=0;i<7;i++){ const a=i/7*Math.PI*2, k=.75+((i*37)%5)/12; g.lineTo(Math.cos(a)*s*k,Math.sin(a)*s*k); } g.closePath(); g.fill(); g.stroke(); g.restore(); }
+  // enemies sorted far to near
+  const es=o.enemies.filter(e=>!e.dead).sort((a,b)=>b.pos.z-a.pos.z); for(const e of es) drawShip(e,W,H,f);
+  for(const b of o.ebul){ const q=proj(b.pos,W,H,f); if(!q) continue; const r=Math.max(2,b.r*q.s); g.fillStyle=b.big?'#FF4B5C':'#FFE14D'; g.beginPath(); g.arc(q.x,q.y,r,0,7); g.fill(); g.fillStyle='#fff'; g.beginPath(); g.arc(q.x,q.y,r*.45,0,7); g.fill(); }
+  for(const t of o.torps){ if(t.pos.z<40) continue; const q=proj(t.pos,W,H,f); if(!q) continue; const r=Math.min(9,Math.max(1.5,7*q.s)); g.fillStyle='#7CF7FF'; g.beginPath(); g.arc(q.x,q.y,r,0,7); g.fill(); }
+  for(const b of o.booms){ const q=proj(b.pos,W,H,f); if(!q) continue; const r=b.size*q.s*(1+b.t*2); g.globalAlpha=1-b.t/.7; g.strokeStyle=b.col; g.lineWidth=2; g.beginPath(); g.arc(q.x,q.y,r,0,7); g.stroke(); g.fillStyle=b.col; for(let i=0;i<8;i++){ const a=i/8*Math.PI*2; g.fillRect(q.x+Math.cos(a)*r*1.2,q.y+Math.sin(a)*r*1.2,2,2); } g.globalAlpha=1; }
+  // crosshair & target box
+  if(!S.dmg.scope){ g.strokeStyle='rgba(124,247,255,.8)'; g.lineWidth=1.5; const c=14; g.beginPath(); g.moveTo(W/2-c*2,H/2); g.lineTo(W/2-c*.6,H/2); g.moveTo(W/2+c*.6,H/2); g.lineTo(W/2+c*2,H/2); g.moveTo(W/2,H/2-c*2); g.lineTo(W/2,H/2-c*.6); g.moveTo(W/2,H/2+c*.6); g.lineTo(W/2,H/2+c*2); g.stroke();
+    for(const e of es){ const q=proj(e.pos,W,H,f); if(!q) continue; const s=Math.max(8,ETYPE[e.type].size*q.s*1.2); g.strokeStyle='rgba(255,213,74,.6)'; g.strokeRect(q.x-s,q.y-s,s*2,s*2); } }
+  else { g.fillStyle='rgba(255,75,92,.8)'; g.font=`800 ${W*.03}px sans-serif`; g.textAlign='center'; g.fillText('照準故障',W/2,H/2); }
+  // off-screen arrows toward enemies
+  for(const e of es){ const p=e.pos; const q=p.z>8?proj(p,W,H,f):null; if(q&&q.x>0&&q.x<W&&q.y>0&&q.y<H) continue; const a=Math.atan2(-p.y,p.x); g.fillStyle='rgba(255,75,92,.7)'; const x=W/2+Math.cos(a)*Math.min(W,H)*.44, y=H/2+Math.sin(a)*H*.42; g.beginPath(); g.moveTo(x+Math.cos(a)*8,y+Math.sin(a)*8); g.lineTo(x+Math.cos(a+2.5)*7,y+Math.sin(a+2.5)*7); g.lineTo(x+Math.cos(a-2.5)*7,y+Math.sin(a-2.5)*7); g.fill(); }
+  if(S.flash){ g.fillStyle=`rgba(255,60,60,${S.flash})`; g.fillRect(0,0,W,H); }
+  // messages
+  g.textAlign='center'; g.font=`800 ${Math.max(11,W*.028)}px "M PLUS Rounded 1c",sans-serif`;
+  S.msgs.forEach((m,i)=>{ g.globalAlpha=Math.min(1,m.life); g.fillStyle='#E8ECFF'; g.fillText(m.t,W/2,22+i*18); g.globalAlpha=1; });
+  if(!S.mapOpen&&S.kind!=='fight'&&!o.dark&&S.afterT==null&&!(o.planet&&!o.planet.done)&&!(o.base&&!o.base.done)&&!(S.kind==='rocks'&&S.rockT>0)){ g.fillStyle='rgba(255,213,74,.9)'; g.fillText('🗺 マップを開いて次の行き先へ',W/2,H-14); }
+}
+function drawMap(W,H,now){
+  const m=Math.min(W,H-18)*.94, cs=m/GW, ox=(W-m)/2, oy=4;
+  g.fillStyle='#070A1E'; g.fillRect(0,0,W,H);
+  for(let y=0;y<GW;y++) for(let x=0;x<GW;x++){ const X=ox+x*cs, Y=oy+y*cs; g.strokeStyle='#1E2660'; g.lineWidth=1; g.strokeRect(X+.5,Y+.5,cs-1,cs-1); }
+  const cell=(p,fn)=>{ fn(ox+p.x*cs,oy+p.y*cs); };
+  g.textAlign='center'; g.textBaseline='middle';
+  for(const r of S.rocks) cell(r,(X,Y)=>{ g.fillStyle='#6B5E52'; for(let i=0;i<5;i++) { g.beginPath(); g.arc(X+cs*(.25+(i*37%10)/20),Y+cs*(.25+(i*53%10)/20),cs*.07,0,7); g.fill(); } });
+  for(const b of S.bases) cell(b,(X,Y)=>{ g.fillStyle=b.hp>0?'#2E8B57':'#333'; g.fillRect(X+cs*.18,Y+cs*.18,cs*.64,cs*.64); g.fillStyle='#fff'; g.font=`800 ${cs*.34}px sans-serif`; g.fillText(b.hp>0?'B':'×',X+cs/2,Y+cs*.46); if(b.hp>0){ g.fillStyle='#1B2150'; g.fillRect(X+cs*.18,Y+cs*.86,cs*.64,cs*.07); g.fillStyle='#7CFFB0'; g.fillRect(X+cs*.18,Y+cs*.86,cs*.64*b.hp/b.max,cs*.07); } });
+  for(const p of S.planets) cell(p,(X,Y)=>{ g.fillStyle=p.hp>0?(p.earth?'#3C8CFF':'#C9894C'):'#444'; g.beginPath(); g.arc(X+cs/2,Y+cs*.45,cs*.26,0,7); g.fill(); g.fillStyle='#fff'; g.font=`800 ${cs*.2}px sans-serif`; g.fillText(p.earth?'地':'P',X+cs/2,Y+cs*.46);
+    if(p.key>=0&&!p.got){ g.fillStyle=KEY_COL[p.key]; g.fillRect(X+cs*.68,Y+cs*.1,cs*.18,cs*.18); }
+    if(p.hp>0){ g.fillStyle='#1B2150'; g.fillRect(X+cs*.18,Y+cs*.84,cs*.64,cs*.07); g.fillStyle='#8FD3FF'; g.fillRect(X+cs*.18,Y+cs*.84,cs*.64*p.hp/p.max,cs*.07); } });
+  if(S.dark&&S.dark.known&&S.dark.hp>0) cell(S.dark,(X,Y)=>{ g.fillStyle='#2A0030'; g.beginPath(); g.arc(X+cs/2,Y+cs/2,cs*.32,0,7); g.fill(); g.strokeStyle='#B35BFF'; g.lineWidth=2; g.stroke(); g.fillStyle='#FF4B5C'; g.beginPath(); g.arc(X+cs/2,Y+cs/2,cs*.1*(1+Math.sin(now*5)*.2),0,7); g.fill(); });
+  for(const f of S.fleets) cell(f,(X,Y)=>{ if(S.dmg.radar){ g.fillStyle='#553'; g.font=`800 ${cs*.4}px sans-serif`; g.fillText('?',X+cs/2,Y+cs/2); return; } g.fillStyle='#FF4B5C'; g.beginPath(); g.moveTo(X+cs/2,Y+cs*.15); g.lineTo(X+cs*.85,Y+cs*.8); g.lineTo(X+cs*.15,Y+cs*.8); g.closePath(); g.fill(); g.fillStyle='#fff'; g.font=`800 ${cs*.28}px sans-serif`; g.fillText(f.ships.length,X+cs/2,Y+cs*.58); });
+  // player & cursor
+  cell(S.pos,(X,Y)=>{ g.strokeStyle='#FFD54A'; g.lineWidth=3; g.beginPath(); g.arc(X+cs/2,Y+cs/2,cs*.42,0,7); g.stroke(); });
+  cell(S.cursor,(X,Y)=>{ const k=Math.sin(now*8)>0; g.strokeStyle=k?'#4FE3FF':'#2A7A90'; g.lineWidth=3; g.strokeRect(X+2,Y+2,cs-4,cs-4); });
+  if(!same(S.cursor,S.pos)){ g.strokeStyle='rgba(79,227,255,.4)'; g.setLineDash([4,4]); g.beginPath(); g.moveTo(ox+(S.pos.x+.5)*cs,oy+(S.pos.y+.5)*cs); g.lineTo(ox+(S.cursor.x+.5)*cs,oy+(S.cursor.y+.5)*cs); g.stroke(); g.setLineDash([]); }
+  g.textBaseline='alphabetic';
+}
+function drawPanel(W,H,VH,now){
+  const y0=VH, h=H-VH;
+  g.fillStyle='#10132C'; g.fillRect(0,y0,W,h); g.strokeStyle='#2A3170'; g.lineWidth=2; g.strokeRect(1,y0+1,W-2,h-2);
+  if(!S) return;
+  const fs=Math.max(10,W*.026); g.font=`800 ${fs}px "M PLUS Rounded 1c",sans-serif`; g.textAlign='left';
+  // energy & shield
+  const bx=W*.03, bw=W*.3;
+  g.fillStyle='#8E97C8'; g.fillText('ENERGY',bx,y0+h*.2); g.fillStyle=S.energy<2500?'#FF4B5C':'#E8ECFF'; g.fillText(Math.max(0,Math.round(S.energy)),bx+bw*.55,y0+h*.2);
+  g.fillStyle='#1B2150'; g.fillRect(bx,y0+h*.26,bw,h*.1); g.fillStyle=S.energy<2500?'#FF4B5C':'#4FE3FF'; g.fillRect(bx,y0+h*.26,bw*Math.max(0,S.energy)/9999,h*.1);
+  g.fillStyle='#8E97C8'; g.fillText('SHIELD',bx,y0+h*.52); g.fillStyle='#1B2150'; g.fillRect(bx,y0+h*.58,bw,h*.1); g.fillStyle='#7CFFB0'; g.fillRect(bx,y0+h*.58,bw*S.shield/100,h*.1);
+  g.fillStyle='#8E97C8'; g.fillText(`宇宙暦 ${(2150+S.day).toFixed(1)}`,bx,y0+h*.86);
+  // radar
+  const rx=W*.5, ry=y0+h*.5, rr=h*.4;
+  g.strokeStyle='#2A3170'; g.fillStyle='#070A1E'; g.beginPath(); g.arc(rx,ry,rr,0,7); g.fill(); g.stroke(); g.beginPath(); g.moveTo(rx-rr,ry); g.lineTo(rx+rr,ry); g.moveTo(rx,ry-rr); g.lineTo(rx,ry+rr); g.stroke();
+  if(S.dmg.radar){ g.fillStyle='#FF4B5C'; g.textAlign='center'; g.fillText('故障',rx,ry+fs*.35); }
+  else if(S.objs&&!S.mapOpen){ const sc=rr/1100; const dot=(p,c,s)=>{ const x=p.x*sc, z=p.z*sc, d=Math.hypot(x,z); const k=d>rr*.95?rr*.95/d:1; g.fillStyle=c; g.fillRect(rx+x*k-s/2,ry-z*k-s/2,s,s); };
+    for(const e of S.objs.enemies) if(!e.dead) dot(e.pos,ETYPE[e.type].col,4); for(const b of S.objs.ebul) dot(b.pos,'#FFE14D',2);
+    if(S.objs.planet) dot(S.objs.planet.pos,'#8FD3FF',6); if(S.objs.dark) dot(S.objs.dark.pos,'#B35BFF',7); if(S.objs.base) dot(S.objs.base.pos,'#7CFFB0',6);
+    g.fillStyle='#FFD54A'; g.beginPath(); g.moveTo(rx,ry-4); g.lineTo(rx+3,ry+3); g.lineTo(rx-3,ry+3); g.fill(); }
+  // status & keys
+  const sx=W*.68; g.textAlign='left';
+  Object.keys(SUBS).forEach((k,i)=>{ const x=sx+(i%2)*W*.15, y=y0+h*(.2+(i/2|0)*.26); g.fillStyle=S.dmg[k]?(Math.sin(now*8)>0?'#FF4B5C':'#6A1020'):'#2E8B57'; g.fillRect(x,y-fs*.85,W*.13,fs*1.2); g.fillStyle='#fff'; g.font=`800 ${fs*.8}px "M PLUS Rounded 1c",sans-serif`; g.fillText(SUBS[k],x+3,y); });
+  g.font=`800 ${fs}px "M PLUS Rounded 1c",sans-serif`;
+  const sp=['停止','低速','中速','高速'][Math.min(S.speed,S.dmg.engine?1:3)];
+  if(S.M.keys){ for(let i=0;i<7;i++){ g.fillStyle=S.planets.some(p=>p.key===i&&p.got)?KEY_COL[i]:'#262B55'; g.fillRect(sx+i*W*.042,y0+h*.72,W*.035,h*.1); } g.fillStyle='#8E97C8'; g.fillText(`敵${S.fleets.length} ${sp}`,sx,y0+h*.95); }
+  else { g.fillStyle='#8E97C8'; g.fillText(`敵部隊 ${S.fleets.length}　${sp}`,sx,y0+h*.8); }
+  if(S.mapOpen){ const c=S.cursor; let info=''; if(!same(c,S.pos)){ const w=warpCost(c); info=`→ 距離${w.d}　E-${w.e}`; } else info='行き先をえらんでワープ';
+    g.fillStyle='#4FE3FF'; g.textAlign='center'; g.fillText(info,W/2,VH-4); }
+}
+
+// ---------- sound ----------
+let AC=null, muted=false, NB=null;
+try{ muted=localStorage.getItem('sgMute')==='1'; }catch(e){}
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); NB=AC.createBuffer(1,AC.sampleRate,AC.sampleRate); const c=NB.getChannelData(0); for(let i=0;i<c.length;i++) c[i]=Math.random()*2-1; }catch(e){} } if(AC&&AC.state==='suspended') AC.resume(); return AC; }
+function tone(f,d,type='square',v=.06,delay=0,f2){ if(muted||!ac()) return; const t=AC.currentTime+delay, o=AC.createOscillator(), gn=AC.createGain(); o.type=type; o.frequency.setValueAtTime(f,t); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+d); gn.gain.setValueAtTime(v,t); gn.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(gn).connect(AC.destination); o.start(t); o.stop(t+d+.02); }
+function noise(d,v,fq){ if(muted||!ac()) return; const t=AC.currentTime, s=AC.createBufferSource(), fl=AC.createBiquadFilter(), gn=AC.createGain(); s.buffer=NB; fl.type='lowpass'; fl.frequency.setValueAtTime(fq,t); fl.frequency.exponentialRampToValueAtTime(80,t+d); gn.gain.setValueAtTime(v,t); gn.gain.exponentialRampToValueAtTime(.0001,t+d); s.connect(fl).connect(gn).connect(AC.destination); s.start(t); s.stop(t+d); }
+let lastS={};
+function sfx(k){ const n=performance.now(); if(lastS[k]&&n-lastS[k]<50) return; lastS[k]=n;
+  if(k==='shot') tone(1400,.12,'square',.04,0,300);
+  else if(k==='eshot') tone(500,.1,'sawtooth',.02,0,900);
+  else if(k==='boom') noise(.45,.3,1800);
+  else if(k==='bigboom'){ noise(1.4,.45,1200); tone(80,1,'sine',.3,0,30); }
+  else if(k==='tink') tone(2200,.05,'square',.03);
+  else if(k==='hit'){ noise(.25,.35,3000); }
+  else if(k==='warp') tone(200,1,'sawtooth',.05,0,2400);
+  else if(k==='alarm'){ tone(880,.15,'square',.05); tone(660,.15,'square',.05,.18); tone(880,.15,'square',.05,.36); }
+  else if(k==='dock') [523,659,784].forEach((f,i)=>tone(f,.15,'triangle',.08,i*.1));
+  else if(k==='key') [784,988,1175,1568].forEach((f,i)=>tone(f,.12,'triangle',.08,i*.08));
+  else if(k==='clear') [523,659,784,1047].forEach((f,i)=>tone(f,.2,'square',.05,i*.12));
+  else if(k==='bad') tone(300,.5,'sawtooth',.05,0,80);
+  else if(k==='no') tone(200,.15,'square',.04);
+  else if(k==='sel') tone(900,.05,'triangle',.05);
+}
+function setMute(m){ muted=m; $('muteBtn').textContent=m?'音 OFF':'音 ON'; try{ localStorage.setItem('sgMute',m?'1':'0'); }catch(e){} }
+
+// ---------- UI & input ----------
+function buildModes(){ $('modes').innerHTML=MODES.map((m,i)=>`<button class="md" data-m="${i}" aria-pressed="${i===modeSel}"><b>${m.name}</b><span>${m.desc}</span><i>${best['m'+i]?'BEST '+best['m'+i].toLocaleString():''}</i></button>`).join(''); }
+$('modes').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; modeSel=+b.dataset.m; buildModes(); sfx('sel'); });
+function start(mode){ newGame(mode); phase='play'; paused=false; $('titleOv').hidden=true; $('resultOv').hidden=true; autoT=0; }
+function renderButtons(){
+  const inPlay=phase==='play'&&S&&!S.end, map=inPlay&&S.mapOpen, busy=!inPlay||!!S.warp;
+  $('mapBtn').textContent=map?'🚀 もどる':'🗺 マップ'; $('mapBtn').disabled=busy||(map&&S.kind==='dock'&&S.objs.base&&!S.objs.base.done);
+  $('mapBtn').classList.toggle('hot',!!(inPlay&&!map&&S.kind!=='fight'&&S.afterT==null&&!S.objs.dark&&!(S.objs.planet&&!S.objs.planet.done)&&!(S.kind==='rocks'&&S.rockT>0)));
+  $('slowBtn').disabled=busy||map; $('fastBtn').disabled=busy||map;
+  $('warpBtn').disabled=busy||!map||same(S.cursor,S.pos); $('warpBtn').classList.toggle('hot',!!(map&&!same(S.cursor,S.pos)));
+  $('help').innerHTML=map?'マップ：マスをタップ（または矢印キー）で行き先をえらび、ワープ（Enter）':'PC：矢印キーで旋回、スペースで発射<br>W/S で加速・減速、M でマップ';
+}
+function toggleMap(){ if(!S||S.warp||S.end) return; if(S.mapOpen){ S.mapOpen=false; } else { S.mapOpen=true; S.cursor={...S.pos}; } sfx('sel'); }
+$('mapBtn').onclick=()=>{ ac(); user(); toggleMap(); };
+$('slowBtn').onclick=()=>{ ac(); user(); if(S) S.speed=Math.max(0,S.speed-1); };
+$('fastBtn').onclick=()=>{ ac(); user(); if(S) S.speed=Math.min(S.dmg.engine?1:3,S.speed+1); };
+$('warpBtn').onclick=()=>{ ac(); user(); if(S&&S.mapOpen) warpTo(S.cursor); };
+cv.addEventListener('click',e=>{
+  if(!S||!S.mapOpen||S.warp||phase!=='play') return; ac(); user();
+  const r=cv.getBoundingClientRect(), W=r.width, VH=r.height*.74, m=Math.min(W,VH-18)*.94, cs=m/GW, ox=(W-m)/2, oy=4;
+  const x=Math.floor((e.clientX-r.left-ox)/cs), y=Math.floor((e.clientY-r.top-oy)/cs); if(x<0||y<0||x>=GW||y>=GW) return;
+  if(S.cursor.x===x&&S.cursor.y===y&&!same(S.cursor,S.pos)) warpTo(S.cursor); else { S.cursor={x,y}; sfx('sel'); }
+});
+// stick
+const dpad=$('dpad'), knob=$('knob'); let padId=null;
+function padSet(e){ const r=dpad.getBoundingClientRect(); let dx=(e.clientX-r.left-r.width/2)/(r.width/2), dy=(e.clientY-r.top-r.height/2)/(r.height/2); const l=Math.hypot(dx,dy); if(l>1){ dx/=l; dy/=l; }
+  knob.style.transform=`translate(${dx*48}px,${dy*48}px)`;
+  if(S&&S.mapOpen){ if(!padSet.t||performance.now()-padSet.t>220){ padSet.t=performance.now(); if(Math.abs(dx)>.5||Math.abs(dy)>.5){ S.cursor.x=Math.max(0,Math.min(GW-1,S.cursor.x+(Math.abs(dx)>.5?Math.sign(dx):0))); S.cursor.y=Math.max(0,Math.min(GW-1,S.cursor.y+(Math.abs(dy)>.5?Math.sign(dy):0))); sfx('sel'); } } input.x=0; input.y=0; return; }
+  input.x=Math.abs(dx)<.12?0:dx; input.y=Math.abs(dy)<.12?0:-dy; }
+dpad.addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); user(); padId=e.pointerId; dpad.setPointerCapture(e.pointerId); padSet.t=0; padSet(e); });
+dpad.addEventListener('pointermove',e=>{ if(e.pointerId===padId) padSet(e); });
+const padEnd=e=>{ if(e.pointerId!==padId) return; padId=null; input.x=0; input.y=0; knob.style.transform=''; };
+dpad.addEventListener('pointerup',padEnd); dpad.addEventListener('pointercancel',padEnd);
+const fb=$('fireBtn');
+fb.addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); user(); input.fire=true; fb.classList.add('on'); fire(); });
+const fbUp=()=>{ input.fire=false; fb.classList.remove('on'); }; fb.addEventListener('pointerup',fbUp); fb.addEventListener('pointercancel',fbUp); fb.addEventListener('pointerleave',fbUp);
+addEventListener('keydown',e=>{
+  if(e.code==='KeyO'){ if(!e.repeat){ ac(); setAuto(!auto); } return; }
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
+  if(phase!=='play'){ if(e.code==='Enter'&&!e.repeat){ ac(); start(phase==='result'&&S?S.mode:modeSel); } return; }
+  if(!keys[e.code]&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','KeyZ','KeyW','KeyS','KeyM','Enter'].includes(e.code)) user();
+  keys[e.code]=true; if(e.repeat) return; ac();
+  if(S&&S.mapOpen&&!S.warp){ const mv={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]}[e.code];
+    if(mv){ S.cursor.x=Math.max(0,Math.min(GW-1,S.cursor.x+mv[0])); S.cursor.y=Math.max(0,Math.min(GW-1,S.cursor.y+mv[1])); sfx('sel'); }
+    if(e.code==='Enter'||e.code==='Space') warpTo(S.cursor); }
+  if(e.code==='KeyM') toggleMap();
+  if(e.code==='KeyW'&&S) S.speed=Math.min(S.dmg.engine?1:3,S.speed+1);
+  if(e.code==='KeyS'&&S) S.speed=Math.max(0,S.speed-1);
+  if(e.code==='KeyP') paused=!paused;
+});
+addEventListener('keyup',e=>{ keys[e.code]=false; });
+addEventListener('blur',()=>{ keys={}; });
+document.addEventListener('visibilitychange',()=>{ if(document.hidden&&phase==='play') paused=true; else if(!document.hidden) paused=false; });
+$('startBtn').onclick=()=>{ ac(); start(modeSel); };
+$('autoStartBtn').onclick=()=>{ ac(); setAuto(true); };
+$('againBtn').onclick=()=>{ ac(); user(); start(S.mode); };
+$('toTitleBtn').onclick=()=>{ user(); phase='title'; S=null; $('resultOv').hidden=true; $('titleOv').hidden=false; buildModes(); };
+$('autoBtn').onclick=()=>{ ac(); setAuto(!auto); };
+$('muteBtn').onclick=()=>{ ac(); setMute(!muted); };
+
+setMute(muted); buildModes();
+let last=performance.now();
+function loop(t){ const dt=Math.min(.05,(t-last)/1000); last=t; if(!manualClock) update(dt); draw(); renderButtons(); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+
+// test hook
+window.__sg={
+  get s(){ return S&&{phase,mode:S.mode,day:S.day,energy:S.energy,shield:S.shield,dmg:{...S.dmg},keys:S.keys,kills:S.kills,score:S.score,total:S.total,pos:{...S.pos},mapOpen:S.mapOpen,kind:S.kind,warp:!!S.warp,fleets:S.fleets.length,bases:S.bases.map(b=>b.hp),planets:S.planets.map(p=>p.hp),dark:S.dark&&{...S.dark},end:S.end,auto,enemies:S.objs?S.objs.enemies.filter(e=>!e.dead).length:0}; },
+  setAuto, start, seed(n){ rand=rng(n); }, manual(v=true){ manualClock=v; }, step(dt){ update(dt); },
+  warpTo:(x,y)=>warpTo({x,y}), fire, input,
+};
+})();
+</script>
+</body>
+</html>
