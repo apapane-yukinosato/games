@@ -260,7 +260,9 @@ function fire(){
   if(!S||S.mapOpen||S.warp||S.fireCd>0||S.kind==='dock') return;
   if(S.objs.torps.length>=5) return;
   S.fireCd=S.dmg.computer?.45:.2; S.energy-=8;
-  S.objs.torps.push({pos:v3(0,-6,12),vel:v3(0,0,1000),life:1.3}); sfx('shot');
+  // beams come alternately from the left and right cannons and converge just ahead of the crosshair
+  S.side=-(S.side||1); const sx=S.side*38, sy=-20, sz=18, cz=650, dl=Math.hypot(sx,sy,cz-sz);
+  S.objs.torps.push({pos:v3(sx,sy,sz),vel:v3(-sx/dl*1000,-sy/dl*1000,(cz-sz)/dl*1000),life:1.3}); sfx('shot');
 }
 function hitPlayer(power){
   S.energy-=power*2; S.shieldT=0; sfx('hit'); S.flash=.25;
@@ -468,7 +470,13 @@ function draw3D(W,H,now){
   // enemies sorted far to near
   const es=o.enemies.filter(e=>!e.dead).sort((a,b)=>b.pos.z-a.pos.z); for(const e of es) drawShip(e,W,H,f);
   for(const b of o.ebul){ const q=proj(b.pos,W,H,f); if(!q) continue; const r=Math.max(2,b.r*q.s); g.fillStyle=b.big?'#FF4B5C':'#FFE14D'; g.beginPath(); g.arc(q.x,q.y,r,0,7); g.fill(); g.fillStyle='#fff'; g.beginPath(); g.arc(q.x,q.y,r*.45,0,7); g.fill(); }
-  for(const t of o.torps){ if(t.pos.z<40) continue; const q=proj(t.pos,W,H,f); if(!q) continue; const r=Math.min(9,Math.max(1.5,7*q.s)); g.fillStyle='#7CF7FF'; g.beginPath(); g.arc(q.x,q.y,r,0,7); g.fill(); }
+  g.lineCap='round';
+  for(const t of o.torps){ const vl=len(t.vel)||1, L=46, tail=v3(t.pos.x-t.vel.x/vl*L,t.pos.y-t.vel.y/vl*L,t.pos.z-t.vel.z/vl*L);
+    if(t.pos.z<14) continue; if(tail.z<14){ const k=(t.pos.z-14)/(t.pos.z-tail.z); tail.x=t.pos.x+(tail.x-t.pos.x)*k; tail.y=t.pos.y+(tail.y-t.pos.y)*k; tail.z=14; }
+    const a=proj(t.pos,W,H,f), b=proj(tail,W,H,f); if(!a||!b) continue; const w=Math.min(4,Math.max(1.2,3.5*a.s));
+    g.strokeStyle='rgba(79,227,255,.45)'; g.lineWidth=w*2.2; g.beginPath(); g.moveTo(b.x,b.y); g.lineTo(a.x,a.y); g.stroke();
+    g.strokeStyle='#E8FFFF'; g.lineWidth=w; g.beginPath(); g.moveTo(b.x,b.y); g.lineTo(a.x,a.y); g.stroke(); }
+  g.lineCap='butt';
   for(const b of o.booms){ const q=proj(b.pos,W,H,f); if(!q) continue; const r=b.size*q.s*(1+b.t*2); g.globalAlpha=1-b.t/.7; g.strokeStyle=b.col; g.lineWidth=2; g.beginPath(); g.arc(q.x,q.y,r,0,7); g.stroke(); g.fillStyle=b.col; for(let i=0;i<8;i++){ const a=i/8*Math.PI*2; g.fillRect(q.x+Math.cos(a)*r*1.2,q.y+Math.sin(a)*r*1.2,2,2); } g.globalAlpha=1; }
   // crosshair & target box
   if(!S.dmg.scope){ g.strokeStyle='rgba(124,247,255,.8)'; g.lineWidth=1.5; const c=14; g.beginPath(); g.moveTo(W/2-c*2,H/2); g.lineTo(W/2-c*.6,H/2); g.moveTo(W/2+c*.6,H/2); g.lineTo(W/2+c*2,H/2); g.moveTo(W/2,H/2-c*2); g.lineTo(W/2,H/2-c*.6); g.moveTo(W/2,H/2+c*.6); g.lineTo(W/2,H/2+c*2); g.stroke();
