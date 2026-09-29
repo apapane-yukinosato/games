@@ -80,7 +80,7 @@ details ul{margin:4px 0;padding-left:18px}
       <span class="num">❤️ あなた</span>
       <div class="bar"><i id="hpBar" style="background:#6BE38A"></i></div>
       <span class="num" id="hHp">100</span>
-      <span class="num">🛡 コア</span>
+      <span class="num">🛡 コアHP</span>
       <div class="bar"><i id="coreBar" style="background:#5CE1FF"></i></div>
       <span class="num" id="hCore">100</span>
       <div id="stock"></div>
@@ -93,7 +93,7 @@ details ul{margin:4px 0;padding-left:18px}
         <button class="cmd" id="dropBtn">📦 置く</button>
         <button class="cmd" id="homeBtn">🏠 基地へ</button>
       </div>
-      <button id="shootBtn" aria-label="撃つ">🔫 撃つ</button>
+      <button id="shootBtn" aria-label="撃つ">🔫 撃つ<br><small style="font-size:11px">SPACE</small></button>
     </div>
     <div id="build">
       <h3><span>🏗 建設（基地の中でできる）</span><span id="bHint"></span></h3>
@@ -108,6 +108,7 @@ details ul{margin:4px 0;padding-left:18px}
           <summary>あそびかた</summary>
           <ul>
             <li>スティック（矢印キー / WASD）で移動。資材のそばで止まると掘れる</li>
+            <li>🔫 撃つ：ボタン（PC は <b>SPACE キー</b>）。近くの敵を自動でねらう。押しつづけると連射</li>
             <li>背負えるのは3つまで。重い物を持つほど遅くなる。基地に入ると資材が入る</li>
             <li><b>荷物を持っているとエイリアンに狙われる</b>。撃って戦うか、荷物を置いて逃げるか</li>
             <li>🧊氷は近く、🪨鉱石・🔩レアメタルはもっと遠く、💎クリスタルはエイリアンの巣の近く</li>
@@ -386,6 +387,10 @@ function draw(){
   const domes=[[0,0,38],[-50,20,22],[50,20,22],[0,-55,20],[-55,-35,16],[55,-35,16]].slice(0,1+lv);
   for(const [dx,dy,r] of domes){ const x=X(CX+dx), y=Y(CY+dy); const gr=g.createRadialGradient(x-r*sc*.3,y-r*sc*.4,2,x,y,r*sc); gr.addColorStop(0,'#F4FAFF'); gr.addColorStop(1,'#7C93A8'); g.fillStyle=gr; g.beginPath(); g.arc(x,y,r*sc,Math.PI,0); g.lineTo(x+r*sc,y+r*sc*.25); g.lineTo(x-r*sc,y+r*sc*.25); g.fill(); }
   g.fillStyle=G.coreHit?'#FF5A4F':'#5CE1FF'; g.beginPath(); g.arc(X(CX),Y(CY+18),7*sc,0,7); g.fill();
+  { const bw=90*sc, bx0=X(CX)-bw/2, by0=Y(CY)-78*sc, k=G.core/G.coreMax; g.fillStyle='rgba(10,4,8,.75)'; g.fillRect(bx0-3,by0-14*sc,bw+6,22*sc);
+    g.fillStyle='#12090E'; g.fillRect(bx0,by0,bw,6*sc); g.fillStyle=k>.5?'#5CE1FF':k>.25?'#FFC857':'#FF5A4F'; g.fillRect(bx0,by0,bw*k,6*sc);
+    if(G.fenceHp>0){ const fm=G.fence===2?160:80; g.fillStyle='rgba(92,225,255,.35)'; g.fillRect(bx0,by0+7*sc,bw*G.fenceHp/fm,3*sc); }
+    g.fillStyle='#fff'; g.font=`800 ${Math.max(10,10*sc)}px "M PLUS Rounded 1c",sans-serif`; g.textAlign='center'; g.textBaseline='middle'; g.fillText(`コアHP ${Math.ceil(G.core)}/${G.coreMax}`,X(CX),by0-5*sc); }
   if(G.built.port){ g.fillStyle='#fff'; g.fillRect(X(CX+70),Y(CY-80),10*sc,60*sc); }
   // towers
   for(const t of G.towers){ const x=X(t.x), y=Y(t.y); g.fillStyle='#5A6B7C'; g.fillRect(x-10*sc,y-10*sc,20*sc,20*sc); g.fillStyle='#FFC857'; g.beginPath(); g.arc(x,y,6*sc,0,7); g.fill(); g.strokeStyle='rgba(255,200,87,.15)'; g.beginPath(); g.arc(x,y,t.range*sc,0,7); g.stroke(); }
@@ -456,7 +461,7 @@ function renderHud(){
   $('dayBar').style.width=(ct/CYCLE*100)+'%'; $('dayBar').style.background=G.night?'#6A5ACD':'#FFC857';
   $('hLv').textContent=`🏠 Lv${level()}`;
   $('hpBar').style.width=G.hp+'%'; $('hHp').textContent=Math.round(G.hp);
-  $('coreBar').style.width=G.core+'%'; $('hCore').textContent=Math.round(G.core)+(G.fenceHp>0?` +🛡${Math.round(G.fenceHp)}`:'');
+  $('coreBar').style.width=G.core+'%'; $('hCore').textContent=`${Math.ceil(G.core)}/${G.coreMax}`+(G.fenceHp>0?`　🛡フェンス${Math.ceil(G.fenceHp)}`:'');
   $('stock').innerHTML=Object.entries(G.stock).map(([k,v])=>`<span>${RES[k].ic}${v}</span>`).join('');
   $('carry').textContent=G.p.carry.length?G.p.carry.map(k=>RES[k].ic).join('')+`（${G.p.carry.length}/${cap()}）`:`かばん 0/${cap()}`;
   $('dropBtn').disabled=!G.p.carry.length; $('homeBtn').disabled=inBase(G.p);
@@ -510,6 +515,7 @@ addEventListener('keydown',e=>{
   if(!keys[e.code]&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD','Space','KeyX'].includes(e.code)){ ac(); user(); homeGo=false; }
   keys[e.code]=true; if(e.repeat) return;
   if(e.code==='KeyX') dropOne();
+  if(e.code==='Space'&&G&&!auto) playerShoot();   // fire on the press itself so quick taps always shoot
   if(e.code==='KeyP') paused=!paused;
 });
 addEventListener('keyup',e=>{ keys[e.code]=false; });
@@ -533,7 +539,7 @@ requestAnimationFrame(loop);
 
 // test hook
 window.__miner={
-  get s(){ return G&&{phase,t:G.t,day:G.day,night:G.night,hp:G.hp,core:G.core,fenceHp:G.fenceHp,stock:{...G.stock},built:Object.keys(G.built),carry:[...G.p.carry],pos:{x:G.p.x,y:G.p.y},dead:G.p.dead,enemies:G.enemies.length,kills:G.kills,dropped:G.dropped,deaths:G.deaths,end:G.end,auto}; },
+  get s(){ return G&&{phase,t:G.t,day:G.day,night:G.night,hp:G.hp,core:G.core,fenceHp:G.fenceHp,stock:{...G.stock},built:Object.keys(G.built),carry:[...G.p.carry],pos:{x:G.p.x,y:G.p.y},dead:G.p.dead,enemies:G.enemies.length,kills:G.kills,dropped:G.dropped,deaths:G.deaths,end:G.end,auto,shots:G.shots.length}; },
   bot:BOT, setAuto, start, seed(n){ rand=rng(n); }, manual(v=true){ manualClock=v; }, step(dt){ update(dt); if(phase==='play') renderHud(); }, build, input,
 };
 })();
