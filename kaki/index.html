@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>火器円舞</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&display=swap">
+<style>
+:root{
+  --bg:#171210; --panel:#241c18; --panel2:#2f2520; --ink:#f3e9d8; --sub:#b9a78e; --line:#4a3a30;
+  --gold:#d9ae5c; --red:#c8413a; --blue:#4d7fc0; --green:#4fa36b; --warn:#e0a13a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;
+  background:radial-gradient(ellipse at 50% -10%,#3a2418 0,transparent 60%),var(--bg);min-height:100vh}
+.mincho{font-family:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif}
+#app{max-width:560px;margin:0 auto;padding:10px 12px 30px;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+button{font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;touch-action:manipulation}
+button:disabled{opacity:.4;cursor:default}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.pri{background:linear-gradient(#a8322c,#7c201c);border-color:#e0766c;font-weight:700}
+.gold{background:linear-gradient(#b8893a,#8a6222);border-color:#f0cf8a;color:#fff8e6;font-weight:700}
+[hidden]{display:none!important}
+header.top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+header.top a{color:var(--sub);text-decoration:none;font-size:14px;padding:6px 2px}
+header.top .ttl{flex:1;text-align:center;font-size:18px;color:var(--gold);letter-spacing:.1em}
+header.top button{padding:5px 9px;font-size:13px}
+#autoBtn[aria-pressed="true"]{background:var(--gold);color:#1b1410;border-color:#fff0c8}
+.res{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;color:var(--sub);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin-bottom:8px}
+.res b{color:var(--ink);font-weight:700}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:8px}
+.tabs button{padding:8px 0;font-size:14px}
+.tabs button.on{background:var(--gold);color:#1b1410;border-color:#fff0c8;font-weight:700}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px}
+.panel h3{margin:0 0 8px;font-size:15px;color:var(--gold)}
+.note{font-size:12px;color:var(--sub);line-height:1.6}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.grow{flex:1}
+/* タイトル */
+#sc-title{text-align:center;padding-top:6vh}
+.logo{font-size:clamp(52px,17vw,84px);letter-spacing:.12em;margin:10px 0 0;color:#f6e3b4;text-shadow:0 0 18px rgba(217,174,92,.45),0 3px 0 #6b1d18}
+.logo-sub{letter-spacing:.5em;color:var(--sub);font-size:13px;margin:6px 0 20px}
+#titleArt{width:100%;max-width:420px;aspect-ratio:3/2;display:block;margin:0 auto 18px;border-radius:12px;border:1px solid var(--line)}
+#sc-title .pri,#sc-title .gold{width:100%;max-width:360px;font-size:18px;padding:12px;margin:6px auto;display:block}
+/* 初期銃 */
+.pick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pick button{padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.pick img{width:84px;height:84px;border-radius:10px}
+/* 部隊カード */
+.pcard{display:grid;grid-template-columns:64px 1fr;gap:4px 10px;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);margin-bottom:6px}
+.pcard img{width:64px;height:64px;border-radius:8px;grid-row:span 3}
+.pcard .nm{font-weight:700;font-size:15px}
+.pcard .nm small{font-weight:400;color:var(--sub);font-size:11px;margin-left:4px}
+.lead{display:inline-block;background:var(--red);color:#fff;font-size:10px;border-radius:4px;padding:0 5px;margin-right:4px;vertical-align:2px}
+.hpbar{height:8px;background:#120d0b;border-radius:4px;overflow:hidden;border:1px solid var(--line)}
+.hpbar i{display:block;height:100%;background:var(--green)}
+.hpbar i.l{background:#9bb34a}.hpbar i.m{background:var(--warn)}.hpbar i.h{background:var(--red)}
+.sous{display:flex;gap:4px;flex-wrap:wrap}
+.sous select{font:inherit;font-size:11px;background:#1b1512;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:3px;max-width:120px}
+.tag{font-size:11px;border-radius:4px;padding:0 5px;border:1px solid var(--line);color:var(--sub)}
+.tag.sakura{color:#ffb7c9;border-color:#ffb7c9}.tag.tired{color:#ff8a7a;border-color:#ff8a7a}
+.tag.h{color:#fff;background:var(--red);border-color:var(--red)}.tag.m{color:#1b1410;background:var(--warn);border-color:var(--warn)}.tag.l{color:#1b1410;background:#9bb34a;border-color:#9bb34a}
+.mini{display:flex;gap:4px}
+.mini button{padding:3px 8px;font-size:12px}
+/* 合戦場 */
+.maps button{display:block;width:100%;text-align:left;margin-bottom:6px;padding:10px}
+.maps .mn{font-size:17px;font-weight:700}
+.maps .ms{font-size:12px;color:var(--sub)}
+.maps .clr{color:var(--gold);float:right}
+/* 工房 */
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.grid4 button,.grid3 button{padding:8px 2px;font-size:13px;line-height:1.3}
+.grid4 small,.grid3 small{display:block;font-size:10px;color:var(--sub)}
+/* 地図 */
+#mapBox{position:relative;width:100%;aspect-ratio:16/10;background:linear-gradient(#2c3a2a,#1f2a1d);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+#mapBox.night{background:linear-gradient(#141a2e,#0b0f1c)}
+#mapBox svg{position:absolute;inset:0;width:100%;height:100%}
+.node{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;border:2px solid #0006;color:#1b1410;background:#d8c9a8}
+.node.b{background:#d98a6a}.node.r{background:#8fc27a}.node.boss{background:#c8413a;color:#fff;width:42px;height:42px;margin:-21px 0 0 -21px}.node.S{background:#e7d9b3}
+.node.done{opacity:.55}
+#marker{position:absolute;width:26px;height:26px;margin:-36px 0 0 -13px;transition:left .6s,top .6s;pointer-events:none;font-size:22px;text-align:center}
+#compass{position:absolute;left:50%;top:50%;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;background:radial-gradient(#f3e3bb,#b58d45);border:3px solid #6b4a1c;display:flex;align-items:center;justify-content:center;font-size:40px;box-shadow:0 0 30px #0009}
+#compass i{display:block;transition:transform 1s cubic-bezier(.2,.9,.3,1);font-style:normal}
+.plist{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:8px}
+/* 戦闘 */
+#sc-battle{position:relative}
+.bhead{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--sub);margin-bottom:6px}
+.side{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.u{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:3px 3px 4px;text-align:center;min-height:98px;transition:transform .15s}
+.u img{width:100%;aspect-ratio:1;border-radius:6px;display:block}
+.u .n{font-size:10px;line-height:1.2;height:12px;overflow:hidden;white-space:nowrap;margin:2px 0}
+.u .hpbar{height:6px}
+.u .sp{display:flex;gap:2px;margin-top:2px;height:4px}
+.u .sp i{flex:1;background:#6b8fc7;border-radius:2px}
+.u .sp i.x{background:#3a2e28}
+.u .st{position:absolute;left:2px;right:2px;top:30%;font-size:11px;font-weight:700;border-radius:4px;padding:1px 0;pointer-events:none}
+.u.down{filter:grayscale(1) brightness(.55)}
+.u.brk{filter:grayscale(1) brightness(.3)}
+.u.act{transform:translateY(-8px) scale(1.06);border-color:var(--gold);box-shadow:0 0 12px var(--gold)}
+.enemy .u.act{transform:translateY(8px) scale(1.06);border-color:var(--red);box-shadow:0 0 12px var(--red)}
+.u.hit{animation:hit .35s}
+@keyframes hit{0%,100%{transform:none}25%{transform:translateX(-4px);background:#6b1d18}75%{transform:translateX(4px)}}
+.u.shin{border-color:#ff6ad5;box-shadow:0 0 10px #ff6ad5}
+.dmg{position:absolute;left:0;right:0;top:20%;font-weight:800;font-size:16px;color:#fff;text-shadow:0 0 3px #000,0 0 3px #000;animation:up .8s forwards;pointer-events:none;z-index:3}
+.dmg.c{color:#ffd24a;font-size:19px}.dmg.s{color:#9cc3ff;font-size:13px}.dmg.m{color:#ccc;font-size:12px}
+@keyframes up{to{transform:translateY(-26px);opacity:0}}
+.form{font-size:11px;color:var(--sub);margin:4px 0}
+.form b{color:var(--gold)}
+#stage{position:relative;height:118px;margin:6px 0;border-radius:10px;background:linear-gradient(#2a1d17,#1b1411);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden}
+#stage.night{background:linear-gradient(#141a2e,#0b0f1c)}
+#phase{font-size:13px;color:var(--gold);letter-spacing:.2em}
+#msg{font-size:17px;font-weight:700;padding:0 10px;line-height:1.4}
+#msg.big{font-size:28px;color:#ff9ad8;text-shadow:0 0 12px #ff3fb0}
+#msg.duel{font-size:26px;color:#ffd24a}
+#bubble{font-size:13px;color:#f3e9d8;margin-top:4px;min-height:18px;padding:0 8px}
+#forms{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+#forms button{padding:9px 2px;font-size:14px;line-height:1.25}
+#forms small{display:block;font-size:10px;color:var(--sub)}
+#forms button.adv{border-color:#6fd08a;box-shadow:inset 0 0 0 1px #6fd08a}
+#forms button.dis{border-color:#e0766c}
+#forms .adv small{color:#8fe0a4}#forms .dis small{color:#ff9d93}
+.bctl{display:flex;justify-content:flex-end;gap:6px;margin-top:8px}
+.bctl button{font-size:12px;padding:5px 10px}
+/* モーダル */
+#modal{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;padding:14px;z-index:20}
+#mbox{width:100%;max-width:460px;max-height:88vh;overflow:auto;background:var(--panel);border:1px solid var(--gold);border-radius:12px;padding:14px}
+#mbox h2{margin:0 0 8px;text-align:center;color:var(--gold)}
+.rank{font-size:64px;text-align:center;line-height:1;margin:4px 0;color:#ffd24a;text-shadow:0 0 16px #c8413a}
+.rank small{display:block;font-size:14px;color:var(--ink);text-shadow:none}
+.homare{display:flex;gap:10px;align-items:center;background:var(--panel2);border-radius:10px;padding:8px;margin:8px 0}
+.homare img{width:60px;height:60px;border-radius:8px}
+.explist{font-size:13px;line-height:1.7}
+.up{color:#ffd24a;font-weight:700}
+.mbtns{display:flex;gap:8px;margin-top:12px}
+.mbtns button{flex:1;padding:11px}
+.rlist{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.rlist button{padding:4px;font-size:11px}
+.rlist img{width:100%;border-radius:6px;display:block}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000d;border:1px solid var(--gold);border-radius:20px;padding:8px 16px;font-size:13px;z-index:30;pointer-events:none;transition:opacity .3s;max-width:90vw;text-align:center}
+.keys{font-size:11px;color:var(--sub);margin-top:10px;text-align:center}
+@media (pointer:coarse){.keys{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <a href="../">← 一覧</a>
+    <span class="ttl mincho">火器円舞</span>
+    <button id="autoBtn" aria-pressed="false" title="オート（O キー）">🤖 オート</button>
+    <button id="sndBtn" aria-pressed="true" title="音（M キー）">🔊</button>
+  </header>
+
+  <!-- タイトル -->
+  <section id="sc-title">
+    <div class="logo mincho">火器円舞</div>
+    <div class="logo-sub mincho">かきえんぶ</div>
+    <canvas id="titleArt" width="600" height="400"></canvas>
+    <button class="pri mincho" id="startBtn">はじめる</button>
+    <button id="resetBtn" style="margin-top:14px;font-size:12px">最初からやり直す</button>
+    <p class="note" id="bestT" style="margin-top:14px"></p>
+    <p class="note">銃に宿った九十九神「銃士（じゅうし）」を率いて、<br>歴史をむしばむ「錆鬼（さびおに）」をうち払え。</p>
+  </section>
+
+  <!-- 初期銃えらび -->
+  <section id="sc-pick" hidden>
+    <div class="panel">
+      <h3 class="mincho">最初の一挺をえらぶ</h3>
+      <p class="note">はじめに共に戦う銃士をえらんでください。馬上筒と狭間筒もなかまに加わります。</p>
+      <div class="pick" id="pickBox"></div>
+    </div>
+  </section>
+
+  <!-- 本陣 -->
+  <section id="sc-home" hidden>
+    <div class="res" id="resBar"></div>
+    <div class="tabs" id="tabs">
+      <button data-t="party" class="on">部隊</button><button data-t="sortie">出陣</button><button data-t="work">工房</button><button data-t="list">名簿</button>
+    </div>
+    <div id="tab-party"></div>
+    <div id="tab-sortie" hidden></div>
+    <div id="tab-work" hidden></div>
+    <div id="tab-list" hidden></div>
+  </section>
+
+  <!-- 合戦場マップ -->
+  <section id="sc-map" hidden>
+    <div class="row" style="margin-bottom:6px"><b class="mincho grow" id="mapTitle" style="font-size:17px;color:var(--gold)"></b><span class="note" id="mapInfo"></span></div>
+    <div id="mapBox"><svg id="mapSvg" viewBox="0 0 100 62.5" preserveAspectRatio="none"></svg><div id="marker">🚩</div><div id="compass" hidden><i>🧭</i></div></div>
+    <div class="plist" id="mapParty"></div>
+    <p class="note" id="mapNote" style="min-height:20px;margin:8px 0"></p>
+    <div class="row"><button class="pri grow" id="goBtn" style="padding:12px;font-size:17px">進軍</button><button id="backBtn" style="padding:12px 18px">帰還</button></div>
+  </section>
+
+  <!-- 戦闘 -->
+  <section id="sc-battle" hidden>
+    <div class="bhead"><span id="bTitle"></span><span id="bSpeedWrap"><button id="speedBtn">▶▶ 倍速</button></span></div>
+    <div class="side enemy" id="sideE"></div>
+    <div class="form" id="formE"></div>
+    <div id="stage"><div id="phase"></div><div id="msg"></div><div id="bubble"></div></div>
+    <div class="form" id="formU"></div>
+    <div class="side" id="sideU"></div>
+    <div id="forms" hidden></div>
+    <p class="keys">PC：1〜6 陣形　Enter 決定・次へ　O オート　M 音</p>
+  </section>
+</div>
+
+<div id="modal" hidden><div id="mbox"></div></div>
+<div id="toast" style="opacity:0"></div>
+
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+let seedV=(Date.now()%2147483646)+1;
+function rnd(){ seedV=seedV*16807%2147483647; return (seedV-1)/2147483646; }
+const ri=(a,b)=>a+Math.floor(rnd()*(b-a+1));
+const pick=a=>a[Math.floor(rnd()*a.length)];
+function wpick(pairs){ let s=0; for(const p of pairs) s+=p[1]; let r=rnd()*s; for(const p of pairs){ r-=p[1]; if(r<0) return p[0]; } return pairs[pairs.length-1][0]; }
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ================= データ ================= */
+// 銃種（刀種にあたる）
+const TYPES={
+  tan:{n:'短筒',slots:1,range:'単',night:1.3,col:'#a8443c',sou:['軽歩','重歩','投石']},
+  ki:{n:'騎銃',slots:2,range:'単',night:1.15,col:'#b0702c',sou:['軽歩','重歩','軽騎','盾','投石']},
+  sho:{n:'小銃',slots:2,range:'単',night:1.0,col:'#35699a',sou:['軽歩','重歩','軽騎','重騎','盾','投石','砲兵']},
+  sam:{n:'士筒',slots:3,range:'単',night:.8,col:'#4a579c',sou:['軽歩','重歩','軽騎','重騎','盾','弓','砲兵']},
+  oz:{n:'大筒',slots:3,range:'複',night:.6,col:'#6a4394',sou:['軽歩','重歩','盾']},
+  haz:{n:'狭間筒',slots:1,range:'貫',night:1.0,col:'#2f8266',sou:['軽歩','重歩','盾']},
+  rap:{n:'喇叭銃',slots:2,range:'全',night:.9,col:'#8f7630',sou:['軽歩','重歩','軽騎','盾']},
+};
+const RANGE_TXT={'単':'単体','複':'複数（2〜3体）','全':'全体','貫':'貫通（護装を無視）'};
+const BASE={
+  tan:{hp:24,atk:30,def:22,mob:42,crit:48,scout:32,hide:46},
+  ki:{hp:30,atk:34,def:28,mob:37,crit:40,scout:28,hide:38},
+  sho:{hp:38,atk:44,def:36,mob:32,crit:30,scout:22,hide:26},
+  sam:{hp:48,atk:54,def:46,mob:26,crit:22,scout:18,hide:16},
+  oz:{hp:58,atk:60,def:52,mob:15,crit:18,scout:12,hide:10},
+  haz:{hp:42,atk:46,def:30,mob:30,crit:28,scout:30,hide:22},
+  rap:{hp:46,atk:40,def:36,mob:22,crit:24,scout:20,hide:18},
+};
+// 護装（刀装にあたる）
+const SOU={
+  '軽歩':{n:'軽歩兵',dur:6,def:2,mob:2},
+  '重歩':{n:'重歩兵',dur:10,def:4,mob:-1},
+  '盾':{n:'盾兵',dur:14,def:3},
+  '軽騎':{n:'軽騎兵',dur:8,atk:2,mob:3},
+  '重騎':{n:'重騎兵',dur:12,atk:3,def:2},
+  '投石':{n:'投石兵',dur:5,ranged:7},
+  '弓':{n:'弓兵',dur:6,ranged:9},
+  '砲兵':{n:'砲兵',dur:6,ranged:12,scout:3},
+};
+const SOU_KEYS=Object.keys(SOU);
+const RANKS=['並','上','特上'], RMUL=[1,1.5,2.1];
+const RANGED_ORDER=['弓','砲兵','投石'];
+// 陣形：魚鱗＞鶴翼＞横隊＞方陣＞雁行＞逆行＞魚鱗
+const FORMS=[
+  {n:'魚鱗陣',d:'打撃↑ 統率↓',m:{atk:1.1,def:.9}},
+  {n:'鶴翼陣',d:'打撃↑ 統率・機動↓',m:{atk:1.12,def:.9,mob:.9}},
+  {n:'横隊陣',d:'統率・必殺↑',m:{def:1.1,crit:1.3,atk:.95}},
+  {n:'方陣',d:'統率↑↑ 機動・打撃↓',m:{def:1.18,mob:.9,atk:.92}},
+  {n:'雁行陣',d:'機動↑ 統率・必殺↓',m:{mob:1.12,def:.92,crit:.8}},
+  {n:'逆行陣',d:'機動↑↑ 統率↓',m:{mob:1.18,def:.9}},
+];
+const BEATS=[1,2,3,4,5,0];
+const advOf=(a,b)=>BEATS[a]===b?1:BEATS[b]===a?-1:0;
+
+const CH=[
+  {id:'tane',n:'種子島',t:'sho',r:2,hair:'#2a211c',eye:'#c9463d',cloth:'#9c2f2a',sty:2,
+   join:'種子島だ。この国で最初に火を噴いた一挺……って言えば、わかるかな',hom:'当然。始まりの銃だからね',shin:'火縄はまだ燃えてる……！',brk:'……火が、消える……'},
+  {id:'kuni',n:'国友',t:'sho',r:2,hair:'#6b4a2e',eye:'#3f7fb0',cloth:'#2f4f7a',sty:0,
+   join:'近江は国友村で打たれた国友筒です。精度ならおまかせを',hom:'狙いどおり、ですね',shin:'照準、ずらしません……！',brk:'鍛冶場の音が……聞こえる……'},
+  {id:'sakai',n:'堺',t:'sho',r:2,hair:'#b8863a',eye:'#4fa36b',cloth:'#4f6b2f',sty:3,
+   join:'堺の町で生まれた堺筒や。商いも戦も、段取り八分やで',hom:'ええ商いやったわ',shin:'ここが勝負どころや！',brk:'……えらい、高うついたなぁ……'},
+  {id:'bajo',n:'馬上筒',t:'tan',r:1,hair:'#d86a3a',eye:'#e0a13a',cloth:'#b8643a',sty:3,
+   join:'馬上筒！ 馬の上からでも撃てる、ちっちゃいけど速いんだよ！',hom:'いっちばーん！',shin:'まだ、走れる……！',brk:'ごめん……もう、走れないや……'},
+  {id:'futo',n:'懐筒',t:'tan',r:2,hair:'#3a3346',eye:'#a78bd8',cloth:'#2f2a3a',sty:1,
+   join:'懐筒。……懐に入れておけ。いざというとき、役に立つ',hom:'……当然だ',shin:'懐に入った。終わりだ',brk:'……ここまで、か'},
+  {id:'mura',n:'村田騎銃',t:'ki',r:2,hair:'#1f2a3a',eye:'#4d7fc0',cloth:'#2f3f5a',sty:0,
+   join:'村田騎銃であります！ 国産の誇り、お見せします！',hom:'光栄であります！',shin:'引くわけにはいかないのであります！',brk:'申し訳……ありません……'},
+  {id:'spen',n:'スペンサー',t:'ki',r:3,hair:'#d8c070',eye:'#3f9a8a',cloth:'#6a4a2a',sty:3,
+   join:'スペンサー騎銃。七連発だぜ、退屈させねえよ',hom:'ラッキーセブン、ってな',shin:'残り七発、全部くれてやる！',brk:'弾切れ、か……わるくなかったぜ'},
+  {id:'geve',n:'ゲベール',t:'sho',r:2,hair:'#7a6a5a',eye:'#c98a3a',cloth:'#5a4a3a',sty:0,
+   join:'ゲベール銃だ。古い？ 撃てりゃ文句ねえだろ',hom:'古いのも悪くねえだろ？',shin:'錆びてねえ、まだ撃てる！',brk:'……ああ、これで本当に、骨董品だ'},
+  {id:'mini',n:'ミニエー',t:'sho',r:3,hair:'#e8e0d0',eye:'#6a8fd8',cloth:'#3a5a8a',sty:1,
+   join:'ミニエー銃と申します。ライフリング、ご存じ？',hom:'弾道は美しくなくては',shin:'螺旋の果てまで、届け！',brk:'美しく……散れたかしら'},
+  {id:'juu',n:'十匁筒',t:'sam',r:3,hair:'#2a2a2a',eye:'#c9463d',cloth:'#5a2a2a',sty:2,
+   join:'十匁筒。重いぞ。その分、よく効く',hom:'重さは強さだ',shin:'この重み、受けてみよ！',brk:'……重荷を、おろす時か'},
+  {id:'sanju',n:'三十匁筒',t:'sam',r:4,hair:'#c0c8d8',eye:'#d9ae5c',cloth:'#2a3a5a',sty:1,
+   join:'三十匁筒。城攻めの折には、私の出番だ',hom:'城も、敵も、同じこと',shin:'門ごと、撃ち抜く！',brk:'城は……落ちた、か'},
+  {id:'kakae',n:'抱え大筒',t:'oz',r:3,hair:'#e08aa8',eye:'#8a5ad8',cloth:'#6a3a7a',sty:2,
+   join:'抱え大筒だよ〜。抱えて撃つの、けっこう大変なんだから',hom:'どかーん、ってね！',shin:'まとめて吹っ飛べ〜っ！',brk:'……もう、持ちあがらないや……'},
+  {id:'kunik',n:'国崩し',t:'oz',r:5,hair:'#f0e0b0',eye:'#e04a3a',cloth:'#7a1f1a',sty:1,
+   join:'国崩し。南蛮より渡りし大砲なり。……国をも崩す、この一撃を見よ',hom:'崩れぬ国など、ない',shin:'これが、国崩しの名の由来だ！',brk:'我が身が、崩れるとは……'},
+  {id:'hazama',n:'狭間筒',t:'haz',r:2,hair:'#3a5a4a',eye:'#7ad8a8',cloth:'#2a4a3a',sty:1,
+   join:'狭間筒。城の狭間から、遠くを狙う。……静かにしてて',hom:'……見えてた',shin:'一点、貫く',brk:'……もう、何も見えない'},
+  {id:'snid',n:'スナイドル',t:'haz',r:3,hair:'#8a3a2a',eye:'#e0c060',cloth:'#4a3020',sty:0,
+   join:'スナイドル銃さ。後ろから込める新式だ、覚えときな',hom:'装填の速さが違うのさ',shin:'込めて、撃つ。それだけだ！',brk:'次の弾は……もう、込められねえ'},
+  {id:'rappa',n:'ラッパ銃',t:'rap',r:2,hair:'#e0b040',eye:'#e0603a',cloth:'#8a5a1a',sty:3,
+   join:'ラッパ銃！ 口が広いから、ばらまき放題だぞ！',hom:'ぜんぶ当たった！',shin:'ぜんぶまとめて、パーン！',brk:'ラッパ、鳴らせなく……なっちゃった'},
+  {id:'chou',n:'鳥銃',t:'rap',r:3,hair:'#4a6a8a',eye:'#e08aa8',cloth:'#2a3a4a',sty:2,
+   join:'鳥銃……鳥を撃つための銃よ。でも今日の獲物は、あなたたち',hom:'狩りは、得意なの',shin:'群れごと、落とす',brk:'鳥みたいに……飛んで、いけたら'},
+];
+const CHM={}; CH.forEach(c=>CHM[c.id]=c);
+const EN_NAME={tan:'錆短筒',ki:'錆騎銃',sho:'錆小銃',sam:'錆士筒',oz:'錆大筒',haz:'錆狭間',rap:'錆喇叭'};
+// 合戦場
+const MAPS=[
+  {n:'種子島',era:'天文十二年（1543）',lv:2,f:.74,night:false,forms:[3,3,2,1,1,1],boss:'錆将・赤錆',souLv:0,drop:['bajo','hazama','rappa','mura','futo'],
+   nodes:{S:{x:8,y:32},A:{x:28,y:32,k:'b',en:['tan','tan','sho'],nx:[['B',1],['C',1]]},B:{x:48,y:12,k:'r',nx:[['D',1]]},C:{x:48,y:52,k:'b',en:['sho','ki','tan'],nx:[['D',1]]},
+     D:{x:70,y:32,k:'b',en:['sho','sho','haz','tan'],nx:[['X',1]]},X:{x:90,y:32,k:'boss',en:['B:sam','sho','sho','tan'],nx:[]}},start:[['A',1]]},
+  {n:'長篠・設楽原',era:'天正三年（1575）',lv:6,f:.78,night:false,forms:[1,2,3,3,2,1],boss:'錆将・鉄火',souLv:1,drop:['geve','kuni','sakai','hazama','rappa','juu','mura'],
+   nodes:{S:{x:6,y:32},A:{x:22,y:18,k:'b',en:['sho','sho','ki','tan'],nx:[['B',2],['C',1]]},E:{x:22,y:48,k:'r',nx:[['C',1]]},B:{x:42,y:10,k:'b',en:['sam','sho','ki','tan'],nx:[['D',1]]},
+     C:{x:42,y:44,k:'b',en:['haz','sho','sho','tan','tan'],nx:[['D',1],['F',1]]},D:{x:62,y:22,k:'b',en:['sho','sho','sho','haz','ki'],nx:[['X',1]]},F:{x:66,y:50,k:'r',nx:[['X',1]]},
+     X:{x:88,y:32,k:'boss',en:['B:sam','sam','sho','sho','haz'],nx:[]}},start:[['A',2],['E',1]]},
+  {n:'関ヶ原',era:'慶長五年（1600）',lv:12,f:.8,night:false,forms:[2,1,2,3,2,2],boss:'錆将・朱鞘',souLv:1,drop:['juu','spen','mini','kakae','snid','chou','sanju'],
+   nodes:{S:{x:6,y:32},A:{x:22,y:32,k:'b',en:['sam','sho','sho','ki','haz'],nx:[['B',1],['C',1]]},B:{x:40,y:12,k:'b',en:['oz','sho','sho','tan','tan'],nx:[['D',1]]},
+     C:{x:40,y:52,k:'r',nx:[['E',1]]},D:{x:60,y:12,k:'b',en:['sam','sam','haz','ki','ki'],nx:[['X',2],['E',1]]},E:{x:62,y:48,k:'b',en:['rap','sho','sho','haz','tan','tan'],nx:[['X',1]]},
+     X:{x:88,y:30,k:'boss',en:['B:oz','sam','sam','sho','haz','rap'],nx:[]}},start:[['A',1]]},
+  {n:'本能寺（夜戦）',era:'天正十年（1582）',lv:16,f:.82,night:true,forms:[1,1,1,2,3,3],boss:'闇夜の錆将',souLv:2,drop:['futo','bajo','spen','mura','snid','hazama'],
+   nodes:{S:{x:6,y:32},A:{x:24,y:20,k:'b',en:['tan','tan','ki','ki','sho'],nx:[['B',1],['C',1]]},B:{x:44,y:8,k:'b',en:['ki','ki','tan','tan','haz'],nx:[['D',1]]},
+     C:{x:44,y:42,k:'b',en:['sam','sho','tan','tan','tan'],nx:[['D',1]]},D:{x:66,y:26,k:'b',en:['haz','ki','ki','tan','tan','sho'],nx:[['X',1]]},
+     X:{x:88,y:36,k:'boss',en:['B:ki','ki','ki','haz','tan','tan'],nx:[]}},start:[['A',1]]},
+  {n:'鳥羽・伏見',era:'慶応四年（1868）',lv:22,f:.84,night:false,forms:[2,2,2,2,2,2],boss:'錆将・黒煙',souLv:2,drop:['mini','snid','spen','sanju','chou','kakae','kunik'],
+   nodes:{S:{x:6,y:32},A:{x:22,y:18,k:'b',en:['sho','sho','sho','haz','haz','ki'],nx:[['B',1],['C',1]]},B:{x:40,y:8,k:'b',en:['sam','sam','oz','sho','haz','ki'],nx:[['D',1]]},
+     C:{x:40,y:40,k:'r',nx:[['E',1]]},D:{x:60,y:18,k:'b',en:['rap','rap','sam','sho','sho','haz'],nx:[['X',1],['E',1]]},E:{x:62,y:48,k:'b',en:['oz','sam','sam','sho','ki','ki'],nx:[['X',1]]},
+     X:{x:88,y:30,k:'boss',en:['B:sam','oz','sam','sho','haz','rap'],nx:[]}},start:[['A',1]]},
+  {n:'黒船来航',era:'嘉永六年（1853）',lv:30,f:.88,night:false,forms:[2,2,1,3,2,2],boss:'錆大将・黒船',souLv:2,drop:['kunik','sanju','mini','kakae','chou','snid'],
+   nodes:{S:{x:6,y:32},A:{x:20,y:32,k:'b',en:['sam','sam','sho','sho','haz','haz'],nx:[['B',1],['C',1]]},B:{x:38,y:10,k:'b',en:['oz','oz','sam','sho','ki','ki'],nx:[['D',1]]},
+     C:{x:38,y:52,k:'b',en:['rap','rap','sam','sam','haz','ki'],nx:[['D',1]]},D:{x:58,y:32,k:'r',nx:[['E',1]]},E:{x:74,y:32,k:'b',en:['oz','sam','sam','sam','haz','rap'],nx:[['X',1]]},
+     X:{x:92,y:32,k:'boss',en:['B:oz','oz','sam','sam','haz','rap'],nx:[]}},start:[['A',1]]},
+];
+const FORGE=[
+  {n:'軽め',cost:[50,50,50,50],pool:{1:6,2:3,3:.6}},
+  {n:'標準',cost:[150,150,150,150],pool:{1:2,2:5,3:2.5,4:.4}},
+  {n:'重め',cost:[400,300,400,300],pool:{2:3,3:4,4:1.6,5:.45}},
+];
+const RES_N=['火薬','鉛','鉄','木'];
+
+/* ================= 音 ================= */
+let AC=null, soundOn=LS.get('kaki_sound','1')!=='0';
+function ac(){ if(!AC){ try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){} } if(AC&&AC.state==='suspended')AC.resume(); }
+function tone(f,d=.1,type='square',v=.05,f2=0,delay=0){ if(!soundOn||!AC||S.manual)return; const t=AC.currentTime+delay,o=AC.createOscillator(),g=AC.createGain(); o.type=type; o.frequency.setValueAtTime(f,t); if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d); g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(g).connect(AC.destination); o.start(t); o.stop(t+d+.02); }
+function noise(d=.15,v=.12,f=1200,delay=0){ if(!soundOn||!AC||S.manual)return; const n=Math.floor(AC.sampleRate*d),b=AC.createBuffer(1,n,AC.sampleRate),ch=b.getChannelData(0); for(let i=0;i<n;i++) ch[i]=(Math.random()*2-1)*Math.pow(1-i/n,2); const s=AC.createBufferSource(),fl=AC.createBiquadFilter(),g=AC.createGain(); s.buffer=b; fl.type='bandpass'; fl.frequency.value=f; g.gain.value=v; s.connect(fl).connect(g).connect(AC.destination); s.start(AC.currentTime+delay); }
+const SFX={
+  shot:()=>{ noise(.18,.2,900); tone(140,.12,'sawtooth',.05,60); },
+  hit:()=>{ noise(.1,.14,2200); tone(220,.08,'square',.04,110); },
+  crit:()=>{ noise(.2,.2,1600); tone(880,.15,'square',.05,440); },
+  miss:()=>tone(600,.08,'triangle',.04,900),
+  taiko:()=>{ tone(90,.3,'sine',.25,50); noise(.08,.1,300); },
+  shin:()=>{ [523,659,784,1046,1318].forEach((f,i)=>tone(f,.18,'square',.05,0,i*.06)); },
+  brk:()=>{ noise(.6,.2,500); tone(300,.8,'triangle',.07,80); },
+  win:()=>{ [392,523,659,784,659,784,1046].forEach((f,i)=>tone(f,.2,'triangle',.07,0,i*.12)); },
+  lose:()=>{ [330,294,262,196].forEach((f,i)=>tone(f,.3,'triangle',.07,0,i*.2)); },
+  ok:()=>tone(880,.06,'square',.04),
+  bell:()=>{ tone(1320,.5,'sine',.06); tone(1980,.4,'sine',.03,0,.02); },
+};
+
+/* ================= 状態 ================= */
+const S={screen:'title',auto:false,manual:false,t:0,autoT:0,tab:'party',sortie:null,B:null,speed:+LS.get('kaki_speed','1')||1,modalOn:false,modalA:null,moving:null,regenT:0,
+  stats:{battles:0,wins:0,loses:0,breaks:0,clears:0,S:0}};
+let G=null;
+function newG(){ return {v:1,res:[600,600,600,600],chars:[],party:[],items:[],cleared:{},omamori:1,uid:1,stats:{sorties:0,homare:0,breaks:0,sWins:0,battles:0}}; }
+function saveG(){ if(G) LS.set('kaki_save',JSON.stringify(G)); }
+function loadG(){ try{ const g=JSON.parse(LS.get('kaki_save','null')); if(g&&g.v===1) return g; }catch(e){} return null; }
+G=loadG();
+
+/* ================= 銃士の計算 ================= */
+function rmulOf(r){ return 1+(r-1)*.06; }
+function maxHp(c){ const d=CHM[c.cid]; return Math.round(BASE[d.t].hp*rmulOf(d.r)*(1+c.lv*.03)); }
+function expNext(lv){ return 25+lv*18; }
+function addChar(cid,lv=1){ const c={u:G.uid++,cid,lv,exp:0,hp:0,cond:49,sou:[],omamori:false}; c.hp=maxHp(c); const T=TYPES[CHM[cid].t]; c.sou=new Array(T.slots).fill(null); G.chars.push(c); return c; }
+function charBy(u){ return G.chars.find(c=>c.u===u); }
+function itemBy(u){ return G.items.find(i=>i.u===u); }
+function hpState(hp,max){ const r=hp/max; return hp<=0?'崩':r<=.25?'重傷':r<=.5?'中傷':r<=.75?'軽傷':''; }
+function hpCls(hp,max){ const r=hp/max; return r<=.25?'h':r<=.5?'m':r<=.75?'l':''; }
+function condTag(c){ return c.cond>=50?'<span class="tag sakura">🌸 桜</span>':c.cond<=20?'<span class="tag tired">疲労</span>':''; }
+function condMul(c){ return c.cond>=50?1.1:c.cond<=20?.8:c.cond<=29?.9:1; }
+function power(c){ const d=CHM[c.cid], b=BASE[d.t]; return Math.round((b.atk+b.def+b.hp*.5)*rmulOf(d.r)*(1+c.lv*.04)); }
+
+/* ================= 描画（肖像） ================= */
+const PC={};
+function purl(key,fn){ if(PC[key]) return PC[key]; const cv=document.createElement('canvas'); cv.width=cv.height=96; fn(cv.getContext('2d')); return PC[key]=cv.toDataURL(); }
+function drawGun(c,t){
+  c.save(); c.translate(48,52); c.rotate(-.75);
+  const L={tan:40,ki:66,sho:84,sam:92,oz:70,haz:110,rap:70}[t]||80, W={oz:14,sam:8,rap:7}[t]||5;
+  c.fillStyle='#5a3a22'; c.fillRect(-L/2-18,-2,26,W+8);           // 台木
+  c.fillStyle='#1c1612'; c.fillRect(-L/2,-W/2,L,W);                 // 銃身
+  if(t==='rap'){ c.beginPath(); c.moveTo(L/2,-W/2); c.lineTo(L/2+14,-W/2-8); c.lineTo(L/2+14,W/2+8); c.lineTo(L/2,W/2); c.fill(); }
+  if(t==='oz'){ c.beginPath(); c.arc(L/2,0,W/2+3,0,Math.PI*2); c.fill(); }
+  c.fillStyle='#c9a24a'; c.fillRect(-L/2+8,-W/2-1,4,W+2); c.fillRect(L/2-10,-W/2-1,3,W+2);
+  c.restore();
+}
+function drawChar(c,d){
+  const T=TYPES[d.t];
+  c.fillStyle=T.col; c.fillRect(0,0,96,96);
+  c.fillStyle='rgba(255,255,255,.1)'; for(let i=-96;i<120;i+=18){ c.beginPath(); c.moveTo(i,96); c.lineTo(i+50,0); c.lineTo(i+58,0); c.lineTo(i+8,96); c.fill(); }
+  drawGun(c,d.t);
+  const H=d.hair;
+  if(d.sty===1){ c.fillStyle=H; c.beginPath(); c.moveTo(26,40); c.quadraticCurveTo(22,80,30,92); c.lineTo(66,92); c.quadraticCurveTo(74,80,70,40); c.fill(); }
+  c.fillStyle=d.cloth; c.beginPath(); c.moveTo(14,96); c.quadraticCurveTo(18,70,48,68); c.quadraticCurveTo(78,70,82,96); c.fill();
+  c.fillStyle='#f3ecde'; c.beginPath(); c.moveTo(38,69); c.lineTo(48,86); c.lineTo(58,69); c.fill();
+  c.fillStyle='#c9a24a'; c.fillRect(46,74,4,4);
+  c.fillStyle='#f4d9c0'; c.fillRect(43,58,10,12);
+  c.beginPath(); c.ellipse(48,46,17,19,0,0,Math.PI*2); c.fill();
+  c.fillStyle=H;
+  c.beginPath(); c.ellipse(48,36,19,15,0,Math.PI,0); c.fill();
+  c.beginPath(); c.moveTo(29,38); for(let i=0;i<=6;i++){ c.lineTo(29+i*6.3,i%2?44+ (i===3?4:0):36); } c.lineTo(67,34); c.lineTo(29,30); c.fill();
+  if(d.sty===2){ c.beginPath(); c.moveTo(62,30); c.quadraticCurveTo(84,34,80,62); c.quadraticCurveTo(74,46,62,40); c.fill(); }
+  if(d.sty===3){ for(const [x,y] of [[30,26],[40,18],[52,17],[64,24]]){ c.beginPath(); c.moveTo(x-6,y+10); c.lineTo(x,y-6); c.lineTo(x+7,y+10); c.fill(); } }
+  if(d.sty===0){ c.fillRect(28,34,5,16); c.fillRect(63,34,5,16); }
+  c.fillStyle='#fff'; c.beginPath(); c.ellipse(41,49,4.2,5,0,0,Math.PI*2); c.ellipse(55,49,4.2,5,0,0,Math.PI*2); c.fill();
+  c.fillStyle=d.eye; c.beginPath(); c.ellipse(41.5,50,3,4,0,0,Math.PI*2); c.ellipse(54.5,50,3,4,0,0,Math.PI*2); c.fill();
+  c.fillStyle='#fff'; c.fillRect(40,47,2,2); c.fillRect(53,47,2,2);
+  c.strokeStyle='#5a3a2a'; c.lineWidth=1.4; c.beginPath(); c.moveTo(36,42); c.lineTo(45,43); c.moveTo(51,43); c.lineTo(60,42); c.moveTo(46,58); c.lineTo(50,58); c.stroke();
+}
+function drawEnemy(c,t,boss){
+  c.fillStyle=boss?'#4a1410':'#2a1c18'; c.fillRect(0,0,96,96);
+  for(let i=0;i<26;i++){ c.fillStyle=`rgba(${150+i*3},${60+i%5*10},30,.25)`; c.beginPath(); c.arc((i*37)%96,(i*53)%96,3+i%4,0,7); c.fill(); }
+  drawGun(c,t);
+  c.fillStyle='#3a2a24'; c.beginPath(); c.moveTo(14,96); c.quadraticCurveTo(18,66,48,64); c.quadraticCurveTo(78,66,82,96); c.fill();
+  c.fillStyle='#6a4a3a'; c.beginPath(); c.ellipse(48,44,19,21,0,0,Math.PI*2); c.fill();
+  c.fillStyle='#8a4a2a'; for(let i=0;i<8;i++){ c.beginPath(); c.arc(34+i*4,34+(i%3)*8,2.5,0,7); c.fill(); }
+  if(boss){ c.fillStyle='#c9a24a'; c.beginPath(); c.moveTo(30,30); c.lineTo(20,6); c.lineTo(40,26); c.moveTo(66,30); c.lineTo(76,6); c.lineTo(56,26); c.fill(); }
+  c.fillStyle='#ff3a2a'; c.shadowColor='#ff3a2a'; c.shadowBlur=8; c.fillRect(36,44,9,4); c.fillRect(52,44,9,4); c.shadowBlur=0;
+  c.fillStyle='#1a1210'; c.fillRect(38,56,20,4);
+}
+const charImg=cid=>purl('c:'+cid,c=>drawChar(c,CHM[cid]));
+const enImg=(t,boss)=>purl('e:'+t+(boss?'B':''),c=>drawEnemy(c,t,boss));
+
+/* ================= 画面 ================= */
+const SC=['title','pick','home','map','battle'];
+function show(n){ S.screen=n; SC.forEach(k=>$('sc-'+k).hidden=k!==n); S.autoT=0; window.scrollTo(0,0); }
+let toastT=0; function toast(t){ const e=$('toast'); e.textContent=t; e.style.opacity=1; toastT=2.2; }
+function openModal(html,btns){ $('mbox').innerHTML=html+'<div class="mbtns">'+btns.map((b,i)=>`<button class="${b.cls||''}" data-i="${i}">${b.t}</button>`).join('')+'</div>'; $('modal').hidden=false; S.modalOn=true; S.modalA=btns; S.autoT=0;
+  $('mbox').querySelectorAll('.mbtns button').forEach(b=>b.addEventListener('click',()=>{ ac(); const f=btns[+b.dataset.i].f; if(!btns[+b.dataset.i].keep) closeModal(); f&&f(); })); }
+function closeModal(){ $('modal').hidden=true; S.modalOn=false; S.modalA=null; }
+function modalPrimary(){ const b=S.modalA; if(!b) return; const k=b.findIndex(x=>x.pri); const f=b[k<0?0:k]; if(!f.keep) closeModal(); f.f&&f.f(); }
+
+/* ---------- タイトル ---------- */
+function renderTitle(){
+  const c=$('titleArt').getContext('2d');
+  const g=c.createLinearGradient(0,0,0,400); g.addColorStop(0,'#3a1f16'); g.addColorStop(1,'#120c0a'); c.fillStyle=g; c.fillRect(0,0,600,400);
+  c.fillStyle='rgba(217,174,92,.18)'; c.beginPath(); c.arc(300,210,150,0,7); c.fill();
+  const ids=['tane','kunik','spen','hazama','bajo'];
+  const pos=[[300,190,1.9],[140,220,1.4],[460,220,1.4],[40,260,1.05],[560,260,1.05]];
+  [3,4,1,2,0].forEach(k=>{ const im=new Image(); im.src=charImg(ids[k]); const [x,y,s]=pos[k]; im.onload=()=>{ c.save(); c.beginPath(); c.arc(x,y,48*s,0,7); c.clip(); c.drawImage(im,x-48*s,y-48*s,96*s,96*s); c.restore(); c.strokeStyle='#d9ae5c'; c.lineWidth=3; c.beginPath(); c.arc(x,y,48*s,0,7); c.stroke(); }; });
+  const b=G?G.stats:null;
+  $('bestT').textContent=G?`攻略：${Object.keys(G.cleared).length}/${MAPS.length} 合戦場　誉 ${b.homare} 回　完全勝利 ${b.sWins} 回　銃士 ${G.chars.length} 挺`:'記録：まだありません';
+  $('startBtn').textContent=G?'つづきから':'はじめる';
+  $('resetBtn').hidden=!G;
+}
+function startGame(){ if(!G){ show('pick'); renderPick(); } else goHome(); }
+function renderPick(){
+  $('pickBox').innerHTML=['tane','kuni','sakai'].map(id=>`<button data-id="${id}"><img src="${charImg(id)}" alt=""><b class="mincho">${CHM[id].n}</b><span class="note">${TYPES[CHM[id].t].n}</span></button>`).join('');
+  $('pickBox').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ ac(); userAct(); choose(b.dataset.id); }));
+}
+function choose(id){
+  G=newG(); const a=addChar(id), b=addChar('bajo'), h=addChar('hazama'); G.party=[a.u,b.u,h.u];
+  for(const [t,r] of [['軽歩',0],['軽歩',0],['重歩',0],['投石',0]]) G.items.push({u:G.uid++,type:t,rank:r});
+  autoEquip(true); saveG();
+  openModal(`<h2 class="mincho">${CHM[id].n}</h2><div class="homare"><img src="${charImg(id)}"><div>「${esc(CHM[id].join)}」</div></div><p class="note">馬上筒と狭間筒も部隊に加わった。まずは「出陣」から「種子島」へ向かおう。</p>`,[{t:'本陣へ',pri:1,cls:'pri',f:goHome}]);
+}
+
+/* ---------- 本陣 ---------- */
+function goHome(){ show('home'); if(S.sortie) endSortie(); renderHome(); }
+function renderRes(){ $('resBar').innerHTML=RES_N.map((n,i)=>`${n} <b>${G.res[i]}</b>`).join('')+`<span>お守り <b>${G.omamori}</b></span>`; }
+function renderHome(){ renderRes(); document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===S.tab)); ['party','sortie','work','list'].forEach(k=>$('tab-'+k).hidden=k!==S.tab); ({party:renderParty,sortie:renderSortie,work:renderWork,list:renderList})[S.tab](); }
+function sousHtml(c,editable){
+  const T=TYPES[CHM[c.cid].t];
+  return c.sou.map((iu,k)=>{ const it=iu&&itemBy(iu);
+    if(!editable) return `<span class="tag">${it?RANKS[it.rank]+SOU[it.type].n:'―'}</span>`;
+    const opts=G.items.filter(x=>T.sou.includes(x.type)&&(x.u===iu||!isEquipped(x.u)));
+    const groups={}; opts.forEach(x=>{ const key=x.type+':'+x.rank; if(!groups[key]||x.u===iu) groups[key]=x; });
+    return `<select data-c="${c.u}" data-k="${k}"><option value="">（なし）</option>${Object.values(groups).sort((a,b)=>SOU_KEYS.indexOf(a.type)-SOU_KEYS.indexOf(b.type)||b.rank-a.rank).map(x=>`<option value="${x.u}" ${x.u===iu?'selected':''}>${RANKS[x.rank]}${SOU[x.type].n}</option>`).join('')}</select>`; }).join('');
+}
+function isEquipped(iu){ return G.chars.some(c=>c.sou.includes(iu)); }
+function pcard(c,i,edit){
+  const d=CHM[c.cid], mh=maxHp(c), st=hpState(c.hp,mh);
+  return `<div class="pcard"><img src="${charImg(c.cid)}" alt=""><div class="nm">${i===0?'<span class="lead">隊長</span>':''}${d.n}<small>${TYPES[d.t].n}・★${d.r}・Lv${c.lv}</small></div>
+    <div class="row" style="gap:6px"><div class="hpbar grow"><i class="${hpCls(c.hp,mh)}" style="width:${100*c.hp/mh}%"></i></div><span class="note">${c.hp}/${mh}</span>${st?`<span class="tag ${hpCls(c.hp,mh)}">${st}</span>`:''}${condTag(c)}${c.omamori?'<span class="tag">お守り</span>':''}</div>
+    <div class="sous">${sousHtml(c,edit)}</div>
+    ${edit?`<div class="mini" style="grid-column:1/3">${i>0?`<button data-lead="${c.u}">隊長にする</button>`:''}<button data-swap="${i}">入れ替え</button><button data-rm="${c.u}">外す</button>${!c.omamori&&G.omamori>0?`<button data-om="${c.u}">お守りを持たせる</button>`:''}</div>`:''}</div>`;
+}
+function renderParty(){
+  const box=$('tab-party');
+  box.innerHTML=`<div class="panel"><h3 class="mincho">第一部隊</h3>${G.party.map((u,i)=>pcard(charBy(u),i,true)).join('')}
+    ${G.party.length<6?`<button data-swap="${G.party.length}" style="width:100%">＋ 銃士を加える（${G.party.length}/6）</button>`:''}
+    <div class="row" style="margin-top:8px"><button class="grow" id="eqAuto">護装おまかせ装備</button><button class="grow" id="repAll">全員手入れ</button></div>
+    <p class="note">1番目が隊長。隊長が重傷になると進軍できず帰還します。重傷のまま進軍して倒れると、その銃士は<b style="color:#ff8a7a">破壊（二度ともどらない）</b>されます。</p></div>`;
+  box.querySelectorAll('select').forEach(s=>s.addEventListener('change',()=>{ userAct(); const c=charBy(+s.dataset.c); c.sou[+s.dataset.k]=s.value?+s.value:null; saveG(); renderParty(); }));
+  box.querySelectorAll('[data-lead]').forEach(b=>b.addEventListener('click',()=>{ userAct(); const u=+b.dataset.lead; G.party=[u,...G.party.filter(x=>x!==u)]; saveG(); renderParty(); }));
+  box.querySelectorAll('[data-rm]').forEach(b=>b.addEventListener('click',()=>{ userAct(); if(G.party.length<=1){ toast('部隊には1挺以上必要です'); return; } G.party=G.party.filter(x=>x!==+b.dataset.rm); saveG(); renderParty(); }));
+  box.querySelectorAll('[data-om]').forEach(b=>b.addEventListener('click',()=>{ userAct(); const c=charBy(+b.dataset.om); if(G.omamori>0&&!c.omamori){ G.omamori--; c.omamori=true; saveG(); renderHome(); } }));
+  box.querySelectorAll('[data-swap]').forEach(b=>b.addEventListener('click',()=>{ userAct(); swapPicker(+b.dataset.swap); }));
+  $('eqAuto').addEventListener('click',()=>{ userAct(); autoEquip(false); saveG(); renderParty(); toast('空いている枠に護装をつけました'); });
+  $('repAll').addEventListener('click',()=>{ userAct(); repairAll(); });
+}
+function swapPicker(slot){
+  const cand=G.chars.filter(c=>!G.party.includes(c.u)).sort((a,b)=>b.lv-a.lv);
+  if(!cand.length){ toast('入れ替えられる銃士がいません（鍛銃や出陣で増やそう）'); return; }
+  openModal(`<h2 class="mincho">銃士をえらぶ</h2><div class="rlist">${cand.map(c=>{const mh=maxHp(c); return `<button data-u="${c.u}"><img src="${charImg(c.cid)}" alt=""><b>${CHM[c.cid].n}</b><br>Lv${c.lv} ${hpState(c.hp,mh)||'無傷'}</button>`;}).join('')}</div>`,[{t:'やめる'}]);
+  $('mbox').querySelectorAll('.rlist button').forEach(b=>b.addEventListener('click',()=>{ const u=+b.dataset.u; if(slot<G.party.length) G.party[slot]=u; else G.party.push(u); closeModal(); saveG(); renderHome(); }));
+}
+function repairCost(c){ const miss=maxHp(c)-c.hp; return [0,0,0,0].map(()=>Math.ceil(miss*.45)); }
+function canPay(cost){ return cost.every((v,i)=>G.res[i]>=v); }
+function pay(cost){ cost.forEach((v,i)=>G.res[i]-=v); }
+function repairAll(silent){
+  let n=0,fail=0; for(const c of G.chars){ if(c.hp<maxHp(c)){ const cost=repairCost(c); if(canPay(cost)){ pay(cost); c.hp=maxHp(c); n++; } else fail++; } }
+  saveG(); if(!silent){ toast(n?`${n} 挺を手入れしました`+(fail?`（資材不足で ${fail} 挺は手入れできず）`:''):fail?'資材が足りません':'手入れの必要はありません'); SFX.ok(); renderHome(); }
+  return n;
+}
+function autoEquip(all){
+  // 空いている枠に、在庫からいちばん良い護装をつける（遠戦用を1つ入れる）
+  const list=all?G.chars:G.party.map(charBy);
+  for(const c of list){ const T=TYPES[CHM[c.cid].t];
+    c.sou.forEach((iu,k)=>{ if(iu&&itemBy(iu)) return; c.sou[k]=null;
+      const hasRanged=c.sou.some(x=>x&&SOU[itemBy(x).type].ranged);
+      const free=G.items.filter(x=>T.sou.includes(x.type)&&!isEquipped(x.u));
+      const score=x=>{ const s=SOU[x.type]; let v=(s.dur+(s.def||0)*2+(s.atk||0)*2)*RMUL[x.rank]; if(s.ranged) v=(!hasRanged&&T.slots>=2)?s.ranged*3*RMUL[x.rank]:v*.4; return v; };
+      free.sort((a,b)=>score(b)-score(a)); if(free[0]) c.sou[k]=free[0].u; }); }
+}
+function renderSortie(){
+  const box=$('tab-sortie');
+  const avg=Math.round(G.party.reduce((s,u)=>s+charBy(u).lv,0)/G.party.length);
+  box.innerHTML=`<div class="panel maps"><h3 class="mincho">出陣先（部隊の平均 Lv${avg}）</h3>${MAPS.map((m,i)=>{ const lock=i>0&&!G.cleared[i-1];
+    return `<button data-m="${i}" ${lock?'disabled':''}><span class="clr">${G.cleared[i]?'攻略済':''}</span><span class="mn mincho">${i+1}. ${m.n}</span><br><span class="ms">${m.era}　${m.night?'🌙 夜戦':'☀ 昼戦'}　目安 Lv${m.lv}${lock?'　🔒 前の合戦場を攻略':''}</span></button>`; }).join('')}
+    <p class="note">夜戦は短筒・騎銃が強く、士筒・大筒は苦手。遠戦の弾もよけられやすくなります。</p></div>`;
+  box.querySelectorAll('[data-m]').forEach(b=>b.addEventListener('click',()=>{ userAct(); sortie(+b.dataset.m); }));
+}
+function renderWork(){
+  const box=$('tab-work');
+  const dmg=G.chars.filter(c=>c.hp<maxHp(c)); const tot=[0,0,0,0]; dmg.forEach(c=>repairCost(c).forEach((v,i)=>tot[i]+=v));
+  box.innerHTML=`<div class="panel"><h3 class="mincho">手入れ</h3><p class="note">${dmg.length?`けが人 ${dmg.length} 挺。全員の手入れに ${tot.map((v,i)=>RES_N[i]+v).join('・')}`:'けがをしている銃士はいません'}</p><button id="rep2" ${dmg.length?'':'disabled'}>全員手入れ</button></div>
+  <div class="panel"><h3 class="mincho">護装づくり（各資材 50）</h3><div class="grid4">${SOU_KEYS.map(k=>`<button data-sou="${k}">${SOU[k].n}<small>${SOU[k].ranged?'遠戦 '+SOU[k].ranged:'耐久 '+SOU[k].dur}</small></button>`).join('')}</div>
+    <p class="note">並・上・特上がランダム。在庫：${stockText()||'なし'}</p></div>
+  <div class="panel"><h3 class="mincho">鍛銃（新しい銃士）</h3><div class="grid3">${FORGE.map((f,i)=>`<button data-fg="${i}">${f.n}<small>${f.cost.join('/')}</small></button>`).join('')}</div>
+    <p class="note">すでにいる銃士が出たときは、資材に変わります。</p></div>
+  <div class="panel"><h3 class="mincho">お守りづくり（各資材 150）</h3><p class="note">持たせた銃士が破壊されそうなとき、一度だけ身代わりになって全回復する。</p><button id="omBtn">お守りをつくる（所持 ${G.omamori}）</button></div>`;
+  $('rep2').addEventListener('click',()=>{ userAct(); repairAll(); });
+  box.querySelectorAll('[data-sou]').forEach(b=>b.addEventListener('click',()=>{ userAct(); const it=makeSou(b.dataset.sou); if(it){ toast(`${RANKS[it.rank]}${SOU[it.type].n}ができた！`); renderHome(); } else toast('資材が足りません'); }));
+  box.querySelectorAll('[data-fg]').forEach(b=>b.addEventListener('click',()=>{ userAct(); forge(+b.dataset.fg); }));
+  $('omBtn').addEventListener('click',()=>{ userAct(); if(canPay([150,150,150,150])){ pay([150,150,150,150]); G.omamori++; saveG(); SFX.bell(); renderHome(); } else toast('資材が足りません'); });
+}
+function stockText(){ const m={}; G.items.filter(x=>!isEquipped(x.u)).forEach(x=>{ const k=RANKS[x.rank]+SOU[x.type].n; m[k]=(m[k]||0)+1; }); return Object.entries(m).map(([k,v])=>`${k}×${v}`).join('、'); }
+function makeSou(type){ const cost=[50,50,50,50]; if(!canPay(cost)) return null; pay(cost); const r=rnd(); const it={u:G.uid++,type,rank:r<.15?2:r<.5?1:0}; G.items.push(it); saveG(); SFX.ok(); return it; }
+function forge(i){ const f=FORGE[i]; if(!canPay(f.cost)){ toast('資材が足りません'); return; } pay(f.cost);
+  const r=+wpick(Object.entries(f.pool).map(([k,v])=>[k,v])); let pool=CH.filter(c=>c.r===r); if(!pool.length) pool=CH; const d=pick(pool);
+  saveG(); getChar(d.id,'鍛銃'); }
+function getChar(cid,how){
+  const d=CHM[cid];
+  if(G.chars.some(c=>c.cid===cid)){ const v=20*d.r; G.res=G.res.map(x=>x+v); saveG(); if(S.screen==='home') renderHome(); toast(`${d.n}（すでにいる）→ 資材 +${v}`); return false; }
+  const c=addChar(cid); autoEquip(false); saveG(); SFX.bell();
+  if(S.screen==='home') renderHome();
+  openModal(`<h2 class="mincho">${how}：${d.n}</h2><div class="homare"><img src="${charImg(cid)}"><div><b>${TYPES[d.t].n}・★${d.r}</b><br>「${esc(d.join)}」</div></div>`,[{t:'よろしく！',pri:1,cls:'pri'}]);
+  return true;
+}
+function renderList(){
+  $('tab-list').innerHTML=`<div class="panel"><h3 class="mincho">名簿（${G.chars.length} 挺）</h3>${G.chars.slice().sort((a,b)=>b.lv-a.lv).map(c=>{ const d=CHM[c.cid], b=BASE[d.t], m=rmulOf(d.r);
+    return `<div class="pcard"><img src="${charImg(c.cid)}" alt=""><div class="nm">${d.n}<small>${TYPES[d.t].n}・★${d.r}・Lv${c.lv}（次まで ${expNext(c.lv)-c.exp}）</small></div>
+    <div class="note">生存${maxHp(c)} 打撃${Math.round(b.atk*m)} 統率${Math.round(b.def*m)} 機動${Math.round(b.mob*m)} 必殺${b.crit} 偵察${b.scout} 隠蔽${b.hide}<br>範囲：${RANGE_TXT[TYPES[d.t].range]}　護装 ${TYPES[d.t].slots} 枠　気力 ${c.cond} ${condTag(c)}</div></div>`; }).join('')}
+    <p class="note">図鑑 ${G.chars.length}/${CH.length}　破壊された銃士 ${G.stats.breaks} 挺</p></div>`;
+}
+document.querySelectorAll('#tabs button').forEach(b=>b.addEventListener('click',()=>{ userAct(); S.tab=b.dataset.t; renderHome(); }));
+
+/* ---------- 出陣・マップ ---------- */
+function sortie(mi){
+  if(!G.party.length){ toast('部隊に銃士を入れよう'); return; }
+  const party=G.party.map(charBy);
+  const lead=party[0]; if(lead.hp/maxHp(lead)<=.25){ toast('隊長が重傷です。手入れしてから出陣しよう'); return; }
+  G.stats.sorties++;
+  const dur={}; party.forEach(c=>c.sou.forEach(iu=>{ if(iu){ const it=itemBy(iu); if(it) dur[iu]=Math.round(SOU[it.type].dur*RMUL[it.rank]); } }));
+  S.sortie={mi,node:'S',visited:['S'],dur,battles:0,over:false,why:''};
+  saveG(); show('map'); renderMap(); setMapNote('羅針盤にしたがって進軍します。'); SFX.taiko();
+}
+function curMap(){ return MAPS[S.sortie.mi]; }
+function renderMap(){
+  const m=curMap(), so=S.sortie;
+  $('mapTitle').textContent=`${S.sortie.mi+1}. ${m.n}`; $('mapInfo').textContent=`${m.era}　${m.night?'🌙夜戦':'☀昼戦'}`;
+  const box=$('mapBox'); box.classList.toggle('night',m.night);
+  box.querySelectorAll('.node').forEach(e=>e.remove());
+  let lines=''; const N=m.nodes;
+  const edges=[...m.start.map(([t])=>['S',t])]; for(const k in N) (N[k].nx||[]).forEach(([t])=>edges.push([k,t]));
+  for(const [a,b] of edges) lines+=`<line x1="${N[a].x}" y1="${N[a].y}" x2="${N[b].x}" y2="${N[b].y}" stroke="#e8d9b0" stroke-opacity=".5" stroke-width=".8" stroke-dasharray="1.6 1.2"/>`;
+  $('mapSvg').innerHTML=lines;
+  for(const k in N){ const n=N[k], e=document.createElement('div'); e.className='node '+(k==='S'?'S':n.k)+(so.visited.includes(k)&&k!=='S'?' done':''); e.style.left=n.x+'%'; e.style.top=(n.y/62.5*100)+'%'; e.textContent=k==='S'?'本':k==='X'?'将':n.k==='r'?'資':k; box.appendChild(e); }
+  const cur=N[so.node]; $('marker').style.left=cur.x+'%'; $('marker').style.top=(cur.y/62.5*100)+'%';
+  $('mapParty').innerHTML=G.party.map(u=>{ const c=charBy(u); if(!c) return ''; const mh=maxHp(c); const st=hpState(c.hp,mh); return `<div class="u ${c.hp<=0?'down':''}"><img src="${charImg(c.cid)}" alt=""><div class="n">${CHM[c.cid].n}</div><div class="hpbar"><i class="${hpCls(c.hp,mh)}" style="width:${100*c.hp/mh}%"></i></div>${st?`<div class="st tag ${hpCls(c.hp,mh)}">${st}</div>`:''}</div>`; }).join('');
+  updateMapButtons();
+}
+function leaderHeavy(){ const c=charBy(G.party[0]); return c.hp/maxHp(c)<=.25; }
+function updateMapButtons(){
+  const so=S.sortie, m=curMap(); const ended=so.over||(so.node!=='S'&&!(m.nodes[so.node].nx||[]).length);
+  $('goBtn').disabled=ended||!!S.moving||leaderHeavy(); $('backBtn').disabled=!!S.moving;
+  $('backBtn').textContent=ended?'本陣へ帰還':'帰還';
+  if(!ended&&leaderHeavy()) setMapNote('隊長が重傷のため、これ以上は進軍できない。帰還しよう。');
+  else if(!ended){ const heavy=G.party.map(charBy).filter(c=>c.hp>0&&c.hp/maxHp(c)<=.25&&!c.omamori); if(heavy.length) setMapNote(`⚠ ${heavy.map(c=>CHM[c.cid].n).join('・')} が重傷！ このまま進軍して倒れると破壊されます。`); }
+}
+function setMapNote(t){ $('mapNote').textContent=t; }
+function advance(){
+  const so=S.sortie; if(!so||S.moving||so.over) return; const m=curMap();
+  const opts=so.node==='S'?m.start:m.nodes[so.node].nx; if(!opts||!opts.length) return;
+  const nxt=wpick(opts); const multi=opts.length>1;
+  S.moving={t:0,dur:multi?1.6:.7,to:nxt,multi};
+  if(multi){ const cp=$('compass'); cp.hidden=false; const ang=Math.atan2(m.nodes[nxt].y-m.nodes[so.node].y,m.nodes[nxt].x-m.nodes[so.node].x)*180/Math.PI+90+720; cp.firstChild.style.transform=`rotate(${ang}deg)`; setMapNote('羅針盤が回る……'); }
+  updateMapButtons();
+}
+function arrive(k){
+  const so=S.sortie, m=curMap(), n=m.nodes[k]; so.node=k; so.visited.push(k); $('compass').hidden=true; $('compass').firstChild.style.transform='';
+  renderMap();
+  if(n.k==='r'){ const g=[0,0,0,0].map(()=>ri(40,80)+m.lv*6); G.res=G.res.map((v,i)=>v+g[i]); saveG(); SFX.bell(); setMapNote(`資源を見つけた！ ${g.map((v,i)=>RES_N[i]+'+'+v).join(' ')}`); updateMapButtons(); }
+  else { setMapNote('敵部隊と遭遇！'); startBattle(k); }
+}
+function endSortie(){
+  // 帰還：護装の耐久を戻す（こわれた護装はなくなる）。気力を少し下げる
+  const so=S.sortie; if(!so) return;
+  for(const c of G.chars) c.sou=c.sou.map(iu=>iu&&itemBy(iu)?iu:null);
+  S.sortie=null; saveG();
+}
+function goBack(){ userAct(); if(S.moving) return; goHome(); }
+
+/* ================= 戦闘 ================= */
+function unitFromChar(c,idx){
+  const d=CHM[c.cid], b=BASE[d.t], m=rmulOf(d.r);
+  const sou=c.sou.map(iu=>{ const it=iu&&itemBy(iu); if(!it) return null; const dur=S.sortie.dur[iu]??Math.round(SOU[it.type].dur*RMUL[it.rank]); return {u:iu,type:it.type,rank:it.rank,dur,max:Math.round(SOU[it.type].dur*RMUL[it.rank])}; }).filter(x=>x&&x.dur>0);
+  const mh=maxHp(c);
+  return {side:0,i:idx,ref:c,name:d.n,t:d.t,lv:c.lv,hp:c.hp,max:mh,atk:b.atk*m,def:b.def*m,mob:b.mob*m,crit:b.crit,scout:b.scout,hide:b.hide,cm:condMul(c),
+    sou,state:c.hp<=0?'down':'ok',pre:c.hp<=0,wasHeavy:c.hp>0&&c.hp/mh<=.25,omamori:c.omamori,shin:false,mHurt:false,dealt:0,kills:0,img:charImg(c.cid)};
+}
+function enemyUnit(code,idx,m){
+  const boss=code.startsWith('B:'), t=boss?code.slice(2):code, b=BASE[t], f=m.f*(boss?1.22:1), lv=m.lv+(boss?2:0);
+  const hp=Math.round(b.hp*f*(boss?1.5:1)*(1+lv*.03));
+  const sou=[]; const T=TYPES[t]; const ns=Math.min(T.slots,m.souLv+(boss?1:0)+(rnd()<.5?1:0));
+  for(let k=0;k<ns;k++){ const ty=pick(T.sou), rk=Math.min(2,Math.max(0,m.souLv-1+ri(0,1))); const mx=Math.round(SOU[ty].dur*RMUL[rk]); sou.push({type:ty,rank:rk,dur:mx,max:mx}); }
+  return {side:1,i:idx,name:boss?m.boss:EN_NAME[t],t,lv,hp,max:hp,atk:b.atk*f,def:b.def*f,mob:b.mob*f,crit:b.crit*.6,scout:b.scout*f,hide:b.hide*f,cm:1,
+    sou,state:'ok',pre:false,wasHeavy:false,shin:false,dealt:0,kills:0,boss,img:enImg(t,boss)};
+}
+function startBattle(k){
+  const m=curMap(), n=m.nodes[k];
+  const us=G.party.map((u,i)=>unitFromChar(charBy(u),i));
+  const them=n.en.map((c,i)=>enemyUnit(c,i,m));
+  const enForm=+wpick(m.forms.map((w,i)=>[i,w]));
+  S.B={k,boss:n.k==='boss',us,them,enForm,myForm:null,phase:'intro',t:0,q:[],qi:0,wait:0,scoutOK:false,night:m.night,result:null};
+  show('battle'); buildBattleUI(); $('stage').classList.toggle('night',m.night);
+  $('bTitle').textContent=`${m.n}　${k==='X'?'ボス':k+' 地点'}${m.night?'　🌙夜戦':''}`;
+  $('phase').textContent=''; $('msg').className=''; $('msg').textContent=S.B.boss?`${m.boss} が現れた！`:'敵部隊が現れた！'; $('bubble').textContent='';
+  $('formE').innerHTML='敵陣形：？'; $('formU').innerHTML=''; $('forms').hidden=true; SFX.taiko();
+}
+function buildBattleUI(){
+  const B=S.B;
+  for(const [side,box] of [[B.them,'sideE'],[B.us,'sideU']]){
+    const el=$(box); el.innerHTML='';
+    for(let i=0;i<6;i++){ const u=side[i]; const d=document.createElement('div');
+      if(!u){ d.className='u'; d.style.visibility='hidden'; el.appendChild(d); continue; }
+      d.className='u'; d.innerHTML=`<img src="${u.img}" alt=""><div class="n">${u.side===0&&u.i===0?'★':''}${u.name}</div><div class="hpbar"><i></i></div><div class="sp"></div>`;
+      el.appendChild(d); u.el=d; u.dhp=u.hp; u.dsou=u.sou.map(s=>s.dur); u.dstate=u.state; drawU(u); }
+  }
+}
+function drawU(u){
+  const e=u.el; if(!e) return;
+  const i=e.querySelector('.hpbar i'); i.style.width=Math.max(0,100*u.dhp/u.max)+'%'; i.className=hpCls(u.dhp,u.max);
+  e.querySelector('.sp').innerHTML=u.sou.map((s,k)=>`<i class="${u.dsou[k]<=0?'x':''}" style="opacity:${u.dsou[k]<=0?1:.4+.6*u.dsou[k]/s.max}"></i>`).join('');
+  e.classList.toggle('down',u.dstate==='down'); e.classList.toggle('brk',u.dstate==='brk'); e.classList.toggle('shin',!!u.dshin);
+  let st=e.querySelector('.st'); const txt=u.dstate==='brk'?'破壊':u.dstate==='down'?(u.side?'撃破':'崩壊'):u.side===0?hpState(u.dhp,u.max):'';
+  if(txt){ if(!st){ st=document.createElement('div'); e.appendChild(st); } st.className='st tag '+(u.dstate!=='ok'?'h':hpCls(u.dhp,u.max)); st.textContent=txt; } else if(st) st.remove();
+}
+function floatDmg(u,txt,cls){ if(!u.el) return; const s=document.createElement('div'); s.className='dmg '+(cls||''); s.textContent=txt; u.el.appendChild(s); setTimeout(()=>s.remove(),820); }
+function flash(u,cls,ms=350){ if(!u.el) return; u.el.classList.remove(cls); void u.el.offsetWidth; u.el.classList.add(cls); setTimeout(()=>u.el&&u.el.classList.remove(cls),ms); }
+
+function scout(){
+  const B=S.B; const my=B.us.filter(u=>u.state==='ok').reduce((s,u)=>s+u.scout+u.sou.reduce((a,x)=>a+(SOU[x.type].scout||0)*RMUL[x.rank],0),0);
+  const en=B.them.reduce((s,u)=>s+u.hide,0)*(B.night?1.25:1);
+  B.scoutOK=my*(.75+rnd()*.5)>en*.9;
+}
+function showForms(){
+  const B=S.B; $('forms').hidden=false; $('phase').textContent='陣形選択';
+  $('msg').textContent=B.scoutOK?'索敵成功！ 敵の陣形がわかった':'索敵失敗…… 敵の陣形はわからない';
+  $('formE').innerHTML=B.scoutOK?`敵陣形：<b>${FORMS[B.enForm].n}</b>`:'敵陣形：？';
+  $('forms').innerHTML=FORMS.map((f,i)=>{ const a=B.scoutOK?advOf(i,B.enForm):0; return `<button data-f="${i}" class="${a>0?'adv':a<0?'dis':''}">${i+1}. ${f.n}<small>${a>0?'有利！':a<0?'不利':f.d}</small></button>`; }).join('');
+  $('forms').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ ac(); userAct(); chooseForm(+b.dataset.f); }));
+}
+function chooseForm(f){
+  const B=S.B; if(!B||B.phase!=='form') return;
+  B.myForm=f; $('forms').hidden=true; $('formU').innerHTML=`自陣形：<b>${FORMS[f].n}</b>`; $('formE').innerHTML=`敵陣形：<b>${FORMS[B.enForm].n}</b>`;
+  simulate(B); B.phase='play'; B.wait=0; SFX.taiko();
+}
+function aiForm(){
+  const B=S.B, m=curMap();
+  if(B.scoutOK) return FORMS.findIndex((_,i)=>advOf(i,B.enForm)>0);
+  // 敵がよく使う陣形に強いものをえらぶ
+  let best=0,bs=-1e9; FORMS.forEach((_,i)=>{ let s=0; m.forms.forEach((w,j)=>s+=w*advOf(i,j)); if(s>bs){bs=s;best=i;} }); return best;
+}
+
+/* ---------- 戦闘の計算 ---------- */
+function statOf(u,k,B){
+  let v=u[k]; for(const s of u.sou) if(s.dur>0) v+=(SOU[s.type][k]||0)*RMUL[s.rank];
+  const form=FORMS[u.side?B.enForm:B.myForm]; v*=form.m[k]||1;
+  if(k==='atk'||k==='mob') v*=u.cm;
+  if(B.night&&(k==='atk'||k==='crit')) v*=TYPES[u.t].night;
+  return v;
+}
+const alive=(arr)=>arr.filter(u=>u.state==='ok');
+function snap(u){ return {hp:u.hp,sou:u.sou.map(s=>s.dur),state:u.state,shin:u.shin}; }
+function applyDmg(B,att,tgt,dmg,pierce,melee,ev,crit){
+  const parts=[]; let rest=dmg, total=0;
+  if(!pierce) for(const s of tgt.sou){ if(s.dur<=0||rest<=0) continue; const take=Math.min(s.dur,rest); s.dur-=take; rest-=take; total+=take; parts.push({sou:1,v:take}); }
+  let broke=false,om=false;
+  if(rest>0){ const take=Math.min(tgt.hp,rest); tgt.hp-=take; total+=take; parts.push({v:take});
+    if(tgt.hp<=0){ tgt.hp=0;
+      if(tgt.side===0&&tgt.wasHeavy){ if(tgt.omamori){ tgt.omamori=false; tgt.hp=tgt.max; om=true; } else { tgt.state='brk'; broke=true; } }
+      else tgt.state='down';
+      if(tgt.state!=='ok'){ att.kills++; tgt.downNow=true; } } }
+  if(melee&&tgt.side===0&&tgt.hp>0&&tgt.hp/tgt.max<=.5) tgt.mHurt=true;
+  att.dealt+=total; B.dmg[att.side]+=total;
+  return {tgt:[tgt.side,tgt.i],parts,crit,after:snap(tgt),broke,om};
+}
+function meleeDmg(B,a,t,mul){
+  const A=statOf(a,'atk',B)*(1+a.lv*.04), D=statOf(t,'def',B)*(1+t.lv*.04);
+  let d=(A*.55-D*.3)*(.85+rnd()*.3)*mul;
+  const adv=advOf(a.side?B.enForm:B.myForm,a.side?B.myForm:B.enForm); if(adv>0) d*=1.2; else if(adv<0) d*=.85;
+  return Math.max(1,Math.round(d));
+}
+function attack(B,a,ev,duel){
+  const foes=alive(a.side?B.us:B.them); if(!foes.length) return;
+  const T=TYPES[a.t]; let targets=[pick(foes)], mul=1;
+  if(!duel){ if(T.range==='複'){ const n=Math.min(foes.length,ri(2,3)); targets=foes.slice().sort(()=>rnd()-.5).slice(0,n); mul=.85; } else if(T.range==='全'){ targets=foes; mul=.7; } }
+  // 真剣必殺（中傷以下で白兵戦の攻撃を受けていると、確率で発動）
+  let shinNow=false;
+  if(a.side===0&&!a.shin&&a.mHurt&&rnd()<.18+statOf(a,'crit',B)/300){ a.shin=true; shinNow=true; ev.push({k:'shin',a:[0,a.i],after:snap(a),dur:1.3}); }
+  const crit=a.shin||rnd()<Math.min(.3,statOf(a,'crit',B)/320);
+  const hits=targets.map(t=>applyDmg(B,a,t,meleeDmg(B,a,t,mul*(crit?1.5:1)),T.range==='貫',true,ev,crit));
+  ev.push({k:'hit',a:[a.side,a.i],hits,crit,dur:.62,melee:true,duel});
+  if(shinNow&&alive(a.side?B.us:B.them).length&&a.state==='ok') attack(B,a,ev,duel);
+}
+function simulate(B){
+  const ev=B.q; B.dmg=[0,0];
+  B.hp0=[B.us,B.them].map(s=>s.filter(u=>!u.pre).reduce((a,u)=>a+u.hp+u.sou.reduce((x,s)=>x+s.dur,0),0));
+  const adv=advOf(B.myForm,B.enForm);
+  ev.push({k:'phase',p:'遠戦',m:adv>0?'陣形有利！':adv<0?'陣形不利……':'',dur:.8});
+  // 遠戦：弓→砲→投石の順
+  let any=false;
+  for(const ty of RANGED_ORDER) for(const side of [B.us,B.them]) for(const u of side){ if(u.state!=='ok') continue;
+    for(const s of u.sou){ if(s.type!==ty||s.dur<=0) continue; const foes=alive(side===B.us?B.them:B.us); if(!foes.length) break; const t=pick(foes); any=true;
+      if(B.night&&rnd()<.55){ ev.push({k:'miss',a:[u.side,u.i],t:[t.side,t.i],sou:SOU[ty].n,dur:.5}); continue; }
+      const D=statOf(t,'def',B)*(1+t.lv*.04);
+      const dmg=Math.max(1,Math.round(SOU[ty].ranged*RMUL[s.rank]*(.9+rnd()*.2)*(1+u.lv*.03)-D*.1));
+      ev.push({k:'hit',a:[u.side,u.i],hits:[applyDmg(B,u,t,dmg,false,false,ev,false)],ranged:SOU[ty].n,dur:.55}); } }
+  if(!any) ev.push({k:'phase',p:'遠戦',m:'遠戦なし',dur:.4});
+  // 白兵戦：機動の高い順に二巡
+  ev.push({k:'phase',p:'白兵戦',m:'',dur:.7});
+  for(let r=0;r<2;r++){
+    const order=[...B.us,...B.them].filter(u=>u.state==='ok').map(u=>({u,m:statOf(u,'mob',B)*(.9+rnd()*.2)})).sort((a,b)=>b.m-a.m).map(x=>x.u);
+    for(const u of order){
+      if(u.state!=='ok') continue;
+      const mine=alive(B.us), foes=alive(B.them); if(!mine.length||!foes.length) break;
+      // 一騎打ち：こちらが隊長だけ、敵も1体だけ
+      if(!B.duel&&mine.length===1&&mine[0].i===0&&foes.length===1&&B.us.length>1){ duel(B,mine[0],foes[0],ev); break; }
+      attack(B,u,ev,false);
+    }
+    if(B.duel||!alive(B.us).length||!alive(B.them).length) break;
+  }
+  judge(B); ev.push({k:'end',dur:.9});
+}
+function duel(B,me,en,ev){
+  B.duel=true; ev.push({k:'duel',dur:1.3});
+  let a=statOf(me,'mob',B)>=statOf(en,'mob',B)?me:en;
+  for(let n=0;n<16&&me.state==='ok'&&en.state==='ok';n++){ attack(B,a,ev,true); a=a===me?en:me; }
+  B.duelWin=me.state==='ok';
+}
+function judge(B){
+  const ourDown=B.us.filter(u=>u.downNow).length, enDown=B.them.filter(u=>u.state!=='ok').length, tot=B.them.length;
+  const dealt=B.dmg[0]/Math.max(1,B.hp0[1]), taken=B.dmg[1]/Math.max(1,B.hp0[0]);
+  let r;
+  if(!alive(B.us).length) r='敗北';
+  else if(B.duel&&B.duelWin) r='S';
+  else if(enDown===tot) r=(ourDown===0&&B.dmg[1]===0)?'S':ourDown<=1?'A':ourDown===2?'B':'C';
+  else if(enDown>tot/2&&ourDown<=2) r='B';
+  else if(dealt>taken) r='C';
+  else r='敗北';
+  // 誉：一騎打ち勝者＞与ダメージ＞撃破数＞並び順
+  let hom=null; if(r!=='敗北'){ const c=B.us.filter(u=>!u.pre&&u.state!=='brk'); if(B.duel&&B.duelWin) hom=B.us[0]; else { c.sort((a,b)=>b.dealt-a.dealt||b.kills-a.kills||a.i-b.i); hom=c[0]; } }
+  B.result={rank:r,hom,dealt,taken,duelWin:B.duel&&B.duelWin};
+}
+function U(ref){ const B=S.B; return (ref[0]?B.them:B.us)[ref[1]]; }
+function playEvent(e){
+  const B=S.B;
+  const msg=$('msg'); msg.className='';
+  if(e.k==='phase'){ $('phase').textContent=e.p; msg.textContent=e.m||e.p+'！'; if(e.p==='白兵戦') SFX.taiko(); }
+  else if(e.k==='miss'){ const a=U(e.a), t=U(e.t); flash(a,'act',420); floatDmg(t,'回避','m'); msg.textContent=`${a.name}の${e.sou}……${t.name}がよけた！`; SFX.miss(); }
+  else if(e.k==='hit'){ const a=U(e.a); flash(a,'act',480);
+    const names=e.hits.map(h=>U(h.tgt).name);
+    msg.textContent=e.ranged?`${a.name}の${e.ranged}が撃つ！`:e.crit?'会心の一撃！':`${a.name}の攻撃！`+(names.length>1?`（${names.length}体）`:'');
+    for(const h of e.hits){ const t=U(h.tgt); t.dhp=h.after.hp; t.dsou=h.after.sou; t.dstate=h.after.state; flash(t,'hit');
+      const bodyV=h.parts.filter(p=>!p.sou).reduce((s,p)=>s+p.v,0), souV=h.parts.filter(p=>p.sou).reduce((s,p)=>s+p.v,0);
+      if(souV) floatDmg(t,'護'+souV,'s'); if(bodyV||!souV) setTimeout(()=>floatDmg(t,String(bodyV),e.crit?'c':''),souV?140:0);
+      drawU(t);
+      if(h.om){ msg.textContent=`${t.name}のお守りが砕けた……身代わりになった！`; SFX.bell(); }
+      if(h.broke){ msg.textContent=`${t.name}が……砕け散った`; $('bubble').textContent=`${t.name}「${CHM[t.ref.cid].brk}」`; SFX.brk(); } }
+    e.crit?SFX.crit():e.ranged?SFX.shot():SFX.hit(); if(e.ranged) SFX.shot(); }
+  else if(e.k==='shin'){ const a=U(e.a); a.dshin=true; drawU(a); msg.className='big mincho'; msg.textContent='真剣必殺'; $('bubble').textContent=`${a.name}「${CHM[a.ref.cid].shin}」`; SFX.shin(); flash(a,'act',900); }
+  else if(e.k==='duel'){ msg.className='duel mincho'; msg.textContent='一騎打ち'; $('bubble').textContent='隊長と敵の一騎打ちだ！'; SFX.taiko(); }
+  else if(e.k==='end'){ endBattle(); }
+}
+function endBattle(){
+  const B=S.B, R=B.result, m=curMap(), so=S.sortie;
+  B.phase='done'; so.battles++; G.stats.battles++; S.stats.battles++;
+  // 永続データへ反映
+  const lines=[];
+  const base=20+m.lv*6, rk={S:1.2,A:1,B:.8,C:.6,'敗北':.4}[R.rank]*(B.boss?1.5:1);
+  const broken=[];
+  for(const u of B.us){ const c=u.ref;
+    for(const s of u.sou) so.dur[s.u]=s.dur;
+    if(u.state==='brk'){ broken.push(c); continue; }
+    c.hp=u.hp; c.omamori=u.omamori;
+    if(u.pre) continue;
+    let g=Math.round(base*rk*(u.i===0?1.5:1)*(R.hom===u?1.2:1)*(u.state==='down'?.5:1));
+    c.cond=Math.max(0,Math.min(100,c.cond-(u.i===0?3:2)+(R.hom===u?10:0)));
+    c.exp+=g; let up=0; while(c.lv<99&&c.exp>=expNext(c.lv)){ c.exp-=expNext(c.lv); const old=maxHp(c); c.lv++; c.hp=Math.min(maxHp(c),c.hp+(maxHp(c)-old)); up++; }
+    lines.push(`${CHM[c.cid].n} +${g}${up?` <span class="up">Lv${c.lv}！</span>`:''}`);
+  }
+  // 壊れた護装は失う
+  for(const u of B.us) for(const s of u.sou) if(s.dur<=0){ G.items=G.items.filter(x=>x.u!==s.u); u.ref.sou=u.ref.sou.map(x=>x===s.u?null:x); }
+  for(const c of broken){ G.chars=G.chars.filter(x=>x!==c); G.party=G.party.filter(x=>x!==c.u); c.sou.forEach(iu=>{ G.items=G.items.filter(x=>x.u!==iu); }); G.stats.breaks++; S.stats.breaks++; }
+  if(R.hom) G.stats.homare++; if(R.rank==='S') G.stats.sWins++;
+  const win=R.rank!=='敗北'; if(win) S.stats.wins++; else S.stats.loses++;
+  win?SFX.win():SFX.lose();
+  let clear=false, drop=null;
+  if(win&&B.boss&&'SAB'.includes(R.rank)){ clear=!G.cleared[so.mi]; G.cleared[so.mi]=true; S.stats.clears++; }
+  if(win&&'SAB'.includes(R.rank)&&rnd()<(B.boss?.6:.28)){ drop=pick(m.drop); }
+  const gainRes=win?[0,0,0,0].map(()=>ri(10,25)+m.lv*2):[0,0,0,0]; G.res=G.res.map((v,i)=>v+gainRes[i]);
+  if(!win||B.boss||!G.party.length) so.over=true;
+  if(!G.party.length){ so.why='部隊が全滅した'; }
+  saveG();
+  const hom=R.hom;
+  const html=`<h2 class="mincho">${B.boss?'ボス戦 ':''}戦果</h2><div class="rank mincho">${R.rank==='敗北'?'敗北':R.rank}<small>${R.duelWin?'一騎打ち勝利':R.rank==='S'?'完全勝利':R.rank==='敗北'?'撤退……':'勝利'}</small></div>
+    ${hom?`<div class="homare"><img src="${hom.img}" alt=""><div><b style="color:var(--gold)">誉</b> ${hom.name}<br>「${esc(CHM[hom.ref.cid].hom)}」</div></div>`:''}
+    <div class="explist">${lines.join('<br>')}</div>
+    ${broken.length?`<p style="color:#ff8a7a">${broken.map(c=>CHM[c.cid].n).join('・')} が破壊された……</p>`:''}
+    ${win?`<p class="note">資材 ${gainRes.map((v,i)=>RES_N[i]+'+'+v).join(' ')}</p>`:''}
+    ${clear?`<p style="color:var(--gold)">🎉 ${m.n} を攻略した！${MAPS[so.mi+1]?`「${MAPS[so.mi+1].n}」へ出陣できるようになった`:'すべての合戦場を攻略！'}</p>`:''}`;
+  const openR=()=>{ if(S.screen!=='battle') return; openModal(html,[{t:'次へ',pri:1,cls:'pri',f:()=>afterResult(drop)}]); };
+  if(S.manual) openR(); else setTimeout(openR,350);
+}
+function afterResult(drop){
+  if(S.screen!=='battle') return;
+  S.B=null; show('map'); renderMap();
+  const so=S.sortie;
+  if(drop){ const d=CHM[drop]; getChar(drop,'ドロップ'); }
+  if(so.over) setMapNote(so.why||(curMap().nodes[so.node].k==='boss'?'ボスとの戦いが終わった。本陣へ帰還しよう。':'敗北……本陣へ帰還しよう。'));
+  else if(!leaderHeavy()) setMapNote('進軍するか、帰還するか。');
+  updateMapButtons();
+}
+
+/* ================= オート（上手な遊び方） ================= */
+function autoHome(){
+  // 1) 手入れ 2) 部隊をととのえる 3) 護装を補充 4) お守り 5) 鍛銃 6) 出陣先えらび
+  repairAll(true);
+  const sorted=G.chars.slice().sort((a,b)=>power(b)-power(a));
+  G.party=sorted.slice(0,6).map(c=>c.u);
+  if(G.party.length){ const lead=G.party.map(charBy).sort((a,b)=>maxHp(b)-maxHp(a))[0]; G.party=[lead.u,...G.party.filter(x=>x!==lead.u)]; }
+  for(const c of G.party.map(charBy)){ const T=TYPES[CHM[c.cid].t];
+    c.sou.forEach((iu,k)=>{ if(iu&&itemBy(iu)) return; if(G.res.some(v=>v<250)) return;
+      const hasR=c.sou.some(x=>x&&itemBy(x)&&SOU[itemBy(x).type].ranged);
+      const want=(!hasR&&T.slots>=2)?(T.sou.includes('砲兵')?'砲兵':T.sou.includes('弓')?'弓':'投石'):(T.sou.includes('盾')?'盾':'重歩');
+      if(!G.items.some(x=>x.type===want&&!isEquipped(x.u))) makeSou(want); }); }
+  autoEquip(false);
+  for(const c of G.party.map(charBy)) if(!c.omamori){ if(G.omamori<=0&&G.res.every(v=>v>=900)){ pay([150,150,150,150]); G.omamori++; } if(G.omamori>0){ G.omamori--; c.omamori=true; } }
+  if(G.res.every(v=>v>=1400)) forge(2); else if(G.res.every(v=>v>=700)&&G.chars.length<8) forge(1);
+  saveG();
+}
+function autoMapChoice(){
+  const avg=G.party.reduce((s,u)=>s+charBy(u).lv,0)/G.party.length;
+  let mi=0; for(let i=0;i<MAPS.length;i++){ const unlocked=i===0||G.cleared[i-1]; if(!unlocked) break; if(!G.cleared[i]){ mi=(avg>=MAPS[i].lv*.85||i===0)?i:Math.max(0,i-1); break; } mi=i; if(avg<MAPS[i].lv) break; }
+  return mi;
+}
+function autoRetreat(){ const ps=G.party.map(charBy); return ps.some(c=>c.hp>0&&c.hp/maxHp(c)<=.25&&!c.omamori)||ps.filter(c=>c.hp<=0).length>=2; }
+function updateAuto(dt){
+  S.autoT+=dt;
+  if(S.modalOn){ if(S.autoT>1.4){ const b=S.modalA; if(b&&b.length===1&&b[0].t==='やめる'){ closeModal(); return; } modalPrimary(); S.autoT=0; } return; }
+  if(S.screen==='title'&&S.autoT>.6){ startGame(); }
+  else if(S.screen==='pick'&&S.autoT>.8){ choose('tane'); }
+  else if(S.screen==='home'&&S.autoT>1.0){
+    const tired=G.party.map(charBy).filter(c=>c.cond<=25).length;
+    if(tired>=2&&S.autoT<8) return;               // 疲労がぬけるまで休む
+    autoHome(); renderHome();
+    // けが人がいて資材が足りないときは、資材がたまるまで待つ
+    if(G.party.map(charBy).some(c=>c.hp<maxHp(c)*.6)){ S.autoT=-2; return; }
+    S.tab='sortie'; sortie(autoMapChoice());
+  }
+  else if(S.screen==='map'&&!S.moving&&S.autoT>.9){
+    const so=S.sortie, m=curMap(); const ended=so.over||(so.node!=='S'&&!(m.nodes[so.node].nx||[]).length);
+    if(ended||leaderHeavy()||autoRetreat()) goHome(); else advance();
+  }
+  else if(S.screen==='battle'&&S.B&&S.B.phase==='form'&&S.autoT>.8){ chooseForm(aiForm()); }
+}
+
+/* ================= 更新ループ ================= */
+function update(dt){
+  S.t+=dt;
+  if(toastT>0){ toastT-=dt; if(toastT<=0) $('toast').style.opacity=0; }
+  if(S.screen==='home'&&G){ S.regenT+=dt; if(S.regenT>1.5){ S.regenT=0; let ch=false; for(const c of G.chars){ if(c.cond<49){ c.cond++; ch=true; } else if(c.cond>49&&rnd()<.3){ c.cond--; ch=true; } }
+      for(let i=0;i<4;i++) if(G.res[i]<1500){ G.res[i]=Math.min(1500,G.res[i]+3); ch=true; } if(ch&&!S.auto){ renderRes(); } } }
+  if(S.moving){ const mv=S.moving; mv.t+=dt; if(mv.t>=mv.dur-.6&&!mv.moved){ mv.moved=true; const n=curMap().nodes[mv.to]; $('marker').style.left=n.x+'%'; $('marker').style.top=(n.y/62.5*100)+'%'; }
+    if(mv.t>=mv.dur){ S.moving=null; arrive(mv.to); } }
+  const B=S.B;
+  if(S.screen==='battle'&&B){
+    B.t+=dt;
+    if(B.phase==='intro'&&B.t>1.0){ B.phase='scout'; B.t=0; $('phase').textContent='索敵'; $('msg').textContent='索敵中……'; scout(); }
+    else if(B.phase==='scout'&&B.t>.9){ B.phase='form'; showForms(); S.autoT=0; }
+    else if(B.phase==='play'){ B.wait-=dt*S.speed; while(B.wait<=0&&B.qi<B.q.length&&B.phase==='play'){ const e=B.q[B.qi++]; playEvent(e); B.wait+=e.dur; } }
+  }
+  if(S.auto) updateAuto(dt);
+}
+let last=performance.now();
+function frame(now){ const dt=Math.min(.1,(now-last)/1000); last=now; if(!S.manual) update(dt); requestAnimationFrame(frame); }
+
+/* ================= 操作 ================= */
+function setAuto(v){ S.auto=!!v; $('autoBtn').setAttribute('aria-pressed',String(S.auto)); S.autoT=0; }
+function userAct(){ if(S.auto) setAuto(false); }
+function setSound(v){ soundOn=v; LS.set('kaki_sound',v?'1':'0'); $('sndBtn').setAttribute('aria-pressed',String(v)); $('sndBtn').textContent=v?'🔊':'🔇'; }
+$('autoBtn').addEventListener('click',()=>{ ac(); setAuto(!S.auto); });
+$('sndBtn').addEventListener('click',()=>{ ac(); setSound(!soundOn); });
+$('startBtn').addEventListener('click',()=>{ ac(); userAct(); startGame(); });
+$('resetBtn').addEventListener('click',()=>{ userAct(); openModal('<h2>最初からやり直す？</h2><p class="note">銃士・資材・攻略の記録がすべて消えます。</p>',[{t:'やめる'},{t:'消してやり直す',cls:'pri',f:()=>{ LS.del('kaki_save'); G=null; renderTitle(); }}]); });
+$('goBtn').addEventListener('click',()=>{ ac(); userAct(); advance(); });
+$('backBtn').addEventListener('click',()=>{ ac(); goBack(); });
+$('speedBtn').addEventListener('click',()=>{ S.speed=S.speed===1?2:1; LS.set('kaki_speed',S.speed); $('speedBtn').textContent=S.speed===1?'▶▶ 倍速':'▶ 通常'; });
+$('speedBtn').textContent=S.speed===1?'▶▶ 倍速':'▶ 通常';
+addEventListener('keydown',e=>{
+  const k=e.key.toLowerCase();
+  if(k==='o'){ ac(); setAuto(!S.auto); return; }
+  if(k==='m'){ ac(); setSound(!soundOn); return; }
+  if(S.modalOn&&(k==='enter'||k===' ')){ e.preventDefault(); ac(); userAct(); modalPrimary(); return; }
+  if(S.screen==='battle'&&S.B&&S.B.phase==='form'&&/^[1-6]$/.test(k)){ ac(); userAct(); chooseForm(+k-1); return; }
+  if(k==='enter'){ if(S.screen==='title'){ ac(); userAct(); startGame(); } else if(S.screen==='map'&&!$('goBtn').disabled){ ac(); userAct(); advance(); } }
+});
+
+/* ================= テスト用フック ================= */
+window.__kaki={
+  get G(){ return G; }, get S(){ return S; },
+  setAuto, manual:()=>{ S.manual=true; }, step:(dt=1/60)=>update(dt), seed:v=>{ seedV=(Math.abs(v|0)%2147483646)+1; },
+  reset:()=>{ LS.del('kaki_save'); G=null; S.sortie=null; S.B=null; closeModal(); show('title'); renderTitle(); },
+  choose, sortie, advance, chooseForm, goHome, maxHp, MAPS, FORMS, advOf,
+};
+
+setSound(soundOn); renderTitle(); show('title');
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
