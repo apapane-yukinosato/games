@@ -24,7 +24,7 @@
 | 🌌 | スターガード | https://apapane-yukinosato.github.io/games/starguard/ | ファミコン「スターラスター」風の宇宙戦。銀河マップでワープし、コクピット視点で敵部隊と戦う。基地と惑星を守り、キーを集めて暗黒惑星を破壊する。 |
 | 🪐 | スペース・マイナー | https://apapane-yukinosato.github.io/games/miner/ | 惑星の採掘基地づくり。資材を掘って基地へ運び、建物を建てて大きくする。荷物を持った帰り道はエイリアンに狙われ、夜は基地を守る。5日以内に宇宙港を完成させればクリア。 |
 | 🥟 | ラー油つなげ | https://apapane-yukinosato.github.io/games/rayu/ | 餃子のタレに浮かぶラー油をドラッグでつなげて、ひとつの大きな油にするパズル。速く動かすとちぎれる。全6ステージ。 |
-| 🧱 | КУБИКИ（クービキ） | https://apapane-yukinosato.github.io/games/kubiki/ | 落ちものパズル。タイトルはロシア語で「つみき」。BGM はロシア民謡「コロベイニキ」「カリンカ」で、レベルが上がるほど速くなる。 |
+| 🧱 | クービキ | https://apapane-yukinosato.github.io/games/kubiki/ | 落ちものパズル。タイトルはロシア語で「つみき」。BGM はロシア民謡「コロベイニキ」「カリンカ」で、レベルが上がるほど速くなる。 |
 
 ## 🤖 オートモード
 
@@ -59,7 +59,7 @@ games/
 ├── starguard/      … スターガード
 ├── miner/          … スペース・マイナー
 ├── rayu/           … ラー油つなげ
-├── kubiki/         … КУБИКИ（クービキ）
+├── kubiki/         … クービキ
 ├── audit/          … 監査部、出動。（作り直し中のためメニューと一覧からは外している）
 └── CLAUDE.md       … ゲームを作るときのルール
 ```
