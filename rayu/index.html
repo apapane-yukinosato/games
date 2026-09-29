@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="餃子のタレに浮かぶラー油をドラッグでつなげて、ひとつの大きな油にするパズル。">
+<title>ラー油つなげ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&display=swap">
+<style>
+:root{ --bg:#F4ECE0; --ink:#3A2A22; --card:#FFFBF4; --line:#E4D3BD; --mute:#8C7666; --red:#D8452B; --gold:#E8A33A; color-scheme:light; }
+[hidden]{display:none!important}
+html,body{min-height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;overscroll-behavior:none}
+button{font:inherit;color:inherit}
+#app{max-width:560px;margin:0 auto;padding:8px 12px 16px;box-sizing:border-box}
+#top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:18px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--card);cursor:pointer;white-space:nowrap}
+.mini[aria-pressed=true]{background:var(--red);border-color:var(--red);color:#fff}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#game{position:relative}
+#hud{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:7px 12px;font-size:14px;font-weight:800}
+#hud .num{font-variant-numeric:tabular-nums;white-space:nowrap}
+#cv{display:block;width:100%;aspect-ratio:1/1;margin:8px 0;border-radius:16px;background:#E9DFD0;touch-action:none;cursor:grab}
+#cv.grab{cursor:grabbing}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cmd{min-height:44px;border:1px solid var(--line);border-radius:12px;background:var(--card);font-weight:800;font-size:14px;cursor:pointer}
+.hint{text-align:center;font-size:12px;color:var(--mute);margin:8px 0 0;line-height:1.5}
+.ov{position:absolute;top:0;left:0;right:0;min-height:100%;display:flex;align-items:flex-start;justify-content:center;background:rgba(58,42,34,.35);z-index:5;border-radius:16px}
+.box{background:var(--card);border-radius:18px;padding:14px;width:100%;box-sizing:border-box;box-shadow:0 10px 30px rgba(58,42,34,.25)}
+.box h2{margin:0;text-align:center;font-size:26px;font-weight:800}
+.box h2 span{color:var(--red)}
+.sub{text-align:center;font-size:12px;color:var(--mute);margin:6px 0 10px;line-height:1.6}
+.stages{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sg{display:grid;gap:2px;text-align:left;border:2px solid var(--line);border-radius:12px;background:#fff;padding:8px 10px;cursor:pointer}
+.sg b{font-size:14px}.sg span{font-size:11px;color:var(--mute)}.sg i{font-style:normal;font-size:13px;color:var(--gold);letter-spacing:1px}
+.sg:disabled{opacity:.45;cursor:not-allowed}
+.big{width:100%;font-weight:800;font-size:17px;min-height:50px;border:0;border-radius:14px;cursor:pointer;background:var(--red);color:#fff;box-shadow:0 4px 0 #8E2A18;margin-top:8px}
+.big.alt{background:#EADCC6;color:var(--ink);box-shadow:0 4px 0 #CDB894}
+.big:active{transform:translateY(3px);box-shadow:none}
+.stars{text-align:center;font-size:40px;color:var(--gold);letter-spacing:4px}
+.stars .off{color:#E4D3BD}
+.rows{display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:14px;margin:10px 0}
+.rows b{text-align:right;font-variant-numeric:tabular-nums}
+.back{display:block;text-align:center;margin-top:10px;font-size:13px;font-weight:800;color:var(--mute);text-decoration:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>🥟 ラー油つなげ</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false" title="Oキー">🤖 オート</button>
+    <button class="mini" id="muteBtn">音 ON</button>
+  </div>
+  <div id="game">
+    <div id="hud"><span id="hStage">ステージ1</span><span class="num" id="hCount">🌶 5こ</span><span class="num" id="hTime">⏱ 0.0秒</span></div>
+    <canvas id="cv" aria-label="餃子のタレの小皿。ラー油の粒をドラッグしてつなげる"></canvas>
+    <div class="btns"><button class="cmd" id="retryBtn">🔄 やりなおす</button><button class="cmd" id="selBtn">📋 ステージ</button></div>
+    <p class="hint">ラー油の粒をドラッグして、ほかの粒にくっつけよう。<br>速く動かしすぎると <b>ちぎれる</b> ので、ゆっくり！</p>
+
+    <div class="ov" id="titleOv">
+      <div class="box">
+        <h2>🥟 ラー油<span>つなげ</span></h2>
+        <p class="sub">餃子のタレにぷかぷか浮かぶラー油。<br>ぜんぶつなげて、ひとつの大きな油にしたらクリア！</p>
+        <div class="stages" id="stages"></div>
+        <button class="big alt" id="autoStartBtn">🤖 オートで見る</button>
+        <a class="back" href="../">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+    <div class="ov" id="resultOv" hidden>
+      <div class="box">
+        <h2 id="rTitle">🎉 <span>ひとつになった！</span></h2>
+        <p class="sub" id="rMsg"></p>
+        <div class="stars" id="rStars"></div>
+        <div class="rows" id="rRows"></div>
+        <button class="big" id="nextBtn">つぎのステージへ</button>
+        <button class="big alt" id="againBtn">もう一回</button>
+        <a class="back" href="../">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const SZ=600, C=300, DISH=262;               // logical canvas size, centre, liquid radius
+const STAGES=[
+  {name:'はじめてのタレ', n:5,  swirl:0,   gyoza:0, par:12, desc:'まずは5つぶ'},
+  {name:'ふえてきた',     n:8,  swirl:0,   gyoza:0, par:20, desc:'8つぶをつなげよう'},
+  {name:'うずまきタレ',   n:9,  swirl:.18, gyoza:0, par:25, desc:'タレがゆっくり回る'},
+  {name:'餃子がじゃま',   n:10, swirl:0,   gyoza:1, par:32, desc:'浮かぶ餃子をよけて'},
+  {name:'餃子ふたつ',     n:12, swirl:.14, gyoza:2, par:40, desc:'うずまき＋餃子2こ'},
+  {name:'ラー油の海',     n:15, swirl:.22, gyoza:2, par:50, desc:'15つぶ。はやい流れ'},
+];
+let rand=Math.random;
+function rng(seed){ return ()=>{ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+let stars=STAGES.map(()=>0), bestT=STAGES.map(()=>0);
+try{ const v=JSON.parse(localStorage.getItem('rayuBest')||'null'); if(v){ stars=v.stars||stars; bestT=v.bestT||bestT; } }catch(e){}
+const save=()=>{ try{ localStorage.setItem('rayuBest',JSON.stringify({stars,bestT})); }catch(e){} };
+
+// ---------- state ----------
+let S=null, phase='title', auto=false, autoT=0, manualClock=false, nextId=1;
+function drop(x,y,r){ const seeds=[]; for(let i=0;i<Math.round(r/6);i++){ const a=rand()*Math.PI*2, d=Math.sqrt(rand())*.7; seeds.push({a,d,s:.5+rand()*.6}); } return {id:nextId++,x,y,r,vx:0,vy:0,wob:rand()*6,seeds,born:0}; }
+function startStage(i){
+  const st=STAGES[i], drops=[], gy=[];
+  for(let k=0;k<st.gyoza;k++){ const a=k*Math.PI+rand(); gy.push({x:C+Math.cos(a)*110,y:C+Math.sin(a)*110,a:rand()*6,vx:0,vy:0,rx:52,ry:30}); }
+  for(let k=0;k<st.n;k++){ for(let tries=0;tries<200;tries++){ const a=rand()*Math.PI*2, d=Math.sqrt(rand())*(DISH-40), r=12+rand()*12, x=C+Math.cos(a)*d, y=C+Math.sin(a)*d;
+    if(drops.some(o=>Math.hypot(o.x-x,o.y-y)<o.r+r+22)) continue; if(gy.some(g=>Math.hypot(g.x-x,g.y-y)<g.rx+r+10)) continue; drops.push(drop(x,y,r)); break; } }
+  S={stage:i,st,drops,gy,t:0,splits:0,drag:null,fx:[],done:false,ripples:[]};
+  phase='play'; $('titleOv').hidden=true; $('resultOv').hidden=true; autoT=0; S.autoPlan=null;
+}
+const area=r=>r*r;
+function limitFor(r){ return Math.max(90,Math.min(270,270*Math.sqrt(16/r))); }   // bigger oil tears more easily
+
+// ---------- drag ----------
+function pushOut(x,y,r){ // move a point out of any gyoza (ellipse collision)
+  for(const g of S.gy){ const ca=Math.cos(-g.a), sa=Math.sin(-g.a), lx=(x-g.x)*ca-(y-g.y)*sa, ly=(x-g.x)*sa+(y-g.y)*ca, ex=g.rx+r*.8, ey=g.ry+r*.8, k=(lx*lx)/(ex*ex)+(ly*ly)/(ey*ey);
+    if(k<1){ const s=1/Math.sqrt(k||1e-6), nx=lx*s, ny=ly*s, cb=Math.cos(g.a), sb=Math.sin(g.a); x=g.x+nx*cb-ny*sb; y=g.y+nx*sb+ny*cb; } }
+  return {x,y}; }
+function pick(x,y){ let b=null,bd=1e9; for(const d of S.drops){ const q=Math.hypot(d.x-x,d.y-y); if(q<d.r+16&&q-d.r<bd){ bd=q-d.r; b=d; } } return b; }
+function grab(x,y){ if(!S||S.done) return false; const d=pick(x,y); if(!d) return false; S.drag={d,px:x,py:y,ox:d.x-x,oy:d.y-y,fast:0,spd:0}; sfx('grab'); return true; }
+function dragTo(x,y,dt){
+  const g=S.drag; if(!g||!S.drops.includes(g.d)) { S.drag=null; return; }
+  const d=g.d; let tx=x+g.ox, ty=y+g.oy; { const rx=tx-C, ry=ty-C, r=Math.hypot(rx,ry)||1, lim=DISH-d.r; if(r>lim){ tx=C+rx/r*lim; ty=C+ry/r*lim; } }
+  { const q=pushOut(tx,ty,d.r); tx=q.x; ty=q.y; }
+  const dist=Math.hypot(tx-d.x,ty-d.y), sp=dist/Math.max(dt,1/120);
+  g.spd=g.spd*.6+sp*.4;
+  const lim=limitFor(d.r);
+  if(g.spd>lim){ g.fast+=dt; } else g.fast=Math.max(0,g.fast-dt*2);
+  if(g.fast>.07&&d.r>9){ // tear: half the oil stays behind
+    const nr=d.r/Math.SQRT2, stay=drop(d.x,d.y,nr); stay.vx=-(tx-d.x)*2; stay.vy=-(ty-d.y)*2; d.r=nr; d.seeds=d.seeds.slice(0,Math.max(1,d.seeds.length/2|0)); S.drops.push(stay);
+    S.splits++; g.fast=0; g.spd=0; S.fx.push({x:d.x,y:d.y-d.r-8,t:0,text:'ちぎれた！'}); sfx('split');
+  }
+  d.vx=(tx-d.x)/Math.max(dt,1/120)*.3; d.vy=(ty-d.y)/Math.max(dt,1/120)*.3;
+  d.x=tx; d.y=ty; g.px=x; g.py=y;
+}
+function release(){ if(S&&S.drag){ S.drag=null; } }
+
+// ---------- physics ----------
+function update(dt){
+  if(phase!=='play'||!S) { if(phase==='result'&&auto){ autoT+=dt; if(autoT>2.8) startStage(S.stage+1<STAGES.length?S.stage+1:0); } return; }
+  if(!S.done) S.t+=dt;
+  if(auto) autoTick(dt);
+  const sw=S.st.swirl;
+  for(const d of S.drops){
+    d.wob+=dt*3; d.born+=dt;
+    if(S.drag&&S.drag.d===d) continue;
+    const rx=d.x-C, ry=d.y-C;
+    d.vx+=(-ry*sw*.5-d.vx*1.6)*dt+(rand()-.5)*6*dt; d.vy+=(rx*sw*.5-d.vy*1.6)*dt+(rand()-.5)*6*dt;
+    d.x+=d.vx*dt; d.y+=d.vy*dt;
+  }
+  // gyoza drift with the swirl and bob around
+  for(const g of S.gy){ const rx=g.x-C, ry=g.y-C, r=Math.hypot(rx,ry)||1;
+    g.vx+=(-ry*(sw+.05)*.35-g.vx*.8)*dt+(C-g.x)*.02*dt; g.vy+=(rx*(sw+.05)*.35-g.vy*.8)*dt+(C-g.y)*.02*dt; g.x+=g.vx*dt; g.y+=g.vy*dt; g.a+=dt*(.15+sw*.5);
+    const lim=DISH-g.rx; if(r>lim){ g.x=C+rx/r*lim; g.y=C+ry/r*lim; } }
+  // keep inside the dish, push out of gyoza
+  for(const d of S.drops){
+    const rx=d.x-C, ry=d.y-C, r=Math.hypot(rx,ry)||1, lim=DISH-d.r;
+    if(r>lim){ d.x=C+rx/r*lim; d.y=C+ry/r*lim; d.vx*=-.3; d.vy*=-.3; }
+    for(const g of S.gy){ // treat gyoza as an ellipse by scaling into its frame
+      const ca=Math.cos(-g.a), sa=Math.sin(-g.a), lx=(d.x-g.x)*ca-(d.y-g.y)*sa, ly=(d.x-g.x)*sa+(d.y-g.y)*ca;
+      const ex=g.rx+d.r*.8, ey=g.ry+d.r*.8, k=(lx*lx)/(ex*ex)+(ly*ly)/(ey*ey);
+      if(k<1){ const s=1/Math.sqrt(k||1e-6), nx=lx*s, ny=ly*s, cb=Math.cos(g.a), sb=Math.sin(g.a); d.x=g.x+nx*cb-ny*sb; d.y=g.y+nx*sb+ny*cb; if(S.drag&&S.drag.d===d){ S.drag.ox+=0; } }
+    }
+  }
+  // gentle attraction and merging
+  for(let i=0;i<S.drops.length;i++) for(let j=i+1;j<S.drops.length;j++){
+    const a=S.drops[i], b=S.drops[j], dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy)||1, gap=d-a.r-b.r;
+    if(gap<14&&gap>0){ const f=(14-gap)*5*dt; if(!(S.drag&&S.drag.d===a)){ a.x+=dx/d*f*b.r/(a.r+b.r); a.y+=dy/d*f*b.r/(a.r+b.r); } if(!(S.drag&&S.drag.d===b)){ b.x-=dx/d*f*a.r/(a.r+b.r); b.y-=dy/d*f*a.r/(a.r+b.r); } }
+    if(gap<-Math.min(a.r,b.r)*.25){ merge(a,b); return; }
+  }
+  for(const f of S.fx) f.t+=dt; S.fx=S.fx.filter(f=>f.t<1.1);
+  for(const r of S.ripples) r.t+=dt; S.ripples=S.ripples.filter(r=>r.t<.8);
+  if(!S.done&&S.drops.length===1){ S.done=true; S.drag=null; setTimeout(()=>{ if(S&&S.done&&phase==='play') clear(); },700); sfx('clear'); }
+}
+function merge(a,b){
+  const A=area(a.r), B=area(b.r), keep=(S.drag&&S.drag.d===b)?b:a, other=keep===a?b:a;
+  const nx=(a.x*A+b.x*B)/(A+B), ny=(a.y*A+b.y*B)/(A+B);
+  if(S.drag&&S.drag.d===keep){ S.drag.ox+=nx-keep.x; S.drag.oy+=ny-keep.y; } // keep the finger offset stable
+  keep.x=nx; keep.y=ny; keep.r=Math.sqrt(A+B); keep.seeds=keep.seeds.concat(other.seeds).slice(0,40); keep.born=0; keep.vx=(a.vx*A+b.vx*B)/(A+B); keep.vy=(a.vy*A+b.vy*B)/(A+B);
+  S.drops=S.drops.filter(d=>d!==other); S.ripples.push({x:nx,y:ny,r:keep.r,t:0}); sfx('merge');
+}
+function clear(){
+  phase='result'; autoT=0; const st=S.st, t=S.t;
+  const n=t<=st.par?3:t<=st.par*2?2:1;
+  if(!auto){ if(n>stars[S.stage]) stars[S.stage]=n; if(!bestT[S.stage]||t<bestT[S.stage]) bestT[S.stage]=+t.toFixed(1); save(); }
+  $('rMsg').textContent=`ステージ${S.stage+1}「${st.name}」${auto?'　🤖 オート':''}`;
+  $('rStars').innerHTML=[1,2,3].map(k=>`<span class="${k<=n?'':'off'}">★</span>`).join('');
+  $('rRows').innerHTML=[['タイム',t.toFixed(1)+' 秒'],['★3 の目標',st.par+' 秒以内'],['ちぎれた回数',S.splits+' 回'],['ベスト',bestT[S.stage]?bestT[S.stage]+' 秒':'—']].map(([a,b])=>`<span>${a}</span><b>${b}</b>`).join('');
+  $('nextBtn').hidden=S.stage>=STAGES.length-1;
+  $('rTitle').innerHTML=S.stage>=STAGES.length-1?'🏆 <span>ぜんぶクリア！</span>':'🎉 <span>ひとつになった！</span>';
+  $('resultOv').hidden=false;
+}
+
+// ---------- auto: carry the smallest drop to its nearest neighbour, slower than the tear limit ----------
+function setAuto(v){ auto=v; $('autoBtn').setAttribute('aria-pressed',v); autoT=0; if(S) S.autoPlan=null; if(v&&phase!=='play') startStage(0); }
+function user(){ if(auto) setAuto(false); }
+function blocked(a,b){ for(const g of S.gy){ const dx=b.x-a.x, dy=b.y-a.y, L=Math.hypot(dx,dy)||1, t=Math.max(0,Math.min(1,((g.x-a.x)*dx+(g.y-a.y)*dy)/(L*L))), px=a.x+dx*t, py=a.y+dy*t; if(Math.hypot(px-g.x,py-g.y)<g.rx+a.r*.6) return true; } return false; }
+function autoTick(dt){
+  if(S.done) return;
+  let P=S.autoPlan;
+  if(P&&(!S.drops.includes(P.from)||!S.drops.includes(P.to))){ release(); P=S.autoPlan=null; }
+  if(!P){ autoT+=dt; if(autoT<.25) return; autoT=0;
+    const order=S.drops.slice().sort((a,b)=>a.r-b.r);
+    for(const from of order){ let best=null,bd=1e9; for(const to of S.drops){ if(to===from) continue; const d=Math.hypot(to.x-from.x,to.y-from.y)-to.r-from.r+(blocked(from,to)?400:0); if(d<bd){ bd=d; best=to; } }
+      if(best){ P=S.autoPlan={from,to:best}; grab(from.x,from.y); break; } }
+    return; }
+  if(!S.drag){ grab(P.from.x,P.from.y); return; }
+  const d=P.from, to=P.to, dx=to.x-d.x, dy=to.y-d.y, L=Math.hypot(dx,dy)||1;
+  // steer around gyoza by sliding sideways when the straight line is blocked
+  let ux=dx/L, uy=dy/L; if(blocked(d,to)){ const g=S.gy.reduce((a,b)=>Math.hypot(b.x-d.x,b.y-d.y)<Math.hypot(a.x-d.x,a.y-d.y)?b:a); const sx=-(g.y-d.y), sy=g.x-d.x, sl=Math.hypot(sx,sy)||1; ux=ux*.4+sx/sl*.6; uy=uy*.4+sy/sl*.6; }
+  const sp=limitFor(d.r)*.62, step=Math.min(sp*dt,L);
+  dragTo(S.drag.px+ux*step,S.drag.py+uy*step,dt);
+}
+
+// ---------- drawing ----------
+const cv=$('cv'), g=cv.getContext('2d');
+function drawGyoza(q,s){
+  g.save(); g.translate(q.x*s,q.y*s); g.rotate(q.a);
+  const rx=q.rx*s, ry=q.ry*s;
+  g.fillStyle='rgba(40,20,10,.25)'; g.beginPath(); g.ellipse(4*s,6*s,rx,ry,0,0,7); g.fill();
+  const gr=g.createLinearGradient(0,-ry,0,ry); gr.addColorStop(0,'#FFF3DA'); gr.addColorStop(.6,'#F2D7A8'); gr.addColorStop(1,'#C98B45');
+  g.fillStyle=gr; g.beginPath(); g.moveTo(-rx,ry*.3); g.quadraticCurveTo(-rx*.9,-ry*1.2,0,-ry); g.quadraticCurveTo(rx*.9,-ry*1.2,rx,ry*.3); g.quadraticCurveTo(0,ry*1.3,-rx,ry*.3); g.fill();
+  g.strokeStyle='rgba(160,110,60,.7)'; g.lineWidth=2*s; for(let i=-3;i<=3;i++){ g.beginPath(); g.moveTo(i*rx*.22,-ry*.95); g.quadraticCurveTo(i*rx*.22+rx*.06,-ry*.5,i*rx*.24,-ry*.25); g.stroke(); }
+  g.fillStyle='rgba(140,70,20,.5)'; g.beginPath(); g.ellipse(0,ry*.55,rx*.6,ry*.25,0,0,7); g.fill();
+  g.restore();
+}
+function drawDrop(d,s,now){
+  const drag=S.drag&&S.drag.d===d; let sx=1, sy=1, ang=0, warn=0;
+  if(drag){ const lim=limitFor(d.r), k=Math.min(1.2,S.drag.spd/lim); warn=k; sx=1+k*.35; sy=1-k*.2; ang=Math.atan2(d.vy,d.vx); }
+  const grow=d.born<.25?1+Math.sin(d.born/.25*Math.PI)*.12:1, wob=Math.sin(d.wob)*.03;
+  const x=d.x*s, y=d.y*s, r=d.r*s*grow;
+  g.save(); g.translate(x,y); g.rotate(ang); g.scale(sx*(1+wob),sy*(1-wob));
+  const gr=g.createRadialGradient(-r*.3,-r*.3,r*.1,0,0,r);
+  gr.addColorStop(0,warn>.8?'rgba(255,190,140,.95)':'rgba(255,170,70,.92)'); gr.addColorStop(.6,'rgba(230,80,30,.85)'); gr.addColorStop(1,'rgba(170,40,15,.8)');
+  g.fillStyle=gr; g.beginPath(); g.arc(0,0,r,0,7); g.fill();
+  g.strokeStyle=warn>.8&&Math.sin(now*30)>0?'#FFF':'rgba(255,220,160,.7)'; g.lineWidth=Math.max(1,1.6*s); g.stroke();
+  g.fillStyle='rgba(120,20,10,.7)'; for(const q of d.seeds){ g.beginPath(); g.ellipse(Math.cos(q.a)*q.d*r,Math.sin(q.a)*q.d*r,2.2*s*q.s,1.4*s*q.s,q.a,0,7); g.fill(); }
+  g.fillStyle='rgba(255,255,255,.55)'; g.beginPath(); g.ellipse(-r*.35,-r*.4,r*.28,r*.14,-.6,0,7); g.fill();
+  g.restore();
+}
+function draw(){
+  const dpr=Math.min(2,devicePixelRatio||1), W=cv.clientWidth, H=cv.clientHeight;
+  if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){ cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); }
+  g.setTransform(dpr,0,0,dpr,0,0); const s=W/SZ, now=performance.now()/1000;
+  g.fillStyle='#D9C4A6'; g.fillRect(0,0,W,H);
+  for(let i=0;i<14;i++){ g.fillStyle=i%2?'rgba(255,255,255,.06)':'rgba(0,0,0,.03)'; g.fillRect(0,i*H/14,W,H/14); }
+  // dish
+  g.fillStyle='rgba(60,40,20,.25)'; g.beginPath(); g.arc((C+8)*s,(C+12)*s,(DISH+34)*s,0,7); g.fill();
+  g.fillStyle='#FDFDFB'; g.beginPath(); g.arc(C*s,C*s,(DISH+32)*s,0,7); g.fill();
+  g.strokeStyle='#3C63A8'; g.lineWidth=4*s; g.beginPath(); g.arc(C*s,C*s,(DISH+22)*s,0,7); g.stroke();
+  g.lineWidth=1.5*s; for(let i=0;i<24;i++){ const a=i/24*Math.PI*2; g.beginPath(); g.arc(C*s+Math.cos(a)*(DISH+27)*s,C*s+Math.sin(a)*(DISH+27)*s,3*s,0,7); g.stroke(); }
+  // soy sauce
+  const sg=g.createRadialGradient(C*s-60*s,C*s-80*s,20*s,C*s,C*s,DISH*s); sg.addColorStop(0,'#6B3A1E'); sg.addColorStop(.7,'#4A230F'); sg.addColorStop(1,'#35180A');
+  g.fillStyle=sg; g.beginPath(); g.arc(C*s,C*s,DISH*s,0,7); g.fill();
+  g.strokeStyle='rgba(255,220,180,.07)'; g.lineWidth=2*s; for(let i=0;i<5;i++){ g.beginPath(); g.arc(C*s,C*s,(60+i*45+Math.sin(now*.8+i)*5)*s,now*(S?S.st.swirl:0)+i,now*(S?S.st.swirl:0)+i+1.4); g.stroke(); }
+  g.fillStyle='rgba(255,255,255,.12)'; g.beginPath(); g.ellipse((C-120)*s,(C-150)*s,70*s,22*s,-.5,0,7); g.fill();
+  if(!S) return;
+  for(const q of S.gy) drawGyoza(q,s);
+  for(const r of S.ripples){ g.strokeStyle=`rgba(255,200,140,${.5*(1-r.t/.8)})`; g.lineWidth=2*s; g.beginPath(); g.arc(r.x*s,r.y*s,(r.r+r.t*40)*s,0,7); g.stroke(); }
+  const ds=S.drops.slice().sort((a,b)=>a.r-b.r); for(const d of ds) drawDrop(d,s,now);
+  g.textAlign='center'; g.textBaseline='middle'; g.font=`800 ${18*s}px "M PLUS Rounded 1c",sans-serif`;
+  for(const f of S.fx){ g.globalAlpha=1-f.t/1.1; g.fillStyle='#fff'; g.strokeStyle='#8E2A18'; g.lineWidth=4*s; g.strokeText(f.text,f.x*s,(f.y-f.t*30)*s); g.fillText(f.text,f.x*s,(f.y-f.t*30)*s); g.globalAlpha=1; }
+  if(S.done){ g.fillStyle='#fff'; g.strokeStyle='#8E2A18'; g.lineWidth=6*s; g.font=`800 ${40*s}px "M PLUS Rounded 1c",sans-serif`; g.strokeText('ひとつになった！',C*s,70*s); g.fillText('ひとつになった！',C*s,70*s); }
+  g.textBaseline='alphabetic';
+}
+function renderHud(){ if(!S) return; $('hStage').textContent=`ステージ${S.stage+1}　${S.st.name}`; $('hCount').textContent=`🌶 ${S.drops.length}こ`; $('hTime').textContent=`⏱ ${S.t.toFixed(1)}秒`; }
+
+// ---------- input ----------
+let lastPtr=null;
+const toWorld=e=>{ const r=cv.getBoundingClientRect(); return {x:(e.clientX-r.left)/r.width*SZ,y:(e.clientY-r.top)/r.height*SZ}; };
+cv.addEventListener('pointerdown',e=>{ if(phase!=='play') return; ac(); user(); const p=toWorld(e); if(grab(p.x,p.y)){ cv.setPointerCapture(e.pointerId); cv.classList.add('grab'); lastPtr={t:performance.now()}; } });
+cv.addEventListener('pointermove',e=>{ if(!S||!S.drag||auto) return; const p=toWorld(e), n=performance.now(), dt=Math.max(.004,(n-(lastPtr?lastPtr.t:n))/1000); lastPtr={t:n}; dragTo(p.x,p.y,dt); });
+const up=()=>{ if(!auto) release(); cv.classList.remove('grab'); };
+cv.addEventListener('pointerup',up); cv.addEventListener('pointercancel',up);
+
+// ---------- sound ----------
+let AC=null, muted=false;
+try{ muted=localStorage.getItem('rayuMute')==='1'; }catch(e){}
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==='suspended') AC.resume(); return AC; }
+function tone(f,d,type='sine',v=.12,delay=0,f2){ if(muted||!ac()) return; const t=AC.currentTime+delay, o=AC.createOscillator(), gn=AC.createGain(); o.type=type; o.frequency.setValueAtTime(f,t); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+d); gn.gain.setValueAtTime(v,t); gn.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(gn).connect(AC.destination); o.start(t); o.stop(t+d+.02); }
+let lastS={};
+function sfx(k){ const n=performance.now(); if(lastS[k]&&n-lastS[k]<50) return; lastS[k]=n;
+  if(k==='grab') tone(500,.06,'sine',.06,0,700);
+  else if(k==='merge'){ tone(420,.12,'sine',.14,0,900); tone(900,.08,'triangle',.05,.06); }
+  else if(k==='split') tone(700,.18,'triangle',.1,0,220);
+  else if(k==='clear') [523,659,784,1047].forEach((f,i)=>tone(f,.2,'triangle',.12,i*.1));
+}
+function setMute(m){ muted=m; $('muteBtn').textContent=m?'音 OFF':'音 ON'; try{ localStorage.setItem('rayuMute',m?'1':'0'); }catch(e){} }
+
+// ---------- menus ----------
+function buildStages(){ $('stages').innerHTML=STAGES.map((st,i)=>{ const open=i===0||stars[i-1]>0; return `<button class="sg" data-st="${i}" ${open?'':'disabled'}><b>${i+1}. ${st.name}</b><span>${open?st.desc:'🔒 前のステージをクリア'}</span><i>${'★'.repeat(stars[i])}${'☆'.repeat(3-stars[i])}${bestT[i]?`　${bestT[i]}秒`:''}</i></button>`; }).join(''); }
+$('stages').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b||b.disabled) return; ac(); startStage(+b.dataset.st); });
+$('retryBtn').onclick=()=>{ if(!S) return; ac(); user(); startStage(S.stage); };
+$('selBtn').onclick=()=>{ user(); phase='title'; $('resultOv').hidden=true; $('titleOv').hidden=false; buildStages(); };
+$('nextBtn').onclick=()=>{ ac(); user(); startStage(Math.min(STAGES.length-1,S.stage+1)); };
+$('againBtn').onclick=()=>{ ac(); user(); startStage(S.stage); };
+$('autoStartBtn').onclick=()=>{ ac(); setAuto(true); };
+$('autoBtn').onclick=()=>{ ac(); setAuto(!auto); };
+$('muteBtn').onclick=()=>{ ac(); setMute(!muted); };
+addEventListener('keydown',e=>{ if(e.repeat) return; if(e.code==='KeyO'){ ac(); setAuto(!auto); } if(e.code==='KeyR'&&S&&phase==='play'){ user(); startStage(S.stage); } });
+
+setMute(muted); buildStages();
+let last=performance.now();
+function loop(t){ const dt=Math.min(.05,(t-last)/1000); last=t; if(!manualClock) update(dt); draw(); renderHud(); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+
+// test hook
+window.__rayu={
+  get s(){ return S&&{phase,stage:S.stage,t:S.t,drops:S.drops.map(d=>({x:d.x,y:d.y,r:d.r})),splits:S.splits,done:S.done,auto,dragging:!!S.drag}; },
+  setAuto, start:startStage, seed(n){ rand=rng(n); }, manual(v=true){ manualClock=v; }, step(dt){ update(dt); },
+  grab, dragTo, release, limitFor,
+};
+})();
+</script>
+</body>
+</html>
