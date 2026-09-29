@@ -48,6 +48,8 @@ body{background:var(--bg);color:var(--ink);
 .go{font:inherit;font-weight:800;font-size:17px;width:100%;min-height:50px;border:0;border-radius:14px;cursor:pointer;margin-top:8px;background:#E23E86;color:#fff;box-shadow:0 4px 0 #9A1F55}
 .go:active{transform:translateY(3px);box-shadow:0 1px 0 #9A1F55}
 .go.alt{background:#E6DFF7;color:#1D1638;box-shadow:0 4px 0 #BFB3E0}
+.go.dl{font-size:14px;min-height:40px;margin:2px 0 8px}
+.go:disabled{opacity:.7;cursor:default}
 .go:focus-visible,.song:focus-visible,.seg button:focus-visible{outline:3px solid #4FB7FF;outline-offset:2px}
 .note{font-size:11px;color:#6D6490;text-align:center;margin:6px 0}
 .grade{font-family:"Dela Gothic One",sans-serif;font-size:64px;text-align:center;line-height:1;margin:4px 0;color:#E23E86}
@@ -72,6 +74,7 @@ body{background:var(--bg);color:var(--ink);
         <h2>コギ・ステップ！</h2>
         <p class="sub">音楽に合わせて、上のわくに矢印がかさなった瞬間にふもう！</p>
         <div class="songs" id="songs"></div>
+        <button class="go alt dl" id="dlBtn">⬇ 曲をダウンロード</button>
         <div class="row"><span class="lab">むずかしさ</span><div class="seg" id="diffs"></div></div>
         <div class="row"><span class="lab">スピード</span><div class="seg" id="speeds"></div></div>
         <div class="row"><span class="lab">タイミング</span><div class="seg" id="offs"><button data-o="-10">−10ms</button><button id="offVal" disabled style="opacity:1">0ms</button><button data-o="10">＋10ms</button></div></div>
@@ -228,6 +231,51 @@ function playEv(e,t,song){
   else if(e.type==='pad'){ const d=e.dur*60/song.bpm; for(const m of e.notes){ const o=a.createOscillator(), v=a.createGain(); o.type='triangle'; o.frequency.value=mtof(m); v.gain.setValueAtTime(.0001,t); v.gain.exponentialRampToValueAtTime(.05,t+.2); v.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(v).connect(master); o.start(t); o.stop(t+d+.05); } }
   else if(e.type==='lead'){ const d=Math.max(.08,e.dur*60/song.bpm*.95), o=a.createOscillator(), f=a.createBiquadFilter(), v=a.createGain(); o.type=song.lead; o.frequency.value=mtof(e.midi+12); f.type='lowpass'; f.frequency.value=2600; v.gain.setValueAtTime(.0001,t); v.gain.exponentialRampToValueAtTime(.09,t+.01); v.gain.setValueAtTime(.09,t+d*.7); v.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(f).connect(v).connect(master); o.start(t); o.stop(t+d+.05); }
 }
+// ---------- download: synthesize the whole song in JS (same sounds as the game) and save it as WAV ----------
+function synthSong(song){
+  const comp=composeSong(song), spb=60/song.bpm, sr=44100, off=.3, N=Math.ceil(sr*(off+song.bars*4*spb+2.5)), out=new Float32Array(N);
+  const nr=rng(song.seed*7+1), noise=()=>nr()*2-1, TAU=Math.PI*2;
+  const ramp=(v0,v1,x)=>v0*Math.pow(v1/v0,Math.min(1,Math.max(0,x)));
+  const env=(t,a,d,pk)=>t<a?ramp(1e-4,pk,t/a):ramp(pk,1e-4,(t-a)/d);          // same shape as the game's env()
+  const wave={sine:p=>Math.sin(p*TAU),square:p=>(p%1)<.5?1:-1,sawtooth:p=>2*(p%1)-1,triangle:p=>4*Math.abs((p%1)-.5)-1};
+  const lpA=fc=>1-Math.exp(-TAU*fc/sr);
+  const voice=(t0,len,fn)=>{ const s0=Math.floor(t0*sr), n=Math.min(N-s0,Math.ceil(len*sr)); for(let i=0;i<n;i++) out[s0+i]+=fn(i/sr)*.5; };
+  for(const e of comp.ev){ const t=off+e.t*spb;
+    if(e.type==='kick'){ let ph=0; voice(t,.3,x=>{ const f=x<.18?ramp(150,45,x/.18):45; ph+=f/sr; return Math.sin(ph*TAU)*env(x,.004,.22,.9); }); }
+    else if(e.type==='snare'){ let y1=0,y2=0; const a1=lpA(1800*1.6), a2=lpA(1800/1.6);
+      voice(t,.25,x=>{ const n=noise(); y1+=a1*(n-y1); y2+=a2*(y1-y2); return (y1-y2)*2*env(x,.002,.16,.45); });
+      let ph=0; voice(t,.12,x=>{ ph+=210/sr; return wave.triangle(ph)*env(x,.002,.08,.25); }); }
+    else if(e.type==='hat'){ let y=0; const a=lpA(7000); voice(t,.25,x=>{ const n=noise(); y+=a*(n-y); return (n-y)*env(x,.001,e.open?.18:.04,.18); }); }
+    else if(e.type==='bass'){ let ph=0,y=0; const f=mtof(e.midi), a=lpA(600), d=e.dur*spb; voice(t,d+.05,x=>{ ph+=f/sr; y+=a*(wave.sawtooth(ph)-y); return y*env(x,.005,d,.28); }); }
+    else if(e.type==='pad'){ const d=e.dur*spb; for(const m of e.notes){ let ph=0; const f=mtof(m); voice(t,d+.05,x=>{ ph+=f/sr; return wave.triangle(ph)*(x<.2?ramp(1e-4,.05,x/.2):ramp(.05,1e-4,(x-.2)/(d-.2))); }); } }
+    else if(e.type==='lead'){ const d=Math.max(.08,e.dur*spb*.95), f=mtof(e.midi+12), a=lpA(2600), w=wave[song.lead]; let ph=0,y=0;
+      voice(t,d+.05,x=>{ ph+=f/sr; y+=a*(w(ph)-y); const g=x<.01?ramp(1e-4,.09,x/.01):x<d*.7?.09:ramp(.09,1e-4,(x-d*.7)/(d*.3)); return y*g; }); }
+  }
+  return {data:out,sr};
+}
+function toWav({data,sr}){
+  const n=data.length, ab=new ArrayBuffer(44+n*2), v=new DataView(ab);
+  let peak=0; for(let i=0;i<n;i++){ const a=Math.abs(data[i]); if(a>peak) peak=a; }
+  const k=peak>0?.9/peak:1;
+  const w=(o,str)=>{ for(let i=0;i<str.length;i++) v.setUint8(o+i,str.charCodeAt(i)); };
+  w(0,'RIFF'); v.setUint32(4,36+n*2,true); w(8,'WAVE'); w(12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,sr,true); v.setUint32(28,sr*2,true); v.setUint16(32,2,true); v.setUint16(34,16,true); w(36,'data'); v.setUint32(40,n*2,true);
+  for(let i=0;i<n;i++){ const x=Math.max(-1,Math.min(1,data[i]*k)); v.setInt16(44+i*2,x<0?x*32768:x*32767,true); }
+  return new Blob([ab],{type:'audio/wav'});
+}
+function downloadSong(){
+  const s=SONGS[songI], b=$('dlBtn'); b.disabled=true; b.textContent='⏳ 曲をつくっています…';
+  setTimeout(()=>{   // let the label paint before the (short) synthesis
+    try{
+      const blob=toWav(synthSong(s)), url=URL.createObjectURL(blob), a=document.createElement('a');
+      a.href=url; a.download=`CorgiStep_${s.id}.wav`; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),60000);
+      b.textContent=`✅ 保存しました（${(blob.size/1048576).toFixed(1)}MB・WAV）`;
+    }catch(e){ b.textContent='⚠ ダウンロードできませんでした'; }
+    b.disabled=false; setTimeout(dlLabel,2500);
+  },30);
+}
+function dlLabel(){ const b=$('dlBtn'); if(b&&!b.disabled) b.textContent=`⬇ 「${SONGS[songI].title}」をダウンロード`; }
 function sClap(){ if(!AC||muted)return; const t=AC.currentTime, s=AC.createBufferSource(), f=AC.createBiquadFilter(), v=AC.createGain(); s.buffer=NB; f.type='bandpass'; f.frequency.value=2500; env(v,t,.001,.05,.12); s.connect(f).connect(v).connect(master); s.start(t,0,.1); }
 function setMute(m){ muted=m; $('muteBtn').textContent=m?'音 OFF':'音 ON'; if(master)master.gain.value=m?0:.5; try{localStorage.setItem('stepMute',m?'1':'0');}catch(e){} }
 
@@ -394,8 +442,9 @@ function buildMenu(){
   DIFFS.forEach((x,i)=>{ const s=SONGS[songI], n=makeChart(s,composeSong(s),i).length; const b=document.createElement('button'); b.setAttribute('aria-pressed',i===diff); b.innerHTML=`${x.name}<span>${n}ノーツ</span>`; b.onclick=()=>{ diff=i; buildMenu(); }; d.appendChild(b); });
   const sp=$('speeds'); sp.innerHTML='';
   [1,1.5,2,3].forEach(v=>{ const b=document.createElement('button'); b.setAttribute('aria-pressed',v===hs); b.textContent=`×${v}`; b.onclick=()=>{ hs=v; try{localStorage.setItem('stepHS',v);}catch(e){} buildMenu(); }; sp.appendChild(b); });
-  $('offVal').textContent=`${offset>0?'+':''}${offset}ms`;
+  $('offVal').textContent=`${offset>0?'+':''}${offset}ms`; dlLabel();
 }
+$('dlBtn').onclick=downloadSong;
 for(const b of document.querySelectorAll('#offs button[data-o]')) b.onclick=()=>{ offset=Math.max(-200,Math.min(300,offset+ +b.dataset.o)); try{localStorage.setItem('stepOffset',offset);}catch(e){} buildMenu(); };
 function toMenu(){ phase='menu'; paused=false; for(const id of ['resultOv','pauseOv'])$(id).hidden=true; $('menuOv').hidden=false; buildMenu(); }
 function togglePause(){
