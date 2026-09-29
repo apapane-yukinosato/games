@@ -26,7 +26,12 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 #hud .num{font-variant-numeric:tabular-nums;white-space:nowrap}
 #cv{display:block;width:100%;aspect-ratio:1/1;margin:8px 0;border-radius:16px;background:#E9DFD0;touch-action:none;cursor:grab}
 #cv.grab{cursor:grabbing}
-.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.cmd[aria-pressed=true]{background:#3C63A8;border-color:#3C63A8;color:#fff}
+#tiltRow{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 10px;margin-bottom:8px;font-size:13px;font-weight:800}
+#tiltRow[hidden]{display:none}
+.bar{position:relative;height:12px;border-radius:6px;background:#EADCC6;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:#3C63A8;transition:width .1s}
 .cmd{min-height:44px;border:1px solid var(--line);border-radius:12px;background:var(--card);font-weight:800;font-size:14px;cursor:pointer}
 .hint{text-align:center;font-size:12px;color:var(--mute);margin:8px 0 0;line-height:1.5}
 .ov{position:absolute;top:0;left:0;right:0;min-height:100%;display:flex;align-items:flex-start;justify-content:center;background:rgba(58,42,34,.35);z-index:5;border-radius:16px}
@@ -59,13 +64,16 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   <div id="game">
     <div id="hud"><span id="hStage">ステージ1</span><span class="num" id="hCount">🌶 5こ</span><span class="num" id="hTime">⏱ 0.0秒</span></div>
     <canvas id="cv" aria-label="餃子のタレの小皿。ラー油の粒をドラッグしてつなげる"></canvas>
-    <div class="btns"><button class="cmd" id="retryBtn">🔄 やりなおす</button><button class="cmd" id="selBtn">📋 ステージ</button></div>
-    <p class="hint">ラー油の粒をドラッグして、ほかの粒にくっつけよう。<br>速く動かしすぎると <b>ちぎれる</b> ので、ゆっくり！</p>
+    <div id="tiltRow" hidden><span>💧 こぼれ</span><div class="bar"><i id="spillBar"></i></div><span class="num" id="tiltDeg">0°</span><button class="mini" id="levelBtn" title="今の持ち方を水平にする">水平リセット</button></div>
+    <div class="btns"><button class="cmd" id="retryBtn">🔄 やりなおす</button><button class="cmd" id="selBtn">📋 ステージ</button><button class="cmd" id="sensorBtn">📱 センサー</button></div>
+    <p class="hint">ラー油の粒をドラッグして、ほかの粒にくっつけよう。<br>速く動かしすぎると <b>ちぎれる</b> ので、ゆっくり！<br><span id="sensorMsg">📱 センサーを ON にすると、スマホを傾けたぶんタレも傾く。傾けすぎるとこぼれてゲームオーバー！</span></p>
 
     <div class="ov" id="titleOv">
       <div class="box">
         <h2>🥟 ラー油<span>つなげ</span></h2>
         <p class="sub">餃子のタレにぷかぷか浮かぶラー油。<br>ぜんぶつなげて、ひとつの大きな油にしたらクリア！</p>
+        <button class="big alt" id="sensorBtn2" style="margin:0 0 10px">📱 傾きセンサーを ON にする</button>
+        <p class="sub" id="sensorMsg2" style="margin-top:-4px">スマホを傾けるとタレも傾く。傾けすぎるとタレがこぼれてゲームオーバー！（PC ではセンサーなしで遊べる）</p>
         <div class="stages" id="stages"></div>
         <button class="big alt" id="autoStartBtn">🤖 オートで見る</button>
         <a class="back" href="../">← ゲーム一覧にもどる</a>
@@ -111,10 +119,45 @@ function startStage(i){
   for(let k=0;k<st.gyoza;k++){ const a=k*Math.PI+rand(); gy.push({x:C+Math.cos(a)*110,y:C+Math.sin(a)*110,a:rand()*6,vx:0,vy:0,rx:52,ry:30}); }
   for(let k=0;k<st.n;k++){ for(let tries=0;tries<200;tries++){ const a=rand()*Math.PI*2, d=Math.sqrt(rand())*(DISH-40), r=12+rand()*12, x=C+Math.cos(a)*d, y=C+Math.sin(a)*d;
     if(drops.some(o=>Math.hypot(o.x-x,o.y-y)<o.r+r+22)) continue; if(gy.some(g=>Math.hypot(g.x-x,g.y-y)<g.rx+r+10)) continue; drops.push(drop(x,y,r)); break; } }
-  S={stage:i,st,drops,gy,t:0,splits:0,drag:null,fx:[],done:false,ripples:[]};
+  S={stage:i,st,drops,gy,t:0,splits:0,drag:null,fx:[],done:false,ripples:[],spilled:false};
+  SEN.base=null; SEN.tx=SEN.ty=0; SEN.spill=0;   // whatever angle the phone is held at the start counts as level
   phase='play'; $('titleOv').hidden=true; $('resultOv').hidden=true; autoT=0; S.autoPlan=null;
 }
 const area=r=>r*r;
+
+// ---------- tilt sensor ----------
+const SPILL_START=14, SPILL_FAST=34;   // degrees
+const SEN={on:false,got:false,base:null,tx:0,ty:0,spill:0,fake:false};
+const screenAngle=()=>((screen.orientation&&screen.orientation.angle)||window.orientation||0);
+function onOrient(e){
+  if(e.beta==null||e.gamma==null) return; SEN.got=true;
+  if(!SEN.base) SEN.base={b:e.beta,g:e.gamma};
+  const gx=e.gamma-SEN.base.g, gy=e.beta-SEN.base.b, a=-screenAngle()*Math.PI/180;
+  const rx=gx*Math.cos(a)-gy*Math.sin(a), ry=gx*Math.sin(a)+gy*Math.cos(a);
+  SEN.tx+=(rx-SEN.tx)*.35; SEN.ty+=(ry-SEN.ty)*.35;
+}
+function sensorMsg(t){ $('sensorMsg').textContent=t; $('sensorMsg2').textContent=t; }
+function syncSensorBtns(){ $('sensorBtn').setAttribute('aria-pressed',SEN.on); $('sensorBtn').textContent=SEN.on?'📱 センサーON':'📱 センサー'; $('sensorBtn2').textContent=SEN.on?'📱 傾きセンサー ON（タップでOFF）':'📱 傾きセンサーを ON にする'; }
+async function enableSensor(){
+  try{
+    if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){ // iPhone asks once, on a tap
+      const r=await DeviceOrientationEvent.requestPermission(); if(r!=='granted'){ sensorMsg('⚠ センサーが許可されませんでした（設定から許可できます）'); return; } }
+    addEventListener('deviceorientation',onOrient); SEN.on=true; SEN.got=false; SEN.base=null; syncSensorBtns();
+    sensorMsg('📱 傾きセンサー ON：傾けすぎるとタレがこぼれる！');
+    setTimeout(()=>{ if(SEN.on&&!SEN.got&&!SEN.fake){ disableSensor(); sensorMsg('⚠ この端末では傾きセンサーが使えません（センサーなしで遊べます）'); } },1500);
+  }catch(e){ sensorMsg('⚠ センサーを使えませんでした'); }
+}
+function disableSensor(){ removeEventListener('deviceorientation',onOrient); SEN.on=false; SEN.got=false; SEN.spill=0; SEN.tx=SEN.ty=0; syncSensorBtns(); sensorMsg('📱 センサー OFF（こぼれない）'); }
+const tiltOn=()=>SEN.on&&(SEN.got||SEN.fake);
+function spillOver(){
+  S.spilled=true; S.spillAt=performance.now()/1000; S.spillDir=Math.atan2(SEN.ty,SEN.tx); S.drag=null; phase='result'; autoT=0; sfx('spill');
+  setTimeout(()=>{
+    $('rTitle').innerHTML='💦 タレが<span>こぼれた！</span>';
+    $('rMsg').textContent=`ステージ${S.stage+1}「${S.st.name}」　スマホを傾けすぎた…`;
+    $('rStars').innerHTML='<span class="off">★</span><span class="off">★</span><span class="off">★</span>';
+    $('rRows').innerHTML=[['のこりの粒',S.drops.length+' こ'],['タイム',S.t.toFixed(1)+' 秒']].map(([a,b])=>`<span>${a}</span><b>${b}</b>`).join('');
+    $('nextBtn').hidden=true; $('resultOv').hidden=false; },1300);
+}
 function limitFor(r){ return Math.max(90,Math.min(270,270*Math.sqrt(16/r))); }   // bigger oil tears more easily
 
 // ---------- drag ----------
@@ -147,16 +190,21 @@ function update(dt){
   if(!S.done) S.t+=dt;
   if(auto) autoTick(dt);
   const sw=S.st.swirl;
+  // tilt: things slide downhill, and too much tilt spills the sauce
+  let ax=0, ay=0;
+  if(tiltOn()){ const m=Math.hypot(SEN.tx,SEN.ty); ax=SEN.tx*5; ay=SEN.ty*5;
+    if(!S.done&&!auto){ if(m>SPILL_START) SEN.spill+=(m-SPILL_START)*dt*7+(m>SPILL_FAST?dt*120:0); else SEN.spill=Math.max(0,SEN.spill-dt*20);
+      if(SEN.spill>=100){ SEN.spill=100; spillOver(); return; } } }
   for(const d of S.drops){
     d.wob+=dt*3; d.born+=dt;
     if(S.drag&&S.drag.d===d) continue;
     const rx=d.x-C, ry=d.y-C;
-    d.vx+=(-ry*sw*.5-d.vx*1.6)*dt+(rand()-.5)*6*dt; d.vy+=(rx*sw*.5-d.vy*1.6)*dt+(rand()-.5)*6*dt;
+    d.vx+=(-ry*sw*.5-d.vx*1.6+ax)*dt+(rand()-.5)*6*dt; d.vy+=(rx*sw*.5-d.vy*1.6+ay)*dt+(rand()-.5)*6*dt;
     d.x+=d.vx*dt; d.y+=d.vy*dt;
   }
   // gyoza drift with the swirl and bob around
   for(const g of S.gy){ const rx=g.x-C, ry=g.y-C, r=Math.hypot(rx,ry)||1;
-    g.vx+=(-ry*(sw+.05)*.35-g.vx*.8)*dt+(C-g.x)*.02*dt; g.vy+=(rx*(sw+.05)*.35-g.vy*.8)*dt+(C-g.y)*.02*dt; g.x+=g.vx*dt; g.y+=g.vy*dt; g.a+=dt*(.15+sw*.5);
+    g.vx+=(-ry*(sw+.05)*.35-g.vx*.8+ax*.4)*dt+(C-g.x)*.02*dt; g.vy+=(rx*(sw+.05)*.35-g.vy*.8+ay*.4)*dt+(C-g.y)*.02*dt; g.x+=g.vx*dt; g.y+=g.vy*dt; g.a+=dt*(.15+sw*.5);
     const lim=DISH-g.rx; if(r>lim){ g.x=C+rx/r*lim; g.y=C+ry/r*lim; } }
   // keep inside the dish, push out of gyoza
   for(const d of S.drops){
@@ -258,6 +306,17 @@ function draw(){
   // soy sauce
   const sg=g.createRadialGradient(C*s-60*s,C*s-80*s,20*s,C*s,C*s,DISH*s); sg.addColorStop(0,'#6B3A1E'); sg.addColorStop(.7,'#4A230F'); sg.addColorStop(1,'#35180A');
   g.fillStyle=sg; g.beginPath(); g.arc(C*s,C*s,DISH*s,0,7); g.fill();
+  // tilt: the sauce piles up on the low side of the dish
+  const tm=S&&tiltOn()?Math.min(40,Math.hypot(SEN.tx,SEN.ty)):0;
+  if(tm>1){ const ta=Math.atan2(SEN.ty,SEN.tx), w=Math.min(1,tm/SPILL_FAST);
+    g.save(); g.beginPath(); g.arc(C*s,C*s,DISH*s,0,7); g.clip();
+    const hx=C+Math.cos(ta)*DISH, hy=C+Math.sin(ta)*DISH, lg=g.createRadialGradient(hx*s,hy*s,0,hx*s,hy*s,DISH*1.2*s);
+    lg.addColorStop(0,`rgba(20,8,2,${.55*w})`); lg.addColorStop(1,'rgba(20,8,2,0)'); g.fillStyle=lg; g.fillRect(0,0,W,H);
+    const ux=C-Math.cos(ta)*DISH, uy=C-Math.sin(ta)*DISH, ug=g.createRadialGradient(ux*s,uy*s,0,ux*s,uy*s,DISH*.9*s);
+    ug.addColorStop(0,`rgba(230,215,195,${.5*w})`); ug.addColorStop(1,'rgba(230,215,195,0)'); g.fillStyle=ug; g.fillRect(0,0,W,H);
+    g.restore();
+    g.strokeStyle=`rgba(110,60,25,${.35+.5*w})`; g.lineWidth=(4+w*10)*s; g.beginPath(); g.arc(C*s,C*s,(DISH-2)*s,ta-.9*w-.2,ta+.9*w+.2); g.stroke(); }
+  if(S&&tiltOn()&&SEN.spill>35&&!S.spilled){ g.strokeStyle=`rgba(216,69,43,${(SEN.spill/100)*(.5+.5*Math.sin(now*14))})`; g.lineWidth=8*s; g.beginPath(); g.arc(C*s,C*s,(DISH+30)*s,0,7); g.stroke(); }
   g.strokeStyle='rgba(255,220,180,.07)'; g.lineWidth=2*s; for(let i=0;i<5;i++){ g.beginPath(); g.arc(C*s,C*s,(60+i*45+Math.sin(now*.8+i)*5)*s,now*(S?S.st.swirl:0)+i,now*(S?S.st.swirl:0)+i+1.4); g.stroke(); }
   g.fillStyle='rgba(255,255,255,.12)'; g.beginPath(); g.ellipse((C-120)*s,(C-150)*s,70*s,22*s,-.5,0,7); g.fill();
   if(!S) return;
@@ -266,10 +325,15 @@ function draw(){
   const ds=S.drops.slice().sort((a,b)=>a.r-b.r); for(const d of ds) drawDrop(d,s,now);
   g.textAlign='center'; g.textBaseline='middle'; g.font=`800 ${18*s}px "M PLUS Rounded 1c",sans-serif`;
   for(const f of S.fx){ g.globalAlpha=1-f.t/1.1; g.fillStyle='#fff'; g.strokeStyle='#8E2A18'; g.lineWidth=4*s; g.strokeText(f.text,f.x*s,(f.y-f.t*30)*s); g.fillText(f.text,f.x*s,(f.y-f.t*30)*s); g.globalAlpha=1; }
+  if(S.spilled){ const k=Math.min(1,(now-S.spillAt)/1.1), a=S.spillDir, ex=C+Math.cos(a)*(DISH+20), ey=C+Math.sin(a)*(DISH+20);
+    g.fillStyle='rgba(74,35,15,.92)';
+    for(let i=0;i<9;i++){ const sp=(i-4)*.13, d=(30+i%3*25)*k+40*k*k, x=ex+Math.cos(a+sp)*d, y=ey+Math.sin(a+sp)*d; g.beginPath(); g.ellipse(x*s,y*s,(28+i*3)*k*s,(18+i*2)*k*s,a,0,7); g.fill(); }
+    g.fillStyle='#fff'; g.strokeStyle='#8E2A18'; g.lineWidth=6*s; g.font=`800 ${40*s}px "M PLUS Rounded 1c",sans-serif`; g.strokeText('こぼれた！',C*s,70*s); g.fillText('こぼれた！',C*s,70*s); }
   if(S.done){ g.fillStyle='#fff'; g.strokeStyle='#8E2A18'; g.lineWidth=6*s; g.font=`800 ${40*s}px "M PLUS Rounded 1c",sans-serif`; g.strokeText('ひとつになった！',C*s,70*s); g.fillText('ひとつになった！',C*s,70*s); }
   g.textBaseline='alphabetic';
 }
-function renderHud(){ if(!S) return; $('hStage').textContent=`ステージ${S.stage+1}　${S.st.name}`; $('hCount').textContent=`🌶 ${S.drops.length}こ`; $('hTime').textContent=`⏱ ${S.t.toFixed(1)}秒`; }
+function renderHud(){ if(!S) return; $('hStage').textContent=`ステージ${S.stage+1}　${S.st.name}`; $('hCount').textContent=`🌶 ${S.drops.length}こ`; $('hTime').textContent=`⏱ ${S.t.toFixed(1)}秒`;
+  const on=tiltOn(); $('tiltRow').hidden=!on; if(on){ const m=Math.hypot(SEN.tx,SEN.ty); $('spillBar').style.width=SEN.spill+'%'; $('spillBar').style.background=SEN.spill>60?'#D8452B':SEN.spill>25?'#E8A33A':'#3C63A8'; $('tiltDeg').textContent=`📐 ${Math.round(m)}°`; $('tiltDeg').style.color=m>SPILL_START?'#D8452B':''; } }
 
 // ---------- input ----------
 let lastPtr=null;
@@ -290,6 +354,7 @@ function sfx(k){ const n=performance.now(); if(lastS[k]&&n-lastS[k]<50) return; 
   else if(k==='merge'){ tone(420,.12,'sine',.14,0,900); tone(900,.08,'triangle',.05,.06); }
   else if(k==='split') tone(700,.18,'triangle',.1,0,220);
   else if(k==='clear') [523,659,784,1047].forEach((f,i)=>tone(f,.2,'triangle',.12,i*.1));
+  else if(k==='spill'){ tone(300,.6,'sawtooth',.08,0,60); tone(180,.5,'triangle',.1,.15,70); try{ navigator.vibrate&&navigator.vibrate([200,80,300]); }catch(e){} }
 }
 function setMute(m){ muted=m; $('muteBtn').textContent=m?'音 OFF':'音 ON'; try{ localStorage.setItem('rayuMute',m?'1':'0'); }catch(e){} }
 
@@ -303,6 +368,9 @@ $('againBtn').onclick=()=>{ ac(); user(); startStage(S.stage); };
 $('autoStartBtn').onclick=()=>{ ac(); setAuto(true); };
 $('autoBtn').onclick=()=>{ ac(); setAuto(!auto); };
 $('muteBtn').onclick=()=>{ ac(); setMute(!muted); };
+const toggleSensor=()=>{ ac(); if(SEN.on) disableSensor(); else enableSensor(); };
+$('sensorBtn').onclick=toggleSensor; $('sensorBtn2').onclick=toggleSensor;
+$('levelBtn').onclick=()=>{ SEN.base=null; SEN.tx=SEN.ty=0; sensorMsg('📐 今の持ち方を水平にしました'); };
 addEventListener('keydown',e=>{ if(e.repeat) return; if(e.code==='KeyO'){ ac(); setAuto(!auto); } if(e.code==='KeyR'&&S&&phase==='play'){ user(); startStage(S.stage); } });
 
 setMute(muted); buildStages();
@@ -312,7 +380,9 @@ requestAnimationFrame(loop);
 
 // test hook
 window.__rayu={
-  get s(){ return S&&{phase,stage:S.stage,t:S.t,drops:S.drops.map(d=>({x:d.x,y:d.y,r:d.r})),splits:S.splits,done:S.done,auto,dragging:!!S.drag}; },
+  get s(){ return S&&{phase,stage:S.stage,t:S.t,drops:S.drops.map(d=>({x:d.x,y:d.y,r:d.r})),splits:S.splits,done:S.done,auto,dragging:!!S.drag,spilled:S.spilled,spill:SEN.spill,sensor:SEN.on}; },
+  tilt(tx,ty){ SEN.on=true; SEN.fake=true; SEN.tx=tx; SEN.ty=ty; syncSensorBtns(); },   // test-only: pretend the phone is tilted
+  orient(beta,gamma){ onOrient({beta,gamma}); }, sensorOn:()=>enableSensor(),
   setAuto, start:startStage, seed(n){ rand=rng(n); }, manual(v=true){ manualClock=v; }, step(dt){ update(dt); },
   grab, dragTo, release, limitFor,
 };
