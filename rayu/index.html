@@ -175,12 +175,23 @@ function dragTo(x,y,dt){
   g.spd=g.spd*.6+sp*.4;
   const lim=limitFor(d.r);
   if(g.spd>lim){ g.fast+=dt; } else g.fast=Math.max(0,g.fast-dt*2);
-  if(g.fast>.07&&d.r>9){ // tear: half the oil stays behind
-    const nr=d.r/Math.SQRT2, stay=drop(d.x,d.y,nr); stay.vx=-(tx-d.x)*2; stay.vy=-(ty-d.y)*2; d.r=nr; d.seeds=d.seeds.slice(0,Math.max(1,d.seeds.length/2|0)); S.drops.push(stay);
-    S.splits++; g.fast=0; g.spd=0; S.fx.push({x:d.x,y:d.y-d.r-8,t:0,text:'ちぎれた！'}); sfx('split');
-  }
+  if(g.fast>.07&&d.r>9){ tear(d,tx-d.x,ty-d.y); return; }
   d.vx=(tx-d.x)/Math.max(dt,1/120)*.3; d.vy=(ty-d.y)/Math.max(dt,1/120)*.3;
   d.x=tx; d.y=ty; g.px=x; g.py=y;
+}
+// tear: the oil bursts into several droplets that fly apart, and the finger lets go
+function tear(d,mx,my){
+  const n=d.r>26?5:d.r>18?4:d.r>12?3:2, total=area(d.r);
+  const w=[]; for(let k=0;k<n;k++) w.push(.6+rand()*.8); const ws=w.reduce((a,b)=>a+b,0);
+  const rs=w.map(v=>Math.max(5,Math.sqrt(total*v/ws))), maxr=Math.max(...rs), R=d.r*.9+maxr+6;
+  const ml=Math.hypot(mx,my)||1, base=rand()*Math.PI*2;
+  S.drops=S.drops.filter(x=>x!==d); S.drag=null;
+  rs.forEach((r,k)=>{ const a=base+k*Math.PI*2/n+(rand()-.5)*.5;
+    let x=d.x+Math.cos(a)*R, y=d.y+Math.sin(a)*R; const rx=x-C, ry=y-C, rr=Math.hypot(rx,ry)||1, lim=DISH-r; if(rr>lim){ x=C+rx/rr*lim; y=C+ry/rr*lim; }
+    const q=pushOut(x,y,r), nd=drop(q.x,q.y,r), sp=110+rand()*80;
+    nd.vx=Math.cos(a)*sp+mx/ml*60; nd.vy=Math.sin(a)*sp+my/ml*60; nd.apart=1.2; nd.born=.3;
+    S.drops.push(nd); S.ripples.push({x:q.x,y:q.y,r,t:0}); });
+  S.splits++; S.fx.push({x:d.x,y:d.y-d.r-8,t:0,text:'ちぎれた！'}); sfx('split');
 }
 function release(){ if(S&&S.drag){ S.drag=null; } }
 
@@ -196,7 +207,7 @@ function update(dt){
     if(!S.done&&!auto){ if(m>SPILL_START) SEN.spill+=(m-SPILL_START)*dt*7+(m>SPILL_FAST?dt*120:0); else SEN.spill=Math.max(0,SEN.spill-dt*20);
       if(SEN.spill>=100){ SEN.spill=100; spillOver(); return; } } }
   for(const d of S.drops){
-    d.wob+=dt*3; d.born+=dt;
+    d.wob+=dt*3; d.born+=dt; if(d.apart>0) d.apart-=dt;
     if(S.drag&&S.drag.d===d) continue;
     const rx=d.x-C, ry=d.y-C;
     d.vx+=(-ry*sw*.5-d.vx*1.6+ax)*dt+(rand()-.5)*6*dt; d.vy+=(rx*sw*.5-d.vy*1.6+ay)*dt+(rand()-.5)*6*dt;
@@ -218,7 +229,8 @@ function update(dt){
   }
   // gentle attraction and merging
   for(let i=0;i<S.drops.length;i++) for(let j=i+1;j<S.drops.length;j++){
-    const a=S.drops[i], b=S.drops[j], dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy)||1, gap=d-a.r-b.r;
+    const a=S.drops[i], b=S.drops[j]; if(a.apart>0||b.apart>0) continue;
+    const dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy)||1, gap=d-a.r-b.r;
     if(gap<14&&gap>0){ const f=(14-gap)*5*dt; if(!(S.drag&&S.drag.d===a)){ a.x+=dx/d*f*b.r/(a.r+b.r); a.y+=dy/d*f*b.r/(a.r+b.r); } if(!(S.drag&&S.drag.d===b)){ b.x-=dx/d*f*a.r/(a.r+b.r); b.y-=dy/d*f*a.r/(a.r+b.r); } }
     if(gap<-Math.min(a.r,b.r)*.25){ merge(a,b); return; }
   }
