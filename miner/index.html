@@ -37,8 +37,16 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .cmd.hot{background:#6A3A20;border-color:var(--gold)}
 #shootBtn{width:104px;height:104px;border-radius:50%;border:0;background:radial-gradient(circle at 35% 30%,#8FF0FF,#1A8FB0);box-shadow:0 6px 0 #0C4A5C;font-weight:800;font-size:16px;color:#08202A;touch-action:none;flex:none}
 #shootBtn.on{transform:translateY(4px);box-shadow:0 2px 0 #0C4A5C}
-#build{background:var(--panel);border-radius:12px;padding:8px 10px;margin-top:8px}
-#build h3{margin:0 0 6px;font-size:13px;display:flex;justify-content:space-between;color:var(--mute)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.row2 .cmd{font-size:12px;white-space:nowrap;padding:0 2px}
+#buildBtn{position:relative}
+#buildBtn .badge{position:absolute;top:-6px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--gold);color:#2A1500;font-size:11px;line-height:18px;padding:0 4px}
+#buildWin{position:absolute;left:0;right:0;top:0;z-index:4;display:flex;justify-content:center;padding:8px;box-sizing:border-box;background:rgba(10,4,8,.55);border-radius:10px}
+#buildWin .win{width:100%;max-width:560px;background:#1E1118;border:1px solid var(--gold);border-radius:14px;padding:10px;box-sizing:border-box;box-shadow:0 10px 30px rgba(0,0,0,.6);display:flex;flex-direction:column}
+#buildWin h3{margin:0 0 8px;font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+#buildWin h3 small{font-size:11px;color:var(--mute);font-weight:800}
+#closeBuild{white-space:nowrap;flex:none;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:6px 12px;font-weight:800;cursor:pointer}
+#blist{overflow:auto}
 .blist{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .bi{display:grid;gap:2px;text-align:left;border:1px solid var(--line);border-radius:10px;background:#1C1017;padding:6px 8px;cursor:pointer;font-size:12px}
 .bi b{font-size:13px}
@@ -90,14 +98,16 @@ details ul{margin:4px 0;padding-left:18px}
       <div id="stick" aria-label="移動スティック"><div id="knob"></div></div>
       <div id="mid">
         <div id="carry" style="text-align:center;font-size:18px;min-height:24px"></div>
-        <button class="cmd" id="dropBtn">📦 置く</button>
-        <button class="cmd" id="homeBtn">🏠 基地へ</button>
+        <div class="row2"><button class="cmd" id="dropBtn">📦置く</button><button class="cmd" id="homeBtn">🏠基地へ</button></div>
+        <button class="cmd" id="buildBtn">🏗 建設（B）<span class="badge" id="bBadge" hidden></span></button>
       </div>
       <button id="shootBtn" aria-label="撃つ">🔫 撃つ<br><small style="font-size:11px">SPACE</small></button>
     </div>
-    <div id="build">
-      <h3><span>🏗 建設（基地の中でできる）</span><span id="bHint"></span></h3>
-      <div class="blist" id="blist"></div>
+    <div id="buildWin" hidden>
+      <div class="win" role="dialog" aria-label="建設メニュー">
+        <h3><span>🏗 建設 <small id="bHint"></small></span><button id="closeBuild">✕ とじる</button></h3>
+        <div class="blist" id="blist"></div>
+      </div>
     </div>
 
     <div class="ov" id="titleOv">
@@ -108,6 +118,7 @@ details ul{margin:4px 0;padding-left:18px}
           <summary>あそびかた</summary>
           <ul>
             <li>スティック（矢印キー / WASD）で移動。資材のそばで止まると掘れる</li>
+            <li>🏗 建設ボタン（B キー）で建設ウィンドウが開く。建てられるのは基地の中にいるとき。開いている間はゲームが止まる</li>
             <li>🔫 撃つ：ボタン（PC は <b>SPACE キー</b>）。近くの敵を自動でねらう。押しつづけると連射</li>
             <li>背負えるのは3つまで。重い物を持つほど遅くなる。基地に入ると資材が入る</li>
             <li><b>荷物を持っているとエイリアンに狙われる</b>。撃って戦うか、荷物を置いて逃げるか</li>
@@ -271,6 +282,7 @@ function updatePlayer(dt,mx,my,firing){
 // ---------- main update ----------
 const input={x:0,y:0,fire:false}; let keys={};
 function update(dt){
+  if(buildOpen&&phase==='play') return;   // the game waits while the build window is open
   if(phase!=='play'||paused||!G||G.end){ if(phase==='result'&&auto){ autoT+=dt; if(autoT>6) start(); } return; }
   G.t+=dt; const ct=G.t%CYCLE; G.day=Math.floor(G.t/CYCLE)+1;
   if(G.day>DAYS){ finish(false,'time'); return; }
@@ -465,10 +477,11 @@ function renderHud(){
   $('stock').innerHTML=Object.entries(G.stock).map(([k,v])=>`<span>${RES[k].ic}${v}</span>`).join('');
   $('carry').textContent=G.p.carry.length?G.p.carry.map(k=>RES[k].ic).join('')+`（${G.p.carry.length}/${cap()}）`:`かばん 0/${cap()}`;
   $('dropBtn').disabled=!G.p.carry.length; $('homeBtn').disabled=inBase(G.p);
-  const inb=inBase(G.p);
+  const inb=inBase(G.p), okN=BUILDS.filter(b=>canBuild(b)).length;
+  $('bBadge').hidden=!okN; $('bBadge').textContent=okN; $('buildBtn').classList.toggle('hot',inb&&okN>0);
   const key=inb+':'+JSON.stringify(G.stock)+':'+Object.keys(G.built).join();
-  if(key!==lastBuildKey){ lastBuildKey=key; $('bHint').textContent=inb?'タップで建設':'基地にもどると建設できる';
-    const doneN=Object.keys(G.built).length; $('bHint').textContent=(inb?'タップで建設':'基地にもどると建設できる')+(doneN?`（完成 ${doneN}）`:'');
+  if(key!==lastBuildKey){ lastBuildKey=key;
+    const doneN=Object.keys(G.built).length; $('bHint').textContent=(inb?'えらぶと建設（一時停止中）':'⚠ 基地の中でだけ建設できる')+(doneN?`　完成 ${doneN}`:'');
     $('blist').innerHTML=BUILDS.filter(b=>(!b.need||G.built[b.need])&&!G.built[b.id]).map(b=>{ const done=G.built[b.id], ok=!done&&canBuild(b);
       return `<button class="bi ${done?'done':ok?'ok':''}" data-b="${b.id}" ${ok&&inb?'':'disabled'}><b>${done?'✅ ':''}${b.name}</b><small>${b.desc}</small><span class="cost">${Object.entries(b.cost).map(([k,v])=>`${RES[k].ic}${v}`).join(' ')}</span></button>`; }).join(''); }
 }
@@ -507,13 +520,23 @@ const sbUp=()=>{ input.fire=false; sb.classList.remove('on'); }; sb.addEventList
 $('dropBtn').onclick=()=>{ ac(); user(); dropOne(); };
 let homeGo=false;
 $('homeBtn').onclick=()=>{ ac(); user(); homeGo=true; };
-$('blist').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b||b.disabled) return; ac(); user(); build(b.dataset.b); lastBuildKey=''; });
+$('blist').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b||b.disabled) return; ac(); user(); build(b.dataset.b); lastBuildKey=''; renderHud(); if(G.end) closeBuild(); });
+let buildOpen=false;
+function openBuild(){ if(!G||phase!=='play') return; buildOpen=true; input.x=0; input.y=0; input.fire=false; keys={}; const w=$('buildWin'); w.style.top=cv.offsetTop+'px'; w.style.height=cv.offsetHeight+'px'; w.querySelector('.win').style.maxHeight=(cv.offsetHeight-16)+'px'; w.hidden=false; lastBuildKey=''; renderHud(); sfx('get'); }
+function closeBuild(){ buildOpen=false; $('buildWin').hidden=true; }
+$('buildBtn').onclick=()=>{ ac(); user(); buildOpen?closeBuild():openBuild(); };
+$('closeBuild').onclick=()=>closeBuild();
+$('buildWin').addEventListener('click',e=>{ if(e.target.id==='buildWin') closeBuild(); });
+addEventListener('resize',()=>{ if(buildOpen){ const w=$('buildWin'); w.style.top=cv.offsetTop+'px'; w.style.height=cv.offsetHeight+'px'; w.querySelector('.win').style.maxHeight=(cv.offsetHeight-16)+'px'; } });
 addEventListener('keydown',e=>{
   if(e.code==='KeyO'){ if(!e.repeat){ ac(); setAuto(!auto); } return; }
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
   if(phase!=='play'){ if(e.code==='Enter'&&!e.repeat){ ac(); start(); } return; }
   if(!keys[e.code]&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD','Space','KeyX'].includes(e.code)){ ac(); user(); homeGo=false; }
   keys[e.code]=true; if(e.repeat) return;
+  if(e.code==='KeyB'){ user(); buildOpen?closeBuild():openBuild(); return; }
+  if(e.code==='Escape'&&buildOpen){ closeBuild(); return; }
+  if(buildOpen) return;
   if(e.code==='KeyX') dropOne();
   if(e.code==='Space'&&G&&!auto) playerShoot();   // fire on the press itself so quick taps always shoot
   if(e.code==='KeyP') paused=!paused;
@@ -521,7 +544,7 @@ addEventListener('keydown',e=>{
 addEventListener('keyup',e=>{ keys[e.code]=false; });
 addEventListener('blur',()=>{ keys={}; });
 document.addEventListener('visibilitychange',()=>{ if(document.hidden&&phase==='play') paused=true; else paused=false; });
-function start(){ newGame(); phase='play'; paused=false; homeGo=false; $('titleOv').hidden=true; $('resultOv').hidden=true; lastBuildKey=''; say('まずは近くの🧊氷を掘って基地にはこぼう'); }
+function start(){ closeBuild(); newGame(); phase='play'; paused=false; homeGo=false; $('titleOv').hidden=true; $('resultOv').hidden=true; lastBuildKey=''; say('まずは近くの🧊氷を掘って基地にはこぼう'); }
 $('startBtn').onclick=()=>{ ac(); start(); };
 $('autoStartBtn').onclick=()=>{ ac(); setAuto(true); };
 $('againBtn').onclick=()=>{ ac(); user(); start(); };
@@ -540,7 +563,7 @@ requestAnimationFrame(loop);
 // test hook
 window.__miner={
   get s(){ return G&&{phase,t:G.t,day:G.day,night:G.night,hp:G.hp,core:G.core,fenceHp:G.fenceHp,stock:{...G.stock},built:Object.keys(G.built),carry:[...G.p.carry],pos:{x:G.p.x,y:G.p.y},dead:G.p.dead,enemies:G.enemies.length,kills:G.kills,dropped:G.dropped,deaths:G.deaths,end:G.end,auto,shots:G.shots.length}; },
-  bot:BOT, setAuto, start, seed(n){ rand=rng(n); }, manual(v=true){ manualClock=v; }, step(dt){ update(dt); if(phase==='play') renderHud(); }, build, input,
+  bot:BOT, grant(o){ for(const k in o) G.stock[k]+=o[k]; }, home(){ G.p.x=CX; G.p.y=CY+40; }, setAuto, start, seed(n){ rand=rng(n); }, manual(v=true){ manualClock=v; }, step(dt){ update(dt); if(phase==='play') renderHud(); }, build, input,
 };
 })();
 </script>
