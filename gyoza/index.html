@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="コーギーの店長になって、餃子をこんがり焼いてお客さんに出そう。90秒でどれだけ売れるかな？">
+<title>コーギーの餃子屋さん</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&family=Dela+Gothic+One&display=swap">
+<style>
+:root{--bg:#FFF3E0;--ink:#3A2618;--card:#FFFCF6;--line:#EBD6B8;--mute:#8A7462;--red:#D9412E;--gold:#F2B233;--green:#3E9E5E;--blue:#3F6FD8}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+#app{max-width:520px;margin:0 auto;padding:8px 10px 16px;padding-top:calc(8px + env(safe-area-inset-top,0px))}
+#top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--card);cursor:pointer;white-space:nowrap}
+.mini[aria-pressed=true]{background:var(--red);border-color:var(--red);color:#fff}
+#wrap{position:relative}
+#cv{display:block;width:100%;aspect-ratio:3/4;border-radius:16px;background:#F6E2C0;touch-action:none}
+.ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(58,38,24,.5);border-radius:16px;padding:14px;z-index:3}
+.card{background:var(--card);border-radius:18px;padding:16px;width:100%;max-width:380px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.card h2{margin:0;font-family:"Dela Gothic One","M PLUS Rounded 1c",sans-serif;font-size:26px;line-height:1.3}
+.card h2 span{color:var(--red)}
+.sub{font-size:13px;color:var(--mute);margin:8px 0 12px;line-height:1.7}
+.how{text-align:left;font-size:13px;line-height:1.7;background:#FFF4E2;border-radius:12px;padding:8px 12px;margin:0 0 10px}
+.go{display:block;width:100%;min-height:50px;border:0;border-radius:14px;font-weight:800;font-size:17px;cursor:pointer;margin-top:8px;background:var(--red);color:#fff;box-shadow:0 4px 0 #962A1C}
+.go.alt{background:#F0E2CC;color:var(--ink);box-shadow:0 4px 0 #D4BE9C}
+.back{display:block;margin-top:10px;font-size:13px;font-weight:800;color:var(--mute);text-decoration:none}
+.big{font-family:"Dela Gothic One",sans-serif;font-size:40px;line-height:1.1;margin:6px 0;color:var(--red)}
+.rank{font-weight:800;font-size:18px}
+.rows{display:grid;grid-template-columns:1fr auto;gap:3px 12px;font-size:13px;margin:10px 0;text-align:left}
+.rows b{text-align:right}
+.help{font-size:12px;color:var(--mute);text-align:center;margin:8px 0 0;line-height:1.6}
+@media (pointer:coarse){.pc{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>コーギーの餃子屋さん</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false" title="Oキー">🤖 オート</button>
+    <button class="mini" id="muteBtn">音 ON</button>
+  </div>
+  <div id="wrap">
+    <canvas id="cv" width="360" height="480" aria-label="餃子屋さんのお店。フライパンとお客さん"></canvas>
+    <div class="ov" id="titleOv">
+      <div class="card">
+        <h2>コーギーの<br><span>餃子屋さん</span></h2>
+        <p class="sub">店長はコーギー。90秒で、どれだけ売れるかな？</p>
+        <div class="how">🥟 フライパンの空いた所をタップ → 餃子を置く<br>✨ こんがり金色に光ったらタップ → お皿へ<br>🐶 お客さんをタップ → 注文の数だけ出す<br>🌶 「ラー油」の注文には、ラー油ボタンでかけてから出す</div>
+        <button class="go" id="startBtn">▶ 開店！</button>
+        <button class="go alt" id="autoStartBtn">🤖 オートで見る</button>
+        <p class="sub" id="bestT" style="margin:10px 0 0"></p>
+        <a class="back" href="../">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+    <div class="ov" id="endOv" hidden>
+      <div class="card">
+        <h2>閉店！</h2>
+        <div class="big" id="endYen"></div>
+        <div class="rank" id="endRank"></div>
+        <div class="rows" id="endRows"></div>
+        <button class="go" id="againBtn">もう一回</button>
+        <a class="back" href="../">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+  </div>
+  <p class="help">こげる前にお皿へ！ 早すぎても「まだ！」と言われるだけなので、あわてなくて大丈夫。<br><span class="pc">PC：1〜7 フライパン　Q/W/E お客さん　R ラー油　O オート　M 音</span></p>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+let seed=(Date.now()%2147483646)+1; const rnd=()=>{ seed=seed*16807%2147483647; return (seed-1)/2147483646; };
+const W=360,H=480, ROUND=90;
+const COOK=6.2;                                 // seconds from raw to golden-start
+const GOLD=[.72,1.25], BURN=1.4;                // cook level: golden between .72 and 1.25, burnt at 1.4
+const PAN={x:180,y:290,r:108};
+const SLOTS=[[0,0],[-58,-32],[0,-64],[58,-32],[58,32],[0,64],[-58,32]].map(([x,y])=>({x:PAN.x+x,y:PAN.y+y}));
+const SEATS=[{x:62,y:92},{x:180,y:92},{x:298,y:92}];
+const PLATE={x:92,y:436}, CHILI={x:268,y:436};
+const DOGS=[
+  {name:'しばた',body:'#D08A48',belly:'#F6E6CC',ear:'up'},{name:'プー子',body:'#F2E6EC',belly:'#FFF',ear:'curl'},
+  {name:'ダックス',body:'#8A4A26',belly:'#C87A4A',ear:'long'},{name:'パグお',body:'#E8D4B0',belly:'#F4E8D4',ear:'rose',mask:1},
+  {name:'ハスキー',body:'#6A7A8A',belly:'#F4F4F4',ear:'up'},{name:'ビーグル',body:'#E8A860',belly:'#FFFFFF',ear:'long'},
+];
+
+const S={scene:'title',t:0,time:ROUND,pan:SLOTS.map(()=>null),plate:0,chili:false,seats:[null,null,null],spawnT:1,yen:0,served:0,made:0,burnt:0,lost:0,combo:0,maxCombo:0,fx:[],auto:false,autoT:0,manual:false};
+let best=0; try{ best=+localStorage.getItem('gyozaBest')||0; }catch(e){}
+function renderBest(){ $('bestT').textContent=best?`これまでの最高：${best.toLocaleString()}円`:'まだ記録なし'; }
+
+function start(){
+  Object.assign(S,{scene:'play',t:0,time:ROUND,pan:SLOTS.map(()=>null),plate:0,chili:false,seats:[null,null,null],spawnT:.6,yen:0,served:0,made:0,burnt:0,lost:0,combo:0,maxCombo:0,fx:[]});
+  $('titleOv').hidden=true; $('endOv').hidden=true; sfx('open');
+}
+function finish(){
+  S.scene='end';
+  if(!S.auto&&S.yen>best){ best=S.yen; try{ localStorage.setItem('gyozaBest',best); }catch(e){} }
+  const r=S.yen>=13000?'🏆 伝説の餃子マスター':S.yen>=9000?'🥇 行列のできる名店':S.yen>=6000?'🥈 町の人気店':S.yen>=3000?'🥉 がんばる新人店長':'🐣 見習いコーギー';
+  $('endYen').textContent=`${S.yen.toLocaleString()}円`; $('endRank').textContent=r;
+  $('endRows').innerHTML=[['来てくれたお客さん',`${S.served}組`],['焼いた餃子',`${S.made}こ`],['こがした餃子',`${S.burnt}こ`],['帰っちゃったお客さん',`${S.lost}組`],['さいだいコンボ',`${S.maxCombo}`],['これまでの最高',S.auto?'（オートは記録しない）':`${best.toLocaleString()}円`]].map(([a,b])=>`<span>${a}</span><b>${b}</b>`).join('');
+  $('endOv').hidden=false; S.endT=0; sfx('close'); renderBest();
+}
+
+/* ---------- actions ---------- */
+function tapSlot(i){
+  if(S.scene!=='play') return;
+  const g=S.pan[i];
+  if(!g){ S.pan[i]={c:0}; S.made++; sfx('sizzle'); return; }
+  if(g.c>=BURN){ S.pan[i]=null; S.fx.push({k:'txt',x:SLOTS[i].x,y:SLOTS[i].y-20,t:0,txt:'ポイ…',col:'#8A7462'}); return; }
+  if(g.c<GOLD[0]){ S.fx.push({k:'txt',x:SLOTS[i].x,y:SLOTS[i].y-20,t:0,txt:'まだ！',col:'#3F6FD8'}); sfx('nope'); return; }
+  if(S.plate>=12){ S.fx.push({k:'txt',x:PLATE.x,y:PLATE.y-40,t:0,txt:'お皿いっぱい！',col:'#D9412E'}); return; }
+  S.pan[i]=null; S.plate++; S.fx.push({k:'fly',x:SLOTS[i].x,y:SLOTS[i].y,t:0}); sfx('pick');
+}
+function tapChili(){ if(S.scene!=='play'||S.plate===0) return; S.chili=!S.chili; sfx(S.chili?'chili':'pick'); }
+function tapSeat(i){
+  if(S.scene!=='play') return;
+  const c=S.seats[i]; if(!c||c.leaving) return;
+  if(S.plate<c.n){ c.shake=.4; S.fx.push({k:'txt',x:SEATS[i].x,y:SEATS[i].y+50,t:0,txt:`あと${c.n-S.plate}こ！`,col:'#D9412E'}); sfx('nope'); return; }
+  S.plate-=c.n;
+  let pay=c.n*100, bonus=0;
+  if(c.chili&&S.chili) bonus+=c.n*50;
+  const quick=c.p/c.maxP; if(quick>.6) bonus+=100;
+  S.combo++; S.maxCombo=Math.max(S.maxCombo,S.combo); if(S.combo>=3) bonus+=Math.min(300,(S.combo-2)*50);
+  S.yen+=pay+bonus; S.served++;
+  const msg=c.chili&&!S.chili?'ラー油は…？':c.chili?'ピリ辛さいこう！':quick>.6?'はやい！':'おいしい！';
+  S.fx.push({k:'yen',x:SEATS[i].x,y:SEATS[i].y-10,t:0,txt:`+${pay+bonus}円`},{k:'txt',x:SEATS[i].x,y:SEATS[i].y+52,t:0,txt:msg,col:'#3E9E5E'});
+  c.leaving=1; c.happy=1; if(S.plate===0) S.chili=false; sfx('coin');
+}
+function spawn(){
+  const free=S.seats.map((s,i)=>s?-1:i).filter(i=>i>=0); if(!free.length) return;
+  const i=free[rnd()*free.length|0], prog=1-S.time/ROUND;
+  const n=2+(rnd()*(3+prog*3)|0);               // 2〜4, later up to 7
+  const maxP=Math.max(16,26-prog*8);
+  S.seats[i]={dog:DOGS[rnd()*DOGS.length|0],n,chili:rnd()<.3,p:maxP,maxP,in:0,shake:0};
+  sfx('bell');
+}
+
+/* ---------- update ---------- */
+function update(dt){
+  S.t+=dt;
+  for(const f of S.fx) f.t+=dt; S.fx=S.fx.filter(f=>f.t<(f.k==='fly'?.35:1.1));
+  if(S.scene==='title'){ if(S.auto){ S.autoT+=dt; if(S.autoT>.8) start(); } return; }
+  if(S.scene==='end'){ if(S.auto){ S.endT+=dt; if(S.endT>3.5){ S.autoT=0; start(); } } return; }
+  S.time-=dt; if(S.time<=0){ S.time=0; finish(); return; }
+  for(let i=0;i<S.pan.length;i++){ const g=S.pan[i]; if(!g) continue; const was=g.c; g.c+=dt/COOK;
+    if(was<GOLD[0]&&g.c>=GOLD[0]) sfx('ding');
+    if(was<BURN&&g.c>=BURN){ S.burnt++; S.combo=0; S.fx.push({k:'txt',x:SLOTS[i].x,y:SLOTS[i].y-20,t:0,txt:'こげた！',col:'#3A2618'}); sfx('burn'); }
+    if(g.c>BURN+.5) S.pan[i]=null; }
+  S.spawnT-=dt; if(S.spawnT<=0){ spawn(); S.spawnT=(5.5-3*(1-S.time/ROUND))*(.7+rnd()*.6); }
+  for(let i=0;i<3;i++){ const c=S.seats[i]; if(!c) continue; c.in=Math.min(1,c.in+dt*3); if(c.shake>0) c.shake-=dt;
+    if(c.leaving){ c.leaving+=dt; if(c.leaving>1.8) S.seats[i]=null; continue; }
+    c.p-=dt; if(c.p<=0){ c.leaving=1; c.happy=0; S.lost++; S.combo=0; S.fx.push({k:'txt',x:SEATS[i].x,y:SEATS[i].y+52,t:0,txt:'もういいワン…',col:'#8A7462'}); sfx('sad'); } }
+  if(S.auto) autoTick(dt);
+}
+
+/* ---------- auto: keeps the pan full, never lets one burn, serves the most patient-less customer first ---------- */
+function autoTick(dt){
+  S.autoT+=dt; if(S.autoT<.28) return; S.autoT=0;
+  // 1) rescue golden gyoza that are closest to burning
+  let bi=-1, bc=0; S.pan.forEach((g,i)=>{ if(g&&g.c>=GOLD[0]+.08&&g.c<BURN&&g.c>bc){ bc=g.c; bi=i; } });
+  if(bi>=0&&S.plate<12){ tapSlot(bi); return; }
+  // 2) serve a customer we can serve (least patience first)
+  const ready=S.seats.map((c,i)=>({c,i})).filter(o=>o.c&&!o.c.leaving&&S.plate>=o.c.n).sort((a,b)=>a.c.p-b.c.p);
+  if(ready.length){ const o=ready[0]; if(o.c.chili&&!S.chili){ tapChili(); return; } if(!o.c.chili&&S.chili&&S.seats.some(c=>c&&!c.leaving&&c.chili)){ /* keep the chili for someone who wants it */ } tapSeat(o.i); return; }
+  // 3) clear burnt ones, then fill empty spots while there is demand
+  const burnt=S.pan.findIndex(g=>g&&g.c>=BURN); if(burnt>=0){ tapSlot(burnt); return; }
+  const need=S.seats.reduce((s,c)=>s+(c&&!c.leaving?c.n:0),0)+3;
+  const cooking=S.pan.filter(g=>g).length+S.plate;
+  const empty=S.pan.findIndex(g=>!g); if(empty>=0&&cooking<need+2&&S.time>COOK*.8) tapSlot(empty);
+}
+
+/* ---------- drawing ---------- */
+const cv=$('cv'), g=cv.getContext('2d');
+function rr(x,y,w,h,r,f){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); g.fillStyle=f; g.fill(); }
+function tri(a,b,c,d,e,f){ g.beginPath(); g.moveTo(a,b); g.lineTo(c,d); g.lineTo(e,f); g.closePath(); g.fill(); }
+function shade(hex,k){ const n=parseInt(hex.slice(1),16); return `rgb(${(n>>16)*k|0},${((n>>8)&255)*k|0},${(n&255)*k|0})`; }
+function gyoza(x,y,s,c){ // c: cook level (null = on plate, golden)
+  g.save(); g.translate(x,y); g.scale(s,s);
+  const k=c==null?1:Math.min(1,c/GOLD[0]);
+  const burnt=c!=null&&c>=BURN;
+  const top=burnt?'#3A2A20':`rgb(${250-k*12|0},${244-k*40|0},${226-k*90|0})`;
+  g.fillStyle=top; g.beginPath(); g.moveTo(-22,6); g.quadraticCurveTo(0,-26,22,6); g.quadraticCurveTo(0,12,-22,6); g.fill();
+  g.strokeStyle=burnt?'#1E1612':'rgba(150,110,70,.6)'; g.lineWidth=1.6; for(let i=-2;i<=2;i++){ g.beginPath(); g.moveTo(i*6,-9+Math.abs(i)*2); g.lineTo(i*6+2,-2+Math.abs(i)*2); g.stroke(); }
+  // golden crispy bottom
+  if(c==null||c>=GOLD[0]*.6){ g.fillStyle=burnt?'#140E0A':c!=null&&c>GOLD[1]?'#8A4A1E':'#D9902E'; g.beginPath(); g.moveTo(-22,6); g.quadraticCurveTo(0,12,22,6); g.quadraticCurveTo(0,16,-22,6); g.fill(); }
+  g.restore();
+}
+function dog(x,y,s,d,happy,sad){
+  g.save(); g.translate(x,y); g.scale(s,s);
+  g.fillStyle=d.body; g.beginPath(); g.ellipse(0,26,24,18,0,0,7); g.fill();
+  g.fillStyle=d.body; g.beginPath(); g.arc(0,-4,22,0,7); g.fill();
+  g.fillStyle=d.belly; g.beginPath(); g.ellipse(0,6,12,9,0,0,7); g.fill();
+  if(d.mask){ g.fillStyle='#3A2A22'; g.beginPath(); g.ellipse(0,4,10,8,0,0,7); g.fill(); }
+  g.fillStyle=d.ear==='curl'?'#FFF6FA':shade(d.body,.78);
+  if(d.ear==='up'){ tri(-18,-12,-12,-36,-4,-20); tri(18,-12,12,-36,4,-20); }
+  else if(d.ear==='long'){ g.beginPath(); g.ellipse(-21,4,6,15,.2,0,7); g.ellipse(21,4,6,15,-.2,0,7); g.fill(); }
+  else if(d.ear==='rose'){ g.beginPath(); g.arc(-17,-18,7,0,7); g.arc(17,-18,7,0,7); g.fill(); }
+  else { g.beginPath(); for(const [ex,ey] of [[-20,-8],[-20,4],[20,-8],[20,4],[-10,-24],[0,-27],[10,-24]]){ g.moveTo(ex+7,ey); g.arc(ex,ey,7,0,7); } g.fill(); }
+  g.fillStyle='#1E1A18';
+  if(happy){ g.lineWidth=2.5; g.strokeStyle='#1E1A18'; g.beginPath(); g.arc(-8,-6,4,Math.PI*1.1,Math.PI*1.9); g.moveTo(12,-6); g.arc(8,-6,4,Math.PI*1.1,Math.PI*1.9); g.stroke(); }
+  else { g.beginPath(); g.arc(-8,-5,3,0,7); g.arc(8,-5,3,0,7); g.fill(); }
+  g.beginPath(); g.ellipse(0,3,4,3,0,0,7); g.fill();
+  g.strokeStyle='#1E1A18'; g.lineWidth=2; g.beginPath(); if(sad){ g.arc(0,14,5,Math.PI*1.15,Math.PI*1.85); } else { g.arc(-3,7,3,0,Math.PI); g.arc(3,7,3,0,Math.PI); } g.stroke();
+  if(happy){ g.fillStyle='#F07A8A'; g.beginPath(); g.ellipse(0,13,4,5,0,0,7); g.fill(); }
+  g.restore();
+}
+function chef(x,y){ // corgi manager with a chef hat
+  g.save(); g.translate(x,y);
+  const b=Math.sin(S.t*6)*1.5;
+  g.fillStyle='#D9822B'; g.beginPath(); g.arc(0,b,26,0,7); g.fill();
+  g.fillStyle='#F7F1E6'; g.beginPath(); g.ellipse(0,b+10,16,12,0,0,7); g.fill();
+  g.fillStyle='#D9822B'; tri(-22,b-10,-26,b-44,-6,b-22); tri(22,b-10,26,b-44,6,b-22);
+  g.fillStyle='#F4B8A0'; tri(-20,b-14,-23,b-38,-9,b-22); tri(20,b-14,23,b-38,9,b-22);
+  g.fillStyle='#fff'; rr(-16,b-40,32,12,4,'#fff'); g.beginPath(); g.arc(-8,b-44,10,0,7); g.arc(8,b-44,10,0,7); g.arc(0,b-50,11,0,7); g.fill();
+  g.fillStyle='#1E1A18'; g.beginPath(); g.arc(-9,b-2,3,0,7); g.arc(9,b-2,3,0,7); g.fill(); g.beginPath(); g.ellipse(0,b+6,4,3,0,0,7); g.fill();
+  g.restore();
+}
+function draw(){
+  g.setTransform(1,0,0,1,0,0);
+  // wall and noren curtain
+  g.fillStyle='#F6E2C0'; g.fillRect(0,0,W,H);
+  g.fillStyle='#8A3A22'; g.fillRect(0,0,W,30); for(let i=0;i<6;i++){ g.fillStyle=i%2?'#A8442A':'#8A3A22'; g.fillRect(i*60,30,58,14); }
+  g.fillStyle='#FFF4E0'; g.font='800 16px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.fillText('🥟 コーギー餃子',W/2,21);
+  // counter
+  g.fillStyle='#C8904A'; g.fillRect(0,150,W,18); g.fillStyle='#A8743A'; g.fillRect(0,168,W,6);
+  // customers
+  for(let i=0;i<3;i++){ const c=S.seats[i], s=SEATS[i]; if(!c) { g.fillStyle='rgba(138,116,98,.35)'; g.font='800 11px "M PLUS Rounded 1c",sans-serif'; g.fillText('あき席',s.x,s.y+30); continue; }
+    const dx=(c.shake>0?Math.sin(c.shake*60)*4:0), dy=c.leaving?Math.min(40,c.leaving*40):(1-c.in)*40, al=c.leaving?Math.max(0,1-c.leaving/1.8):1;
+    g.globalAlpha=al; dog(s.x+dx,s.y+dy+14,1,c.dog,c.happy,c.leaving&&!c.happy);
+    if(!c.leaving){ // order bubble and patience
+      rr(s.x-40,s.y-66,80,34,10,'#fff'); tri(s.x-6,s.y-33,s.x+6,s.y-33,s.x,s.y-24);
+      g.fillStyle='#3A2618'; g.font='800 15px "M PLUS Rounded 1c",sans-serif'; g.fillText(`🥟×${c.n}${c.chili?'🌶':''}`,s.x,s.y-43);
+      const k=c.p/c.maxP; rr(s.x-34,s.y+46,68,7,3,'#E8D6BC'); rr(s.x-34,s.y+46,68*k,7,3,k>.5?'#3E9E5E':k>.25?'#F2B233':'#D9412E');
+    }
+    g.globalAlpha=1; }
+  // stove + pan
+  g.fillStyle='#4A3A34'; rr(28,190,304,200,20,'#4A3A34');
+  g.fillStyle='#2A2220'; g.beginPath(); g.arc(PAN.x,PAN.y,PAN.r+8,0,7); g.fill();
+  const pg=g.createRadialGradient(PAN.x-30,PAN.y-30,10,PAN.x,PAN.y,PAN.r); pg.addColorStop(0,'#5A5A60'); pg.addColorStop(1,'#26262A'); g.fillStyle=pg; g.beginPath(); g.arc(PAN.x,PAN.y,PAN.r,0,7); g.fill();
+  g.fillStyle='#2A2220'; rr(PAN.x+PAN.r-4,PAN.y-9,64,18,8,'#2A2220');
+  SLOTS.forEach((p,i)=>{ const gz=S.pan[i];
+    if(!gz){ g.strokeStyle='rgba(255,255,255,.18)'; g.setLineDash([4,4]); g.lineWidth=2; g.beginPath(); g.arc(p.x,p.y,24,0,7); g.stroke(); g.setLineDash([]); g.fillStyle='rgba(255,255,255,.35)'; g.font='800 10px "M PLUS Rounded 1c",sans-serif'; g.fillText('＋',p.x,p.y+4); return; }
+    const gold=gz.c>=GOLD[0]&&gz.c<BURN;
+    if(gold){ const a=.35+.25*Math.sin(S.t*10); g.fillStyle=gz.c>GOLD[1]?`rgba(255,120,40,${a})`:`rgba(255,220,90,${a})`; g.beginPath(); g.arc(p.x,p.y,28,0,7); g.fill(); }
+    gyoza(p.x,p.y+4,1,gz.c);
+    // steam / smoke
+    for(let k=0;k<2;k++){ const ph=(S.t*.8+k*.5+i*.13)%1; g.fillStyle=gz.c>=BURN?`rgba(40,30,30,${.5*(1-ph)})`:`rgba(255,255,255,${.35*(1-ph)})`; g.beginPath(); g.arc(p.x-6+k*12,p.y-14-ph*26,4+ph*6,0,7); g.fill(); }
+    // cook ring
+    const k=Math.min(1,gz.c/BURN); g.strokeStyle=gz.c<GOLD[0]?'#8AC8F0':gz.c<=GOLD[1]?'#F2B233':gz.c<BURN?'#E8742A':'#3A2A20'; g.lineWidth=3; g.beginPath(); g.arc(p.x,p.y,26,-Math.PI/2,-Math.PI/2+k*Math.PI*2); g.stroke();
+    if(gold){ g.fillStyle='#FFF'; g.font='800 11px "M PLUS Rounded 1c",sans-serif'; g.fillText(gz.c>GOLD[1]?'いそいで！':'OK!',p.x,p.y-26); }
+  });
+  // plate, chili, chef
+  g.fillStyle='#fff'; g.beginPath(); g.ellipse(PLATE.x,PLATE.y,70,26,0,0,7); g.fill(); g.strokeStyle='#3F6FD8'; g.lineWidth=3; g.beginPath(); g.ellipse(PLATE.x,PLATE.y,62,21,0,0,7); g.stroke();
+  for(let i=0;i<S.plate;i++){ const col=i%6, row=i/6|0; gyoza(PLATE.x-45+col*18,PLATE.y-4-row*10,.45,null); }
+  if(S.chili&&S.plate){ g.fillStyle='rgba(217,65,46,.55)'; for(let i=0;i<10;i++){ g.beginPath(); g.arc(PLATE.x-40+i*9,PLATE.y-6+Math.sin(i*2)*5,3,0,7); g.fill(); } }
+  g.fillStyle='#3A2618'; g.font='800 12px "M PLUS Rounded 1c",sans-serif'; g.fillText(`お皿 ${S.plate}こ${S.chili&&S.plate?'（ラー油）':''}`,PLATE.x,PLATE.y+40);
+  rr(CHILI.x-46,CHILI.y-26,92,52,14,S.chili?'#D9412E':'#FFF'); g.strokeStyle='#D9412E'; g.lineWidth=3; g.stroke();
+  g.fillStyle=S.chili?'#fff':'#D9412E'; g.font='800 15px "M PLUS Rounded 1c",sans-serif'; g.fillText('🌶 ラー油',CHILI.x,CHILI.y+5);
+  chef(182,452);
+  // HUD
+  g.fillStyle='#FFF4E0'; g.font='800 13px "M PLUS Rounded 1c",sans-serif'; g.textAlign='left'; g.fillText(`⏱ ${Math.ceil(S.time)}秒`,10,21); g.textAlign='right'; g.fillText(`💴 ${S.yen.toLocaleString()}円`,W-10,21); g.textAlign='center';
+  if(S.combo>=2){ rr(W/2-44,152,88,20,10,'#D9412E'); g.fillStyle='#fff'; g.font='800 12px "M PLUS Rounded 1c",sans-serif'; g.fillText(`${S.combo} コンボ！`,W/2,166); }
+  // effects
+  for(const f of S.fx){
+    if(f.k==='txt'||f.k==='yen'){ g.globalAlpha=Math.max(0,1-f.t/1.1); g.font=`800 ${f.k==='yen'?16:13}px "M PLUS Rounded 1c",sans-serif`; g.lineWidth=4; g.strokeStyle='#fff'; g.strokeText(f.txt,f.x,f.y-f.t*24); g.fillStyle=f.k==='yen'?'#D9902E':f.col; g.fillText(f.txt,f.x,f.y-f.t*24); g.globalAlpha=1; }
+    else if(f.k==='fly'){ const k=f.t/.35; gyoza(f.x+(PLATE.x-f.x)*k,f.y+(PLATE.y-f.y)*k-Math.sin(k*Math.PI)*40,1-k*.5,null); }
+  }
+  if(S.auto&&S.scene==='play'){ g.fillStyle='#3A2618'; g.font='800 11px "M PLUS Rounded 1c",sans-serif'; g.textAlign='left'; g.fillText('🤖 AUTO',8,H-8); g.textAlign='center'; }
+}
+
+/* ---------- sound ---------- */
+let AC=null, muted=false; try{ muted=localStorage.getItem('gyozaMute')==='1'; }catch(e){}
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==='suspended') AC.resume(); }
+function tone(f,d,type='sine',v=.08,delay=0,f2=0){ if(muted||S.manual||!AC) return; const t=AC.currentTime+delay, o=AC.createOscillator(), gn=AC.createGain(); o.type=type; o.frequency.setValueAtTime(f,t); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+d); gn.gain.setValueAtTime(v,t); gn.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(gn).connect(AC.destination); o.start(t); o.stop(t+d+.02); }
+function noise(d,v=.08,f=3000){ if(muted||S.manual||!AC) return; const n=Math.floor(AC.sampleRate*d), b=AC.createBuffer(1,n,AC.sampleRate), ch=b.getChannelData(0); for(let i=0;i<n;i++) ch[i]=(Math.random()*2-1)*(1-i/n); const s=AC.createBufferSource(), fl=AC.createBiquadFilter(), gn=AC.createGain(); s.buffer=b; fl.type='highpass'; fl.frequency.value=f; gn.gain.value=v; s.connect(fl).connect(gn).connect(AC.destination); s.start(); }
+function sfx(k){
+  if(k==='sizzle') noise(.35,.06,3500);
+  else if(k==='ding') tone(1320,.2,'sine',.05);
+  else if(k==='pick') tone(660,.08,'triangle',.07);
+  else if(k==='coin'){ tone(988,.08,'square',.05); tone(1319,.2,'square',.05,.08); }
+  else if(k==='bell') tone(1760,.35,'sine',.05);
+  else if(k==='nope') tone(220,.12,'square',.05);
+  else if(k==='burn') noise(.5,.08,800);
+  else if(k==='sad') tone(392,.3,'triangle',.06,0,262);
+  else if(k==='chili') tone(880,.1,'sawtooth',.04,0,1320);
+  else if(k==='open') [523,659,784].forEach((f,i)=>tone(f,.15,'triangle',.08,i*.1));
+  else if(k==='close') [784,659,523,784].forEach((f,i)=>tone(f,.2,'triangle',.08,i*.13));
+}
+function setMute(m){ muted=m; $('muteBtn').textContent=m?'音 OFF':'音 ON'; try{ localStorage.setItem('gyozaMute',m?'1':'0'); }catch(e){} }
+
+/* ---------- input ---------- */
+function setAuto(v){ S.auto=!!v; $('autoBtn').setAttribute('aria-pressed',S.auto); S.autoT=0; if(S.auto&&S.scene==='title') start(); }
+function user(){ if(S.auto) setAuto(false); }
+cv.addEventListener('pointerdown',e=>{
+  e.preventDefault(); ac(); if(S.scene!=='play') return; user();
+  const r=cv.getBoundingClientRect(), x=(e.clientX-r.left)/r.width*W, y=(e.clientY-r.top)/r.height*H;
+  for(let i=0;i<SLOTS.length;i++) if(Math.hypot(x-SLOTS[i].x,y-SLOTS[i].y)<30){ tapSlot(i); return; }
+  for(let i=0;i<3;i++) if(Math.abs(x-SEATS[i].x)<52&&y>20&&y<168){ tapSeat(i); return; }
+  if(Math.abs(x-CHILI.x)<50&&Math.abs(y-CHILI.y)<30){ tapChili(); return; }
+});
+addEventListener('keydown',e=>{
+  const k=e.key.toLowerCase(); if(e.repeat) return;
+  if(k==='o'){ ac(); setAuto(!S.auto); return; }
+  if(k==='m'){ ac(); setMute(!muted); return; }
+  if(S.scene!=='play'){ if(k==='enter'||k===' '){ e.preventDefault(); ac(); user(); start(); } return; }
+  if(/^[1-7]$/.test(k)){ ac(); user(); tapSlot(+k-1); }
+  else if(k==='q'||k==='w'||k==='e'){ ac(); user(); tapSeat('qwe'.indexOf(k)); }
+  else if(k==='r'){ ac(); user(); tapChili(); }
+});
+$('startBtn').onclick=()=>{ ac(); user(); start(); };
+$('againBtn').onclick=()=>{ ac(); user(); start(); };
+$('autoStartBtn').onclick=()=>{ ac(); setAuto(true); };
+$('autoBtn').onclick=()=>{ ac(); setAuto(!S.auto); };
+$('muteBtn').onclick=()=>{ ac(); setMute(!muted); };
+
+setMute(muted); renderBest();
+let last=performance.now();
+function loop(now){ const dt=Math.min(.05,(now-last)/1000); last=now; if(!S.manual) update(dt); draw(); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+
+window.__gyoza={ get S(){ return S; }, setAuto, start, manual(v=true){ S.manual=v; }, step(dt=1/60){ update(dt); }, seed(v){ seed=(Math.abs(v|0)%2147483646)+1; }, tapSlot, tapSeat, tapChili };
+})();
+</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>
