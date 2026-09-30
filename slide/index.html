@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#232b4e">
+<title>スライドパズル | ゆきの里ゲームズ</title>
+<style>
+:root{--navy:#232b4e;--deep:#141a35;--paper:#f7f3ea;--yellow:#f4c542;--coral:#f08a6c;--mute:#a9b0cf}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--navy);color:var(--paper);font-family:system-ui,"Yu Gothic",sans-serif;display:flex;justify-content:center;align-items:center;padding:20px}
+main{width:min(100%,500px);text-align:center}h1{font-size:clamp(25px,6vw,36px);margin:0 0 5px} .sub{color:var(--mute);margin:0 0 20px;font-size:14px}
+.stats{display:flex;justify-content:center;gap:12px;margin:0 auto 16px}.stat{background:#303960;border-radius:12px;padding:9px 18px;min-width:100px}.stat small{display:block;color:var(--mute);font-size:11px}.stat strong{font-size:22px;font-variant-numeric:tabular-nums}
+.board{width:min(88vw,420px);aspect-ratio:1;margin:auto;padding:8px;background:var(--deep);border-radius:16px;display:grid;grid-template-columns:repeat(4,1fr);gap:7px;box-shadow:0 8px 0 #10152b}
+.tile{border:0;border-radius:10px;background:var(--paper);color:var(--navy);font-size:clamp(24px,7vw,42px);font-weight:800;cursor:pointer;box-shadow:0 4px 0 #c9c2b5;transition:transform .08s,background .12s;touch-action:manipulation}
+.tile:active{transform:translateY(3px);box-shadow:0 1px 0 #c9c2b5}.tile:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}.tile.empty{background:#303960;box-shadow:inset 0 2px 8px #151a32;cursor:default}
+.tile.correct{background:#d8f0df}.controls{display:flex;justify-content:center;gap:10px;margin:22px 0 12px;flex-wrap:wrap}button.action{border:0;border-radius:999px;padding:11px 20px;font-weight:800;font-size:15px;cursor:pointer;background:var(--yellow);color:var(--navy)}button.secondary{background:var(--paper)}.message{height:28px;color:var(--yellow);font-weight:700}.help{color:var(--mute);font-size:12px;line-height:1.7}a{color:var(--yellow);text-decoration:none}
+</style>
+</head>
+<body><main>
+<h1>🧩 スライドパズル</h1><p class="sub">空いたマスを使って、数字を 1 から 15 まで順番に並べよう。</p>
+<div class="stats"><div class="stat"><small>手数</small><strong id="moves">0</strong></div><div class="stat"><small>タイム</small><strong id="time">00:00</strong></div></div>
+<div class="board" id="board" role="group" aria-label="4×4のスライドパズル"></div>
+<div class="controls"><button class="action" id="shuffle">シャッフルして開始</button><button class="action secondary" id="reset">最初から</button></div>
+<div class="message" id="message" aria-live="polite"></div>
+<p class="help">数字のパネルを押すと、空白のマスと入れ替わります。<br>キーボードの矢印キーでも操作できます。</p><p class="help"><a href="../">← ゲーム一覧へ</a></p>
+</main>
+<script>
+const board=document.querySelector('#board'),movesEl=document.querySelector('#moves'),timeEl=document.querySelector('#time'),message=document.querySelector('#message');
+let tiles=[],moves=0,started=0,timer=null,playing=false;
+const solved=()=>tiles.every((v,i)=>v===(i===15?0:i+1));
+function render(){board.innerHTML='';tiles.forEach((n,i)=>{const b=document.createElement('button');b.className='tile'+(n===0?' empty':'')+(n===i+1?' correct':'');b.textContent=n||'';b.setAttribute('aria-label',n?String(n):'空白');b.disabled=n===0;b.addEventListener('click',()=>move(i));board.appendChild(b)});movesEl.textContent=moves}
+function neighbors(i){const r=Math.floor(i/4),c=i%4;return [r>0?i-4:-1,r<3?i+4:-1,c>0?i-1:-1,c<3?i+1:-1].filter(x=>x>=0)}
+function move(i){if(!playing)return;const z=tiles.indexOf(0);if(!neighbors(z).includes(i))return;[tiles[z],tiles[i]]=[tiles[i],tiles[z]];moves++;render();if(solved()){playing=false;clearInterval(timer);message.textContent='完成！ '+moves+'手でクリア！';}}
+function format(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function startClock(){clearInterval(timer);started=Date.now();timeEl.textContent='00:00';timer=setInterval(()=>timeEl.textContent=format(Math.floor((Date.now()-started)/1000)),250)}
+function shuffle(){tiles=Array.from({length:15},(_,i)=>i+1).concat(0);let prev=-1;for(let k=0;k<500;k++){const z=tiles.indexOf(0),opts=neighbors(z).filter(x=>x!==prev);const next=opts[Math.floor(Math.random()*opts.length)];[tiles[z],tiles[next]]=[tiles[next],tiles[z]];prev=z}moves=0;playing=true;message.textContent='';render();startClock()}
+function reset(){clearInterval(timer);tiles=Array.from({length:15},(_,i)=>i+1).concat(0);moves=0;playing=false;timeEl.textContent='00:00';message.textContent='シャッフルして始めよう';render()}
+document.querySelector('#shuffle').addEventListener('click',shuffle);document.querySelector('#reset').addEventListener('click',reset);
+document.addEventListener('keydown',e=>{const z=tiles.indexOf(0),key=e.key;let target=-1;if(key==='ArrowUp')target=z+4;if(key==='ArrowDown')target=z-4;if(key==='ArrowLeft')target=z+1;if(key==='ArrowRight')target=z-1;if(target>=0&&target<16&&neighbors(z).includes(target)){e.preventDefault();move(target)}});
+reset();
+</script></body></html>
