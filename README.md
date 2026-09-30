@@ -19,7 +19,7 @@
 | 😪 | ねない配信 | https://apapane-yukinosato.github.io/games/sleeper/ | ショートスリーパーを名乗る配信者の24時間配信。お風呂やカメラ不調でごまかして、視聴者にバレずにこっそり寝ろ！ |
 | 🎈 | コギ・ランチャー | https://apapane-yukinosato.github.io/games/launch/ | パチンコでコーギーを飛ばして風船をわる。3回の発射でハイスコアをめざす。 |
 | 🚀 | プラネット・ランダー | https://apapane-yukinosato.github.io/games/lander/ | 月・火星・地球・土星・木星・太陽・ブラックホールにスペースシャトルで着陸。星ごとに重力がちがう。燃料に気をつけて。 |
-| 🎵 | コギ・ステップ！ | https://apapane-yukinosato.github.io/games/step/ | ダンスダンスレボリューション風の音ゲー。流れてくる矢印に合わせて ←↓↑→。3曲×3段階、長押しのフリーズ矢印も。 |
+| 🎵 | コギ・ステップ！ | https://apapane-yukinosato.github.io/games/step/ | ダンスダンスレボリューション風の音ゲー。流れてくる矢印に合わせて ←↓↑→。4曲（ジャズ1曲をふくむ）×3段階、長押しのフリーズ矢印も。 |
 | 🧨 | ダイナマイトマン | https://apapane-yukinosato.github.io/games/dyna/ | ボンバーマン風の対戦アクション。ボムでブロックをこわしてアイテムで強くなり、コンピュータ（1〜3人・つよさ3段階）と勝ちぬきバトル。 |
 | 🌌 | スターガード | https://apapane-yukinosato.github.io/games/starguard/ | ファミコン「スターラスター」風の宇宙戦。銀河マップでワープし、コクピット視点で敵部隊と戦う。基地と惑星を守り、キーを集めて暗黒惑星を破壊する。 |
 | 🪐 | スペース・マイナー | https://apapane-yukinosato.github.io/games/miner/ | 惑星の採掘基地づくり。資材を掘って基地へ運び、建物を建てて大きくする。荷物を持った帰り道はエイリアンに狙われ、夜は基地を守る。5日以内に宇宙港を完成させればクリア。 |

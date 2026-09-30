@@ -129,12 +129,78 @@ const SONGS=[
   {id:'pop',  title:'コギコギ・ポップ',       bpm:120,root:60,scale:'major',prog:[0,5,3,4],bars:32,lead:'square',  hat:2,swing:0,  color:'#FF8FB1',seed:11},
   {id:'night',title:'ミッドナイト・ドッグラン',bpm:140,root:57,scale:'minor',prog:[0,5,2,6],bars:40,lead:'sawtooth',hat:2,swing:0,  color:'#7A8CFF',seed:23},
   {id:'hyper',title:'ワンダフル・ハイパー',    bpm:170,root:62,scale:'major',prog:[0,4,5,3],bars:48,lead:'square',  hat:4,swing:0,  color:'#FFD25A',seed:37},
+  {id:'jazz', title:'コーギー・チェンジズ',     bpm:160,root:60,scale:'major',prog:[0,0,0,0],bars:40,lead:'sawtooth',hat:0,swing:1,  color:'#4FD1C5',seed:59,style:'jazz',sax:1},
 ];
 const DIFFS=[{name:'かんたん'},{name:'ふつう'},{name:'むずかしい'}];
 function rng(seed){ return ()=>{ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
 function degNote(song,deg,oct=0){ const sc=SCALES[song.scale], n=sc.length, o=Math.floor(deg/n), d=((deg%n)+n)%n; return song.root+sc[d]+12*(o+oct); }
 function section(song,bar){ const B=song.bars; if(bar<4)return'intro'; if(bar>=B-4)return'outro'; if(bar>=B/2-2&&bar<B/2+2)return'break'; return 'main'; }
+// ---------- jazz: swing, walking bass, ride cymbal, piano comping ----------
+// the form moves key centres by major thirds (C → A♭ → E), the harmonic idea John Coltrane made famous.
+// the chord order and the melody are original to this game.
+const PCN={C:0,Db:1,D:2,Eb:3,E:4,F:5,'F#':6,G:7,Ab:8,A:9,Bb:10,B:11};
+const QUAL={maj7:[0,4,7,11],'7':[0,4,7,10],m7:[0,3,7,10]}, COMPV={maj7:[4,11,14],'7':[4,10,14],m7:[3,10,14]};
+const JAZZ_FORM=('C maj7,Eb 7,Ab maj7,B 7,E maj7,G 7,C maj7,C maj7,F# m7,B 7,E maj7,G 7,C maj7,Eb 7,Ab maj7,Ab maj7,'+
+  'D m7,G 7,C maj7,Eb 7,Ab maj7,B 7,E maj7,E maj7,Bb m7,Eb 7,Ab maj7,B 7,E maj7,G 7,D m7,G 7').split(',').map(x=>{ const [n,q]=x.split(' '); return {pc:PCN[n],q}; });
+function composeJazz(song){
+  const r=rng(song.seed), ev=[], mel=[], SW=2/3, B=song.bars, pick=a=>a[r()*a.length|0];
+  const II={pc:2,q:'m7'}, V={pc:7,q:'7'}, I={pc:0,q:'maj7'};
+  const halves=[];
+  for(let bar=0;bar<B;bar++) for(let h=0;h<2;h++){
+    if(bar<4||bar===B-4||bar===B-3) halves.push(h?V:II);            // intro / turnaround: Dm7 G7
+    else if(bar>=B-2) halves.push(I);                                 // ending on Cmaj7
+    else halves.push(JAZZ_FORM[((bar-4)%16)*2+h]); }
+  const chordAt=b=>halves[Math.max(0,Math.min(halves.length-1,Math.floor(b/2+1e-6)))];
+  const same=(a,b)=>a.pc===b.pc&&a.q===b.q;
+  const tones=c=>QUAL[c.q].map(x=>(c.pc+x)%12);
+  const near=(pcs,to,lo,hi)=>{ let best=lo,bd=1e9; for(let m=lo;m<=hi;m++){ if(!pcs.includes(((m%12)+12)%12)) continue; const d=Math.abs(m-to); if(d<bd){ bd=d; best=m; } } return best; };
+  const voicing=c=>COMPV[c.q].map(i=>{ let m=c.pc+i+48; while(m<52)m+=12; while(m>67)m-=12; return m; });
+  // rhythm section
+  let bp=43;
+  for(let bar=0;bar<B;bar++){
+    const sec=section(song,bar), b0=bar*4;
+    if(bar===B-1) continue;                                           // the final hit is placed below
+    if(bar===B-2){ ev.push({t:b0,type:'ride',vol:1.5,open:1},{t:b0,type:'kick',vol:.8},{t:b0,type:'snare',vol:.5});
+      ev.push({t:b0,type:'bass',midi:36,dur:7,wave:'triangle',vol:1.8},{t:b0,type:'comp',notes:voicing(I).concat([60,64]),dur:7,vol:1.3}); continue; }
+    if(sec==='break'){ const c=chordAt(b0), m=near([c.pc],bp,36,50); bp=m;   // stop-time: everyone hits beat 1, the lead plays alone
+      ev.push({t:b0,type:'ride',vol:1.3,open:1},{t:b0,type:'kick',vol:.6},{t:b0,type:'snare',vol:.45},{t:b0,type:'bass',midi:m,dur:1,wave:'triangle',vol:1.8},{t:b0,type:'comp',notes:voicing(c),dur:.6,vol:1}); continue; }
+    const soft=sec==='intro'?.6:1;
+    for(const x of [0,1,1+SW,2,3,3+SW]) ev.push({t:b0+x,type:'ride',vol:soft*(x%1?.65:(x===1||x===3)?1:.85)});
+    ev.push({t:b0+1,type:'hat',vol:.6},{t:b0+3,type:'hat',vol:.6});
+    if(sec!=='intro'){ for(let q=0;q<4;q++){ ev.push({t:b0+q,type:'kick',vol:.2}); if(r()<.22) ev.push({t:b0+q+SW,type:'snare',vol:.16}); }
+      if(r()<.2) ev.push({t:b0+3+SW,type:'snare',vol:.4}); }
+    for(let q=0;q<4;q++){ const beat=b0+q, c=chordAt(beat), nx=chordAt(beat+1); let m;       // walking bass
+      if(beat===0||!same(chordAt(beat-1),c)) m=near([c.pc],bp,36,50);
+      else if(!same(nx,c)) m=near([nx.pc],bp,37,49)+(r()<.5?1:-1);           // chromatic approach to the next root
+      else m=near(tones(c).slice(1),bp+(bp>46?-3:3),36,52);
+      ev.push({t:beat,type:'bass',midi:m,dur:.85,wave:'triangle',vol:1.8}); bp=m; }
+    for(let h=0;h<2;h++){ const st=b0+h*2, c=halves[bar*2+h], x=r(), v=voicing(c);                 // piano comping
+      if(x<.45) ev.push({t:st,type:'comp',notes:v,dur:.5,vol:soft});
+      else if(x<.8&&st>0) ev.push({t:st-(1-SW),type:'comp',notes:v,dur:.7,vol:soft});   // anticipation on the swung "and"
+      else ev.push({t:st,type:'comp',notes:v,dur:.4,vol:soft},{t:st+1+SW,type:'comp',notes:v,dur:.3,vol:soft*.8}); }
+  }
+  ev.push({t:(B-1)*4+3.99,type:'kick',vol:.001});
+  // melody: chorus 1 = a simple head, chorus 2 = swung bebop eighths
+  const HEAD=[[[0,2]],[[0,1],[1,1]],[[0,SW],[SW,1-SW],[1,1]],[[0,1],[1,SW],[1+SW,1-SW]],[[0,1.5]]];
+  const SOLO=[[[0,SW],[SW,1-SW],[1,SW],[1+SW,1-SW]],[[0,1],[1,SW],[1+SW,1-SW]],[[SW,1-SW],[1,SW],[1+SW,1-SW]],[[0,SW],[SW,1-SW],[1,1]],[[0,SW],[SW,1-SW],[1,SW],[1+SW,1-SW]]];
+  const headRhy=[]; for(let ph=0;ph<2;ph++){ const a=[]; for(let k=0;k<8;k++) a.push(k===7?[[0,1.5]]:k===3?pick([HEAD[0],HEAD[1]]):pick(HEAD)); headRhy.push(a); }
+  let prev=67;
+  const place=(t0,rhy,segEnd)=>{ for(const [st,len] of rhy){ const t=t0+st, c=chordAt(t), last=t+len>=segEnd-1e-6, nx=chordAt(segEnd), onBeat=Math.abs(t-Math.round(t))<1e-6;
+      let m;
+      if(last&&!onBeat&&!same(nx,c)){ const tg=near(tones(nx),prev,61,78); m=tg+(prev<tg?-1:1); }                // chromatic approach
+      else if(onBeat) m=near(tones(c),prev+(r()<.3?pick([-5,5,-7,7,4,-4]):0),60,79);                          // chord tone on the beat
+      else m=Math.max(60,Math.min(79,prev+pick([-2,-1,1,2,-3,3])));                                           // passing tone
+      ev.push({t,type:'lead',midi:m,dur:len}); mel.push({t,midi:m,dur:len,step:0}); prev=m; } };
+  for(let bar=4;bar<B-4;bar++){ const fb=(bar-4)%16, chorus=(bar-4)>>4;
+    for(let h=0;h<2;h++){ const st=bar*4+h*2, k=(fb%4)*2+h;
+      const rhy=chorus===0?headRhy[(fb>>2)%2][k]:(k===7?pick([[[0,1]],[[0,SW],[SW,1-SW]]]):pick(SOLO));
+      place(st,rhy,st+2); } }
+  place((B-4)*4,SOLO[0],(B-4)*4+2); place((B-4)*4+2,SOLO[1],(B-4)*4+4); place((B-3)*4,SOLO[3],(B-3)*4+2); place((B-3)*4+2,[[0,SW],[SW,1-SW]],(B-3)*4+4);
+  { const t=(B-2)*4, m=near([0],prev,64,76); ev.push({t,type:'lead',midi:m,dur:6}); mel.push({t,midi:m,dur:6,step:0}); }
+  return {ev:ev.sort((a,b)=>a.t-b.t),mel,beats:B*4};
+}
 function composeSong(song){
+  if(song.style==='jazz') return composeJazz(song);
   const r=rng(song.seed), ev=[], mel=[];
   // melody: rhythms come from fixed on-beat patterns (16th grid, [start,len]) so the tune locks to the beat
   const pick=a=>a[r()*a.length|0];
@@ -179,7 +245,7 @@ function composeSong(song){
 }
 function makeChart(song,comp,diff){
   const r=rng(song.seed*7+diff), notes=[];
-  const spb=60/song.bpm, minGap=[1,.5,song.bpm>150?.5:.25][diff];
+  const spb=60/song.bpm, minGap=[1,.5,song.swing?1/3:song.bpm>150?.5:.25][diff], OFF=song.swing?2/3:.5;
   const cand=[];
   for(let b=4;b<comp.beats-8;b++){ // every beat is a candidate on quarter
     const bar=Math.floor(b/4), sec=section(song,bar);
@@ -187,10 +253,10 @@ function makeChart(song,comp,diff){
     if(diff===0&&b%2!==0)continue;
     cand.push({t:b,pri:1});
     // hard: extra off-beat steps in the main sections for a denser stream
-    if(diff===2&&sec==='main'&&r()<.6) cand.push({t:b+.5,pri:2});
+    if(diff===2&&sec==='main'&&r()<.6) cand.push({t:b+OFF,pri:2});
   }
-  if(diff>=1) for(const m of comp.mel){ const frac=m.t%1; if(frac===0)continue; if(diff===1&&frac!==.5)continue; if(diff===1&&r()<.45)continue; cand.push({t:m.t,pri:2,midi:m.midi,dur:m.dur}); }
-  for(const m of comp.mel){ const c=cand.find(c=>c.t===m.t); if(c){ c.midi=m.midi; c.dur=m.dur; } }
+  if(diff>=1) for(const m of comp.mel){ const frac=m.t%1; if(frac<1e-6)continue; if(diff===1&&Math.abs(frac-OFF)>1e-6)continue; if(diff===1&&r()<.45)continue; cand.push({t:m.t,pri:2,midi:m.midi,dur:m.dur}); }
+  for(const m of comp.mel){ const c=cand.find(c=>Math.abs(c.t-m.t)<1e-6); if(c){ c.midi=m.midi; c.dur=m.dur; } }
   cand.sort((a,b)=>a.t-b.t);
   let last=-9, lastLane=1, lastMidi=64, prev2=-1;
   for(const c of cand){
@@ -223,12 +289,20 @@ const mtof=m=>440*Math.pow(2,(m-69)/12);
 function env(node,t,a,d,peak){ node.gain.setValueAtTime(.0001,t); node.gain.exponentialRampToValueAtTime(peak,t+a); node.gain.exponentialRampToValueAtTime(.0001,t+a+d); }
 function playEv(e,t,song){
   const a=AC; if(!a)return;
-  if(e.type==='kick'){ const o=a.createOscillator(), v=a.createGain(); o.frequency.setValueAtTime(150,t); o.frequency.exponentialRampToValueAtTime(45,t+.18); env(v,t,.004,.22,.9); o.connect(v).connect(master); o.start(t); o.stop(t+.3); }
-  else if(e.type==='snare'){ const s=a.createBufferSource(), f=a.createBiquadFilter(), v=a.createGain(); s.buffer=NB; f.type='bandpass'; f.frequency.value=1800; env(v,t,.002,.16,.45); s.connect(f).connect(v).connect(master); s.start(t,Math.random()*.5,.25);
-    const o=a.createOscillator(), v2=a.createGain(); o.type='triangle'; o.frequency.setValueAtTime(210,t); env(v2,t,.002,.08,.25); o.connect(v2).connect(master); o.start(t); o.stop(t+.12); }
-  else if(e.type==='hat'){ const s=a.createBufferSource(), f=a.createBiquadFilter(), v=a.createGain(); s.buffer=NB; f.type='highpass'; f.frequency.value=7000; env(v,t,.001,e.open?.18:.04,.18); s.connect(f).connect(v).connect(master); s.start(t,Math.random()*.5,.25); }
-  else if(e.type==='bass'){ const o=a.createOscillator(), f=a.createBiquadFilter(), v=a.createGain(); o.type='sawtooth'; o.frequency.value=mtof(e.midi); f.type='lowpass'; f.frequency.value=600; env(v,t,.005,e.dur*60/song.bpm,.28); o.connect(f).connect(v).connect(master); o.start(t); o.stop(t+e.dur*60/song.bpm+.05); }
+  if(e.type==='kick'){ const o=a.createOscillator(), v=a.createGain(); o.frequency.setValueAtTime(150,t); o.frequency.exponentialRampToValueAtTime(45,t+.18); env(v,t,.004,.22,.9*(e.vol??1)); o.connect(v).connect(master); o.start(t); o.stop(t+.3); }
+  else if(e.type==='snare'){ const s=a.createBufferSource(), f=a.createBiquadFilter(), v=a.createGain(); s.buffer=NB; f.type='bandpass'; f.frequency.value=1800; env(v,t,.002,.16,.45*(e.vol??1)); s.connect(f).connect(v).connect(master); s.start(t,Math.random()*.5,.25);
+    const o=a.createOscillator(), v2=a.createGain(); o.type='triangle'; o.frequency.setValueAtTime(210,t); env(v2,t,.002,.08,.25*(e.vol??1)); o.connect(v2).connect(master); o.start(t); o.stop(t+.12); }
+  else if(e.type==='hat'){ const s=a.createBufferSource(), f=a.createBiquadFilter(), v=a.createGain(); s.buffer=NB; f.type='highpass'; f.frequency.value=7000; env(v,t,.001,e.open?.18:.04,.18*(e.vol??1)); s.connect(f).connect(v).connect(master); s.start(t,Math.random()*.5,.25); }
+  else if(e.type==='bass'){ const o=a.createOscillator(), f=a.createBiquadFilter(), v=a.createGain(); o.type=e.wave||'sawtooth'; o.frequency.value=mtof(e.midi); f.type='lowpass'; f.frequency.value=600; env(v,t,.005,e.dur*60/song.bpm,.28*(e.vol??1)); o.connect(f).connect(v).connect(master); o.start(t); o.stop(t+e.dur*60/song.bpm+.05); }
   else if(e.type==='pad'){ const d=e.dur*60/song.bpm; for(const m of e.notes){ const o=a.createOscillator(), v=a.createGain(); o.type='triangle'; o.frequency.value=mtof(m); v.gain.setValueAtTime(.0001,t); v.gain.exponentialRampToValueAtTime(.05,t+.2); v.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(v).connect(master); o.start(t); o.stop(t+d+.05); } }
+  else if(e.type==='ride'){ const s=a.createBufferSource(), f=a.createBiquadFilter(), v=a.createGain(); s.buffer=NB; f.type='highpass'; f.frequency.value=5000; env(v,t,.001,e.open?1.2:.3,.07*(e.vol??1)); s.connect(f).connect(v).connect(master); s.start(t,Math.random()*.2,e.open?.8:.35);
+    const o=a.createOscillator(), v2=a.createGain(); o.type='square'; o.frequency.value=5230; env(v2,t,.001,e.open?.9:.2,.008*(e.vol??1)); o.connect(v2).connect(master); o.start(t); o.stop(t+(e.open?1:.25)); }
+  else if(e.type==='comp'){ const d=e.dur*60/song.bpm; for(const m of e.notes){ const o=a.createOscillator(), v=a.createGain(); o.type='triangle'; o.frequency.value=mtof(m); env(v,t,.005,d,.04*(e.vol??1)); o.connect(v).connect(master); o.start(t); o.stop(t+d+.05); } }
+  else if(e.type==='lead'&&song.sax){ const d=Math.max(.08,e.dur*60/song.bpm*.95), o=a.createOscillator(), f=a.createBiquadFilter(), v=a.createGain(), lf=a.createOscillator(), lg=a.createGain();
+    o.type='sawtooth'; o.frequency.value=mtof(e.midi); f.type='lowpass'; f.frequency.value=1700; f.Q.value=2;
+    lf.frequency.value=5.5; lg.gain.setValueAtTime(0,t); lg.gain.linearRampToValueAtTime(mtof(e.midi)*.006,t+Math.min(.25,d)); lf.connect(lg).connect(o.frequency);
+    v.gain.setValueAtTime(.0001,t); v.gain.exponentialRampToValueAtTime(.1,t+.025); v.gain.setValueAtTime(.1,t+d*.75); v.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(f).connect(v).connect(master); o.start(t); o.stop(t+d+.05); lf.start(t); lf.stop(t+d+.05); }
   else if(e.type==='lead'){ const d=Math.max(.08,e.dur*60/song.bpm*.95), o=a.createOscillator(), f=a.createBiquadFilter(), v=a.createGain(); o.type=song.lead; o.frequency.value=mtof(e.midi+12); f.type='lowpass'; f.frequency.value=2600; v.gain.setValueAtTime(.0001,t); v.gain.exponentialRampToValueAtTime(.09,t+.01); v.gain.setValueAtTime(.09,t+d*.7); v.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(f).connect(v).connect(master); o.start(t); o.stop(t+d+.05); }
 }
 // ---------- download: synthesize the whole song in JS (same sounds as the game) and save it as WAV ----------
@@ -241,13 +315,18 @@ function synthSong(song){
   const lpA=fc=>1-Math.exp(-TAU*fc/sr);
   const voice=(t0,len,fn)=>{ const s0=Math.floor(t0*sr), n=Math.min(N-s0,Math.ceil(len*sr)); for(let i=0;i<n;i++) out[s0+i]+=fn(i/sr)*.5; };
   for(const e of comp.ev){ const t=off+e.t*spb;
-    if(e.type==='kick'){ let ph=0; voice(t,.3,x=>{ const f=x<.18?ramp(150,45,x/.18):45; ph+=f/sr; return Math.sin(ph*TAU)*env(x,.004,.22,.9); }); }
+    if(e.type==='kick'){ let ph=0; voice(t,.3,x=>{ const f=x<.18?ramp(150,45,x/.18):45; ph+=f/sr; return Math.sin(ph*TAU)*env(x,.004,.22,.9*(e.vol??1)); }); }
     else if(e.type==='snare'){ let y1=0,y2=0; const a1=lpA(1800*1.6), a2=lpA(1800/1.6);
-      voice(t,.25,x=>{ const n=noise(); y1+=a1*(n-y1); y2+=a2*(y1-y2); return (y1-y2)*2*env(x,.002,.16,.45); });
-      let ph=0; voice(t,.12,x=>{ ph+=210/sr; return wave.triangle(ph)*env(x,.002,.08,.25); }); }
-    else if(e.type==='hat'){ let y=0; const a=lpA(7000); voice(t,.25,x=>{ const n=noise(); y+=a*(n-y); return (n-y)*env(x,.001,e.open?.18:.04,.18); }); }
-    else if(e.type==='bass'){ let ph=0,y=0; const f=mtof(e.midi), a=lpA(600), d=e.dur*spb; voice(t,d+.05,x=>{ ph+=f/sr; y+=a*(wave.sawtooth(ph)-y); return y*env(x,.005,d,.28); }); }
+      voice(t,.25,x=>{ const n=noise(); y1+=a1*(n-y1); y2+=a2*(y1-y2); return (y1-y2)*2*env(x,.002,.16,.45*(e.vol??1)); });
+      let ph=0; voice(t,.12,x=>{ ph+=210/sr; return wave.triangle(ph)*env(x,.002,.08,.25*(e.vol??1)); }); }
+    else if(e.type==='hat'){ let y=0; const a=lpA(7000); voice(t,.25,x=>{ const n=noise(); y+=a*(n-y); return (n-y)*env(x,.001,e.open?.18:.04,.18*(e.vol??1)); }); }
+    else if(e.type==='bass'){ let ph=0,y=0; const f=mtof(e.midi), a=lpA(600), d=e.dur*spb; voice(t,d+.05,x=>{ ph+=f/sr; y+=a*(wave[e.wave||'sawtooth'](ph)-y); return y*env(x,.005,d,.28*(e.vol??1)); }); }
     else if(e.type==='pad'){ const d=e.dur*spb; for(const m of e.notes){ let ph=0; const f=mtof(m); voice(t,d+.05,x=>{ ph+=f/sr; return wave.triangle(ph)*(x<.2?ramp(1e-4,.05,x/.2):ramp(.05,1e-4,(x-.2)/(d-.2))); }); } }
+    else if(e.type==='ride'){ let y=0,ph=0; const a=lpA(5000), L=e.open?1.2:.3; voice(t,L+.05,x=>{ const n=noise(); y+=a*(n-y); ph+=5230/sr; return ((n-y)*.07+wave.square(ph)*.008*Math.exp(-x*6))*(e.vol??1)*env(x,.001,L,1); }); }
+    else if(e.type==='comp'){ const d=e.dur*spb; for(const m of e.notes){ let ph=0; const f=mtof(m); voice(t,d+.05,x=>{ ph+=f/sr; return wave.triangle(ph)*env(x,.005,d,.04*(e.vol??1)); }); } }
+    else if(e.type==='lead'&&song.sax){ const d=Math.max(.08,e.dur*spb*.95), f0=mtof(e.midi); let ph=0,y1=0,y2=0; const a=lpA(1700);
+      voice(t,d+.05,x=>{ const vib=f0*.006*Math.min(1,x/.25)*Math.sin(TAU*5.5*x); ph+=(f0+vib)/sr; y1+=a*(wave.sawtooth(ph)-y1); y2+=a*(y1-y2);
+        const g=x<.025?ramp(1e-4,.1,x/.025):x<d*.75?.1:ramp(.1,1e-4,(x-d*.75)/(d*.25)); return y2*g*1.3; }); }
     else if(e.type==='lead'){ const d=Math.max(.08,e.dur*spb*.95), f=mtof(e.midi+12), a=lpA(2600), w=wave[song.lead]; let ph=0,y=0;
       voice(t,d+.05,x=>{ ph+=f/sr; y+=a*(w(ph)-y); const g=x<.01?ramp(1e-4,.09,x/.01):x<d*.7?.09:ramp(.09,1e-4,(x-d*.7)/(d*.3)); return y*g; }); }
   }
