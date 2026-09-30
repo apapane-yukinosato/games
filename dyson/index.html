@@ -138,25 +138,26 @@ const STAGES=[
   {n:'下町商店街',goal:3e5,mix:{student:3,mom:4,oji:3,shop:2},police:1,count:10,rec:{},bg:['#8A7A6A','#A8987A'],
    intro:'ある朝、男は気づいた。\n人に手をかざすと、その人のお金が自分の口座に流れこんでくる――。\n\n男は自分を「マネーダイソン」と名づけた。\nまずは商店街で、この力をためしてみよう。',
    tip:'ほとんどの人はお金を持っていない。長く吸いすぎると怪しまれて、たたかれるぞ。\n警官（公務員）は結構持っているが、怪しまれると追いかけてくる。追ってくる警官はあわてているので、3倍吸いやすい。'},
-  {n:'オフィス街',goal:4e8,mix:{worker:5,ol:4,boss:2,ceo:.7},police:2,count:11,rec:{pow:2,stl:2},bg:['#5A6A7A','#7A8A9A'],
+  {n:'オフィス街',goal:4e8,mix:{worker:5,ol:4,boss:2,ceo:.7},police:2,count:11,rec:{pow:3,stl:2},bg:['#5A6A7A','#7A8A9A'],
    intro:'商店街では小銭しか吸えない。\nマネーダイソンはビルの立ちならぶオフィス街へやってきた。',tip:'社長はSPなしで歩いている。直触りなら一瞬で全部吸えるが、警察に追われる。'},
-  {n:'高級住宅街',goal:3e10,mix:{madam:4,rich:2,ceo:1},police:3,count:10,rec:{rng:3,pow:4,stl:3},bg:['#5A7A5A','#7A9A6A'],
+  {n:'高級住宅街',goal:3e10,mix:{madam:4,rich:2,ceo:1},police:3,count:10,rec:{rng:3,pow:5,stl:3},bg:['#5A7A5A','#7A9A6A'],
    intro:'ここからは本物のお金持ちの街。\nだが、お金持ちにはいつもSPがついている。',tip:'SPに近づくとなぐられる。「吸引距離」をきたえて、遠くから吸おう。'},
-  {n:'金融街',goal:5e12,mix:{trader:3,investor:3,chairman:2},police:3,count:10,rec:{rng:3,pow:5,stl:4,hp:3},bg:['#3A3A5A','#5A5A7A'],
+  {n:'金融街',goal:5e12,mix:{trader:3,investor:3,chairman:2},police:3,count:10,rec:{rng:3,pow:7,stl:4,hp:3},bg:['#3A3A5A','#5A5A7A'],
    intro:'世界のお金が集まる金融街。\n投資家も会長も、SPでがっちり守られている。',tip:'会長のSPはさらに多い。吸引距離とステルスを上げておこう。'},
-  {n:'世界長者サミット',goal:6e14,mix:{tycoon:3,magnate:2},police:4,count:9,rec:{rng:4,pow:6,stl:5,hp:4},bg:['#5A3A2A','#8A5A3A'],
+  {n:'世界長者サミット',goal:6e14,mix:{tycoon:3,magnate:2},police:4,count:9,rec:{rng:4,pow:9,stl:5,hp:4},bg:['#5A3A2A','#8A5A3A'],
    intro:'世界中の大富豪が集まるサミット会場。\nここで世界一になれば、あの「某SNS」だって買える。',tip:'目標は600兆円。大富豪のSPはとても多い。吸引距離を上げて、SPの外から吸おう。'},
 ];
 // abilities (cost grows fast so each town's money matters)
 const SK=[
-  {id:'pow',n:'吸引力',d:l=>`1秒で相手の資産の ${Math.round(powOf(l)*100)}%`,max:7,cost:l=>2e4*Math.pow(30,l-1)},
+  {id:'pow',n:'吸引力',d:l=>`1秒で ${yen(powOf(l))} 吸う`,max:10,cost:l=>1e5*Math.pow(12,l-1)},
   {id:'rng',n:'吸引距離',d:l=>`とどく距離 ${rngOf(l)}`,max:6,cost:l=>1.5e5*Math.pow(40,l-1)},
   {id:'stl',n:'怪しまれにくさ',d:l=>`怪しまれる速さ ${Math.round(stlOf(l)*100)}%`,max:6,cost:l=>5e4*Math.pow(35,l-1)},
   {id:'hp',n:'体力',d:l=>`HP ${hpOf(l)}`,max:5,cost:l=>4e4*Math.pow(45,l-1)},
   {id:'spd',n:'俊足',d:l=>`足の速さ ${Math.round(spdOf(l)*100)}%`,max:5,cost:l=>1e5*Math.pow(40,l-1)},
 ];
 // each level is a big jump: power x2.5, reach +50..60, suspicion x0.55, HP +3, speed +25%
-const powOf=l=>.05*Math.pow(2.5,l-1), rngOf=l=>[44,104,160,212,262,300][l-1], stlOf=l=>Math.pow(.55,l-1), hpOf=l=>3+3*(l-1), spdOf=l=>1+.25*(l-1);
+const powOf=l=>3e4*Math.pow(10,l-1),  // yen per second: x10 each level
+       rngOf=l=>[44,104,160,212,262,300][l-1], stlOf=l=>Math.pow(.55,l-1), hpOf=l=>3+3*(l-1), spdOf=l=>1+.25*(l-1);
 
 /* ================= state ================= */
 const S={scene:'story',stage:0,money:0,lv:{pow:1,rng:1,stl:1,hp:1,spd:1},p:null,npcs:[],fx:[],alarm:0,t:0,target:null,lock:null,sucking:false,paused:false,auto:false,manual:false,
@@ -255,7 +256,7 @@ function update(dt){
   // suck
   S.target=S.sucking?suckTarget():null;
   if(S.target){ const n=S.target, d=Math.hypot(n.x-p.x,n.y-p.y), R=rngOf(S.lv.rng);
-    const amt=Math.min(n.money,n.max*powOf(S.lv.pow)*(n.state==='chase'?3:1)*dt+300*dt); n.money-=amt; S.money+=amt; S.gainT=(S.gainT||0)+amt;
+    const amt=Math.min(n.money,powOf(S.lv.pow)*(n.state==='chase'?3:1)*dt); n.money-=amt; S.money+=amt; S.gainT=(S.gainT||0)+amt;
     const sus=.6*stlOf(S.lv.stl)*(n.t.rich?1.25:1)*(n.t.police?1.15:1)*(.55+.45*(1-d/R));
     n.sus+=sus*dt; if(Math.random()<dt*14) S.fx.push({k:'coin',x:n.x,y:n.y,tx:p.x,ty:p.y,t:0});
     if(n.money<=0){ n.money=0; drainPerson(n); sfx('drain'); }
@@ -318,7 +319,7 @@ function autoTick(dt){
   let goal=null;
   if(S.alarm>0){ // run; only drain a cop that is almost empty (sucking slows us down)
     S.sucking=false; const cop=S.npcs.filter(n=>n.state==='chase').sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0];
-    if(cop&&Math.hypot(cop.x-p.x,cop.y-p.y)<R&&cop.money<=cop.max*powOf(S.lv.pow)*3*1.2){ S.lock=cop.id; S.sucking=true; } }
+    if(cop&&Math.hypot(cop.x-p.x,cop.y-p.y)<R&&cop.money<=powOf(S.lv.pow)*3*1.2){ S.lock=cop.id; S.sucking=true; } }
   else {
     // choose target: value you can safely reach
     let best=null,bv=0;
