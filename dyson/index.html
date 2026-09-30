@@ -45,7 +45,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .back{display:block;margin-top:10px;font-size:13px;font-weight:800;color:var(--mute);text-decoration:none}
 .skills{display:grid;gap:6px;text-align:left;margin-top:8px}
 .sk{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;background:#2C2240;border-radius:12px;padding:8px 10px}
-.sk b{font-size:14px}.sk small{grid-column:1;font-size:11px;color:var(--mute)}
+.sk b{font-size:14px}.sk.rec{outline:2px solid var(--gold)}.sk em{font-style:normal;font-size:11px;color:var(--gold);margin-left:6px}.sk small{grid-column:1;font-size:11px;color:var(--mute)}
 .sk button{grid-row:1/3;grid-column:2;border:0;border-radius:10px;padding:8px 10px;font-weight:800;font-size:12px;background:var(--gold);color:#221A30;cursor:pointer;min-width:92px}
 .sk button:disabled{background:#4A3E5A;color:#8A7A9A;cursor:default}
 #nameIn{width:100%;font-size:18px;padding:10px;border-radius:10px;border:2px solid var(--gold);background:#120E1A;text-align:center;margin-top:6px}
@@ -135,27 +135,28 @@ const T={
   sp:{n:'SP',m:[4e6,1e7],col:'#141418',sp:1.4,isSP:1},
 };
 const STAGES=[
-  {n:'下町商店街',goal:3e5,mix:{student:3,mom:4,oji:3,shop:2},police:1,count:10,bg:['#8A7A6A','#A8987A'],
+  {n:'下町商店街',goal:3e5,mix:{student:3,mom:4,oji:3,shop:2},police:1,count:10,rec:{},bg:['#8A7A6A','#A8987A'],
    intro:'ある朝、男は気づいた。\n人に手をかざすと、その人のお金が自分の口座に流れこんでくる――。\n\n男は自分を「マネーダイソン」と名づけた。\nまずは商店街で、この力をためしてみよう。',
    tip:'ほとんどの人はお金を持っていない。長く吸いすぎると怪しまれて、たたかれるぞ。\n警官（公務員）は結構持っているが、怪しまれると追いかけてくる。追ってくる警官はあわてているので、3倍吸いやすい。'},
-  {n:'オフィス街',goal:2e8,mix:{worker:5,ol:4,boss:2,ceo:.7},police:2,count:11,bg:['#5A6A7A','#7A8A9A'],
+  {n:'オフィス街',goal:4e8,mix:{worker:5,ol:4,boss:2,ceo:.7},police:2,count:11,rec:{pow:2,stl:2},bg:['#5A6A7A','#7A8A9A'],
    intro:'商店街では小銭しか吸えない。\nマネーダイソンはビルの立ちならぶオフィス街へやってきた。',tip:'社長はSPなしで歩いている。直触りなら一瞬で全部吸えるが、警察に追われる。'},
-  {n:'高級住宅街',goal:1e10,mix:{madam:4,rich:2,ceo:1},police:3,count:10,bg:['#5A7A5A','#7A9A6A'],
+  {n:'高級住宅街',goal:3e10,mix:{madam:4,rich:2,ceo:1},police:3,count:10,rec:{rng:3,pow:4,stl:3},bg:['#5A7A5A','#7A9A6A'],
    intro:'ここからは本物のお金持ちの街。\nだが、お金持ちにはいつもSPがついている。',tip:'SPに近づくとなぐられる。「吸引距離」をきたえて、遠くから吸おう。'},
-  {n:'金融街',goal:1.5e12,mix:{trader:3,investor:3,chairman:2},police:3,count:10,bg:['#3A3A5A','#5A5A7A'],
+  {n:'金融街',goal:5e12,mix:{trader:3,investor:3,chairman:2},police:3,count:10,rec:{rng:3,pow:5,stl:4,hp:3},bg:['#3A3A5A','#5A5A7A'],
    intro:'世界のお金が集まる金融街。\n投資家も会長も、SPでがっちり守られている。',tip:'会長のSPはさらに多い。吸引距離とステルスを上げておこう。'},
-  {n:'世界長者サミット',goal:1e14,mix:{tycoon:3,magnate:2},police:4,count:9,bg:['#5A3A2A','#8A5A3A'],
-   intro:'世界中の大富豪が集まるサミット会場。\nここで世界一になれば、あの「某SNS」だって買える。',tip:'目標は100兆円。大富豪のSPはとても多い。遠くから、少しずつ。'},
+  {n:'世界長者サミット',goal:6e14,mix:{tycoon:3,magnate:2},police:4,count:9,rec:{rng:4,pow:6,stl:5,hp:4},bg:['#5A3A2A','#8A5A3A'],
+   intro:'世界中の大富豪が集まるサミット会場。\nここで世界一になれば、あの「某SNS」だって買える。',tip:'目標は600兆円。大富豪のSPはとても多い。吸引距離を上げて、SPの外から吸おう。'},
 ];
 // abilities (cost grows fast so each town's money matters)
 const SK=[
-  {id:'pow',n:'吸引力',d:l=>`1秒で相手の資産の ${Math.round(powOf(l)*100)}%`,max:9,cost:l=>3e4*Math.pow(18,l-1)},
-  {id:'rng',n:'吸引距離',d:l=>`とどく距離 ${rngOf(l)}`,max:7,cost:l=>2e5*Math.pow(30,l-1)},
-  {id:'stl',n:'怪しまれにくさ',d:l=>`怪しまれる速さ ${Math.round(stlOf(l)*100)}%`,max:8,cost:l=>5e4*Math.pow(16,l-1)},
-  {id:'hp',n:'体力',d:l=>`HP ${hpOf(l)}`,max:6,cost:l=>4e4*Math.pow(25,l-1)},
-  {id:'spd',n:'俊足',d:l=>`足の速さ ${Math.round(spdOf(l)*100)}%`,max:5,cost:l=>1e5*Math.pow(25,l-1)},
+  {id:'pow',n:'吸引力',d:l=>`1秒で相手の資産の ${Math.round(powOf(l)*100)}%`,max:7,cost:l=>2e4*Math.pow(30,l-1)},
+  {id:'rng',n:'吸引距離',d:l=>`とどく距離 ${rngOf(l)}`,max:6,cost:l=>1.5e5*Math.pow(40,l-1)},
+  {id:'stl',n:'怪しまれにくさ',d:l=>`怪しまれる速さ ${Math.round(stlOf(l)*100)}%`,max:6,cost:l=>5e4*Math.pow(35,l-1)},
+  {id:'hp',n:'体力',d:l=>`HP ${hpOf(l)}`,max:5,cost:l=>4e4*Math.pow(45,l-1)},
+  {id:'spd',n:'俊足',d:l=>`足の速さ ${Math.round(spdOf(l)*100)}%`,max:5,cost:l=>1e5*Math.pow(40,l-1)},
 ];
-const powOf=l=>.05*Math.pow(1.42,l-1), rngOf=l=>44+30*(l-1), stlOf=l=>Math.pow(.8,l-1), hpOf=l=>3+(l-1), spdOf=l=>1+.12*(l-1);
+// each level is a big jump: power x2.5, reach +50..60, suspicion x0.55, HP +3, speed +25%
+const powOf=l=>.05*Math.pow(2.5,l-1), rngOf=l=>[44,104,160,212,262,300][l-1], stlOf=l=>Math.pow(.55,l-1), hpOf=l=>3+3*(l-1), spdOf=l=>1+.25*(l-1);
 
 /* ================= state ================= */
 const S={scene:'story',stage:0,money:0,lv:{pow:1,rng:1,stl:1,hp:1,spd:1},p:null,npcs:[],fx:[],alarm:0,t:0,target:null,lock:null,sucking:false,paused:false,auto:false,manual:false,
@@ -192,10 +193,11 @@ function story(title,text,btn,fn,showAuto){ S.scene='story'; $('storyTitle').tex
 let storyFn=null;
 function titleScreen(){ S.money=0; S.lv={pow:1,rng:1,stl:1,hp:1,spd:1}; S.ending=null;
   story('マネーダイソン','他人のお金を吸い取る力を手にした男、マネーダイソン。\n街の人に手をかざして資産を吸い、能力をきたえ、\n世界一の大富豪をめざせ！\n\n'+`（とうたつ：STAGE ${S.best.stage+1}／クリア ${S.best.clears}回）`,'はじめる',()=>stageIntro(0),true); }
-function stageIntro(i){ const st=STAGES[i]; story(`STAGE ${i+1}　${st.n}`,st.intro+'\n\n💡 '+st.tip+`\n\n目標：${yen(st.goal)}`,'この街へ',()=>startStage(i),false); }
+function recText(i){ const r=STAGES[i].rec, ks=Object.keys(r); if(!ks.length) return ''; return '\n\n⭐ おすすめ能力：'+ks.map(k=>`${SK.find(s=>s.id===k).n}Lv${r[k]}${S.lv[k]>=r[k]?'✓':''}`).join('・'); }
+function stageIntro(i){ const st=STAGES[i]; story(`STAGE ${i+1}　${st.n}`,st.intro+'\n\n💡 '+st.tip+recText(i)+`\n\n目標：${yen(st.goal)}`,'この街へ',()=>startStage(i),false); }
 function stageClear(){
   S.scene='cleared'; sfx('clear');
-  if(S.stage<STAGES.length-1){ story('STAGE CLEAR!',`${STAGES[S.stage].n}で ${yen(S.money)} 集めた。\n\nショップで能力をきたえてから、次の街へ行こう。`,'次の街へ',()=>stageIntro(S.stage+1),false); }
+  if(S.stage<STAGES.length-1){ story('STAGE CLEAR!',`${STAGES[S.stage].n}で ${yen(S.money)} 集めた。\n\n次の街はもっときびしい。着いたら💰ショップで能力をきたえよう。`+recText(S.stage+1),'次の街へ',()=>stageIntro(S.stage+1),false); }
   else { S.best.clears++; if(!S.auto) saveBest(); story('世界一の大富豪',`マネーダイソンの資産は ${yen(S.money)}。\nついに世界のお金持ちのトップに立った。\n\nそして男は、あるものに目をつけた――。`,'某SNSを買う',()=>{ if(S.auto){ endingStart('マネーダイソン'); } else { $('storyOv').hidden=true; $('nameOv').hidden=false; } },false); }
 }
 function faint(){ S.scene='down'; sfx('lose'); story('たおれた…',`たたかれすぎて、マネーダイソンはたおれた。\n${STAGES[S.stage].n}のはじめからやり直しだ。`,'もう一度',()=>{ S.money=S.start.money; S.lv={...S.start.lv}; startStage(S.stage); },false); }
@@ -273,7 +275,7 @@ function update(dt){
 function enrage(n){
   n.sus=0; n.wary=9; S.fx.push({k:'txt',x:n.x,y:n.y-26,t:0,txt:n.t.police?'逮捕だ！':'ドロボー！',col:'#FF6A5A'}); sfx('alert');
   if(n.t.police){ startAlarm(); return; }
-  if(n.t.rich&&n.guards.length){ for(const gid of n.guards){ const g=S.npcs.find(x=>x.id===gid); if(g&&g.state!=='leave'){ g.state='charge'; g.angryT=4; } } }
+  if(n.t.rich&&n.guards.length){ for(const gid of n.guards){ const g=S.npcs.find(x=>x.id===gid); if(g&&g.state!=='leave'){ g.state='charge'; g.angryT=3.4; } } }
   else { n.state='angry'; n.angryT=5; }
 }
 function stepNpc(n,dt,p){
@@ -284,11 +286,11 @@ function stepNpc(n,dt,p){
     case 'drained': return;
     case 'leaveD': case 'leave': { const ex=n.x<180?-30:W+30; moveTo(ex,n.y,40); if(n.x<-20||n.x>W+20) n.gone=1; return; }
     case 'angry': { n.angryT-=dt; moveTo(p.x,p.y,n.sp*1.9); if(toP<16){ hurt(n,'slap'); n.state='walk'; n.angryT=0; } if(n.angryT<=0) n.state='walk'; return; }
-    case 'chase': { moveTo(p.x,p.y,66+S.stage*4); if(toP<15) hurt(n,'police'); return; }
-    case 'charge': { n.angryT-=dt; moveTo(p.x,p.y,n.sp*1.5); if(toP<16){ hurt(n,'sp'); n.state='guard'; } if(n.angryT<=0) n.state='guard'; return; }
+    case 'chase': { moveTo(p.x,p.y,64+S.stage*2); if(toP<15) hurt(n,'police'); return; }
+    case 'charge': { n.angryT-=dt; if(n.angryT>2.2) return; moveTo(p.x,p.y,n.sp*1.2); if(toP<16){ hurt(n,'sp'); n.state='guard'; } if(n.angryT<=0) n.state='guard'; return; }
     case 'guard': { const o=S.npcs.find(x=>x.id===n.owner); if(!o||o.state==='drained'){ n.state='leave'; return; }
       n.ang+=dt*.8; moveTo(o.x+Math.cos(n.ang)*26,o.y+Math.sin(n.ang)*20,n.sp*1.2);
-      if(Math.hypot(p.x-o.x,p.y-o.y)<o.t.dz&&p.inv<=0){ n.state='charge'; n.angryT=3; S.fx.push({k:'txt',x:n.x,y:n.y-22,t:0,txt:'近よるな！',col:'#FF6A5A'}); }
+      if(Math.hypot(p.x-o.x,p.y-o.y)<o.t.dz&&p.inv<=0){ n.state='charge'; n.angryT=2.8; S.fx.push({k:'txt',x:n.x,y:n.y-22,t:0,txt:'近よるな！',col:'#FF6A5A'}); }
       return; }
     default: { // walk / idle; after a while people head home and new ones arrive
       if(!n.t.police&&!n.t.isSP){ n.life-=dt; if(n.life<=0&&S.target!==n){ n.state='leave'; for(const gid of n.guards){ const gg=S.npcs.find(x=>x.id===gid); if(gg) gg.state='leave'; } return; } }
@@ -304,7 +306,7 @@ const AUTO={t:0,want:null,cool:0};
 function autoTick(dt){
   const p=S.p, R=rngOf(S.lv.rng); AUTO.t-=dt; AUTO.cool-=dt;
   // shop: buy upgrades while keeping most of the money
-  if(AUTO.cool<=0){ AUTO.cool=1.5; const order=['rng','pow','stl','pow','hp','spd']; for(const id of order){ const s=SK.find(x=>x.id===id), l=S.lv[id]; if(l<s.max&&s.cost(l)<=S.money*.45){ buy(id); break; } } }
+  if(AUTO.cool<=0){ AUTO.cool=1.5; const rec=STAGES[S.stage].rec, order=[...Object.keys(rec).filter(k=>S.lv[k]<rec[k]),'rng','pow','stl','pow','hp','spd']; for(const id of order){ const s=SK.find(x=>x.id===id), l=S.lv[id]; if(l<s.max&&s.cost(l)<=S.money*.45){ buy(id); break; } } }
   let mx=0,my=0; const flee=(x,y,w)=>{ const d=Math.hypot(p.x-x,p.y-y)||1; mx+=(p.x-x)/d*w; my+=(p.y-y)/d*w; };
   // danger: angry people, charging SP, police
   let danger=false;
@@ -322,7 +324,7 @@ function autoTick(dt){
     let best=null,bv=0;
     for(const n of S.npcs){ if(n.state==='drained'||n.money<=0||n.wary>0||n.t.isSP||n.state!=='walk') continue;
       if(n.t.police) continue;
-      let stand=R-8; if(n.t.rich&&n.t.dz){ if(R<n.t.dz+18) continue; stand=Math.max(n.t.dz+12,R-10); }
+      let stand=R-8; if(n.t.rich&&n.t.dz){ if(R<n.t.dz+14) continue; stand=Math.max(n.t.dz+12,R-10); }
       const d=Math.hypot(n.x-p.x,n.y-p.y), v=Math.min(n.money,n.max*.35)/(1+d/120);
       if(v>bv){ bv=v; best={n,stand}; } }
     AUTO.want=best;
@@ -395,7 +397,8 @@ function buy(id){ const s=SK.find(x=>x.id===id), l=S.lv[id]; if(l>=s.max) return
 function renderShop(){
   $('shopMoney').textContent=`もっているお金：${yen(S.money)}　／　目標 ${yen(STAGES[S.stage].goal)}`;
   $('skills').innerHTML=SK.map(s=>{ const l=S.lv[s.id], mx=l>=s.max, c=mx?0:s.cost(l);
-    return `<div class="sk"><b>${s.n} Lv${l}${mx?'（最大）':''}</b><small>${s.d(l)}${mx?'':` → ${s.d(l+1)}`}</small><button data-id="${s.id}" ${mx||S.money<c?'disabled':''}>${mx?'MAX':yen(c)}</button></div>`; }).join('');
+    const rc=STAGES[S.stage].rec[s.id], need=rc&&l<rc;
+    return `<div class="sk${need?' rec':''}"><b>${s.n} Lv${l}${mx?'（最大）':''}${need?`<em>⭐おすすめLv${rc}</em>`:''}</b><small>${s.d(l)}${mx?'':` → ${s.d(l+1)}`}</small><button data-id="${s.id}" ${mx||S.money<c?'disabled':''}>${mx?'MAX':yen(c)}</button></div>`; }).join('');
   $('skills').querySelectorAll('button').forEach(b=>b.onclick=()=>{ ac(); buy(b.dataset.id); });
 }
 $('shopClose').onclick=()=>{ ac(); closeShop(); };
