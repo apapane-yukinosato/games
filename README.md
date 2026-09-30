@@ -26,6 +26,7 @@
 | 🥟 | ラー油つなげ | https://apapane-yukinosato.github.io/games/rayu/ | 餃子のタレに浮かぶラー油をドラッグでつなげて、ひとつの大きな油にするパズル。速く動かすとちぎれる。全6ステージ。 |
 | 🧱 | ХОРОШО（ハラショー） | https://apapane-yukinosato.github.io/games/kubiki/ | 落ちものパズル。タイトルはロシア語で「すばらしい！」。BGM はロシア民謡「コロベイニキ」「カリンカ」で、レベルが上がるほど速くなる。 |
 | 🤖 | アーマーを、ほら | https://apapane-yukinosato.github.io/games/armor/ | ルーレットで頭・胴・腕・脚のパーツを引いてロボを組み立て、3ステージのロボバトルを勝ち抜く。近接・射撃・ダッシュ・必殺で戦う。 |
+| 🧩 | スライドパズル | https://apapane-yukinosato.github.io/games/slide/ | 4×4のパネルを動かして、数字を1から15まで順番に並べるスライドパズル。手数とタイムを記録。 |
 | 🔫 | 火器円舞 | https://apapane-yukinosato.github.io/games/kaki/ | 銃の九十九神「銃士」を率いて錆鬼と戦う、刀剣乱舞風の育成バトル。索敵・陣形・遠戦・白兵戦・真剣必殺・一騎打ち・破壊まで同じしくみ。全6合戦場。 |
 
 ## 🤖 オートモード
