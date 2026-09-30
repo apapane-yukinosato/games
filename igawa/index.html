@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="父・母・息子・娘の4人を、ルールを守って橋の向こうへ渡す、狼・ヤギ・キャベツ風の頭の体操パズル。">
+<title>井河家の橋わたり</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&display=swap">
+<style>
+:root{ --bg:#F7EEDD; --ink:#3A2E28; --card:#FFFDF8; --line:#E6D6BD; --mute:#8A7A6A; --red:#E0533D; --green:#3E9E6E; --blue:#4A6FA5; --gold:#F2B233; color-scheme:light; }
+[hidden]{display:none!important}
+html,body{min-height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+#app{max-width:560px;margin:0 auto;padding:8px 12px 16px;box-sizing:border-box}
+#top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:18px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--card);cursor:pointer;white-space:nowrap}
+.mini[aria-pressed=true]{background:var(--red);border-color:var(--red);color:#fff}
+button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+#game{position:relative}
+#hud{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 10px;font-size:13px;font-weight:800}
+#hud .stg{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#hud .cnt{white-space:nowrap;font-variant-numeric:tabular-nums}
+#hud .cnt.over{color:var(--red)}
+#cv{display:block;width:100%;height:230px;margin:8px 0;border-radius:14px;background:#BFE3FF;touch-action:manipulation;cursor:pointer}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:8px}
+.banks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bank h3{margin:0 0 4px;font-size:12px;color:var(--mute);text-align:center}
+.bank h3 b{color:var(--gold)}
+.chips{display:grid;gap:4px}
+.chip{display:flex;align-items:center;gap:6px;border:2px solid var(--line);border-radius:10px;background:#fff;padding:4px 8px;cursor:pointer;text-align:left;min-height:38px}
+.chip canvas{width:28px;height:28px;flex:none}
+.chip .em{font-size:22px;width:28px;text-align:center;flex:none}
+.chip b{font-size:13px;flex:1}
+.chip small{font-size:10px;color:var(--mute);font-weight:800;white-space:nowrap}
+.chip[aria-pressed=true]{border-color:var(--red);background:#FFF0EC}
+.chip:disabled{cursor:default;opacity:.55}
+.chip.gone{visibility:hidden}
+.sel{font-size:13px;text-align:center;margin:8px 0 0;min-height:20px;font-weight:800}
+.sel .warn{color:var(--red)}
+.btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px}
+.big{font-weight:800;font-size:16px;min-height:48px;border:0;border-radius:12px;cursor:pointer;background:var(--red);color:#fff;box-shadow:0 4px 0 #A7331F;width:100%}
+.big:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 #A7331F}
+.big.alt{background:#EADBC2;color:var(--ink);box-shadow:0 4px 0 #CDB894;font-size:13px;min-height:40px}
+.big.green{background:var(--green);box-shadow:0 4px 0 #2A6E4B}
+.big:disabled{opacity:.4;cursor:not-allowed}
+#crossBtn{margin-top:8px}
+.msg{margin-top:8px;padding:9px 10px;border-radius:10px;font-weight:800;font-size:13px;text-align:center;line-height:1.5}
+.msg.bad{background:#FFE3DC;color:#8E2A18;animation:shake .4s}
+.msg.hint{background:#FFF2C8;color:#6B4E00}
+@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.rules{margin:0;padding-left:18px;font-size:12px;line-height:1.6}
+.rules li::marker{color:var(--red)}
+.ph{margin:0 0 4px;font-size:13px;font-weight:800}
+.ov{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;background:rgba(58,46,40,.35);z-index:5;border-radius:14px}
+.box{background:var(--card);border-radius:16px;padding:14px;width:100%;box-sizing:border-box;box-shadow:0 8px 24px rgba(58,46,40,.25)}
+.box h2{margin:0;text-align:center;font-size:24px;font-weight:800}
+.box h2 span{color:var(--red)}
+.sub{text-align:center;font-size:12px;color:var(--mute);margin:4px 0 10px;line-height:1.5}
+.stages{display:grid;gap:6px}
+.sg{display:grid;grid-template-columns:1fr auto;gap:2px 8px;text-align:left;border:2px solid var(--line);border-radius:12px;background:#fff;padding:8px 10px;cursor:pointer}
+.sg b{font-size:14px}.sg span{font-size:11px;color:var(--mute);grid-column:1}
+.sg i{grid-row:1/3;grid-column:2;align-self:center;font-style:normal;font-size:14px;color:var(--gold);letter-spacing:1px}
+.sg:disabled{opacity:.45;cursor:not-allowed}
+.stars{text-align:center;font-size:38px;color:var(--gold);letter-spacing:4px;line-height:1.1}
+.stars .off{color:#E3D6C0}
+.rows{display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:13px;margin:10px 0}
+.rows b{text-align:right;font-variant-numeric:tabular-nums}
+.vbtn{display:grid;gap:8px}
+.back{display:block;text-align:center;margin-top:10px;font-size:13px;font-weight:800;color:var(--mute);text-decoration:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>井河家の橋わたり</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false" title="Oキー">🤖 オート</button>
+    <button class="mini" id="muteBtn">音 ON</button>
+  </div>
+  <div id="game">
+    <div id="hud"><span class="stg" id="hStage"></span><span class="cnt" id="hCnt"></span></div>
+    <canvas id="cv" aria-label="橋と川のようす。キャラクターをタップしてえらべます"></canvas>
+    <div class="panel">
+      <div class="banks">
+        <div class="bank"><h3 id="hL">こっち岸</h3><div class="chips" id="bankL"></div></div>
+        <div class="bank"><h3 id="hR">むこう岸</h3><div class="chips" id="bankR"></div></div>
+      </div>
+      <div class="sel" id="selInfo"></div>
+      <button class="big" id="crossBtn" disabled>わたる</button>
+      <div class="btns">
+        <button class="big alt" id="undoBtn">↩ もどす</button>
+        <button class="big alt" id="resetBtn">🔄 さいしょから</button>
+        <button class="big alt" id="hintBtn">💡 ヒント</button>
+      </div>
+      <div id="msg"></div>
+    </div>
+    <div class="panel">
+      <p class="ph">📜 ルール</p>
+      <ul class="rules" id="rules"></ul>
+    </div>
+
+    <div class="ov" id="titleOv">
+      <div class="box">
+        <h2>井河家の<span>橋わたり</span></h2>
+        <p class="sub">父アキオ・母キヨ・息子ルイ・娘ハルコの4人。<br>ルールを守って、全員を橋のむこうへ渡そう。</p>
+        <div class="stages" id="stages"></div>
+        <p class="sub" style="margin:10px 0 0">渡る人をタップして「わたる」。まちがえたら「もどす」でやりなおせるよ。<br>最短の手数（7手）でクリア（ヒントなし）すると ★3</p>
+        <div class="vbtn" style="margin-top:10px"><button class="big alt" id="autoStartBtn" style="font-size:16px">🤖 オートで見る</button></div>
+        <a class="back" href="../">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+
+    <div class="ov" id="resultOv" hidden>
+      <div class="box">
+        <h2 id="rTitle">🎉 <span>クリア！</span></h2>
+        <p class="sub" id="rMsg"></p>
+        <div class="stars" id="rStars"></div>
+        <div class="rows" id="rRows"></div>
+        <div class="vbtn">
+          <button class="big green" id="nextBtn">つぎのステージへ</button>
+          <button class="big alt" id="retryBtn">もう一回</button>
+          <button class="big alt" id="selBtn">タイトルへ</button>
+        </div>
+        <a class="back" href="../">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+
+// ---------- characters ----------
+const FAM=[
+  {id:'A',name:'アキオ',role:'父',  hair:'#3B3B3B',shirt:'#4A6FA5'},
+  {id:'K',name:'キヨ',  role:'母',  hair:'#6B3E2E',shirt:'#D9577B'},
+  {id:'R',name:'ルイ',  role:'息子',hair:'#262626',shirt:'#3E9E6E'},
+  {id:'H',name:'ハルコ',role:'娘',  hair:'#8A4B2A',shirt:'#F0A13A'},
+];
+const FB=Object.fromEntries(FAM.map(f=>[f.id,f]));
+const EN={A:{name:'アキオ'},K:{name:'キヨ'},R:{name:'ルイ'},H:{name:'ハルコ'}};
+const nm=id=>EN[id].name;
+const has=(on,x)=>on.includes(x);
+
+// ---------- stages (all checked with the solver: solvable, optimum noted) ----------
+const STAGES=[
+  {name:'井河家の橋わたり',desc:'橋はせまくて、キヨ（母）＋もう1人しか渡れない。キヨがいないと家族がもめる…',
+   ents:['A','K','R','H'],lead:['K'],cap:2,
+   capText:'橋を渡れるのは2人まで。キヨ（母）がいっしょでないと、だれも渡れない（キヨ1人でもOK）',
+   rules:[{text:'アキオ（父）とルイ（息子）を、キヨなしで一緒にしない（アキオがルイを怒る）',f:on=>!has(on,'K')&&has(on,'A')&&has(on,'R'),msg:'💢 アキオがルイを怒りだした！',who:['A','R']},
+          {text:'ルイ（息子）とハルコ（娘）を、キヨなしで一緒にしない（けんかする）',f:on=>!has(on,'K')&&has(on,'R')&&has(on,'H'),msg:'💢 ルイとハルコがけんかを始めた！',who:['R','H']}]},
+];
+
+// ---------- puzzle logic ----------
+function violation(st,side){ // side: {id:0|1}
+  for(const b of [0,1]){ const on=st.ents.filter(id=>side[id]===b); for(const r of st.rules) if(r.f&&r.f(on)) return r; }
+  return null;
+}
+function moveProblem(st,side,lantern,movers){
+  if(!movers.length) return '渡る人をえらんでね';
+  if(movers.some(id=>side[id]!==lantern)) return st.night?'ちょうちんのある岸からしか渡れない':'キヨのいる岸からしか渡れない';
+  if(movers.length>st.cap) return `橋は${st.cap}人までしか渡れない`;
+  if(!movers.some(id=>st.lead.includes(id))) return st.night?`ちょうちんを持てる人（${st.lead.map(nm).join('・')}）がいない`:'キヨ（母）がいっしょでないと渡れない';
+  if(st.maxW){ const w=movers.reduce((a,id)=>a+st.w[id],0); if(w>st.maxW) return `重すぎる！${w}kg（100kgまで）`; }
+  return null;
+}
+const moveCost=(st,movers)=>st.time?Math.max(...movers.map(id=>st.time[id])):1;
+// Dijkstra from a state to the goal: returns {cost,path:[movers...]} or null
+function solveFrom(st,side,lantern){
+  const n=st.ents.length, full=(1<<n)-1;
+  let m0=0; st.ents.forEach((id,i)=>{ if(side[id])m0|=1<<i; });
+  const toSide=m=>Object.fromEntries(st.ents.map((id,i)=>[id,(m>>i)&1]));
+  const subsets=[]; for(let s=1;s<=full;s++){ const ids=st.ents.filter((_,i)=>(s>>i)&1); if(ids.length<=st.cap) subsets.push([s,ids]); }
+  const dist=new Map([[m0*2+lantern,0]]), prev=new Map(), pq=[[0,m0,lantern]];
+  while(pq.length){
+    let bi=0; for(let i=1;i<pq.length;i++) if(pq[i][0]<pq[bi][0]) bi=i;
+    const [d,m,l]=pq.splice(bi,1)[0], k=m*2+l; if(d>dist.get(k))continue;
+    if(m===full&&l===1){ const path=[]; let c=k; while(prev.has(c)){ const [pk,mv]=prev.get(c); path.unshift(mv); c=pk; } return {cost:d,path}; }
+    const sd=toSide(m);
+    for(const [s,ids] of subsets){
+      if(ids.some(id=>sd[id]!==l)) continue;
+      if(moveProblem(st,sd,l,ids)) continue;
+      const nm2=m^s, ns=toSide(nm2); if(violation(st,ns)) continue;
+      const nk=nm2*2+(1-l), nd=d+moveCost(st,ids);
+      if(!dist.has(nk)||nd<dist.get(nk)){ dist.set(nk,nd); prev.set(nk,[k,ids]); pq.push([nd,nm2,1-l]); }
+    }
+  }
+  return null;
+}
+const OPT=STAGES.map(st=>{ const r=solveFrom(st,Object.fromEntries(st.ents.map(id=>[id,0])),0); return {cost:r.cost,moves:r.path.length}; });
+
+// ---------- state ----------
+let si=0, st=STAGES[0], side={}, lantern=0, moves=0, time=0, hist=[], sel=[], hints=0, failed=null, hintMsg='', errMsg='';
+let phase='title', anim=null, auto=false, autoT=0, autoPlan=null, clearT=0, manualClock=false, moods={}, bubble=null;
+let stars=STAGES.map(()=>0);
+try{ const v=JSON.parse(localStorage.getItem('igawaStars4')||'[]'); if(Array.isArray(v)) v.forEach((x,i)=>{ if(i<stars.length) stars[i]=+x||0; }); }catch(e){}
+const saveStars=()=>{ try{ localStorage.setItem('igawaStars4',JSON.stringify(stars)); }catch(e){} };
+
+function startStage(i){
+  si=i; st=STAGES[i]; side=Object.fromEntries(st.ents.map(id=>[id,0])); lantern=0; moves=0; time=0; hist=[]; sel=[]; hints=0; failed=null; hintMsg=''; errMsg=''; anim=null; moods={}; bubble=null; autoT=0;
+  $('titleOv').hidden=true; $('resultOv').hidden=true; phase='play';
+  $('rules').innerHTML=`<li>${st.capText}</li>`+st.rules.map(r=>`<li>${r.text}</li>`).join('');
+  render();
+}
+function toggle(id){
+  if(phase!=='play'||anim||failed) return;
+  if(side[id]!==lantern){ errMsg=st.night?'ちょうちんのある岸の人だけえらべるよ':'キヨのいる岸の人だけえらべるよ'; render(); return; }
+  errMsg=''; hintMsg='';
+  if(sel.includes(id)) sel=sel.filter(x=>x!==id); else sel.push(id);
+  sfx('sel'); render();
+}
+function cross(){
+  if(phase!=='play'||anim||failed) return;
+  const p=moveProblem(st,side,lantern,sel); if(p){ errMsg=p; sfx('bad'); render(); return; }
+  hist.push({side:{...side},lantern,moves,time});
+  const movers=[...sel], from=lantern, dur=st.time?.5+moveCost(st,movers)*.09:.9;
+  anim={movers,from,t:0,dur};
+  for(const id of movers) side[id]=1-from;
+  lantern=1-from; moves++; time+=moveCost(st,movers); sel=[]; hintMsg=''; errMsg='';
+  sfx('walk'); render();
+}
+function afterCross(){
+  anim=null;
+  const v=violation(st,side);
+  if(v){ failed=v.msg; for(const id of v.who) moods[id]='angry'; bubble={s:v.msg.split(' ')[0],t:0}; sfx('bad'); }
+  else if(st.limit&&time>st.limit){ failed=`⏰ ${time}分かかった…${st.limit}分をこえちゃった！`; sfx('bad'); }
+  else if(st.ents.every(id=>side[id]===1)){ clear(); return; }
+  render();
+}
+function undo(){
+  if(phase!=='play'||anim||!hist.length) return;
+  const h=hist.pop(); side=h.side; lantern=h.lantern; moves=h.moves; time=h.time; failed=null; moods={}; sel=[]; hintMsg=''; errMsg=''; sfx('sel'); render();
+}
+function reset(){ if(phase!=='play'||anim) return; const h=hints; startStage(si); hints=h; }
+function hint(){
+  if(phase!=='play'||anim) return;
+  if(failed){ hintMsg='まずは「もどす」でひとつ前にもどろう'; render(); return; }
+  const r=solveFrom(st,side,lantern);
+  if(!r||(st.limit&&time+r.cost>st.limit)){ hintMsg='このままだとクリアできない…「もどす」でやりなおそう'; render(); return; }
+  hints++; sel=[...r.path[0]]; hintMsg=`💡 つぎは「${sel.map(nm).join('と')}」で渡ろう（のこり最短${st.time?r.cost+'分':r.path.length+'手'}）`;
+  sfx('sel'); render();
+}
+function clear(){
+  phase='clear'; clearT=0;
+  const best=st.time?time<=OPT[si].cost&&moves<=OPT[si].moves:moves<=OPT[si].moves;
+  const n=hints?1:best?3:2;
+  if(!auto&&n>stars[si]){ stars[si]=n; saveStars(); }
+  $('rMsg').textContent=`${st.name}${auto?'　🤖 オート':''}`;
+  $('rStars').innerHTML=[1,2,3].map(k=>`<span class="${k<=n?'':'off'}">★</span>`).join('');
+  $('rRows').innerHTML=[['手数',`${moves}手（最短${OPT[si].moves}手）`],...(st.time?[['かかった時間',`${time}分（制限${st.limit}分）`]]:[]),['ヒント',`${hints}回`]].map(([a,b])=>`<span>${a}</span><b>${b}</b>`).join('');
+  $('nextBtn').hidden=si>=STAGES.length-1;
+  $('rTitle').innerHTML='🎉 <span>全員わたれた！</span>';
+  $('resultOv').hidden=false; sfx('good'); render();
+}
+function toTitle(){ phase='title'; $('resultOv').hidden=true; $('titleOv').hidden=false; buildStages(); render(); }
+
+// ---------- auto: plays the optimal solution ----------
+function setAuto(v){ auto=v; $('autoBtn').setAttribute('aria-pressed',v); autoT=0; autoPlan=null; if(v&&phase==='title') startStage(0); }
+function user(){ if(auto) setAuto(false); }
+function autoTick(dt){
+  autoT+=dt;
+  if(phase==='play'&&!anim){
+    if(failed){ if(autoT>1.2){ autoT=0; undo(); } return; }
+    if(!sel.length&&autoT>.8){ const r=solveFrom(st,side,lantern); if(r){ sel=[...r.path[0]]; sfx('sel'); render(); } autoT=0; }
+    else if(sel.length&&autoT>.9){ autoT=0; cross(); }
+  }
+  else if(phase==='clear'&&autoT>3.5){ startStage((si+1)%STAGES.length); }
+}
+
+// ---------- render ----------
+function render(){
+  $('hStage').textContent=phase==='title'?'':st.name;
+  const hc=$('hCnt'); hc.textContent=phase==='title'?'':`👣 ${moves}手`+(st.time?`　⏱ ${time}/${st.limit}分`:'');
+  hc.classList.toggle('over',!!(st.limit&&time>st.limit));
+  const L=st.night?'🏮':'🧍', mk=b=>st.ents.map(id=>{ const here=side[id]===b, e=EN[id];
+    const sub=st.time?`${st.time[id]}分`:st.maxW?`${st.w[id]}kg`:st.lead.includes(id)&&st.night?'🏮':FB[id]?FB[id].role+(st.lead.includes(id)?'・必ず渡る':''):'';
+    return `<button class="chip ${here?'':'gone'}" data-id="${id}" aria-pressed="${sel.includes(id)}" ${here&&b===lantern&&!failed&&!anim?'':'disabled'} aria-label="${e.name}">${e.em?`<span class="em">${e.em}</span>`:`<canvas data-face="${id}" width="56" height="56"></canvas>`}<b>${e.name}</b><small>${sub}</small></button>`; }).join('');
+  $('bankL').innerHTML=mk(0); $('bankR').innerHTML=mk(1);
+  $('hL').innerHTML=`こっち岸${lantern===0?` <b>${st.night?'🏮':'⬅'}</b>`:''}`; $('hR').innerHTML=`むこう岸${lantern===1?` <b>${st.night?'🏮':'➡'}</b>`:''}`;
+  document.querySelectorAll('canvas[data-face]').forEach(c=>{ const g2=c.getContext('2d'); g2.clearRect(0,0,56,56); face(g2,c.dataset.face,28,24,17,moods[c.dataset.face]||'ok'); });
+  let info='';
+  if(sel.length){ const p=moveProblem(st,side,lantern,sel); info=`${sel.map(nm).join('＋')}`+(st.time?`：${moveCost(st,sel)}分`:'')+(st.maxW?`：${sel.reduce((a,id)=>a+st.w[id],0)}kg`:'')+(p?`<br><span class="warn">⚠ ${p}</span>`:''); }
+  else if(!failed&&phase==='play') info=`${lantern?'むこう岸':'こっち岸'}から渡る人をえらんでね（キヨは必ず）`;
+  $('selInfo').innerHTML=info;
+  const cb=$('crossBtn'); cb.textContent=lantern===0?'わたる →':'← もどる'; cb.disabled=phase!=='play'||!!anim||!!failed||!sel.length||!!moveProblem(st,side,lantern,sel);
+  $('undoBtn').disabled=phase!=='play'||!!anim||!hist.length; $('resetBtn').disabled=phase!=='play'||!!anim; $('hintBtn').disabled=phase!=='play'||!!anim;
+  $('msg').innerHTML=failed?`<div class="msg bad">${failed}<br><small>「↩ もどす」でひとつ前にもどれるよ</small></div>`:hintMsg?`<div class="msg hint">${hintMsg}</div>`:errMsg?`<div class="msg bad">${errMsg}</div>`:'';
+}
+
+// ---------- drawing ----------
+function face(c,id,x,y,r,mood='ok'){
+  const f=FB[id]; c.save(); c.translate(x,y);
+  c.fillStyle=f.shirt; c.beginPath(); c.ellipse(0,r*1.45,r*1.05,r*.7,0,Math.PI,0); c.fill();
+  c.fillStyle=f.hair;
+  if(id==='K'){ c.beginPath(); c.arc(0,-r*1.02,r*.42,0,7); c.fill(); }
+  if(id==='H'){ c.beginPath(); c.arc(-r*1.05,-r*.05,r*.36,0,7); c.arc(r*1.05,-r*.05,r*.36,0,7); c.fill(); }
+  c.fillStyle='#F6D2AE'; c.beginPath(); c.arc(0,0,r,0,7); c.fill();
+  c.fillStyle=f.hair; c.beginPath();
+  if(id==='A'){ c.arc(0,0,r*1.01,Math.PI*1.12,Math.PI*1.88); c.closePath(); }
+  else if(id==='R'){ c.moveTo(-r*1.02,-r*.05); for(let i=0;i<=8;i++){ const a=Math.PI*(1+i/8), k=i%2?1.28:.95; c.lineTo(Math.cos(a)*r*k,Math.sin(a)*r*k); } c.lineTo(r*1.02,-r*.05); c.quadraticCurveTo(0,-r*.5,-r*1.02,-r*.05); }
+  else { c.arc(0,0,r*1.05,Math.PI,Math.PI*2); c.quadraticCurveTo(r*.2,-r*.35,-r*.3,-r*.5); c.quadraticCurveTo(-r*.8,-r*.3,-r*1.05,0); }
+  c.fill();
+  const ey=r*.12;
+  c.fillStyle='#2B2B2B'; c.strokeStyle='#2B2B2B'; c.lineWidth=Math.max(1,r*.1); c.lineCap='round';
+  if(mood==='pain'){ c.beginPath(); c.moveTo(-r*.48,ey-r*.1); c.lineTo(-r*.25,ey); c.lineTo(-r*.48,ey+r*.1); c.moveTo(r*.48,ey-r*.1); c.lineTo(r*.25,ey); c.lineTo(r*.48,ey+r*.1); c.stroke(); }
+  else { c.beginPath(); c.arc(-r*.36,ey,r*.1,0,7); c.arc(r*.36,ey,r*.1,0,7); c.fill(); }
+  if(mood==='angry'){ c.beginPath(); c.moveTo(-r*.55,-r*.2); c.lineTo(-r*.2,-r*.08); c.moveTo(r*.55,-r*.2); c.lineTo(r*.2,-r*.08); c.stroke(); }
+  if(mood==='sad'){ c.beginPath(); c.moveTo(-r*.55,-r*.06); c.lineTo(-r*.2,-r*.2); c.moveTo(r*.55,-r*.06); c.lineTo(r*.2,-r*.2); c.stroke(); }
+  if(id==='A'){ c.lineWidth=Math.max(1,r*.07); c.beginPath(); c.arc(-r*.36,ey,r*.24,0,7); c.moveTo(r*.6,ey); c.arc(r*.36,ey,r*.24,0,7); c.moveTo(-r*.12,ey); c.lineTo(r*.12,ey); c.stroke();
+    c.fillStyle=f.hair; c.beginPath(); c.ellipse(0,r*.42,r*.3,r*.1,0,0,7); c.fill(); }
+  if(id==='H'||id==='K'){ c.fillStyle='rgba(240,120,120,.45)'; c.beginPath(); c.arc(-r*.55,r*.35,r*.14,0,7); c.arc(r*.55,r*.35,r*.14,0,7); c.fill(); }
+  c.strokeStyle='#8A3B2B'; c.lineWidth=Math.max(1,r*.09); c.beginPath();
+  if(mood==='ok') c.arc(0,r*.42,r*.25,.15*Math.PI,.85*Math.PI);
+  else if(mood==='pain'){ c.moveTo(-r*.3,r*.6); for(let i=1;i<=6;i++) c.lineTo(-r*.3+i*r*.1,r*.6+(i%2?-1:1)*r*.07); }
+  else c.arc(0,r*.8,r*.25,1.2*Math.PI,1.8*Math.PI);
+  c.stroke();
+  if(mood==='pain'){ c.fillStyle='#7CC4F2'; c.beginPath(); c.moveTo(r*.8,-r*.6); c.quadraticCurveTo(r*1.05,-r*.2,r*.8,-r*.15); c.quadraticCurveTo(r*.6,-r*.2,r*.8,-r*.6); c.fill(); }
+  c.restore();
+}
+function drawEnt(c,id,x,y,r,mood){ const e=EN[id]; if(e.em){ c.font=`${r*2.1}px sans-serif`; c.textAlign='center'; c.textBaseline='middle'; c.fillText(e.em,x,y); c.textBaseline='alphabetic'; } else face(c,id,x,y-2,r*.8,mood); }
+const cv=$('cv'), g=cv.getContext('2d');
+function slot(b,i,W,H){ const col=i%2, row=i/2|0, x0=b?W*.78:W*.05; return {x:x0+W*.085+col*W*.085,y:H*.3+row*H*.23}; }
+function drawScene(){
+  const dpr=Math.min(2,window.devicePixelRatio||1), W=cv.clientWidth, H=cv.clientHeight;
+  if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){ cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); }
+  g.setTransform(dpr,0,0,dpr,0,0);
+  const night=phase!=='title'&&st.night, t=performance.now()/1000;
+  let gr=g.createLinearGradient(0,0,0,H); gr.addColorStop(0,night?'#1B2350':'#BFE3FF'); gr.addColorStop(1,night?'#3A4478':'#EAF6FF'); g.fillStyle=gr; g.fillRect(0,0,W,H);
+  if(night){ g.fillStyle='#FFF6C8'; g.beginPath(); g.arc(W*.5,H*.1,9,0,7); g.fill(); g.fillStyle='rgba(255,255,255,.7)'; for(let i=0;i<24;i++){ g.fillRect((i*97)%W,(i*53)%(H*.18),1.5,1.5); } }
+  // river
+  const rx0=W*.3, rx1=W*.7;
+  g.fillStyle=night?'#23406B':'#5BB3E6'; g.fillRect(rx0,H*.12,rx1-rx0,H*.88);
+  g.strokeStyle=night?'rgba(160,200,255,.25)':'rgba(255,255,255,.5)'; g.lineWidth=2;
+  for(let i=0;i<7;i++){ const y=H*.2+i*H*.11, o=(t*20+i*30)%40; g.beginPath(); g.moveTo(rx0+o,y); g.lineTo(rx0+o+18,y); g.moveTo(rx0+o+60,y+6); g.lineTo(rx0+o+80,y+6); g.stroke(); }
+  // banks
+  g.fillStyle=night?'#3D6B3A':'#8CC56B'; g.fillRect(0,H*.12,rx0,H*.88); g.fillRect(rx1,H*.12,W-rx1,H*.88);
+  g.fillStyle=night?'#2F552D':'#76B058'; g.fillRect(rx0-6,H*.12,6,H*.88); g.fillRect(rx1,H*.12,6,H*.88);
+  // bridge
+  const by=H*.62; g.fillStyle=night?'#6B4A2E':'#A8744A';
+  for(let x=rx0-8;x<rx1+8;x+=11) g.fillRect(x,by-9,9,18);
+  g.strokeStyle=night?'#4A3220':'#7A5236'; g.lineWidth=2.5; g.beginPath(); g.moveTo(rx0-10,by-22); g.quadraticCurveTo(W*.5,by-8,rx1+10,by-22); g.stroke();
+  g.fillStyle=night?'#4A3220':'#7A5236'; g.fillRect(rx0-12,by-30,5,30); g.fillRect(rx1+7,by-30,5,30);
+  if(st.maxW&&phase!=='title'){ g.fillStyle='#fff'; g.font='800 11px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.fillText('100kgまで',W*.5,by+26); }
+  g.fillStyle=night?'#DDE3FF':'#3A2E28'; g.font='800 11px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center';
+  g.fillText('こっち岸',W*.15,H*.08+6); g.fillText('むこう岸',W*.85,H*.08+6);
+  if(phase==='title') return;
+  // characters
+  const r=Math.min(15,W*.035);
+  const pos={};
+  st.ents.forEach((id,i)=>{ pos[id]=slot(side[id],i,W,H); });
+  if(anim){
+    const k=Math.min(1,anim.t/anim.dur);
+    anim.movers.forEach((id,j)=>{ const i=st.ents.indexOf(id), a=slot(anim.from,i,W,H), b=slot(1-anim.from,i,W,H);
+      const ex=anim.from?rx1+10:rx0-10, ox=anim.from?rx0-10:rx1+10, yy=by-6-j*4, off=j*18*(anim.from?1:-1);
+      let x,y; if(k<.2){ const u=k/.2; x=a.x+(ex-a.x)*u; y=a.y+(yy-a.y)*u; } else if(k<.8){ const u=(k-.2)/.6; x=ex+(ox-ex)*u+off; y=yy-Math.abs(Math.sin(u*Math.PI*6))*3; } else { const u=(k-.8)/.2; x=ox+off+(b.x-ox-off)*u; y=yy+(b.y-yy)*u; }
+      pos[id]={x,y}; });
+  }
+  // lantern
+  if(st.night){ let lx,ly; if(anim){ const p=pos[anim.movers.find(id=>st.lead.includes(id))||anim.movers[0]]; lx=p.x+r*.9; ly=p.y-r*.6; } else { lx=lantern?W*.74:W*.26; ly=H*.22; }
+    const glow=g.createRadialGradient(lx,ly,2,lx,ly,60); glow.addColorStop(0,'rgba(255,210,120,.55)'); glow.addColorStop(1,'rgba(255,210,120,0)'); g.fillStyle=glow; g.beginPath(); g.arc(lx,ly,60,0,7); g.fill();
+    g.font='18px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('🏮',lx,ly); g.textBaseline='alphabetic'; }
+  for(const id of st.ents){ const p=pos[id]; if(sel.includes(id)){ g.fillStyle='rgba(224,83,61,.35)'; g.beginPath(); g.arc(p.x,p.y,r*1.25,0,7); g.fill(); }
+    drawEnt(g,id,p.x,p.y+(sel.includes(id)?-4:0),r,moods[id]||'ok');
+    g.fillStyle=night?'#fff':'#3A2E28'; g.font='800 10px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.fillText(EN[id].name,p.x,p.y+r*1.35+4); }
+  if(bubble&&bubble.t<2.5){ const p=failSpot(); g.globalAlpha=Math.min(1,2.5-bubble.t); g.font='30px sans-serif'; g.fillText(bubble.s,p.x,p.y-bubble.t*10); g.globalAlpha=1; }
+  cv._pos=pos; cv._r=r;
+}
+function failSpot(){ const W=cv.clientWidth,H=cv.clientHeight; for(const b of [0,1]){ const on=st.ents.filter(id=>side[id]===b); if(st.rules.some(r=>r.f&&r.f(on))) return {x:b?W*.87:W*.13,y:H*.25}; } return {x:W*.5,y:H*.3}; }
+cv.addEventListener('click',e=>{
+  if(phase!=='play'||!cv._pos) return; const rc=cv.getBoundingClientRect(), x=e.clientX-rc.left, y=e.clientY-rc.top;
+  let best=null, bd=1e9; for(const [id,p] of Object.entries(cv._pos)){ const d=Math.hypot(p.x-x,p.y-y); if(d<bd){ bd=d; best=id; } }
+  if(best&&bd<cv._r*2){ ac(); user(); toggle(best); }
+});
+
+// ---------- sound ----------
+let AC=null, muted=false;
+try{ muted=localStorage.getItem('igawaMute')==='1'; }catch(e){}
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==='suspended')AC.resume(); return AC; }
+function tone(f,d,type='sine',v=.12,delay=0){ if(muted||!ac())return; const t=AC.currentTime+delay, o=AC.createOscillator(), gn=AC.createGain(); o.type=type; o.frequency.value=f; gn.gain.setValueAtTime(v,t); gn.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(gn).connect(AC.destination); o.start(t); o.stop(t+d+.02); }
+function sfx(k){
+  if(k==='sel')tone(660,.08,'triangle');
+  else if(k==='walk'){ for(let i=0;i<4;i++) tone(i%2?330:392,.07,'triangle',.08,i*.14); }
+  else if(k==='bad'){ tone(180,.25,'sawtooth',.08); tone(140,.3,'sawtooth',.08,.12); }
+  else if(k==='good'){ [523,659,784,1047].forEach((f,i)=>tone(f,.25,'triangle',.12,i*.1)); }
+}
+function setMute(m){ muted=m; $('muteBtn').textContent=m?'音 OFF':'音 ON'; try{ localStorage.setItem('igawaMute',m?'1':'0'); }catch(e){} }
+
+// ---------- title ----------
+function buildStages(){
+  $('stages').innerHTML=STAGES.map((s,i)=>{ const open=i===0||stars[i-1]>0;
+    return `<button class="sg" data-st="${i}" ${open?'':'disabled'}><b>▶ あそぶ</b><span>${open?s.desc:'🔒 前のステージをクリアすると遊べる'}</span><i>${'★'.repeat(stars[i])}${'☆'.repeat(3-stars[i])}</i></button>`; }).join('');
+}
+
+// ---------- update loop ----------
+function update(dt){
+  if(anim){ anim.t+=dt; if(anim.t>=anim.dur) afterCross(); }
+  if(bubble) bubble.t+=dt;
+  if(phase==='clear') clearT+=dt;
+  if(auto) autoTick(dt);
+}
+
+// ---------- input ----------
+document.querySelector('.banks').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b||b.disabled)return; ac(); user(); toggle(b.dataset.id); });
+$('crossBtn').onclick=()=>{ ac(); user(); cross(); };
+$('undoBtn').onclick=()=>{ ac(); user(); undo(); };
+$('resetBtn').onclick=()=>{ ac(); user(); reset(); };
+$('hintBtn').onclick=()=>{ ac(); user(); hint(); };
+$('stages').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b||b.disabled)return; ac(); startStage(+b.dataset.st); });
+$('autoBtn').onclick=()=>{ ac(); setAuto(!auto); };
+$('autoStartBtn').onclick=()=>{ ac(); setAuto(true); };
+$('muteBtn').onclick=()=>{ ac(); setMute(!muted); };
+$('nextBtn').onclick=()=>{ user(); startStage(Math.min(STAGES.length-1,si+1)); };
+$('retryBtn').onclick=()=>{ user(); startStage(si); };
+$('selBtn').onclick=()=>{ user(); toTitle(); };
+addEventListener('keydown',e=>{
+  if(e.repeat)return;
+  if(e.key==='o'||e.key==='O'){ ac(); setAuto(!auto); return; }
+  if(phase!=='play')return;
+  const k=+e.key; if(k>=1&&k<=st.ents.length){ user(); toggle(st.ents[k-1]); }
+  else if(e.key==='Enter'||e.key===' '){ e.preventDefault(); user(); cross(); }
+  else if(e.key==='z'||e.key==='Backspace'){ user(); undo(); }
+  else if(e.key==='h'){ user(); hint(); }
+});
+
+setMute(muted); buildStages(); render();
+let last=performance.now();
+function loop(t){ const dt=Math.min(.1,(t-last)/1000); last=t; if(!manualClock)update(dt); drawScene(); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+
+// test hook
+window.__igawa={
+  get s(){ return {phase,stage:si,side:{...side},lantern,moves,time,sel:[...sel],failed,hints,auto,anim:!!anim}; },
+  setAuto, startStage, toggle, cross, undo, reset, hint, manual(v=true){ manualClock=v; }, step(dt){ update(dt); },
+  opt:OPT, stages:STAGES.map(s=>s.name), solve:()=>solveFrom(st,side,lantern),
+};
+})();
+</script>
+</body>
+</html>
