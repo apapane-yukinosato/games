@@ -94,7 +94,9 @@ const $=id=>document.getElementById(id);
 let seed=(Date.now()%2147483646)+1; const rnd=()=>{ seed=seed*16807%2147483647; return (seed-1)/2147483646; };
 const clamp=(v,a,b)=>v<a?a:v>b?b:v, pick=a=>a[Math.floor(rnd()*a.length)];
 const W=360,H=480;
-const cv=$('cv'), g=cv.getContext('2d');
+const cv=$('cv'), ctx=cv.getContext('2d'); let g=ctx;
+// wall pictures are drawn into this texture first, then pasted onto the wall in thin strips (true perspective)
+const TEX=document.createElement('canvas'); TEX.width=TEX.height=160; const tctx=TEX.getContext('2d');
 
 /* ================= the corridor (one-point perspective) ================= */
 const HW=1.4, CH=2.5, EYE=1.55, F=240, HY=212, L=24, SIGN_Z=2.6, START_Z=1.0;
@@ -220,13 +222,22 @@ function fog(dz){ return clamp((dz-3)/22,0,.55); }
 // a rectangle on a side wall, plus an affine frame to draw its contents in (-50..50 units)
 function sideRect(x,z0,z1,y0,y1,fill,content){
   if(!visible(z0,z1)) return; const a=cz2(z0), b=cz2(z1);
-  poly([P(x,y0,a),P(x,y1,a),P(x,y1,b),P(x,y0,b)],fill);
-  const zc=(z0+z1)/2, dzc=(zc-S.cz)*S.dir; if(!content||Math.min((z0-S.cz)*S.dir,(z1-S.cz)*S.dir)<.35) return;
-  const ym=(y0+y1)/2, near=(z0-S.cz)*S.dir<(z1-S.cz)*S.dir?z0:z1, far=near===z0?z1:z0;
-  const pn=P(x,ym,near), pf=P(x,ym,far), c=P(x,ym,zc), X=x*S.dir;
-  const ex=X<0?{x:pf.x-pn.x,y:pf.y-pn.y}:{x:pn.x-pf.x,y:pn.y-pf.y}, h=P(x,y0,zc).y-P(x,y1,zc).y;
-  g.save(); g.setTransform(ex.x/100,ex.y/100,0,h/100,c.x,c.y); content(); g.restore();
-  shade(pn,pf,x,z0,z1,y0,y1,dzc);
+  if(fill!=='none') poly([P(x,y0,a),P(x,y1,a),P(x,y1,b),P(x,y0,b)],fill);
+  const zc=(z0+z1)/2, dzc=(zc-S.cz)*S.dir;
+  if(content){
+    // paint the picture into the texture (-50..50 units), as seen when facing the wall
+    g=tctx; g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,160,160); g.setTransform(1.6,0,0,1.6,80,80); content(); g.setTransform(1,0,0,1,0,0); g=ctx;
+    // the texture's left edge: the smaller z on the left wall, the larger z on the right wall
+    const zl=x<0?z0:z1, zr=x<0?z1:z0, N=clamp(Math.ceil(Math.abs(P(x,y1,cz2(z0)).x-P(x,y1,cz2(z1)).x)/2.5),6,80);
+    for(let i=0;i<N;i++){ const za=zl+(zr-zl)*i/N, zb=zl+(zr-zl)*(i+1)/N;
+      if((za-S.cz)*S.dir<.25||(zb-S.cz)*S.dir<.25) continue;
+      const ta=P(x,y1,za), tb=P(x,y1,zb), ba=P(x,y0,za), bb=P(x,y0,zb), ma=P(x,(y0+y1)/2,za), mb=P(x,(y0+y1)/2,zb), sx=160*i/N, sw=160/N;
+      const ov=tb.x>ta.x?.6:-.6, h=ba.y-ta.y;
+      // clip to the strip's true quad, and map along its middle line
+      g.save(); g.beginPath(); g.moveTo(ta.x-ov*.5,ta.y); g.lineTo(tb.x+ov,tb.y); g.lineTo(bb.x+ov,bb.y); g.lineTo(ba.x-ov*.5,ba.y); g.closePath(); g.clip();
+      g.setTransform((mb.x-ma.x+ov)/sw,(mb.y-ma.y)/sw,0,h/160,ta.x,ma.y-h/2); g.drawImage(TEX,sx,0,sw,160,0,0,sw,160); g.restore(); }
+  }
+  if(fill!=='none') shade(null,null,x,z0,z1,y0,y1,dzc);
 }
 function shade(pn,pf,x,z0,z1,y0,y1,dz){ const f=fog(dz); if(f<=0) return; const a=cz2(z0), b=cz2(z1); g.globalAlpha=f; poly([P(x,y0,a),P(x,y1,a),P(x,y1,b),P(x,y0,b)],'#1A1A18'); g.globalAlpha=1; }
 function frontRect(x0,x1,y0,y1,z,fill,content){ const dz=(z-S.cz)*S.dir; if(dz<.3) return; const a=P(x0,y1,z), b=P(x1,y0,z);
@@ -286,7 +297,7 @@ function drawThings(){
   if(!isA('noExt')) add(12.5,()=>sideRect(HW,12.3,12.7,.05,.7,'#C82A2A',()=>{ g.fillStyle='#E84A3A'; g.fillRect(-40,-50,30,100); g.fillStyle='#222'; g.fillRect(-36,-62,20,14); txt('消火器',10,-20,12,'#fff'); }));
   add(18,()=>{ sideRect(HW,17.5,18.5,0,2.0,'#9AA0A8',()=>{ g.fillStyle='#7A8088'; g.fillRect(-46,-48,92,96); g.fillStyle='#C8C0A0'; g.fillRect(-38,2,8,6); txt('非常口',0,-30,10,'#333'); });
     sideRect(HW,17.6,18.4,2.12,2.4,'#2AA05A',()=>{ g.save(); g.translate(-22,0); if(isA('exitMirror')) g.scale(-1,1); runner(); g.restore(); g.fillStyle='#fff'; g.fillRect(4,-30,40,60); g.fillStyle='#2AA05A'; g.fillRect(12,-20,24,44); }); });
-  if(isA('hands')) add(15,()=>sideRect(HW,14,16.5,.6,1.9,'rgba(0,0,0,0)',()=>{ g.fillStyle='rgba(170,20,20,.85)'; for(const [x,y,r] of [[-38,-20,.2],[-14,10,-.3],[8,-30,.1],[30,6,.4],[44,-22,-.2],[-30,30,.3]]){ g.save(); g.translate(x,y); g.rotate(r); g.beginPath(); g.ellipse(0,4,5,7,0,0,7); g.fill(); for(let k=0;k<5;k++){ g.fillRect(-5+k*2.3,-10,1.6,8); } g.restore(); } }));
+  if(isA('hands')) add(15,()=>sideRect(HW,14,16.5,.6,1.9,'none',()=>{ g.fillStyle='rgba(170,20,20,.85)'; for(const [x,y,r] of [[-38,-20,.2],[-14,10,-.3],[8,-30,.1],[30,6,.4],[44,-22,-.2],[-30,30,.3]]){ g.save(); g.translate(x,y); g.rotate(r); g.beginPath(); g.ellipse(0,4,5,7,0,0,7); g.fill(); for(let k=0;k<5;k++){ g.fillRect(-5+k*2.3,-10,1.6,8); } g.restore(); } }));
   // ceiling vent
   add(6,()=>{ if(!visible(5.6,6.4)) return; const a=cz2(5.6), b=cz2(6.4); const p=[P(-.35,CH,a),P(.35,CH,a),P(.35,CH,b),P(-.35,CH,b)]; poly(p,'#5A5A58');
     g.strokeStyle='#2A2A28'; g.lineWidth=1; for(let k=1;k<5;k++){ const z=a+(b-a)*k/5, l=P(-.35,CH,z), r=P(.35,CH,z); g.beginPath(); g.moveTo(l.x,l.y); g.lineTo(r.x,r.y); g.stroke(); }
