@@ -38,6 +38,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .skb{flex:1;min-height:44px;border:0;border-radius:12px;font-weight:800;font-size:12px;line-height:1.2;cursor:pointer;color:#fff;background:#3A2E5A;box-shadow:0 3px 0 #221A38;touch-action:manipulation;position:relative;overflow:hidden}
 .skb small{display:block;font-size:10px;opacity:.85}
 .skb:disabled{filter:grayscale(.8) brightness(.7);cursor:default}
+.skb.rev{background:linear-gradient(135deg,#C8202A,#6A0A10);box-shadow:0 3px 0 #3A0508;color:#FFE0C0}
 .skb.bh{background:radial-gradient(circle at 50% 50%,#000 30%,#5A1A7A);box-shadow:0 3px 0 #2A0A3A;color:#F2C0FF}
 .sk.kinki{background:#2A0E2E;outline:2px solid #B03AC8}.sk.kinki b{color:#F2A0FF}
 .ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,6,18,.72);border-radius:14px;padding:12px;z-index:3}
@@ -102,6 +103,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     <button class="skb" id="sk_hush" hidden>💴 口止め料<small></small></button>
     <button class="skb" id="sk_cloak" hidden>👻 透明マント<small></small></button>
     <button class="skb bh" id="sk_bh" hidden>🕳 ブラックホール<small></small></button>
+    <button class="skb rev" id="sk_rev" hidden>✊ 革命<small></small></button>
   </div>
   <div id="pad">
     <div id="stick" aria-label="移動スティック"><i></i></div>
@@ -111,7 +113,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
       <button class="act" id="shopBtn">💰 ショップ</button>
     </div>
   </div>
-  <p class="keys">PC：WASD / 矢印 移動　スペース（おしっぱなし）吸う　T 直触り　B ショップ　人をクリックでねらいを固定　1 口止め料　2 透明マント　3 ブラックホール　O オート　M 音</p>
+  <p class="keys">PC：WASD / 矢印 移動　スペース（おしっぱなし）吸う　T 直触り　B ショップ　人をクリックでねらいを固定　1 口止め料　2 透明マント　3 ブラックホール　4 革命　O オート　M 音</p>
 </div>
 
 <script>
@@ -170,6 +172,7 @@ const SK=[
   // active skills: learned once (level 0 -> 1), then used from the skill bar
   {id:'hush',act:1,n:'💴 口止め料',desc:'所持金の10%をばらまいて、怒っている人・SP・警察をまとめてだまらせる（25秒ごと）',max:1,cost:()=>5e5},
   {id:'cloak',act:1,n:'👻 透明マント',desc:'6秒間すがたを消す。怪しまれず、だれにも見つからない（40秒ごと）',max:1,cost:()=>2e8},
+  {id:'rev',act:1,kinki:1,n:'✊ 禁忌「革命」',desc:'お金がない人ほど富豪に、富豪ほど一文なしに入れかわる（吸い切った人も富豪になってよみがえる）。12秒間、警察が機能しなくなる。1つの街で1回だけ',max:1,cost:()=>3e11},
   {id:'bh',act:1,kinki:1,n:'🕳 禁忌「ブラックホール」',desc:'エリアにいる全員（SP・警官も）の資産を一瞬で全額吸い取る。1つの街で1回だけ。使うと警察が総出で追ってくる',max:1,cost:()=>2e12},
 ];
 // each level is a big jump: power x2.5, reach +50..60, suspicion x0.55, HP +3, speed +25%
@@ -177,8 +180,8 @@ const powOf=l=>3e4*Math.pow(10,l-1),  // yen per second: x10 each level
        rngOf=l=>[44,104,160,212,262,300][l-1], stlOf=l=>Math.pow(.55,l-1), hpOf=l=>3+3*(l-1), spdOf=l=>1+.25*(l-1);
 
 /* ================= state ================= */
-const LV0={pow:1,rng:1,stl:1,hp:1,spd:1,multi:1,hush:0,cloak:0,bh:0};
-const S={scene:'story',stage:0,money:0,lv:{...LV0},cd:{hush:0,cloak:0},cloak:0,bhUsed:false,bhFx:0,targets:[],p:null,npcs:[],fx:[],alarm:0,t:0,target:null,lock:null,sucking:false,paused:false,auto:false,manual:false,
+const LV0={pow:1,rng:1,stl:1,hp:1,spd:1,multi:1,hush:0,cloak:0,bh:0,rev:0};
+const S={scene:'story',stage:0,money:0,lv:{...LV0},cd:{hush:0,cloak:0},cloak:0,bhUsed:false,bhFx:0,revUsed:false,revT:0,targets:[],p:null,npcs:[],fx:[],alarm:0,t:0,target:null,lock:null,sucking:false,paused:false,auto:false,manual:false,
   start:null,msg:'',msgT:0,endT:0,sns:null,ending:null,
   best:(()=>{ try{ return JSON.parse(localStorage.getItem('dysonBest')||'null')||{stage:0,clears:0}; }catch(e){ return {stage:0,clears:0}; } })(),
   stats:{slaps:0,caught:0,drained:0,touches:0}};
@@ -199,7 +202,7 @@ function spawnPerson(st,edge){
   return n;
 }
 function startStage(i){
-  const st=STAGES[i]; S.stage=i; S.npcs=[]; S.fx=[]; S.alarm=0; S.target=null; S.targets=[]; S.lock=null; S.cd={hush:0,cloak:0}; S.cloak=0; S.bhUsed=false; S.bhFx=0; S.scene='play'; S.paused=false;
+  const st=STAGES[i]; S.stage=i; S.npcs=[]; S.fx=[]; S.alarm=0; S.target=null; S.targets=[]; S.lock=null; S.cd={hush:0,cloak:0}; S.cloak=0; S.bhUsed=false; S.bhFx=0; S.revUsed=false; S.revT=0; S.scene='play'; S.paused=false;
   S.p={x:180,y:AREA.y1-30,hp:hpOf(S.lv.hp),inv:0,vx:0,vy:0,face:0};
   for(let k=0;k<st.count;k++) spawnPerson(st,false);
   for(const ax of [84,276]){ const a=mkNpc('atm',ax,AREA.y0+8); a.money=a.max=Math.floor(st.goal*.06); a.state='atm'; S.npcs.push(a); }
@@ -235,7 +238,7 @@ function directTouch(){
   S.money+=n.money; S.fx.push({k:'txt',x:n.x,y:n.y-20,t:0,txt:`+${yen(n.money)}`,col:'#F2C23A',big:1}); n.money=0; drainPerson(n);
   S.stats.touches++; S.p.dash=4; startAlarm(); sfx('touch');
 }
-function skillReady(id){ if(S.scene!=='play'||S.paused||!S.lv[id]) return false; if(id==='bh') return !S.bhUsed; return S.cd[id]<=0; }
+function skillReady(id){ if(S.scene!=='play'||S.paused||!S.lv[id]) return false; if(id==='bh') return !S.bhUsed; if(id==='rev') return !S.revUsed; return S.cd[id]<=0; }
 function useSkill(id){
   if(!skillReady(id)) return; const p=S.p;
   if(id==='hush'){ const cost=Math.max(1e4,S.money*.1); S.money=Math.max(0,S.money-cost); S.cd.hush=25; S.alarm=0;
@@ -243,6 +246,16 @@ function useSkill(id){
     for(let k=0;k<14;k++) S.fx.push({k:'bill',x:p.x,y:p.y,a:k/14*Math.PI*2,t:0});
     S.fx.push({k:'txt',x:p.x,y:p.y-30,t:0,txt:`口止め料 -${yen(cost)}`,col:'#8AE0A0',big:1}); S.msg='みんな、だまった…'; S.msgT=0; sfx('hush'); }
   else if(id==='cloak'){ S.cloak=6; S.cd.cloak=40; for(const n of S.npcs) n.sus=Math.min(n.sus,.5); S.msg='👻 すがたを消した'; S.msgT=0; sfx('cloak'); }
+  else if(id==='rev'){ S.revUsed=true; S.revT=12; S.alarm=0;
+    // everyone still in town (drained ones too) is ranked; the poorest get the richest's fortune and vice versa
+    const ppl=S.npcs.filter(n=>!n.t.police&&!n.t.isSP&&!n.t.atm&&(n.state==='walk'||n.state==='angry'||n.state==='drained'));
+    const poorFirst=[...ppl].sort((a,b)=>a.money-b.money), fortunes=ppl.map(n=>n.money).sort((a,b)=>b-a);
+    poorFirst.forEach((n,i)=>{ const was=n.money; n.money=n.max=fortunes[i]; n.sus=0; n.wary=0; n.dT=0; n.life=Math.max(n.life,20);
+      n.state=n.money>0?'walk':'drained'; n.revRich=n.money>was&&n.money>0; if(!n.revRich&&n.guards.length){ for(const gid of n.guards){ const g=S.npcs.find(x=>x.id===gid); if(g&&!g.t.police) g.state='leave'; } n.guards=[]; }
+      if(n.money!==was) S.fx.push({k:'txt',x:n.x,y:n.y-24,t:0,txt:n.money>was?'💰！？':'😱',col:n.money>was?'#FFE070':'#A8C8F0'}); });
+    for(const n of S.npcs) if(n.t.police&&n.state!=='drained') n.state='riot';
+    for(let k=0;k<10;k++) S.fx.push({k:'flag',x:AREA.x0+rnd()*(AREA.x1-AREA.x0),y:AREA.y0+20+rnd()*(AREA.y1-AREA.y0-40),t:0});
+    S.msg='✊ 革命だ！ 貧しき者が富み、富める者は貧しく'; S.msgT=0; S.stats.rev=(S.stats.rev||0)+1; sfx('rev'); }
   else if(id==='bh'){ S.bhUsed=true; S.bhFx=2.2; let tot=0;
     for(const n of S.npcs){ if(n.money>0&&n.state!=='drained'){ tot+=n.money; n.money=0; S.fx.push({k:'coin',x:n.x,y:n.y,tx:p.x,ty:p.y,t:0}); drainPerson(n); } }
     S.money+=tot; S.fx.push({k:'txt',x:p.x,y:p.y-34,t:0,txt:`+${yen(tot)}`,col:'#F2A0FF',big:1}); S.stats.bh=(S.stats.bh||0)+1; sfx('bh');
@@ -251,12 +264,13 @@ function useSkill(id){
 }
 function syncSkillBar(){
   let any=false;
-  for(const id of ['hush','cloak','bh']){ const b=$('sk_'+id), has=!!S.lv[id]; b.hidden=!has; if(!has) continue; any=true;
+  for(const id of ['hush','cloak','bh','rev']){ const b=$('sk_'+id), has=!!S.lv[id]; b.hidden=!has; if(!has) continue; any=true;
     const ready=skillReady(id); b.disabled=!ready;
-    b.querySelector('small').textContent=id==='bh'?(S.bhUsed?'この街では使用ずみ':'1回だけ'):id==='cloak'&&S.cloak>0?`透明 ${Math.ceil(S.cloak)}秒`:S.cd[id]>0?`あと${Math.ceil(S.cd[id])}秒`:id==='hush'?`-${yen(Math.max(1e4,S.money*.1))}`:'OK'; }
+    b.querySelector('small').textContent=id==='rev'?(S.revT>0?`警察まひ ${Math.ceil(S.revT)}秒`:S.revUsed?'使用ずみ':'1回だけ'):id==='bh'?(S.bhUsed?'この街では使用ずみ':'1回だけ'):id==='cloak'&&S.cloak>0?`透明 ${Math.ceil(S.cloak)}秒`:S.cd[id]>0?`あと${Math.ceil(S.cd[id])}秒`:id==='hush'?`-${yen(Math.max(1e4,S.money*.1))}`:'OK'; }
   $('skbar').hidden=!any;
 }
 function startAlarm(len=9,extra=1){
+  if(S.revT>0){ S.msg='✊ 革命中… 警察は来ない！'; S.msgT=0; return; }
   const st=STAGES[S.stage]; S.alarm=len; S.msg='🚨 警察が来た！ 逃げろ！'; S.msgT=0;
   const cops=S.npcs.filter(n=>n.t.police&&n.state!=='drained');
   for(let k=cops.length;k<st.police+extra;k++){ const n=mkNpc('police',rnd()<.5?AREA.x0:AREA.x1,AREA.y0+rnd()*(AREA.y1-AREA.y0)); S.npcs.push(n); }
@@ -307,6 +321,7 @@ function update(dt){
     else if(n.sus>=1) enrage(n); }
   // active skill timers
   for(const k in S.cd) if(S.cd[k]>0) S.cd[k]-=dt; if(S.cloak>0) S.cloak-=dt; if(S.bhFx>0) S.bhFx-=dt;
+  if(S.revT>0){ S.revT-=dt; if(S.revT<=0){ S.revT=0; for(const n of S.npcs) if(n.state==='riot') n.state='walk'; S.msg='警察が立ちなおった'; S.msgT=0; } }
   if(S.gainT&&Math.random()<dt*6){ S.fx.push({k:'txt',x:p.x+20,y:p.y-24,t:0,txt:`+${yen(S.gainT)}`,col:'#F2C23A'}); S.gainT=0; }
   // people
   for(const n of S.npcs) stepNpc(n,dt,p);
@@ -321,6 +336,7 @@ function update(dt){
 }
 function enrage(n){
   n.sus=0; n.wary=9; S.fx.push({k:'txt',x:n.x,y:n.y-26,t:0,txt:n.t.police?'逮捕だ！':n.t.atm?'📹 防犯カメラ！':'ドロボー！',col:'#FF6A5A'}); sfx('alert');
+  if(n.t.police&&S.revT>0) return;
   if(n.t.police||n.t.atm){ startAlarm(); return; }
   if(n.t.rich&&n.guards.length){ for(const gid of n.guards){ const g=S.npcs.find(x=>x.id===gid); if(g&&g.state!=='leave'){ g.state='charge'; g.angryT=3.4; } } }
   else { n.state='angry'; n.angryT=5; }
@@ -337,6 +353,7 @@ function stepNpc(n,dt,p){
     case 'atmEmpty': n.refill-=dt; if(n.refill<=0){ n.money=n.max; n.state='atm'; S.fx.push({k:'txt',x:n.x,y:n.y-30,t:0,txt:'補充された',col:'#A8C8F0'}); } return;
     case 'leaveD': case 'leave': { const ex=n.x<180?-30:W+30; moveTo(ex,n.y,40); if(n.x<-20||n.x>W+20) n.gone=1; return; }
     case 'angry': { n.angryT-=dt; moveTo(p.x,p.y,n.sp*1.9); if(toP<16){ hurt(n,'slap'); n.state='walk'; n.angryT=0; } if(n.angryT<=0) n.state='walk'; return; }
+    case 'riot': { n.ang=(n.ang||0)+dt*3; moveTo(n.x+Math.cos(n.ang)*16,n.y+Math.sin(n.ang)*16,24); return; }
     case 'chase': { moveTo(p.x,p.y,64+S.stage*2); if(toP<15) hurt(n,'police'); return; }
     case 'charge': { n.angryT-=dt; if(n.angryT>2.2) return; moveTo(p.x,p.y,n.sp*1.2); if(toP<16){ hurt(n,'sp'); n.state='guard'; } if(n.angryT<=0) n.state='guard'; return; }
     case 'guard': { const o=S.npcs.find(x=>x.id===n.owner); if(!o||o.state==='drained'){ n.state='leave'; return; }
@@ -357,8 +374,9 @@ const AUTO={t:0,want:null,cool:0};
 function autoTick(dt){
   const p=S.p, R=rngOf(S.lv.rng); AUTO.t-=dt; AUTO.cool-=dt;
   // shop: buy upgrades while keeping most of the money
-  if(AUTO.cool<=0){ AUTO.cool=1.5; const rec=STAGES[S.stage].rec, order=[...Object.keys(rec).filter(k=>S.lv[k]<rec[k]),'bh','hush','multi','rng','pow','cloak','stl','pow','hp','spd']; for(const id of order){ const s=SK.find(x=>x.id===id), l=S.lv[id]; if(l<s.max&&s.cost(l)<=S.money*.45){ buy(id); break; } } }
+  if(AUTO.cool<=0){ AUTO.cool=1.5; const rec=STAGES[S.stage].rec, order=[...Object.keys(rec).filter(k=>S.lv[k]<rec[k]),'bh','rev','hush','multi','rng','pow','cloak','stl','pow','hp','spd']; for(const id of order){ const s=SK.find(x=>x.id===id), l=S.lv[id]; if(l<s.max&&s.cost(l)<=S.money*.45){ buy(id); break; } } }
   // active skills
+  if(skillReady('rev')&&S.npcs.filter(n=>n.state==='drained'&&!n.t.police&&!n.t.isSP).length>=5) useSkill('rev');
   if(skillReady('bh')){ const tot=S.npcs.reduce((a,n)=>a+(n.state!=='drained'?n.money:0),0); if(tot>=(STAGES[S.stage].goal-S.money)*.25||tot>=S.money*.5) useSkill('bh'); }
   const near=S.npcs.some(n=>(n.state==='angry'||n.state==='charge'||n.state==='chase')&&Math.hypot(n.x-p.x,n.y-p.y)<70);
   if(near&&skillReady('cloak')) useSkill('cloak');
@@ -380,7 +398,7 @@ function autoTick(dt){
     let best=null,bv=0;
     for(const n of S.npcs){ if(n.state==='drained'||n.money<=0||n.wary>0||n.t.isSP||(n.state!=='walk'&&n.state!=='atm')) continue;
       if(n.t.police) continue;
-      let stand=R-8; if(n.t.rich&&n.t.dz){ if(R<n.t.dz+14) continue; stand=Math.max(n.t.dz+12,R-10); }
+      let stand=R-8; if(n.t.rich&&n.t.dz&&n.guards.length){ if(R<n.t.dz+14) continue; stand=Math.max(n.t.dz+12,R-10); }
       const d=Math.hypot(n.x-p.x,n.y-p.y), v=Math.min(n.money,n.max*.35)/(1+d/120);
       if(v>bv){ bv=v; best={n,stand}; } }
     AUTO.want=best;
@@ -416,7 +434,7 @@ $('suckBtn').addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); user(
 const suckUp=()=>{ if(!S.auto) S.sucking=false; $('suckBtn').classList.remove('on'); };
 $('suckBtn').addEventListener('pointerup',suckUp); $('suckBtn').addEventListener('pointercancel',suckUp); $('suckBtn').addEventListener('pointerleave',suckUp);
 $('touchBtn').addEventListener('click',()=>{ ac(); user(); directTouch(); });
-for(const id of ['hush','cloak','bh']) $('sk_'+id).addEventListener('click',()=>{ ac(); user(); useSkill(id); });
+for(const id of ['hush','cloak','bh','rev']) $('sk_'+id).addEventListener('click',()=>{ ac(); user(); useSkill(id); });
 $('shopBtn').addEventListener('click',()=>{ ac(); user(); openShop(); });
 const stick=$('stick'), knob=stick.querySelector('i'); let sid=null;
 function stickMove(e){ const r=stick.getBoundingClientRect(); let dx=e.clientX-(r.left+r.width/2), dy=e.clientY-(r.top+r.height/2); const m=r.width/2-25, l=Math.hypot(dx,dy); if(l>m){ dx*=m/l; dy*=m/l; } knob.style.transform=`translate(${dx}px,${dy}px)`; pad.x=dx/m; pad.y=dy/m; }
@@ -437,7 +455,7 @@ addEventListener('keydown',e=>{
   if(['w','a','s','d','arrowleft','arrowright','arrowup','arrowdown'].includes(k)){ e.preventDefault(); user(); keys[k]=true; return; }
   if(k===' '){ e.preventDefault(); if(S.scene==='ending'){ spendMoney(); return; } if(!$('storyOv').hidden){ $('storyBtn').click(); return; } ac(); user(); S.sucking=true; return; }
   if(k==='enter'&&!$('storyOv').hidden){ $('storyBtn').click(); return; }
-  if(k==='1'||k==='2'||k==='3'){ ac(); user(); useSkill(['hush','cloak','bh'][+k-1]); return; }
+  if(k>='1'&&k<='4'){ ac(); user(); useSkill(['hush','cloak','bh','rev'][+k-1]); return; }
   if(k==='t'){ ac(); user(); directTouch(); } if(k==='b'){ ac(); user(); if(S.paused) closeShop(); else openShop(); }
 });
 addEventListener('keyup',e=>{ const k=e.key.toLowerCase(); keys[k]=false; if(k===' '&&!S.auto) S.sucking=false; });
@@ -476,12 +494,13 @@ function person(n){
   const c=n.state==='drained'?'#6A6A72':n.t.col, x=n.x, y=n.y, bob=n.state==='drained'?0:Math.sin(S.t*8+n.id)*1.2;
   g.fillStyle='rgba(0,0,0,.25)'; g.beginPath(); g.ellipse(x,y+9,8,3,0,0,7); g.fill();
   if(n.state==='drained'){ g.fillStyle=c; g.beginPath(); g.ellipse(x,y+4,9,6,0,0,7); g.fill(); g.fillStyle='#B8B0A8'; g.beginPath(); g.arc(x,y-3,5.5,0,7); g.fill(); g.fillStyle='#A898BC'; g.font='800 9px sans-serif'; g.textAlign='center'; g.fillText('…',x,y-11); return; }
-  if(n.t.rich){ g.fillStyle=`rgba(255,215,90,${.25+.15*Math.sin(S.t*4)})`; g.beginPath(); g.arc(x,y,16,0,7); g.fill(); }
+  if(n.revRich!==undefined?n.revRich:n.t.rich){ g.fillStyle=`rgba(255,215,90,${.25+.15*Math.sin(S.t*4)})`; g.beginPath(); g.arc(x,y,16,0,7); g.fill(); }
   g.fillStyle=c; g.beginPath(); g.roundRect?g.roundRect(x-6,y-4+bob,12,13,4):g.rect(x-6,y-4+bob,12,13); g.fill();
   g.fillStyle='#F2D2B0'; g.beginPath(); g.arc(x,y-8+bob,6,0,7); g.fill();
   if(n.t.police){ g.fillStyle='#1A2A6A'; g.fillRect(x-6,y-15+bob,12,4); }
   if(n.t.isSP){ g.fillStyle='#111'; g.fillRect(x-5,y-10+bob,10,2.5); }
   if(n.t.rich){ g.fillStyle='#F2C23A'; g.fillRect(x-4,y-17+bob,8,4); }
+  if(n.state==='riot'){ g.font='11px sans-serif'; g.textAlign='center'; g.fillText('🏳',x+9,y-14); }
   if(n.state==='angry'||n.state==='charge'||n.state==='chase'){ g.fillStyle='#FF4A3A'; g.font='800 11px sans-serif'; g.textAlign='center'; g.fillText('💢',x+8,y-14); }
   // suspicion bar
   if(n.sus>.02){ g.fillStyle='#000'; g.fillRect(x-10,y-22,20,3); g.fillStyle=n.sus>.7?'#FF4A3A':'#F2C23A'; g.fillRect(x-10,y-22,20*Math.min(1,n.sus),3); }
@@ -522,6 +541,7 @@ function drawHud(){
   g.fillStyle='#E8E0F0'; g.font='800 10px "M PLUS Rounded 1c",sans-serif'; g.fillText(`STAGE ${S.stage+1} ${st.n}　目標 ${yen(st.goal)}`,8,36);
   const k=Math.min(1,S.money/st.goal); g.fillStyle='#2C2240'; g.fillRect(200,28,150,8); g.fillStyle='#F2C23A'; g.fillRect(200,28,150*k,8);
   g.textAlign='right'; g.font='13px sans-serif'; g.fillText('❤️'.repeat(Math.max(0,p.hp))+'🤍'.repeat(Math.max(0,hpOf(S.lv.hp)-p.hp)),W-8,18);
+  if(S.revT>0){ g.fillStyle='rgba(200,30,40,.12)'; g.fillRect(0,TOP,W,H-TOP); g.fillStyle='#FFD0B0'; g.textAlign='center'; g.font='800 13px "M PLUS Rounded 1c",sans-serif'; g.fillText(`✊ 革命中：警察まひ ${Math.ceil(S.revT)}秒`,W/2,TOP+18); }
   if(S.alarm>0){ g.fillStyle=`rgba(224,67,61,${.25+.2*Math.sin(S.t*12)})`; g.fillRect(0,TOP,W,H-TOP); g.fillStyle='#fff'; g.textAlign='center'; g.font='800 14px "M PLUS Rounded 1c",sans-serif'; g.fillText(`🚨 警察に追われている！ ${Math.ceil(S.alarm)}秒`,W/2,TOP+18); }
   if(S.msg&&S.msgT<2.2){ g.globalAlpha=Math.min(1,2.2-S.msgT); g.fillStyle='rgba(16,10,26,.8)'; g.fillRect(40,H/2-24,280,40); g.fillStyle='#F2C23A'; g.textAlign='center'; g.font='800 17px "M PLUS Rounded 1c",sans-serif'; g.fillText(S.msg,W/2,H/2+2); g.globalAlpha=1; }
   if(S.auto){ g.fillStyle='#B08AF8'; g.font='800 11px sans-serif'; g.textAlign='left'; g.fillText('🤖 AUTO',8,H-8); }
@@ -530,6 +550,7 @@ function drawHud(){
 function drawFx(){
   for(const f of S.fx){
     if(f.k==='coin'){ const k=Math.min(1,f.t/.5); const x=f.x+(f.tx-f.x)*k, y=f.y+(f.ty-f.y)*k-Math.sin(k*Math.PI)*14; g.fillStyle='#F2C23A'; g.beginPath(); g.arc(x,y,3,0,7); g.fill(); if(k>=1) f.t=9; }
+    else if(f.k==='flag'){ g.save(); g.globalAlpha=Math.max(0,1-f.t/1.4); g.font='22px sans-serif'; g.textAlign='center'; g.fillText('🚩',f.x+Math.sin(f.t*9)*3,f.y-f.t*12); g.restore(); }
     else if(f.k==='bill'){ const r=f.t*90, x=f.x+Math.cos(f.a)*r, y=f.y+Math.sin(f.a)*r-20*Math.sin(f.t*3); g.save(); g.globalAlpha=Math.max(0,1-f.t/1.4); g.translate(x,y); g.rotate(f.a+f.t*6); g.fillStyle='#8AD89A'; g.fillRect(-6,-3,12,6); g.restore(); }
     else if(f.k==='txt'){ g.globalAlpha=Math.max(0,1-f.t/1.4); g.font=`800 ${f.big?15:11}px "M PLUS Rounded 1c",sans-serif`; g.textAlign='center'; g.lineWidth=3; g.strokeStyle='#120E1A'; g.strokeText(f.txt,f.x,f.y-f.t*22); g.fillStyle=f.col; g.fillText(f.txt,f.x,f.y-f.t*22); g.globalAlpha=1; }
   }
@@ -584,6 +605,7 @@ function sfx(k){
   else if(k==='clear') [523,659,784,1046,1319].forEach((f,i)=>tone(f,.2,'square',.05,i*.1));
   else if(k==='hush'){ for(let i=0;i<6;i++) tone(1200+i*120,.06,'square',.035,i*.04); }
   else if(k==='cloak') tone(660,.5,'sine',.06,0,1760);
+  else if(k==='rev'){ [196,196,262,330,392,523].forEach((f,i)=>tone(f,.22,'square',.06,i*.16)); tone(98,1.2,'sawtooth',.08); }
   else if(k==='bh'){ tone(55,1.6,'sawtooth',.12,0,30); tone(880,1.2,'sine',.06,0,40); for(let i=0;i<8;i++) tone(1400-i*140,.1,'square',.03,.2+i*.1); }
   else if(k==='lose') [330,262,196].forEach((f,i)=>tone(f,.3,'triangle',.07,i*.2));
 }
