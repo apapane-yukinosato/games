@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="満員電車で、どうにかして座りたい！ 降りそうな人を見ぬいて前に立ち、ライバルより先に座ろう。お年寄りには…ゆずる？ 寝たふり？">
+<title>満員電車で座りたい</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&family=Dela+Gothic+One&display=swap">
+<style>
+:root{--bg:#EEF1F4;--ink:#1E2A36;--card:#FFFFFF;--line:#D4DCE4;--mute:#6A7888;--red:#2E8A5A;--acc:#F0A020}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+#app{max-width:520px;margin:0 auto;padding:8px 10px 16px;padding-top:calc(8px + env(safe-area-inset-top,0px))}
+#top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:16px;font-weight:800;white-space:nowrap}
+.mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--card);cursor:pointer;white-space:nowrap}
+.mini[aria-pressed=true]{background:var(--red);border-color:var(--red);color:#fff}
+#wrap{position:relative}
+#cv{display:block;width:100%;aspect-ratio:360/520;border-radius:16px;background:#C9C2B0;touch-action:none}
+#pad{display:flex;gap:8px;margin-top:8px}
+#holdBtn{flex:1;min-height:60px;border:0;border-radius:18px;background:linear-gradient(#FFD870,#F0A020);color:#4A2A00;font-weight:800;font-size:20px;box-shadow:0 5px 0 #B07010;cursor:pointer;touch-action:none}
+#holdBtn.on{transform:translateY(3px);box-shadow:0 2px 0 #B07010;filter:brightness(.92)}
+.ov{position:absolute;inset:0;display:flex;align-items:safe center;justify-content:center;overflow-y:auto;overscroll-behavior:contain;background:rgba(20,30,40,.55);border-radius:16px;padding:14px;z-index:3}
+.card{background:var(--card);border-radius:18px;padding:14px;margin:auto 0;width:100%;max-width:380px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.card h2{margin:0;font-family:"Dela Gothic One","M PLUS Rounded 1c",sans-serif;font-size:24px;line-height:1.3;color:#1E6A44}
+.sub{font-size:13px;color:var(--mute);margin:8px 0 10px;line-height:1.7;white-space:pre-line}
+.how{text-align:left;font-size:12.5px;line-height:1.7;background:#F2F6F8;border-radius:12px;padding:8px 12px;margin:0 0 10px}
+.go{display:block;width:100%;min-height:48px;border:0;border-radius:14px;font-weight:800;font-size:16px;cursor:pointer;margin-top:8px;background:var(--red);color:#fff;box-shadow:0 4px 0 #1A5A3A}
+.go.alt{background:#E6EEF2;color:var(--ink);box-shadow:0 4px 0 #C4D0D8}
+#lineList .go{min-height:44px;margin-top:6px;font-size:15px}
+.go small{display:block;font-size:11px;font-weight:500;opacity:.85}
+.back{display:block;margin-top:10px;font-size:13px;font-weight:800;color:var(--mute);text-decoration:none}
+.big{font-size:30px;font-weight:800;margin:4px 0;color:#1E6A44}
+#evBox{position:absolute;left:10px;right:10px;bottom:12px;z-index:2;background:rgba(255,255,255,.96);border-radius:16px;padding:10px 12px;box-shadow:0 6px 18px rgba(0,0,0,.3);text-align:center}
+#evBox p{margin:0 0 8px;font-weight:800;font-size:14px;line-height:1.5}
+#evBox .row{display:flex;gap:8px}
+#evBox button{flex:1;min-height:48px;border:0;border-radius:12px;font-weight:800;font-size:16px;cursor:pointer}
+#yieldBtn{background:#2E8A5A;color:#fff;box-shadow:0 4px 0 #1A5A3A}
+#sleepBtn{background:#5A6A8A;color:#fff;box-shadow:0 4px 0 #3A4A6A}
+.help{font-size:12px;color:var(--mute);text-align:center;margin:8px 0 0;line-height:1.6}
+@media (pointer:coarse){.pc{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>🚃 満員電車で座りたい</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false" title="Oキー">🤖 オート</button>
+    <button class="mini" id="muteBtn">音 ON</button>
+  </div>
+  <div id="wrap">
+    <canvas id="cv" width="360" height="520" aria-label="電車の車内を上から見たところ"></canvas>
+    <div id="evBox" hidden>
+      <p>👵 おばあちゃんが目の前に立った…</p>
+      <div class="row"><button id="yieldBtn">🙇 ゆずる</button><button id="sleepBtn">😴 寝たふり</button></div>
+    </div>
+    <div class="ov" id="titleOv">
+      <div class="card">
+        <h2>満員電車で座りたい</h2>
+        <p class="sub">つかれた…どうしても座りたい。降りそうな人を見ぬいて前に立とう！</p>
+        <div class="how">👆 さわった所へ歩く（PCは矢印キー）<br>👜 カバンをしまう人は次の駅で降りる（📱 はフェイク）<br>💺 空いた席にさわると座れる。ライバルより先に！<br>✊ ブレーキ前はつり革。つかまらないとよろける<br>🙏 お年寄りに席をゆずると「徳」と点が上がる</div>
+        <div id="lineList"></div>
+        <button class="go alt" id="autoStartBtn">🤖 オートで見る</button>
+        <a class="back" href="../">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+    <div class="ov" id="resultOv" hidden>
+      <div class="card">
+        <h2 id="resTitle"></h2>
+        <div class="big" id="resScore"></div>
+        <p class="sub" id="resText"></p>
+        <button class="go" id="nextBtn">つぎの路線へ</button>
+        <button class="go alt" id="retryBtn">もう一度</button>
+        <button class="go alt" id="menuBtn">路線をえらぶ</button>
+        <a class="back" href="../">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+  </div>
+  <div id="pad"><button id="holdBtn">✊ つり革につかまる</button></div>
+  <p class="help">車内をさわって歩く。ブレーキ前はつり革！<span class="pc"><br>PC：矢印/WASDで移動　スペース長押しでつり革　Y ゆずる　N 寝たふり　O オート　M 音</span></p>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+let seed=(Date.now()%2147483646)+1; const rnd=()=>{ seed=seed*16807%2147483647; return (seed-1)/2147483646; };
+const clamp=(v,a,b)=>v<a?a:v>b?b:v, pick=a=>a[Math.floor(rnd()*a.length)], dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const W=360,H=520;
+const cv=$('cv'), g=cv.getContext('2d');
+
+/* ================= the car ================= */
+// top-down: long bench seats along both walls, three doors per side
+const WALL0=22, WALL1=338, TOPY=34, BOTY=516;
+const DOORS=[60,280,500], DOOR_HW=20;
+const AISLE0=60, AISLE1=300;            // where standing people can be (centre, r≈10)
+const SEATS=[];
+for(const side of [-1,1]) for(const y0 of [84,304]) for(let i=0;i<6;i++){
+  SEATS.push({side,x:side<0?37:323,y:y0+14+i*28,fx:side<0?AISLE0+4:AISLE1-4,who:null}); }
+const STATIONS=['ゆきのさと','こぶし台','しらかば','さくら坂','中央','みなと町','ひばりが丘','みどり町','本町','しらゆき'];
+const LINES=[
+  {n:'お昼の各駅停車',icon:'☀️',st:8,stand:7,board:3,seekP:.35,cue:5,fake:0,drunk:0,late:0,old:[3],note:'空いてる。まずは練習'},
+  {n:'朝ラッシュ',icon:'🌅',st:10,stand:30,board:9,seekP:.75,cue:3,fake:.25,drunk:0,late:.45,old:[5],note:'ぎゅうぎゅう。ライバルだらけ'},
+  {n:'終電',icon:'🌙',st:10,stand:22,board:4,seekP:.7,cue:3.5,fake:.15,drunk:.4,late:.35,old:[6],note:'寝てる人が急に起きて降りる'},
+];
+const TYPES={
+  oba:{sp:72,m:1.7,react:[.2,.55],hair:'#7A4A8A',body:'#C86A9A',name:'おばちゃん'},
+  stu:{sp:60,m:1.0,react:[.35,.9],hair:'#1A1A1A',body:'#2A3A6A',name:'学生'},
+  sal:{sp:50,m:1.3,react:[.5,1.2],hair:'#2A2A2A',body:'#5A6270',name:'会社員'},
+  old:{sp:28,m:1.5,react:[9,9],hair:'#E8E8E8',body:'#8A7A5A',name:'おばあちゃん'},
+  me:{sp:66,m:1.0,react:[0,0],hair:'#3A2A1A',body:'#E8603A',name:'あなた'},
+};
+const RUN_T=9, STOP_T=5.5, BRAKE_T=1.6, ACC_T=1.2;
+
+const S={scene:'title',li:0,ppl:[],me:null,t:0,k:0,phase:'stop',pt:0,score:0,seatSt:0,toku:0,yields:0,sleeps:0,parts:[],msg:'',msgT:9,
+  target:null,keys:{},hold:false,holdUser:false,auto:false,manual:false,resT:0,ev:null,evT:0,scroll:0,sway:0,lastClear:false,
+  best:(()=>{ try{ return JSON.parse(localStorage.getItem('denshaBest')||'null')||{s:[0,0,0]}; }catch(e){ return {s:[0,0,0]}; } })()};
+function saveBest(){ if(S.auto) return; try{ localStorage.setItem('denshaBest',JSON.stringify(S.best)); }catch(e){} }
+const L=()=>LINES[S.li];
+const stName=k=>STATIONS[k===L().st-1?STATIONS.length-1:k];
+
+function mkPerson(type,x,y,o={}){ const T=TYPES[type]; return Object.assign({type,x,y,vx:0,vy:0,lx:0,ly:0,m:T.m,sp:T.sp,state:'stand',seat:null,dest:L().st-1,home:{x,y},cue:null,cueAt:-1,
+  seeker:false,notice:-1,tgt:null,ph:rnd()*6,face:rnd()*6,bump:0},o); }
+function randDest(from){ const n=L().st; if(L().late&&rnd()<L().late) return n-1; return from+1+Math.floor(rnd()*(n-1-from)); }
+function aislePt(){ return {x:AISLE0+8+rnd()*(AISLE1-AISLE0-16),y:TOPY+30+rnd()*(BOTY-TOPY-60)}; }
+
+function startLine(i){
+  S.li=i; const l=L(); S.ppl=[]; S.parts=[]; S.k=0; S.phase='stop'; S.pt=0; S.t=0; S.score=0; S.seatSt=0; S.toku=0; S.yields=0; S.sleeps=0; S.ev=null; S.target=null; S.hold=false; S.scroll=0;
+  for(const s of SEATS){ s.who=null; }
+  // seated passengers: everybody is already sitting (one seat may be empty on the quiet line)
+  const empty=i===0?pick(SEATS):null;
+  for(const s of SEATS){ if(s===empty) continue; const p=mkPerson(pick(['oba','stu','sal','sal']),s.x,s.y,{state:'seat',seat:s,dest:randDest(0)});
+    if(l.drunk&&rnd()<l.drunk){ p.drunk=true; p.cue='zz'; } s.who=p; S.ppl.push(p); }
+  for(let n=0;n<l.stand;n++){ const a=aislePt(); const p=mkPerson(pick(['oba','stu','stu','sal','sal']),a.x,a.y,{dest:randDest(0),seeker:rnd()<l.seekP}); p.home={...a}; S.ppl.push(p); }
+  S.me=mkPerson('me',(AISLE0+AISLE1)/2,DOORS[1]+30,{me:true}); S.ppl.push(S.me);
+  S.oldDone=new Set();
+  ['titleOv','resultOv'].forEach(id=>$(id).hidden=true); $('evBox').hidden=true;
+  S.scene='play'; say(`${l.icon} ${l.n}　${stName(0)} → ${stName(l.st-1)}`); sfx('chime'); announce();
+}
+function say(m){ S.msg=m; S.msgT=0; }
+function pop(x,y,txt,col){ S.parts.push({x,y,t:0,txt,col:col||'#fff'}); }
+
+/* ================= update ================= */
+function update(dt){
+  S.t+=dt; S.msgT+=dt; for(const p of S.parts) p.t+=dt; S.parts=S.parts.filter(p=>p.t<1.4);
+  if(S.scene!=='play'){ if(S.auto&&(S.scene==='result'||S.scene==='title')){ S.resT+=dt; if(S.resT>(S.scene==='title'?.6:3.2)){ S.resT=0; startLine(S.scene==='title'?0:(S.li+1)%LINES.length); } } return; }
+  if(S.ev){ S.evT+=dt; if(S.auto&&S.evT>1.2) answer(true); return; } // the train waits while you decide
+  const l=L(); S.pt+=dt;
+  // the train: stop (doors open) -> run (accelerate, cruise, brake) -> next stop
+  let lurch=0;
+  if(S.phase==='stop'){
+    if(S.pt>STOP_T){ depart(); }
+  } else {
+    S.scroll+=dt*(S.pt<ACC_T?S.pt/ACC_T:S.pt>RUN_T-BRAKE_T?(RUN_T-S.pt)/BRAKE_T:1)*260;
+    if(S.pt<ACC_T) lurch=1; else if(S.pt>RUN_T-BRAKE_T) lurch=-1;
+    for(const p of S.ppl) if(p.state==='seat'&&p.cueAt>=0&&S.pt>=p.cueAt&&!p.cue){ p.cue=p.fake?'phone':'bag'; }
+    for(const p of S.ppl) if(p.fake&&p.cue==='phone'&&S.pt>p.cueAt+1.8){ p.cue=null; p.fake=false; p.cueAt=-1; }
+    if(S.pt>=RUN_T) arrive();
+  }
+  S.sway+=((lurch)-S.sway)*Math.min(1,dt*4);
+  if(S.auto) autoTick(dt);
+  S.hold=S.holdUser||S.autoHold;
+  $('holdBtn').classList.toggle('on',S.hold&&S.me.state!=='seat');
+  // everybody who is standing walks and bumps
+  const me=S.me; const doorsOpen=S.phase==='stop'&&S.pt<STOP_T-.6;
+  for(const p of S.ppl){
+    if(p.state==='seat'||p.state==='gone') continue;
+    let tx=null,ty=null,spd=p.sp;
+    if(p.me){
+      let mx=0,my=0;
+      if(S.target){ const dx=S.target.x-p.x, dy=S.target.y-p.y, d=Math.hypot(dx,dy); if(d>3){ mx=dx/d*Math.min(1,d/18); my=dy/d*Math.min(1,d/18); } }
+      if(S.keys.left) mx-=1; if(S.keys.right) mx+=1; if(S.keys.up) my-=1; if(S.keys.down) my+=1;
+      const ml=Math.hypot(mx,my); if(ml>1){ mx/=ml; my/=ml; }
+      if(S.hold){ mx=0; my=0; }
+      p.vx+=(mx*spd-p.vx)*Math.min(1,dt*10); p.vy+=(my*spd-p.vy)*Math.min(1,dt*10);
+    } else {
+      if(p.state==='stand'){ // seekers go for an empty seat once they notice it
+        if(p.seeker&&S.phase==='stop'||p.seeker&&S.pt<RUN_T-BRAKE_T){
+          const fs=freeSeats().filter(s=>Math.hypot(s.x-p.x,s.y-p.y)<(l.seekP>.6?150:115));
+          if(fs.length){ if(p.notice<0) p.notice=S.t+TYPES[p.type].react[0]+rnd()*(TYPES[p.type].react[1]-TYPES[p.type].react[0]);
+            if(S.t>=p.notice){ p.tgt=fs.reduce((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)<Math.hypot(b.x-p.x,b.y-p.y)?a:b); p.state='seek'; } }
+          else p.notice=-1; }
+        tx=p.home.x; ty=p.home.y; spd*=.4;
+        if(p.type==='old'&&p.oldFor&&me.state==='seat'&&me.seat===p.oldFor){ tx=p.oldFor.fx; ty=p.oldFor.y; spd=p.sp; }
+      }
+      if(p.state==='seek'){ const s=p.tgt; if(s.who||!s){ p.state='stand'; p.tgt=null; p.notice=-1; p.home={x:p.x,y:p.y}; } else { tx=s.x; ty=s.y; spd*=1.15; } }
+      if(p.state==='leave'){ const d=p.door; if(!doorsOpen&&S.phase!=='stop'){ p.state='stand'; p.home={x:p.x,y:p.y}; p.dest=Math.min(L().st-1,S.k+1); }
+        else if(Math.abs(p.y-d.y)>8&&Math.abs(p.x-d.x)>40){ tx=clamp(p.x,AISLE0+6,AISLE1-6); ty=d.y; } else { tx=d.x; ty=d.y; } spd=p.sp*1.25; }
+      if(p.state==='board'){ tx=p.home.x; ty=p.home.y; if(Math.hypot(tx-p.x,ty-p.y)<8) p.state='stand'; }
+      if(tx!=null){ const dx=tx-p.x, dy=ty-p.y, d=Math.hypot(dx,dy); const k=d>2?Math.min(1,d/16):0; p.vx+=(dx/(d||1)*k*spd-p.vx)*Math.min(1,dt*8); p.vy+=(dy/(d||1)*k*spd-p.vy)*Math.min(1,dt*8); }
+    }
+    // the lurch: brakes throw people forward (up), starting throws them back
+    if(lurch){ const k=p.me?(S.hold?.06:1):.3; p.ly+=-lurch*k*150*dt; }
+    p.ly*=Math.pow(.12,dt); p.lx*=Math.pow(.12,dt);
+    p.x+=(p.vx+p.lx)*dt; p.y+=(p.vy+p.ly)*dt;
+    p.ph+=dt*Math.hypot(p.vx,p.vy)*.12; p.bump=Math.max(0,p.bump-dt);
+  }
+  collide(dt);
+  for(const p of S.ppl){ if(p.state==='seat'||p.state==='gone') continue; bounds(p,doorsOpen);
+    if(p.state==='leave'&&(p.x<10||p.x>W-10)){ p.state='gone'; }
+    if(p.state==='seek'||p.me){ for(const s of SEATS){ if(s.who||blockedSeat(s)) continue; if(Math.hypot(s.x-p.x,s.y-p.y)<13) sit(p,s); } } }
+  // the elderly passenger reaches you
+  for(const p of S.ppl) if(p.type==='old'&&p.oldFor&&!p.asked&&me.state==='seat'&&me.seat===p.oldFor&&p.state==='stand'&&Math.hypot(p.x-p.oldFor.fx,p.y-p.oldFor.y)<26){ p.asked=true; S.ev={old:p}; S.evT=0; $('evBox').hidden=false; sfx('hm'); }
+  S.ppl=S.ppl.filter(p=>p.state!=='gone');
+}
+function freeSeats(){ return SEATS.filter(s=>!s.who&&!blockedSeat(s)); }
+function blockedSeat(s){ for(const p of S.ppl) if(p.state==='leave'&&p.fromSeat===s&&Math.hypot(p.x-s.x,p.y-s.y)<18) return true; return false; }
+function sit(p,s){ s.who=p; p.state='seat'; p.seat=s; p.x=s.x; p.y=s.y; p.vx=p.vy=p.lx=p.ly=0; p.tgt=null; p.cue=null; p.cueAt=-1;
+  if(p.me){ say('💺 すわれた！'); sfx('sit'); pop(s.x+(s.side<0?20:-20),s.y-14,'ふぅ…','#FFF4A0'); }
+  else { p.dest=randDest(S.k); if(Math.hypot(S.me.x-s.x,S.me.y-s.y)<40&&S.me.state!=='seat'){ pop(s.x+(s.side<0?24:-24),s.y-14,'とられた！','#FFB0A0'); sfx('miss'); } } }
+function bounds(p,doorsOpen){
+  let x0=AISLE0,x1=AISLE1;
+  for(const dy of DOORS) if(Math.abs(p.y-dy)<DOOR_HW){ x0=doorsOpen?-20:WALL0+10; x1=doorsOpen?W+20:WALL1-10; }
+  if(p.state==='leave'&&p.fromSeat&&Math.abs(p.y-p.fromSeat.y)<16) x0=Math.min(x0,WALL0+8), x1=Math.max(x1,WALL1-8);
+  // walking into a free seat
+  for(const s of SEATS) if(!s.who&&Math.abs(p.y-s.y)<12&&(p.me||p.tgt===s)){ if(s.side<0) x0=Math.min(x0,s.x); else x1=Math.max(x1,s.x); }
+  if(p.x<x0){ p.x=x0; if(p.vx<0) p.vx=0; if(p.lx<0) p.lx=0; } if(p.x>x1){ p.x=x1; if(p.vx>0) p.vx=0; if(p.lx>0) p.lx=0; }
+  if(p.y<TOPY+12){ p.y=TOPY+12; if(p.ly<0) p.ly=0; } if(p.y>BOTY-10){ p.y=BOTY-10; if(p.ly>0) p.ly=0; }
+}
+function collide(){
+  const list=S.ppl.filter(p=>p.state!=='seat'&&p.state!=='gone');
+  for(let it=0;it<2;it++) for(let i=0;i<list.length;i++){ const a=list[i];
+    for(let j=i+1;j<list.length;j++){ const b=list[j]; const dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy)||.01, m=19;
+      if(d<m){ const o=m-d, ma=a.state==='leave'?4:a.m, mb=b.state==='leave'?4:b.m, wa=mb/(ma+mb), wb=ma/(ma+mb);
+        a.x-=dx/d*o*wa; a.y-=dy/d*o*wa; b.x+=dx/d*o*wb; b.y+=dy/d*o*wb;
+        const me=a.me?a:b.me?b:null; if(me&&Math.hypot(me.ly,me.lx)>45&&me.bump<=0){ me.bump=1.2; pop(me.x,me.y-16,pick(['すみません！','おっとっと','あわわ']),'#FFE0A0'); sfx('bump'); } } } }
+}
+function depart(){
+  const l=L(); S.phase='run'; S.pt=0; sfx('door');
+  if(S.me.state==='seat'){ S.score+=100; S.seatSt++; pop(S.me.x+(S.me.seat.side<0?26:-26),S.me.y,'+100','#B0FFB0'); }
+  // who will get off at the next station shows it a little before
+  const nk=S.k+1;
+  for(const p of S.ppl){ if(p.state!=='seat'||p.me) continue; p.cue=p.drunk?'zz':null; p.fake=false; p.cueAt=-1;
+    if(p.dest===nk&&!p.drunk){ p.cueAt=Math.max(.5,RUN_T-l.cue*(.75+rnd()*.5)); }
+    else if(!p.drunk&&p.type!=='old'&&rnd()<l.fake){ p.fake=true; p.cueAt=Math.max(.5,RUN_T-l.cue*(.6+rnd()*.8)); } }
+  announce();
+}
+function announce(){ const nk=S.phase==='run'?S.k+1:S.k; speak(S.phase==='run'?`つぎは、${stName(nk)}。`:`${stName(nk)}、${stName(nk)}。`); }
+function arrive(){
+  const l=L(); S.k++; S.phase='stop'; S.pt=0; sfx('brake');
+  if(S.k>=l.st-1){ return finish(); }
+  say(`${stName(S.k)}　ドアが開きます`); sfx('chime');
+  // getting off: seated people at their station stand up and go to the nearest door; standing ones too
+  for(const p of S.ppl){ if(p.me) continue;
+    if(p.state==='seat'&&p.dest<=S.k&&p.type!=='old'){ const s=p.seat; s.who=null; p.fromSeat=s; p.seat=null; p.state='leave'; p.cue=null; p.door=doorOf(p); if(p.drunk) pop(p.x+(s.side<0?14:-14),p.y-14,'はっ！','#FFE0A0'); p.x+=s.side<0?10:-10; }
+    else if((p.state==='stand'||p.state==='seek')&&p.dest<=S.k&&p.type!=='old'){ p.state='leave'; p.door=doorOf(p); }
+    else if(p.state==='seat'&&p.drunk&&rnd()<.25) { p.dest=S.k+1+Math.floor(rnd()*2); } }
+  // getting on
+  const standing=S.ppl.filter(p=>!p.me&&(p.state==='stand'||p.state==='seek')).length;
+  let nOn=Math.max(0,Math.min(12,l.stand-standing+Math.floor(rnd()*l.board)-1));
+  for(let n=0;n<nOn;n++){ const dy=pick(DOORS), side=rnd()<.5?-1:1, a=aislePt(); a.y=clamp(dy+(rnd()-.5)*160,TOPY+20,BOTY-20);
+    const p=mkPerson(pick(['oba','stu','stu','sal','sal']),side<0?6:W-6,dy+(rnd()-.5)*20,{state:'board',dest:randDest(S.k),seeker:rnd()<l.seekP}); p.home=a; S.ppl.push(p); }
+  // an elderly passenger gets on and stands right in front of you
+  if(l.old.includes(S.k)&&S.me.state==='seat'){ const s=S.me.seat, dy=DOORS.reduce((a,b)=>Math.abs(b-s.y)<Math.abs(a-s.y)?b:a);
+    const p=mkPerson('old',s.side<0?6:W-6,dy,{state:'stand',dest:L().st-1,oldFor:s}); p.home={x:s.fx,y:s.y}; S.ppl.push(p); }
+  announce();
+}
+function doorOf(p){ const dy=DOORS.reduce((a,b)=>Math.abs(b-p.y)<Math.abs(a-p.y)?b:a); const side=p.fromSeat?p.fromSeat.side:(p.x<180?-1:1); return {x:side<0?-14:W+14,y:dy}; }
+function answer(yes){
+  const ev=S.ev; if(!ev) return; S.ev=null; $('evBox').hidden=true; const old=ev.old, me=S.me;
+  if(yes){ const s=me.seat; s.who=old; old.state='seat'; old.seat=s; old.x=s.x; old.y=s.y; old.dest=L().st; me.state='stand'; me.seat=null; me.x=s.fx; me.y=s.y+(s.y>BOTY-40?-20:20); me.vx=me.vy=0;
+    S.toku++; S.yields++; S.score+=300; pop(s.x+(s.side<0?28:-28),s.y-18,'ありがとうねぇ','#FFF4A0'); pop(me.x,me.y-20,'徳 +1　+300','#B0FFB0'); sfx('toku'); say('🙏 席をゆずった。徳が上がった！'); }
+  else { S.toku--; S.sleeps++; pop(old.x,old.y-18,'じーっ…','#C8D0FF'); say('😴 寝たふり… 徳が下がった'); sfx('miss'); old.home={x:old.x,y:old.y}; }
+}
+function finish(){
+  const l=L(); S.scene='result'; S.resT=0; $('evBox').hidden=true; S.ev=null; sfx(S.seatSt?'clear':'bad');
+  const sc=S.score; S.lastClear=S.seatSt>0;
+  const nb=sc>S.best.s[S.li]; if(nb){ S.best.s[S.li]=sc; saveBest(); }
+  const tk=S.toku>=2?'仏さま':S.toku===1?'いい人':S.toku===0?'ふつう':'ちょっと冷たい';
+  $('resTitle').textContent=S.me.state==='seat'?`${stName(l.st-1)}に到着！`:S.seatSt?`${stName(l.st-1)}に到着`:'ずっと立ちっぱなし…';
+  $('resScore').textContent=`${sc} 点${nb&&!S.auto?' 🎉':''}`;
+  $('resText').textContent=`${l.icon} ${l.n}\n座っていた区間 ${S.seatSt} / ${l.st-1} 駅\n徳 ${S.toku>0?'+':''}${S.toku}（${tk}）${S.yields?`　ゆずった ${S.yields}回`:''}${S.sleeps?`　寝たふり ${S.sleeps}回`:''}\nベスト ${S.best.s[S.li]} 点`;
+  $('nextBtn').hidden=S.li>=LINES.length-1; $('resultOv').hidden=false;
+}
+
+/* ================= auto: read the cues, stand in front, beat the rivals ================= */
+function autoTick(){
+  const me=S.me; S.autoHold=false;
+  if(me.state==='seat'){ S.target=null; return; }
+  const rivals=S.ppl.filter(p=>!p.me&&(p.state==='stand'||p.state==='seek'||p.state==='board')&&p.seeker);
+  let best=null,bv=-1e9,goSit=false;
+  for(const s of SEATS){ const fr={x:s.fx,y:s.y}; const d=Math.hypot(me.x-s.fx,me.y-s.y); let v;
+    if(!s.who&&!blockedSeat(s)){ const rd=Math.min(1e9,...rivals.map(p=>Math.hypot(p.x-s.x,p.y-s.y)*(60/p.sp))); v=1000-d-(rd<d-6?700:0); if(v>bv){ bv=v; best=s; goSit=true; } continue; }
+    const p=s.who; if(!p||p.me) continue;
+    const crowd=S.ppl.filter(o=>!o.me&&o.state==='stand'&&Math.hypot(o.x-fr.x,o.y-fr.y)<14).length;
+    if(p.cue==='bag') v=650-d*1.2-crowd*160;
+    else if(p.drunk) v=220-d*1.1-crowd*120;
+    else v=120-d*1.3-crowd*120;
+    if(v>bv){ bv=v; best=s; goSit=false; } }
+  if(!best){ S.target=null; return; }
+  const t=goSit?{x:best.x,y:best.y}:{x:best.fx,y:best.y};
+  const d=Math.hypot(me.x-t.x,me.y-t.y);
+  const lurching=S.phase==='run'&&(S.pt>RUN_T-BRAKE_T-.3||S.pt<ACC_T);
+  if(lurching&&!goSit&&d<22){ S.autoHold=true; S.target=null; return; }
+  S.target=t;
+}
+
+/* ================= drawing ================= */
+function rr(x,y,w,h,r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
+function drawOutside(){
+  const stop=S.phase==='stop'&&S.scene!=='title';
+  for(const side of [-1,1]){ const x0=side<0?0:WALL1+3, w=side<0?WALL0-3:W-WALL1-3;
+    if(stop){ g.fillStyle='#B8B8B0'; g.fillRect(x0,TOPY,w,H-TOPY); g.fillStyle='#F0D040'; g.fillRect(side<0?x0+w-6:x0+3,TOPY,3,H-TOPY);
+      g.fillStyle='rgba(60,60,80,.6)'; for(let k=0;k<8;k++){ g.beginPath(); g.arc(x0+w/2,TOPY+40+k*62+(side*13),4,0,7); g.fill(); } }
+    else { g.fillStyle=S.li===2?'#1A2240':'#8CC8F0'; g.fillRect(x0,TOPY,w,H-TOPY);
+      const off=S.scroll%640;
+      for(let k=0;k<12;k++){ const y=TOPY+((k*71+off*(side<0?1:1.1))%640)-60; g.fillStyle=S.li===2?(k%3?'#2A3050':'#F0E080'):['#E0C8A0','#A8C890','#C8A0A0','#9AB8D0'][k%4]; g.fillRect(x0+2,y,w-4,28+(k%3)*10); } } }
+}
+function drawPerson(p){
+  const T=TYPES[p.type]; const seated=p.state==='seat';
+  g.save(); g.translate(p.x,p.y);
+  if(seated){ const sd=p.seat.side; g.fillStyle=T.body; g.fillRect(sd<0?6:-16,-6,10,4); g.fillRect(sd<0?6:-16,2,10,4); g.fillStyle='#2A2A2A'; g.fillRect(sd<0?15:-17,-6,3,4); g.fillRect(sd<0?15:-17,2,3,4); }
+  if(p.me){ g.strokeStyle='#FFE040'; g.lineWidth=3; g.beginPath(); g.arc(0,0,13,0,7); g.stroke(); }
+  // shoulders + head
+  const sh=seated?(p.seat.side<0?Math.PI/2:-Math.PI/2):0;
+  g.rotate(sh);
+  g.fillStyle=T.body; g.beginPath(); g.ellipse(0,1,11,7,0,0,7); g.fill(); g.strokeStyle='rgba(0,0,0,.25)'; g.lineWidth=1; g.stroke();
+  if(p.type==='stu'||p.type==='sal'){ g.fillStyle=p.type==='sal'?'#E8E8F0':'#E0E0E0'; g.fillRect(-1.5,-6,3,4); }
+  g.fillStyle='#F0C8A0'; g.beginPath(); g.arc(0,-1,5.2,0,7); g.fill(); g.fillStyle=T.hair; g.beginPath(); g.arc(0,-2,5.2,Math.PI*.95,Math.PI*2.05); g.fill();
+  if(p.type==='oba'){ g.fillStyle='#9A5AAA'; for(const a of [0,1.2,2.4,3.6,4.8]){ g.beginPath(); g.arc(Math.cos(a)*4,-1+Math.sin(a)*4,2.2,0,7); g.fill(); } }
+  if(p.me){ g.fillStyle='#E04A2A'; g.beginPath(); g.arc(0,-1,5.6,Math.PI,0); g.fill(); g.fillRect(-2,-9,4,4); }
+  g.restore();
+  if(p.cue){ const e=p.cue==='bag'?'👜':p.cue==='phone'?'📱':'💤'; const bob=Math.sin(S.t*6)*1.5;
+    g.font='13px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(e,p.x+(p.seat&&p.seat.side<0?16:-16),p.y-10+bob); g.textBaseline='alphabetic'; }
+  if(p.type==='old'){ g.font='12px sans-serif'; g.textAlign='center'; g.fillText('👵',p.x,p.y-13); }
+}
+function drawCar(){
+  // floor
+  g.fillStyle='#CFC8B4'; g.fillRect(WALL0,TOPY,WALL1-WALL0,H-TOPY);
+  g.strokeStyle='rgba(0,0,0,.05)'; g.lineWidth=1; for(let y=TOPY+10;y<H;y+=20){ g.beginPath(); g.moveTo(WALL0,y); g.lineTo(WALL1,y); g.stroke(); }
+  // walls and doors
+  const open=S.phase==='stop'&&S.pt<STOP_T-.6&&S.scene==='play';
+  g.fillStyle='#8A949E';
+  for(const x of [WALL0-3,WALL1]){ let y=TOPY; for(const dy of DOORS){ g.fillRect(x,y,3,Math.max(0,dy-DOOR_HW-y)); y=dy+DOOR_HW; } g.fillRect(x,y,3,Math.max(0,H-y)); }
+  for(const dy of DOORS) for(const side of [-1,1]){ const x=side<0?WALL0-3:WALL1;
+    const sl=open?Math.min(1,S.pt*3):S.phase==='stop'&&S.scene==='play'?Math.max(0,(STOP_T-S.pt)*1.6):0;
+    g.fillStyle='#B8C4CE'; g.fillRect(x,dy-DOOR_HW-sl*16,3,DOOR_HW-1); g.fillRect(x,dy+1+sl*16,3,DOOR_HW-1);
+    g.fillStyle='#E8D040'; g.fillRect(side<0?WALL0:WALL1-5,dy-DOOR_HW,5,DOOR_HW*2); }
+  // seats
+  for(const s of SEATS){ g.fillStyle='#3E7A5A'; rr(s.x-13,s.y-13,26,26,4); g.fill(); g.fillStyle='#2E6A4A'; g.fillRect(s.side<0?WALL0:s.x+9,s.y-13,4,26);
+    if(!s.who&&!blockedSeat(s)&&S.scene==='play'){ g.strokeStyle=`rgba(255,240,120,${.55+Math.sin(S.t*8)*.35})`; g.lineWidth=2; rr(s.x-12,s.y-12,24,24,4); g.stroke(); } }
+  // straps (they swing with the train)
+  for(const x of [AISLE0+16,AISLE1-16]) for(let y=TOPY+24;y<H-10;y+=30){ g.strokeStyle='rgba(80,80,80,.35)'; g.lineWidth=2; g.beginPath(); g.arc(x,y-S.sway*6,3.5,0,7); g.stroke(); }
+}
+function drawLED(){
+  g.fillStyle='#14181C'; g.fillRect(0,0,W,TOPY-2);
+  g.fillStyle='#FF9A2A'; g.font='800 13px "M PLUS Rounded 1c",sans-serif'; g.textAlign='left';
+  const l=L(); let txt;
+  if(S.scene==='title') txt='🚃 満員電車で座りたい';
+  else if(S.phase==='stop') txt=`${stName(S.k)}　（あと ${l.st-1-S.k} 駅）`;
+  else txt=`つぎは ${stName(S.k+1)}`;
+  g.fillText(txt,8,21);
+  if(S.scene!=='title'){ g.textAlign='right'; g.fillStyle='#7AF0A0'; g.fillText(`${S.score}点${S.toku?` 徳${S.toku>0?'+':''}${S.toku}`:''}`,W-8,21); }
+}
+function draw(){
+  g.setTransform(1,0,0,1,0,0);
+  const sx=S.sway*1.5; g.fillStyle='#EEF1F4'; g.fillRect(0,0,W,H);
+  g.save(); g.translate(0,sx);
+  drawOutside(); drawCar();
+  const order=[...S.ppl].sort((a,b)=>(a.state==='seat'?0:1)-(b.state==='seat'?0:1)||a.y-b.y);
+  for(const p of order) drawPerson(p);
+  if(S.target&&S.scene==='play'&&!S.auto){ g.strokeStyle='rgba(255,255,255,.7)'; g.lineWidth=2; g.beginPath(); g.arc(S.target.x,S.target.y,7,0,7); g.stroke(); }
+  if(S.me&&S.scene==='play'){ g.fillStyle='#fff'; g.strokeStyle='rgba(0,0,0,.5)'; g.lineWidth=3; g.font='800 10px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.strokeText('あなた',S.me.x,S.me.y-15); g.fillText('あなた',S.me.x,S.me.y-15); }
+  for(const p of S.parts){ g.globalAlpha=Math.max(0,1-p.t/1.4); g.fillStyle=p.col; g.strokeStyle='rgba(0,0,0,.55)'; g.lineWidth=3; g.font='800 12px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.strokeText(p.txt,p.x,p.y-p.t*18); g.fillText(p.txt,p.x,p.y-p.t*18); }
+  g.globalAlpha=1; g.restore();
+  drawLED();
+  if(S.scene==='play'&&S.phase==='run'&&S.pt>RUN_T-BRAKE_T-.6&&S.me.state!=='seat'&&!S.hold){ g.fillStyle=`rgba(255,80,40,${.6+Math.sin(S.t*14)*.3})`; g.font='800 13px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.fillText('⚠ ブレーキ！ つり革につかまって',180,TOPY+18); }
+  if(S.msg&&S.msgT<2.4){ g.globalAlpha=Math.min(1,2.4-S.msgT); g.fillStyle='rgba(20,30,40,.78)'; rr(26,232,308,36,10); g.fill(); g.fillStyle='#FFF4C8'; g.font='800 14px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.fillText(S.msg,180,256); g.globalAlpha=1; }
+  if(S.auto){ g.fillStyle='rgba(30,40,50,.7)'; g.font='800 11px sans-serif'; g.textAlign='right'; g.fillText('🤖 AUTO',W-8,H-8); }
+}
+
+/* ================= UI ================= */
+function renderLines(){ $('lineList').innerHTML=LINES.map((l,i)=>`<button class="go${i?' alt':''}" data-i="${i}">${l.icon} ${l.n}<small>${l.note}　ベスト ${S.best.s[i]}点</small></button>`).join('');
+  $('lineList').querySelectorAll('button').forEach(b=>b.onclick=()=>{ ac(); user(); startLine(+b.dataset.i); }); }
+function toTitle(){ S.scene='title'; S.resT=0; $('resultOv').hidden=true; $('evBox').hidden=true; S.ev=null; $('titleOv').hidden=false; renderLines(); }
+function setAuto(v){ S.auto=!!v; $('autoBtn').setAttribute('aria-pressed',S.auto); S.resT=0; S.autoHold=false; if(!S.auto) S.target=null; if(S.auto&&S.scene==='title') startLine(0); }
+function user(){ if(S.auto){ setAuto(false); S.target=null; } }
+function toCar(e){ const r=cv.getBoundingClientRect(); return {x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H}; }
+let holding=false;
+cv.addEventListener('pointerdown',e=>{ if(S.scene!=='play'||S.ev) return; e.preventDefault(); ac(); user(); holding=true; try{ cv.setPointerCapture(e.pointerId); }catch(_){} S.target=toCar(e); });
+cv.addEventListener('pointermove',e=>{ if(holding) S.target=toCar(e); });
+const release=()=>{ holding=false; S.target=null; };
+cv.addEventListener('pointerup',release); cv.addEventListener('pointercancel',release);
+const hb=$('holdBtn');
+hb.addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); user(); S.holdUser=true; try{ hb.setPointerCapture(e.pointerId); }catch(_){} });
+for(const ev of ['pointerup','pointercancel','lostpointercapture']) hb.addEventListener(ev,()=>{ S.holdUser=false; });
+$('yieldBtn').onclick=()=>{ ac(); user(); answer(true); };
+$('sleepBtn').onclick=()=>{ ac(); user(); answer(false); };
+$('autoBtn').onclick=()=>{ ac(); setAuto(!S.auto); };
+$('autoStartBtn').onclick=()=>{ ac(); setAuto(true); };
+$('muteBtn').onclick=()=>{ ac(); setMute(!muted); };
+$('nextBtn').onclick=()=>{ ac(); user(); startLine(S.li+1); };
+$('retryBtn').onclick=()=>{ ac(); user(); startLine(S.li); };
+$('menuBtn').onclick=()=>{ ac(); user(); toTitle(); };
+const KM={arrowleft:'left',a:'left',arrowright:'right',d:'right',arrowup:'up',w:'up',arrowdown:'down',s:'down'};
+addEventListener('keydown',e=>{ const k=e.key.toLowerCase();
+  if(k==='o'){ ac(); setAuto(!S.auto); return; } if(k==='m'){ ac(); setMute(!muted); return; }
+  if(S.ev&&(k==='y'||k==='n')){ ac(); user(); answer(k==='y'); return; }
+  if(KM[k]){ e.preventDefault(); user(); S.keys[KM[k]]=true; return; }
+  if(k===' '){ e.preventDefault(); ac(); user(); if(S.scene==='play') S.holdUser=true; else if(S.scene==='result'&&!e.repeat) ($('nextBtn').hidden?$('retryBtn'):$('nextBtn')).click(); } });
+addEventListener('keyup',e=>{ const k=e.key.toLowerCase(); if(KM[k]) S.keys[KM[k]]=false; if(k===' ') S.holdUser=false; });
+addEventListener('blur',()=>{ S.keys={}; S.holdUser=false; });
+
+/* ================= sound ================= */
+let AC=null, muted=false; try{ muted=localStorage.getItem('denshaMute')==='1'; }catch(e){}
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==='suspended') AC.resume(); }
+function tone(f,d,type='sine',v=.07,delay=0,f2){ if(muted||!AC) return; const t=AC.currentTime+delay, o=AC.createOscillator(), gn=AC.createGain(); o.type=type; o.frequency.setValueAtTime(f,t); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+d); gn.gain.setValueAtTime(v,t); gn.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(gn).connect(AC.destination); o.start(t); o.stop(t+d+.02); }
+function sfx(k){
+  if(k==='chime'){ tone(880,.5,'sine',.06); tone(698,.7,'sine',.06,.35); }
+  else if(k==='door'){ tone(1046,.12,'square',.03); tone(1046,.12,'square',.03,.2); tone(220,.4,'triangle',.05,.3,140); }
+  else if(k==='brake') tone(1800,.5,'sawtooth',.015,0,1400);
+  else if(k==='sit'){ tone(330,.15,'triangle',.07,0,200); [523,659,784].forEach((q,i)=>tone(q,.12,'square',.04,.1+i*.08)); }
+  else if(k==='miss') [392,330].forEach((q,i)=>tone(q,.18,'triangle',.06,i*.13));
+  else if(k==='bump') tone(180,.1,'square',.05,0,120);
+  else if(k==='hm') tone(500,.3,'sine',.05,0,380);
+  else if(k==='toku') [659,784,988,1318].forEach((q,i)=>tone(q,.18,'sine',.06,i*.1));
+  else if(k==='clear') [523,659,784,1046,784,1046].forEach((q,i)=>tone(q,.16,'square',.05,i*.1));
+  else if(k==='bad') [392,330,262].forEach((q,i)=>tone(q,.2,'triangle',.06,i*.15));
+}
+// the station announcement, read aloud (Web Speech API) when sound is on
+function speak(t){ if(muted||S.manual||!AC||!('speechSynthesis' in window)) return; try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.lang='ja-JP'; u.rate=1.05; u.pitch=1.1; u.volume=.8; speechSynthesis.speak(u); }catch(e){} }
+function setMute(m){ muted=m; $('muteBtn').textContent=m?'音 OFF':'音 ON'; try{ localStorage.setItem('denshaMute',m?'1':'0'); }catch(e){} if(m) try{ speechSynthesis.cancel(); }catch(e){} }
+
+setMute(muted); toTitle();
+let last=performance.now();
+function loop(now){ const dt=Math.min(.05,(now-last)/1000); last=now; if(!S.manual) update(dt); draw(); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+
+window.__densha={ get S(){ return S; }, setAuto, manual(v=true){ S.manual=v; }, step(dt=1/60){ update(dt); }, seed(v){ seed=(Math.abs(v|0)%2147483646)+1; }, startLine, answer, LINES, SEATS };
+})();
+</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>
