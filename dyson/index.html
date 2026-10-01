@@ -124,8 +124,10 @@ let seed=(Date.now()%2147483646)+1; const rnd=()=>{ seed=seed*16807%2147483647; 
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const W=360,H=480, TOP=44, AREA={x0:14,x1:346,y0:TOP+50,y1:H-40};
 const lr=(a,b)=>Math.exp(Math.log(a)+(Math.log(b)-Math.log(a))*rnd());      // log-uniform money
-function yen(v){ v=Math.floor(v); if(v<1e4) return v.toLocaleString()+'円';
-  const u=[[1e12,'兆'],[1e8,'億'],[1e4,'万']]; for(const [d,n] of u) if(v>=d){ const x=v/d; return (x>=100?Math.floor(x).toLocaleString():x>=10?x.toFixed(1):x.toFixed(2))+n+'円'; } }
+// money never goes past 10,000 muryotaisu (1e72), the end of the Japanese number names, so it can't overflow to Infinity
+const MONEY_CAP=1e72;
+function yen(v){ v=Math.floor(Math.min(isFinite(v)?v:MONEY_CAP,MONEY_CAP)); if(!(v>0)) v=0; if(v<1e4) return v.toLocaleString()+'円';
+  const u=[[1e68,'無量大数'],[1e64,'不可思議'],[1e60,'那由他'],[1e56,'阿僧祇'],[1e52,'恒河沙'],[1e48,'極'],[1e44,'載'],[1e40,'正'],[1e36,'澗'],[1e32,'溝'],[1e28,'穣'],[1e24,'𥝱'],[1e20,'垓'],[1e16,'京'],[1e12,'兆'],[1e8,'億'],[1e4,'万']]; for(const [d,n] of u) if(v>=d){ const x=v/d; return (x>=100?Math.floor(x).toLocaleString():x>=10?x.toFixed(1):x.toFixed(2))+n+'円'; } }
 
 /* ================= world rich list =================
    (wealth in yen, rank of the person who has it) at 1 USD = 157 JPY (Sep 2026).
@@ -242,7 +244,7 @@ function faint(){ S.scene='down'; sfx('lose'); story('たおれた…',`たた�
 function endingStart(name){
   hideAll(); S.scene='ending'; S.ending={name:name||'ダイソンX',t:0,rate:1e12,spent:0,spendT:0,msgs:[]}; sfx('clear');
 }
-function spendMoney(){ const E=S.ending; if(!E) return; const cut=S.money*.5; S.money-=cut; E.spent+=cut; E.rate*=1.8; E.msgs.push({t:0,txt:`-${yen(cut)}… でも、すぐ増える`}); sfx('coin'); }
+function spendMoney(){ const E=S.ending; if(!E) return; const cut=S.money*.5; S.money-=cut; E.spent=Math.min(MONEY_CAP,E.spent+cut); E.rate=Math.min(MONEY_CAP,E.rate*1.8); E.msgs.push({t:0,txt:`-${yen(cut)}… でも、すぐ増える`}); sfx('coin'); }
 
 /* ================= player actions ================= */
 function nearestTouchable(){ const p=S.p; let best=null,bd=26; for(const n of S.npcs){ if(n.state==='drained'||n.money<=0) continue; const d=Math.hypot(n.x-p.x,n.y-p.y); if(d<bd){ bd=d; best=n; } } return best; }
@@ -435,7 +437,7 @@ function autoTick(dt){
 
 /* ================= ending ================= */
 function updateEnding(dt){
-  const E=S.ending; E.t+=dt; E.rate*=Math.pow(1.35,dt); S.money+=E.rate*dt;
+  const E=S.ending; E.t+=dt; E.rate=Math.min(MONEY_CAP,E.rate*Math.pow(1.35,dt)); S.money=Math.min(MONEY_CAP,S.money+E.rate*dt);
   for(const m of E.msgs) m.t+=dt; E.msgs=E.msgs.filter(m=>m.t<2);
   if(S.auto){ E.spendT+=dt; if(E.spendT>1.2&&E.t<9){ E.spendT=0; spendMoney(); } if(E.t>16){ titleScreen(); } }
 }
@@ -582,7 +584,7 @@ function drawEnding(){
   g.fillStyle='#fff'; g.font='800 20px "M PLUS Rounded 1c",sans-serif'; g.fillText(`「${E.name}」`,W/2,196);
   g.font='800 12px "M PLUS Rounded 1c",sans-serif'; g.fillStyle='#C8B8E0'; g.fillText('世界中の投稿が、広告が、課金が、',W/2,222); g.fillText('ぜんぶマネーダイソンのお金になる。',W/2,240);
   g.fillStyle='#F2C23A'; g.font='800 22px "M PLUS Rounded 1c",sans-serif'; g.fillText(yen(S.money),W/2,290);
-  g.fillStyle='#C8B8E0'; g.font='800 11px "M PLUS Rounded 1c",sans-serif'; g.fillText(`1秒で +${yen(E.rate)}`,W/2,310);
+  g.fillStyle='#C8B8E0'; g.font='800 11px "M PLUS Rounded 1c",sans-serif'; g.fillText(S.money>=MONEY_CAP?'∞ 無量大数をこえて、もう数えられない':`1秒で +${yen(E.rate)}`,W/2,310);
   for(const m of E.msgs){ g.globalAlpha=Math.max(0,1-m.t/2); g.fillStyle='#FF8A7A'; g.font='800 12px "M PLUS Rounded 1c",sans-serif'; g.fillText(m.txt,W/2,332-m.t*16); g.globalAlpha=1; }
   // spend button
   g.fillStyle='#E0433D'; g.beginPath(); g.roundRect?g.roundRect(100,404,160,44,14):g.rect(100,404,160,44); g.fill(); g.fillStyle='#fff'; g.font='800 15px "M PLUS Rounded 1c",sans-serif'; g.fillText('お金を使う',W/2,432);
