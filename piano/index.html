@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="1〜3さいの子向け。どうぶつの鍵盤をさわると音が鳴るピアノ。ひかった鍵盤をおすと、きらきらぼしなどの童謡がひける。">
+<title>どうぶつピアノ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&display=swap">
+<style>
+:root{--bg:#F4F0FF;--ink:#3A2A4A;--card:#FFFFFF;--line:#DCD0F2;--mute:#8A7AA0;--pink:#9A6AE0}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink)}
+body{font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
+#top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:17px;font-weight:800;color:#7A4AC8}
+.mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--card);cursor:pointer;white-space:nowrap}
+.mini[aria-pressed=true]{background:var(--pink);border-color:var(--pink);color:#fff}
+#app{height:100vh;height:100dvh;display:flex;flex-direction:column;margin:0;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));padding-top:calc(6px + env(safe-area-inset-top,0px))}
+#wrap{position:relative;flex:1;min-height:0;margin-top:4px}
+#cv{display:block;width:100%;height:100%;border-radius:18px;touch-action:none}
+#bar{position:absolute;left:6px;right:6px;top:6px;display:flex;gap:5px;justify-content:center}
+.sc{flex:1;max-width:64px;height:52px;border:3px solid var(--line);border-radius:18px;background:rgba(255,255,255,.88);font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;position:relative}
+.sc.on{border-color:var(--pink);box-shadow:0 0 0 3px #E4D8FF}
+.sc i{position:absolute;right:2px;top:-2px;font-size:12px;font-style:normal}
+.sc.endless{max-width:72px;font-size:12px;font-weight:800;flex-direction:column;line-height:1.1}
+.sc.endless.on{background:#FFE27A;border-color:#E0A820}
+.keys{font-size:11px;color:var(--mute);text-align:center;margin:4px 0 0}
+@media (pointer:coarse){.keys{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>どうぶつピアノ</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false" title="Oキー">🤖 オート</button>
+    <button class="mini" id="muteBtn">音 ON</button>
+  </div>
+  <div id="wrap"><canvas id="cv" width="360" height="480" aria-label="どうぶつの鍵盤のピアノ"></canvas><div id="bar"></div></div>
+  <p class="keys">A S D F G H J K で鍵盤　1〜5 きょくをえらぶ　E ずっと　O オート　M 音</p>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+let seed=(Date.now()%2147483646)+1; const rnd=()=>{ seed=seed*16807%2147483647; return (seed-1)/2147483646; };
+const clamp=(v,a,b)=>v<a?a:v>b?b:v, pick=a=>a[Math.floor(rnd()*a.length)];
+const W=360; let H=480;   // H follows the phone's height so the keys reach the bottom of the screen
+const cv=$('cv'), SG=cv.getContext('2d');
+/* ================= full-screen stage (same as the other kids' games) ================= */
+const stage=document.createElement('canvas'); stage.width=720; stage.height=960;
+const FIT={s:1,dx:0,dy:0};
+function fitCanvas(){ const r=cv.getBoundingClientRect(); const dpr=Math.min(2,window.devicePixelRatio||1); const w=Math.max(1,Math.round(r.width*dpr)), h=Math.max(1,Math.round(r.height*dpr)); if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; } }
+const edge=document.createElement('canvas'); const eg=edge.getContext('2d'); let edgeKey=null, edgeWait=0;
+function present(key){ if(key!==edgeKey){ edgeKey=key; edgeWait=2; } if(edgeWait>0&&--edgeWait===0){ edge.width=stage.width; edge.height=stage.height; eg.drawImage(stage,0,0); }
+  const src=edgeWait>0?stage:edge, sg=SG, SW=stage.width, SH=stage.height, cw=cv.width, ch=cv.height, s=Math.min(cw/SW,ch/SH), dw=SW*s, dh=SH*s, dx=(cw-dw)/2, dy=(ch-dh)/2; FIT.s=s; FIT.dx=dx; FIT.dy=dy;
+  if(dy>0){ sg.drawImage(src,0,0,SW,2,0,0,cw,dy+2); sg.drawImage(src,0,SH-2,SW,2,0,dy+dh-2,cw,ch-dy-dh+2); }
+  if(dx>0){ sg.drawImage(src,0,0,2,SH,0,dy,dx+2,dh); sg.drawImage(src,SW-2,0,2,SH,dx+dw-2,dy,cw-dx-dw+2,dh); }
+  sg.drawImage(stage,dx,dy,dw,dh); }
+function toStage(e){ const r=cv.getBoundingClientRect(), px=(e.clientX-r.left)/r.width*cv.width, py=(e.clientY-r.top)/r.height*cv.height;
+  return [clamp((px-FIT.dx)/FIT.s/2,0,W),clamp((py-FIT.dy)/FIT.s/2,0,H)]; }
+function layoutH(){ const r=cv.getBoundingClientRect(); H=Math.max(480,Math.round(360*r.height/Math.max(1,r.width))); stage.height=H*2; KEY_BOT=H; }
+addEventListener('resize',()=>{ fitCanvas(); layoutH(); }); fitCanvas();
+const g=stage.getContext('2d');
+
+/* ================= data ================= */
+// one octave, C4..C5, each key has an animal and a color
+const KEYS=[
+  {n:'ド',f:261.63,e:'🐶',c:'#FF6A6A'},{n:'レ',f:293.66,e:'🐱',c:'#FFA040'},{n:'ミ',f:329.63,e:'🐰',c:'#FFD23A'},{n:'ファ',f:349.23,e:'🐸',c:'#7AD05A'},
+  {n:'ソ',f:392.00,e:'🐻',c:'#4AC0E0'},{n:'ラ',f:440.00,e:'🐘',c:'#5A8AF0'},{n:'シ',f:493.88,e:'🐧',c:'#A07AF0'},{n:'ド',f:523.25,e:'🐥',c:'#FF7AC0'},
+];
+// old songs whose melodies are free to use (folk songs / traditional)
+const SONGS=[
+  {id:'free',ic:'🎹',n:'じゆうにひこう',notes:null},
+  {id:'kira',ic:'⭐',n:'きらきらぼし',notes:[0,0,4,4,5,5,4, 3,3,2,2,1,1,0, 4,4,3,3,2,2,1, 4,4,3,3,2,2,1, 0,0,4,4,5,5,4, 3,3,2,2,1,1,0]},
+  {id:'kaeru',ic:'🐸',n:'かえるのうた',notes:[0,1,2,3,2,1,0, 2,3,4,5,4,3,2, 0,0,0,0, 0,0,1,1,2,2,3,3,2,1,0]},
+  {id:'mary',ic:'🐑',n:'メリーさんのひつじ',notes:[2,1,0,1,2,2,2, 1,1,1, 2,4,4, 2,1,0,1,2,2,2, 2,1,1,2,1,0]},
+  {id:'london',ic:'🌉',n:'ロンドンばし',notes:[4,5,4,3,2,3,4, 1,2,3, 2,3,4, 4,5,4,3,2,3,4, 1,4,2,0]},
+];
+const KEY_TOP=250, KW=W/8; let KEY_BOT=480; layoutH();
+const S={endless:(()=>{ try{ return localStorage.getItem('pianoEndless')==='1'; }catch(e){ return false; } })(),
+  si:0,pos:0,lit:[],hop:[],notes:[],parts:[],doneT:0,t:0,auto:false,manual:false,autoT:0,idle:0,ptr:{},count:0,
+  best:(()=>{ try{ return JSON.parse(localStorage.getItem('pianoBest')||'null')||{notes:0,songs:{}}; }catch(e){ return {notes:0,songs:{}}; } })()};
+for(let i=0;i<8;i++){ S.lit[i]=0; S.hop[i]=0; }
+function saveBest(){ if(S.auto) return; try{ localStorage.setItem('pianoBest',JSON.stringify(S.best)); }catch(e){} }
+const song=()=>SONGS[S.si];
+
+function startSong(i){ S.si=(i+SONGS.length)%SONGS.length; S.pos=0; S.doneT=0; S.idle=0; S.notes=[]; S.parts=[]; renderBar(); speak(song().notes?`${song().n}。ひかった ところを おしてね`:'すきなように ひいてね'); }
+
+/* ================= playing ================= */
+function press(i){
+  ac(); playNote(KEYS[i].f); S.lit[i]=1; S.hop[i]=1; S.count++; S.best.notes++; S.idle=0;
+  S.notes.push({x:i*KW+KW/2,y:KEY_TOP-20,t:0,c:KEYS[i].c,s:pick(['♪','♫','♩'])});
+  const sg=song();
+  if(sg.notes&&S.doneT<=0){
+    if(sg.notes[S.pos]===i){ S.pos++; if(S.pos>=sg.notes.length){ S.doneT=3.4; S.best.songs[sg.id]=(S.best.songs[sg.id]||0)+1; saveBest(); renderBar(); } }
+  }
+  if(!sg.notes&&S.count%16===0){ for(let k=0;k<10;k++) S.parts.push({k:'star',x:rnd()*W,y:60+rnd()*150,vx:(rnd()-.5)*60,vy:-20-rnd()*40,t:0}); }
+}
+function keyAt(x,y){ if(y<KEY_TOP-30) return -1; return clamp(Math.floor(x/KW),0,7); }
+
+/* ================= update ================= */
+function update(dt){
+  S.t+=dt; S.idle+=dt;
+  for(let i=0;i<8;i++){ S.lit[i]=Math.max(0,S.lit[i]-dt*3); S.hop[i]=Math.max(0,S.hop[i]-dt*2.5); }
+  for(const n of S.notes){ n.t+=dt; n.y-=60*dt; n.x+=Math.sin(n.t*5)*20*dt; } S.notes=S.notes.filter(n=>n.t<1.6);
+  for(const p of S.parts){ p.t+=dt; p.x+=p.vx*dt; p.y+=p.vy*dt; if(p.k==='conf'){ p.rot+=dt*5; } } S.parts=S.parts.filter(p=>p.t<(p.k==='conf'?4:1.2));
+  if(S.doneT>0){ const was=S.doneT; S.doneT-=dt; if(was>2.8&&S.doneT<=2.8){ speak('じょうず！ ひけたね'); fanfare(); confetti(); } if(S.doneT<=0){ S.doneT=0; startSong(S.endless?S.si:(S.si+1)%SONGS.length||1); } }
+  if(S.auto) autoTick(dt);
+}
+// auto: plays the song at a steady beat; in free play it improvises a little tune
+function autoTick(dt){ S.autoT-=dt; if(S.autoT>0||S.doneT>0) return; const sg=song();
+  if(sg.notes){ S.autoT=.42; press(sg.notes[S.pos]); }
+  else { S.autoT=.3+rnd()*.2; S.walk=clamp((S.walk||3)+pick([-2,-1,1,1,2,0]),0,7); press(S.walk); if(S.count>40){ S.count=0; startSong(1); } } }
+
+/* ================= drawing ================= */
+function emoji(e,x,y,s){ g.font=`${s}px sans-serif`; g.textAlign='center'; g.textBaseline='middle'; g.fillText(e,x,y); g.textBaseline='alphabetic'; }
+function confetti(){ for(let k=0;k<70;k++) S.parts.push({k:'conf',x:rnd()*W,y:-20-rnd()*200,vx:(rnd()-.5)*40,vy:80+rnd()*80,t:0,rot:rnd()*6,col:pick(['#FF5A6A','#FFD23A','#6AD0FF','#7AF07A','#B07AF0','#FF9A3A'])}); }
+function draw(){
+  g.setTransform(2,0,0,2,0,0);
+  const gr=g.createLinearGradient(0,0,0,KEY_TOP); gr.addColorStop(0,'#2A1A5A'); gr.addColorStop(1,'#7A5AC8'); g.fillStyle=gr; g.fillRect(0,0,W,KEY_TOP);
+  // a little concert stage with the animal band
+  g.fillStyle='rgba(255,255,255,.7)'; for(let k=0;k<26;k++){ g.beginPath(); g.arc((k*67)%W,(k*29)%120+70,1.5+(k%3)*.5,0,7); g.fill(); }
+  g.fillStyle='#C8783A'; g.fillRect(0,KEY_TOP-40,W,34); g.fillStyle='#A85A2A'; g.fillRect(0,KEY_TOP-8,W,8);
+  for(let i=0;i<8;i++){ const x=i*KW+KW/2, h=S.hop[i], y=KEY_TOP-56-Math.sin(h*Math.PI)*36; g.globalAlpha=.25+S.lit[i]*.75; g.fillStyle=KEYS[i].c; g.beginPath(); g.ellipse(x,KEY_TOP-36,20,6,0,0,7); g.fill(); g.globalAlpha=1; emoji(KEYS[i].e,x,y,34+h*10); }
+  // song title & progress
+  const sg=song();
+  g.fillStyle='#FFF'; g.font='800 18px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.fillText(`${sg.ic} ${sg.n}`,W/2,96);
+  if(sg.notes){ const n=sg.notes.length, w=Math.min(9,300/n); for(let k=0;k<n;k++){ g.fillStyle=k<S.pos?KEYS[sg.notes[k]].c:'rgba(255,255,255,.3)'; g.beginPath(); g.arc(W/2-(n-1)*w/2+k*w,112,k===S.pos?4:3,0,7); g.fill(); } }
+  for(const n of S.notes){ g.globalAlpha=Math.max(0,1-n.t/1.6); g.fillStyle=n.c; g.font='800 26px sans-serif'; g.textAlign='center'; g.fillText(n.s,n.x,n.y); } g.globalAlpha=1;
+  // keys
+  const next=sg.notes&&S.doneT<=0?sg.notes[S.pos]:-1;
+  for(let i=0;i<8;i++){ const x=i*KW, k=KEYS[i], lit=S.lit[i], down=lit>.6?4:0;
+    g.fillStyle='#E8E0F0'; g.fillRect(x+2,KEY_TOP+8,KW-4,KEY_BOT-KEY_TOP);
+    const kg=g.createLinearGradient(0,KEY_TOP,0,KEY_BOT); kg.addColorStop(0,'#FFFFFF'); kg.addColorStop(1,k.c); g.fillStyle=kg;
+    g.beginPath(); g.roundRect?g.roundRect(x+3,KEY_TOP+down,KW-6,KEY_BOT-KEY_TOP+20,12):g.rect(x+3,KEY_TOP+down,KW-6,KEY_BOT-KEY_TOP+20); g.fill();
+    if(lit>0){ g.fillStyle=`rgba(255,255,255,${lit*.6})`; g.fillRect(x+3,KEY_TOP+down,KW-6,KEY_BOT-KEY_TOP); }
+    if(i===next){ const pulse=.5+.5*Math.sin(S.t*8); g.strokeStyle=`rgba(255,220,60,${.6+pulse*.4})`; g.lineWidth=5; g.strokeRect(x+5,KEY_TOP+4+down,KW-10,KEY_BOT-KEY_TOP-14); emoji('⭐',x+KW/2,KEY_TOP+40+down,26+pulse*6); }
+    emoji(k.e,x+KW/2,KEY_BOT-90+down,30);
+    g.fillStyle='#4A3A5A'; g.font='800 13px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.fillText(k.n,x+KW/2,KEY_BOT-56+down); }
+  // a hint hand when the kid waits
+  if(next>=0&&S.idle>3&&!S.auto){ emoji('👆',next*KW+KW/2+8,KEY_TOP+120+Math.sin(S.t*6)*8,36); }
+  for(const p of S.parts){ g.globalAlpha=Math.max(0,1-p.t/(p.k==='conf'?4:1.2)); if(p.k==='star') emoji('✨',p.x,p.y,20); else { g.fillStyle=p.col; g.save(); g.translate(p.x,p.y); g.rotate(p.rot); g.fillRect(-5,-3,10,6); g.restore(); } } g.globalAlpha=1;
+  if(S.doneT>0&&S.doneT<2.8){ const k=Math.min(1,(2.8-S.doneT)*3); g.save(); g.translate(W/2,170); g.scale(.5+k*.5,.5+k*.5); g.fillStyle='#FFE45A'; g.font='800 40px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.lineWidth=8; g.strokeStyle='#5A2AA0'; g.strokeText('じょうず！',0,0); g.fillText('じょうず！',0,0); g.restore(); }
+  if(S.auto){ g.fillStyle='rgba(255,255,255,.7)'; g.font='800 11px sans-serif'; g.textAlign='left'; g.fillText('🤖 AUTO',8,KEY_TOP-46); }
+}
+
+/* ================= UI ================= */
+function toggleEndless(){ S.endless=!S.endless; try{ localStorage.setItem('pianoEndless',S.endless?'1':'0'); }catch(e){} speak(S.endless?'ずっと おなじ きょく':'じゅんばんに ひこう'); renderBar(); }
+function renderBar(){
+  $('bar').innerHTML=SONGS.map((x,i)=>`<button class="sc${i===S.si?' on':''}" data-i="${i}" aria-label="${x.n}">${x.ic}${S.best.songs[x.id]?'<i>⭐</i>':''}</button>`).join('')+`<button class="sc endless${S.endless?' on':''}" id="endlessBtn" aria-pressed="${!!S.endless}" title="Eキー">🔁<br>ずっと</button>`;
+  $('endlessBtn').onclick=()=>{ ac(); user(); toggleEndless(); };
+  $('bar').querySelectorAll('.sc[data-i]').forEach(b=>b.onclick=()=>{ ac(); user(); startSong(+b.dataset.i); });
+}
+function setAuto(v){ S.auto=!!v; $('autoBtn').setAttribute('aria-pressed',S.auto); S.autoT=.6; }
+function user(){ if(S.auto) setAuto(false); }
+// several fingers at once, and sliding across the keys plays each one
+cv.addEventListener('pointerdown',e=>{ e.preventDefault(); user(); try{ cv.setPointerCapture(e.pointerId); }catch(_){} const [x,y]=toStage(e); const k=keyAt(x,y); S.ptr[e.pointerId]=k; if(k>=0) press(k); else { const a=Math.floor(x/KW); if(y>KEY_TOP-100&&a>=0&&a<8){ S.hop[a]=1; cry(a); } } });
+cv.addEventListener('pointermove',e=>{ if(!(e.pointerId in S.ptr)) return; const [x,y]=toStage(e); const k=keyAt(x,y); if(k>=0&&k!==S.ptr[e.pointerId]){ S.ptr[e.pointerId]=k; press(k); } });
+const end=e=>{ delete S.ptr[e.pointerId]; };
+cv.addEventListener('pointerup',end); cv.addEventListener('pointercancel',end);
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+$('autoBtn').onclick=()=>{ ac(); setAuto(!S.auto); };
+$('muteBtn').onclick=()=>{ ac(); setMute(!muted); };
+const KB='asdfghjk';
+addEventListener('keydown',e=>{ if(e.repeat) return; const k=e.key.toLowerCase();
+  if(k==='o'){ ac(); setAuto(!S.auto); return; } if(k==='e'){ ac(); user(); toggleEndless(); return; } if(k==='m'){ ac(); setMute(!muted); return; }
+  if(k>='1'&&k<='5'){ ac(); user(); startSong(+k-1); return; }
+  const i=KB.indexOf(k); if(i>=0){ user(); press(i); } });
+
+/* ================= sound ================= */
+let AC=null, muted=false; try{ muted=localStorage.getItem('pianoMute')==='1'; }catch(e){}
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==='suspended') AC.resume(); }
+// a soft toy-piano tone: a sine with a quiet octave on top, quick attack and a long decay
+function playNote(f){ if(muted||!AC) return; const t=AC.currentTime, gn=AC.createGain(); gn.gain.setValueAtTime(.0001,t); gn.gain.exponentialRampToValueAtTime(.22,t+.01); gn.gain.exponentialRampToValueAtTime(.0001,t+1.4); gn.connect(AC.destination);
+  for(const [m,v,type] of [[1,1,'sine'],[2,.25,'sine'],[3,.08,'triangle']]){ const o=AC.createOscillator(), og=AC.createGain(); o.type=type; o.frequency.value=f*m; og.gain.value=v; o.connect(og).connect(gn); o.start(t); o.stop(t+1.45); } }
+function tone(f,d,type='sine',v=.07,delay=0,f2){ if(muted||!AC) return; const t=AC.currentTime+delay, o=AC.createOscillator(), gn=AC.createGain(); o.type=type; o.frequency.setValueAtTime(f,t); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+d); gn.gain.setValueAtTime(v,t); gn.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(gn).connect(AC.destination); o.start(t); o.stop(t+d+.02); }
+const CRIES=[[[600,.12],[600,.12]],[[700,.3,500]],[[900,.08,1300]],[[420,.07],[380,.07]],[[220,.3,180]],[[300,.5,700]],[[1000,.06],[1000,.06]],[[1500,.06,1800],[1500,.06,1800]]];
+function cry(i){ ac(); let t=0; for(const [f,d,f2] of CRIES[i]){ tone(f,d,'triangle',.07,t,f2); t+=d+.05; } }
+function fanfare(){ [523,659,784,1046,784,1046].forEach((q,i)=>tone(q,.18,'square',.05,i*.12)); }
+function speak(t){ if(muted) return; try{ const sy=window.speechSynthesis; if(!sy) return; sy.cancel(); const u=new SpeechSynthesisUtterance(t); u.lang='ja-JP'; u.rate=1; u.pitch=1.5; sy.speak(u); }catch(e){} }
+function setMute(m){ muted=m; $('muteBtn').textContent=m?'音 OFF':'音 ON'; try{ localStorage.setItem('pianoMute',m?'1':'0'); }catch(e){} if(m) try{ speechSynthesis.cancel(); }catch(e){} }
+
+setMute(muted); startSong(1);
+let last=performance.now();
+function loop(now){ const dt=Math.min(.05,(now-last)/1000); last=now; if(!S.manual) update(dt); draw(); present(S.si); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+setInterval(()=>{ if(!S.auto) saveBest(); },5000);
+
+window.__piano={ get S(){ return S; }, setAuto, manual(v=true){ S.manual=v; }, step(dt=1/60){ update(dt); }, seed(v){ seed=(Math.abs(v|0)%2147483646)+1; }, press, startSong, SONGS };
+})();
+</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>
