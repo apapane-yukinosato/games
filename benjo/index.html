@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="お腹が痛い！ トイレはこの通路の先…なのに、通路がループする。異変を見つけたら引き返せ。見のがしたら最初から。もらしたらおしまい。">
+<title>便所の入口</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&family=Dela+Gothic+One&display=swap">
+<style>
+:root{--bg:#17181A;--ink:#EDEBE4;--card:#24262A;--line:#3A3D42;--mute:#9A9A92;--acc:#F2C230;--red:#E0503A}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+#app{max-width:520px;margin:0 auto;padding:8px 10px 16px;padding-top:calc(8px + env(safe-area-inset-top,0px))}
+#top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:16px;font-weight:800;white-space:nowrap}
+.mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--card);cursor:pointer;white-space:nowrap}
+.mini[aria-pressed=true]{background:var(--acc);border-color:var(--acc);color:#222}
+#wrap{position:relative}
+#cv{display:block;width:100%;aspect-ratio:3/4;border-radius:14px;background:#000;touch-action:none}
+#pad{display:flex;gap:8px;margin-top:8px}
+#pad button{min-height:64px;border:0;border-radius:16px;font-weight:800;font-size:19px;cursor:pointer;touch-action:none}
+#goBtn{flex:2;background:linear-gradient(#5A6A5A,#3A4A3A);color:#fff;box-shadow:0 5px 0 #222}
+#goBtn.on{transform:translateY(3px);box-shadow:0 2px 0 #222}
+#backBtn{flex:1;background:linear-gradient(#7A4A3A,#5A2A1A);color:#fff;box-shadow:0 5px 0 #2A1A10}
+#backBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #2A1A10}
+.ov{position:absolute;inset:0;display:flex;align-items:safe center;justify-content:center;background:rgba(0,0,0,.6);border-radius:14px;padding:12px;z-index:3;overflow-y:auto;overscroll-behavior:contain}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;width:100%;max-width:380px;text-align:center;margin:auto 0;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.card h2{margin:0;font-family:"Dela Gothic One","M PLUS Rounded 1c",sans-serif;font-size:28px;line-height:1.3;color:var(--acc);letter-spacing:.06em}
+.sub{font-size:13px;color:var(--mute);margin:6px 0 10px;line-height:1.7;white-space:pre-line}
+.rules{text-align:left;font-size:12.5px;line-height:1.75;background:#1A1B1E;border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:0 0 8px}
+.rules b{color:var(--acc)}
+.go{display:block;width:100%;min-height:48px;border:0;border-radius:12px;font-weight:800;font-size:17px;cursor:pointer;margin-top:8px;background:var(--acc);color:#222;box-shadow:0 4px 0 #A07A10}
+.go.alt{background:#34373C;color:var(--ink);box-shadow:0 4px 0 #1A1B1E}
+.back{display:block;margin-top:10px;font-size:13px;font-weight:800;color:var(--mute);text-decoration:none}
+.big{font-size:44px;margin:2px 0}
+.stat{font-size:12px;color:var(--mute);margin:6px 0 0}
+.help{font-size:12px;color:var(--mute);text-align:center;margin:8px 0 0;line-height:1.6}
+@media (pointer:coarse){.pc{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>🚻 便所の入口</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false" title="Oキー">🤖 オート</button>
+    <button class="mini" id="muteBtn">音 ON</button>
+  </div>
+  <div id="wrap">
+    <canvas id="cv" width="360" height="480" aria-label="地下通路を歩く一人称の画面"></canvas>
+    <div class="ov" id="titleOv">
+      <div class="card">
+        <h2>便所の入口</h2>
+        <p class="sub">お腹が…痛い…！ トイレはこの通路の先。<br>なのに、なぜか同じ通路にもどってくる。</p>
+        <div class="rules">
+          ・<b>異変</b>を見のがさないこと<br>
+          ・異変を見つけたら、すぐに<b>引き返す</b>こと<br>
+          ・異変が見つからなかったら、引き返さないこと<br>
+          ・看板の「<b>トイレまで あと 8</b>」が 0 になれば、便所の入口<br>
+          ・まちがえると「あと 8」からやり直し。お腹のげんかいが来たら……<b>おしまい</b>
+        </div>
+        <button class="go" id="startBtn">🚶 通路へ</button>
+        <button class="go alt" id="autoStartBtn">🤖 オートで見る</button>
+        <p class="stat" id="titleStat"></p>
+        <a class="back" href="../">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+    <div class="ov" id="resultOv" hidden>
+      <div class="card">
+        <div class="big" id="resIcon"></div>
+        <h2 id="resTitle"></h2>
+        <p class="sub" id="resText"></p>
+        <button class="go" id="retryBtn">もう一度</button>
+        <button class="go alt" id="menuBtn">タイトルへ</button>
+        <a class="back" href="../">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+  </div>
+  <div id="pad"><button id="goBtn">⬆ 進む（長押し）</button><button id="backBtn">↩ 引き返す</button></div>
+  <p class="help">「進む」を押している間だけ歩く。画面の長押しでも歩ける。<span class="pc"><br>PC：↑/W/スペースで進む　↓/S で引き返す　O オート　M 音</span></p>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+let seed=(Date.now()%2147483646)+1; const rnd=()=>{ seed=seed*16807%2147483647; return (seed-1)/2147483646; };
+const clamp=(v,a,b)=>v<a?a:v>b?b:v, pick=a=>a[Math.floor(rnd()*a.length)];
+const W=360,H=480;
+const cv=$('cv'), g=cv.getContext('2d');
+
+/* ================= the corridor (one-point perspective) ================= */
+const HW=1.4, CH=2.5, EYE=1.55, F=240, HY=212, L=24, SIGN_Z=2.6, START_Z=1.0;
+// the anomalies. detect(): when a careful walker would notice it (used by the auto)
+const ANOMS=[
+  {id:'posterEyes',n:'広告のおじさんが見ている',d:s=>s.cz>5.2},
+  {id:'redLights',n:'照明が赤い',d:s=>s.lt>.6},
+  {id:'flicker',n:'照明がチカチカする',d:s=>s.lt>1.9},
+  {id:'extraDoor',n:'左のかべに知らないドア',d:s=>s.cz>13},
+  {id:'signArrow',n:'看板の矢印が逆',d:s=>s.lt>.5},
+  {id:'puddle',n:'床に水たまりが広がる',d:s=>s.cz>6.5},
+  {id:'noExt',n:'消火器がない',d:s=>s.cz>7.5},
+  {id:'paper',n:'トイレットペーパーが転がってくる',d:s=>s.paper&&s.paper.t>.8},
+  {id:'hands',n:'かべに赤い手形',d:s=>s.cz>9},
+  {id:'walkerStare',n:'おじさんが立ち止まってこっちを見る',d:s=>s.walker&&s.walker.stareT>.5},
+  {id:'walkerBig',n:'おじさんが大きすぎる',d:s=>s.walker&&(s.walker.z-s.cz)<12},
+  {id:'noWalker',n:'おじさんがいない',d:s=>s.lt>2.4},
+  {id:'cleanDoor',n:'清掃用具室のドアがすこし開いている',d:s=>s.cz>3.2},
+  {id:'exitMirror',n:'非常口の人が逆向き',d:s=>s.cz>10.5},
+  {id:'pinkWall',n:'かべがピンク色',d:s=>s.lt>.6},
+  {id:'posterExtra',n:'広告が1枚多い',d:s=>s.cz>14},
+  {id:'shadow',n:'だれもいないのに床に影',d:s=>s.cz>3.5},
+  {id:'ventEye',n:'天井の通気口に目',d:s=>s.cz>2.6},
+];
+const AMAP=Object.fromEntries(ANOMS.map(a=>[a.id,a]));
+
+const S={scene:'title',cz:START_Z,dir:1,v:0,left:8,anom:null,lastAnom:null,loop:0,lt:0,t:0,pain:15,cramp:0,nextCramp:22,mist:0,found:0,
+  walker:null,paper:null,trans:0,transKind:'',turnT:0,bob:0,shake:0,msg:'',msgT:9,holdUser:false,keyGo:false,auto:false,manual:false,resT:0,
+  ai:{notice:-1,miss:false,fake:-1},flick:0,
+  best:(()=>{ try{ return JSON.parse(localStorage.getItem('benjoBest')||'null')||{time:0,clears:0}; }catch(e){ return {time:0,clears:0}; } })(),
+  seen:(()=>{ try{ return new Set(JSON.parse(localStorage.getItem('benjoSeen')||'[]')); }catch(e){ return new Set(); } })()};
+function saveBest(){ if(S.auto) return; try{ localStorage.setItem('benjoBest',JSON.stringify(S.best)); localStorage.setItem('benjoSeen',JSON.stringify([...S.seen])); }catch(e){} }
+
+function start(){
+  S.scene='play'; S.left=8; S.mist=0; S.pain=15; S.cramp=0; S.nextCramp=20+rnd()*8; S.t=0; S.lastAnom=null; S.found=0;
+  ['titleOv','resultOv'].forEach(id=>$(id).hidden=true);
+  newLoop(true); say('お腹が…痛い…。トイレをさがそう'); sfx('start');
+}
+function newLoop(first){
+  S.loop++; S.cz=START_Z; S.dir=1; S.v=0; S.lt=0; S.turnT=0; S.paper=null; S.ai={notice:-1,miss:rnd()<.04,fake:rnd()<.025?3+rnd()*15:-1};
+  // the first corridor and the toilet corridor are always normal
+  if(first||S.left===0||rnd()>.62) S.anom=null;
+  else { let a; do{ a=pick(ANOMS).id; }while(a===S.lastAnom); S.anom=a; S.lastAnom=a; }
+  S.walker=S.anom==='noWalker'||S.left===0?null:{z:L-1.5,x:-.78,stareT:0,big:S.anom==='walkerBig',stare:S.anom==='walkerStare',ph:0};
+}
+const isA=id=>S.anom===id;
+function say(m){ S.msg=m; S.msgT=0; }
+
+/* ================= update ================= */
+function update(dt){
+  S.t+=dt; S.msgT+=dt;
+  if(S.scene!=='play'){ if(S.auto&&S.scene!=='play'){ S.resT+=dt; if(S.resT>(S.scene==='title'?.6:3.5)){ S.resT=0; start(); } } return; }
+  if(S.trans>0){ S.trans-=dt; if(S.trans<=.45&&S.transKind){ const k=S.transKind; S.transKind=''; finishLoop(k); } if(S.scene!=='play') return; S.pain+=.22*dt; return; }
+  S.lt+=dt;
+  // the stomach: slowly worse, with cramps every now and then
+  S.pain+=.22*dt;
+  if(S.cramp>0){ S.cramp-=dt; S.pain+=1.6*dt; S.shake=3; if(S.cramp<=0) S.nextCramp=22+rnd()*8; }
+  else { S.nextCramp-=dt; if(S.nextCramp<=0){ S.cramp=2.6; say('ぐぎゅるるる……っ！'); sfx('growl'); } }
+  S.shake=Math.max(0,S.shake-dt*4);
+  if(S.pain>=100){ S.pain=100; return gameOver(); }
+  if(S.auto) autoTick(dt);
+  // walking
+  const want=(S.holdUser||S.keyGo||S.autoGo)&&S.turnT<=0;
+  const top=S.cramp>0?1.3:3.0;
+  S.v+=((want?top:0)-S.v)*Math.min(1,dt*(want?6:9));
+  if(S.turnT>0) S.turnT-=dt;
+  S.cz+=S.v*S.dir*dt; S.bob+=S.v*dt*2.4;
+  if(S.v>.5&&Math.floor(S.bob/Math.PI)!==Math.floor((S.bob-S.v*dt*2.4)/Math.PI)) sfx('step');
+  // the man walks toward the start
+  const w=S.walker;
+  if(w){ const dz=(w.z-S.cz)*S.dir;
+    if(w.stare&&dz>0&&dz<5.5&&S.dir>0){ w.stareT+=dt; if(w.stareT>1.4) w.z=Math.max(S.cz+2.6,w.z-1.1*dt); }
+    else { w.z-=1.2*dt; w.ph+=dt*7; } }
+  if(isA('paper')){ if(!S.paper&&S.cz>3.5&&S.dir>0) S.paper={z:L-2,t:0,z0:L-2}; if(S.paper){ S.paper.t+=dt; S.paper.z=Math.max(S.cz+1.2,S.paper.z-2.2*dt); } }
+  if(isA('flicker')){ S.flick=((S.lt%2.3)<.35)?1:0; } else S.flick=0;
+  // the end of the corridor
+  if(S.dir>0&&S.cz>=L-1.1){ startTrans('fwd'); }
+  else if(S.dir<0&&S.cz<=.5){ startTrans('back'); }
+  S.cz=clamp(S.cz,.3,L-.9);
+}
+function startTrans(k){ S.trans=.9; S.transKind=k; S.v=0; sfx('step'); }
+function finishLoop(k){
+  if(S.left===0&&k==='fwd') return clear();
+  const right=(k==='fwd')===(S.anom==null);
+  if(S.anom&&k==='back'){ S.seen.add(S.anom); S.found++; }
+  if(right){ S.left--; sfx('ok'); if(S.left===0) say('……あった！ この先が便所の入口だ！'); else say(''); }
+  else { S.left=8; S.mist++; S.pain+=12; sfx('bad'); S.shake=4; say(S.anom?'……異変を見のがした。お腹がキュッとなる':'……異変なんてなかった。お腹がキュッとなる'); }
+  newLoop(false);
+  if(S.pain>=100){ S.pain=100; gameOver(); }
+}
+function turnBack(){ if(S.scene!=='play'||S.trans>0||S.turnT>0) return; S.dir*=-1; S.turnT=.45; S.v=0; sfx('turn'); }
+function clear(){
+  S.scene='result'; S.resT=0; S.trans=0; sfx('clear');
+  const tm=Math.round(S.t), nb=!S.best.time||tm<S.best.time; if(!S.auto){ if(nb) S.best.time=tm; S.best.clears++; } saveBest();
+  $('resIcon').textContent='🚽✨'; $('resTitle').textContent='まにあった……！';
+  $('resText').textContent=`便所の入口に たどりついた。\nかかった時間 ${tm}秒${nb&&!S.auto?'（ベスト！）':''}　見のがし・かんちがい ${S.mist}回\nお腹のげんかい ${Math.round(S.pain)}%\n見つけた異変の種類 ${S.seen.size} / ${ANOMS.length}`;
+  $('resultOv').hidden=false;
+}
+function gameOver(){
+  S.scene='result'; S.resT=0; sfx('over'); saveBest();
+  $('resIcon').textContent='💧🩲'; $('resTitle').textContent='……もれた。';
+  $('resText').textContent=`トイレまで あと ${S.left}　のところで、げんかいが来た。\n見のがし・かんちがい ${S.mist}回\n異変に気づいたら、すぐ引き返そう。\n見つけた異変の種類 ${S.seen.size} / ${ANOMS.length}`;
+  $('resultOv').hidden=false;
+}
+
+/* ================= auto: walk, look carefully, turn back the moment something is off ================= */
+function autoTick(){
+  S.autoGo=true; const a=S.ai;
+  if(S.dir<0) return;               // already heading back: just walk
+  if(S.anom&&!a.miss&&AMAP[S.anom].d(S)&&a.notice<0){ a.notice=S.lt+.45+rnd()*.35; say('……ん？'); }
+  if(!S.anom&&a.fake>0&&S.cz>a.fake&&a.notice<0){ a.notice=S.lt+.5; say('……ん？（気のせい？）'); }
+  if(a.notice>=0){ S.autoGo=false; if(S.lt>=a.notice&&S.v<.4){ turnBack(); a.notice=-1; } }
+}
+
+/* ================= drawing ================= */
+let SX=0,SY=0;
+function P(x,y,z){ const dz=Math.max(.05,(z-S.cz)*S.dir), X=x*S.dir; return {x:W/2+X*F/dz+SX,y:HY+(EYE+Math.sin(S.bob)*.03-y)*F/dz+SY,dz}; }
+const nearZ=()=>S.cz+.22*S.dir;
+function cz2(z){ return S.dir>0?Math.max(z,nearZ()):Math.min(z,nearZ()); }
+function poly(pts,fill){ g.beginPath(); pts.forEach((p,i)=>i?g.lineTo(p.x,p.y):g.moveTo(p.x,p.y)); g.closePath(); g.fillStyle=fill; g.fill(); }
+const visible=(z0,z1)=>Math.max((z0-S.cz)*S.dir,(z1-S.cz)*S.dir)>.25;
+function fog(dz){ return clamp((dz-3)/22,0,.55); }
+// a rectangle on a side wall, plus an affine frame to draw its contents in (-50..50 units)
+function sideRect(x,z0,z1,y0,y1,fill,content){
+  if(!visible(z0,z1)) return; const a=cz2(z0), b=cz2(z1);
+  poly([P(x,y0,a),P(x,y1,a),P(x,y1,b),P(x,y0,b)],fill);
+  const zc=(z0+z1)/2, dzc=(zc-S.cz)*S.dir; if(!content||Math.min((z0-S.cz)*S.dir,(z1-S.cz)*S.dir)<.35) return;
+  const ym=(y0+y1)/2, near=(z0-S.cz)*S.dir<(z1-S.cz)*S.dir?z0:z1, far=near===z0?z1:z0;
+  const pn=P(x,ym,near), pf=P(x,ym,far), c=P(x,ym,zc), X=x*S.dir;
+  const ex=X<0?{x:pf.x-pn.x,y:pf.y-pn.y}:{x:pn.x-pf.x,y:pn.y-pf.y}, h=P(x,y0,zc).y-P(x,y1,zc).y;
+  g.save(); g.setTransform(ex.x/100,ex.y/100,0,h/100,c.x,c.y); content(); g.restore();
+  shade(pn,pf,x,z0,z1,y0,y1,dzc);
+}
+function shade(pn,pf,x,z0,z1,y0,y1,dz){ const f=fog(dz); if(f<=0) return; const a=cz2(z0), b=cz2(z1); g.globalAlpha=f; poly([P(x,y0,a),P(x,y1,a),P(x,y1,b),P(x,y0,b)],'#1A1A18'); g.globalAlpha=1; }
+function frontRect(x0,x1,y0,y1,z,fill,content){ const dz=(z-S.cz)*S.dir; if(dz<.3) return; const a=P(x0,y1,z), b=P(x1,y0,z);
+  const l=Math.min(a.x,b.x), w=Math.abs(b.x-a.x), t=a.y, h=b.y-a.y; g.fillStyle=fill; g.fillRect(l,t,w,h);
+  if(content){ g.save(); g.translate(l+w/2,t+h/2); g.scale(h/100,h/100); content(w,h); g.restore(); } }
+function txt(s,x,y,size,col,font){ g.fillStyle=col; g.font=`800 ${size}px ${font||'"M PLUS Rounded 1c",sans-serif'}`; g.textAlign='center'; g.textBaseline='middle'; g.fillText(s,x,y); g.textBaseline='alphabetic'; }
+
+function drawCorridor(){
+  const zEnd=S.dir>0?L:0, red=isA('redLights'), pink=isA('pinkWall');
+  const wall=pink?'#E8B8C4':'#E2DED2', floor='#8E8C84', ceil='#CFCDC4';
+  g.fillStyle='#111'; g.fillRect(0,0,W,H);
+  const n=nearZ();
+  // end wall with the turn
+  const e0=P(-HW,CH,zEnd), e1=P(HW,0,zEnd); const ex0=Math.min(e0.x,e1.x), ew=Math.abs(e1.x-e0.x);
+  g.fillStyle=pink?'#D8A8B4':'#D2CEC2'; g.fillRect(ex0,e0.y,ew,e1.y-e0.y);
+  const goal=S.left===0&&S.dir>0;
+  if(goal){ // the toilet entrance
+    g.fillStyle='#2A5A9A'; g.fillRect(ex0,e0.y,ew,e1.y-e0.y);
+    const d0=P(-.55,2.1,zEnd), d1=P(.55,0,zEnd); g.fillStyle='#F4EEDC'; g.fillRect(Math.min(d0.x,d1.x),d0.y,Math.abs(d1.x-d0.x),d1.y-d0.y);
+    const nw=Math.abs(d1.x-d0.x); g.fillStyle='#3A6AAA'; g.fillRect(Math.min(d0.x,d1.x),d0.y,nw,(d1.y-d0.y)*.42);
+    txt('便所',(d0.x+d1.x)/2,d0.y+(d1.y-d0.y)*.2,Math.max(8,nw*.32),'#fff','"Dela Gothic One",sans-serif');
+    txt('🚹🚺',(d0.x+d1.x)/2,d0.y-(d1.y-d0.y)*.14,Math.max(7,nw*.25),'#fff');
+  } else {
+    const o0=P(.25*S.dir,2.2,zEnd), o1=P(HW*S.dir,0,zEnd); g.fillStyle='#6A6860'; g.fillRect(Math.min(o0.x,o1.x),o0.y,Math.abs(o1.x-o0.x),o1.y-o0.y);
+    const ow=Math.abs(o1.x-o0.x); txt(S.dir>0?'🚻 →':'→',(o0.x+o1.x)/2,o0.y-ow*.18,Math.max(7,ow*.3),'#F2C230');
+  }
+  g.globalAlpha=fog(Math.abs(zEnd-S.cz)); g.fillStyle='#1A1A18'; g.fillRect(ex0,e0.y,ew,e1.y-e0.y); g.globalAlpha=1;
+  // floor, ceiling, walls
+  poly([P(-HW,0,n),P(HW,0,n),P(HW,0,zEnd),P(-HW,0,zEnd)],floor);
+  poly([P(-HW,CH,n),P(HW,CH,n),P(HW,CH,zEnd),P(-HW,CH,zEnd)],ceil);
+  poly([P(-HW,0,n),P(-HW,CH,n),P(-HW,CH,zEnd),P(-HW,0,zEnd)],wall);
+  poly([P(HW,0,n),P(HW,CH,n),P(HW,CH,zEnd),P(HW,0,zEnd)],wall);
+  // depth darkening (simple fog) and tile lines
+  for(let z=Math.ceil(Math.min(S.cz,zEnd));z<=Math.max(S.cz,zEnd);z++){ const dz=(z-S.cz)*S.dir; if(dz<.3) continue;
+    const a=P(-HW,0,z), b=P(-HW,CH,z), c=P(HW,CH,z), d=P(HW,0,z);
+    g.strokeStyle=`rgba(0,0,0,${.14*(1-fog(dz))})`; g.lineWidth=1; g.beginPath(); g.moveTo(a.x,a.y); g.lineTo(b.x,b.y); g.lineTo(c.x,c.y); g.lineTo(d.x,d.y); g.closePath(); g.stroke(); }
+  g.strokeStyle='rgba(0,0,0,.12)'; for(const y of [.9]){ for(const x of [-HW,HW]){ const a=P(x,y,n), b=P(x,y,zEnd); g.beginPath(); g.moveTo(a.x,a.y); g.lineTo(b.x,b.y); g.stroke(); } }
+  // tactile paving (yellow)
+  poly([P(.9,0,n),P(1.15,0,n),P(1.15,0,zEnd),P(.9,0,zEnd)],'#C8A830');
+  // fog band toward the end
+  const vg=g.createRadialGradient(W/2,HY,10,W/2,HY,90); vg.addColorStop(0,'rgba(20,20,18,.55)'); vg.addColorStop(1,'rgba(20,20,18,0)'); g.fillStyle=vg; g.fillRect(0,0,W,H);
+  // ceiling lights
+  for(let z=3;z<L;z+=4){ if((z+.4-S.cz)*S.dir<.3&&(z-.4-S.cz)*S.dir<.3) continue; const a=cz2(z-.5), b=cz2(z+.5);
+    poly([P(-.22,CH-.01,a),P(.22,CH-.01,a),P(.22,CH-.01,b),P(-.22,CH-.01,b)],red?'#FF5040':'#FFFDF0'); }
+}
+// everything that sits in the corridor, drawn far to near
+function drawThings(){
+  const list=[];
+  const add=(z,fn)=>{ const dz=(z-S.cz)*S.dir; if(dz>-.5) list.push({dz,fn}); };
+  // posters on the left wall
+  const posters=[[5,'medicine'],[10,'man'],[15,'onsen'],[20,'manner']]; if(isA('posterExtra')) posters.push([22.3,'man2']);
+  for(const [z,k] of posters) add(z,()=>sideRect(-HW,z-.55,z+.55,1.0,1.85,'#FAFAF4',()=>poster(k)));
+  if(isA('extraDoor')) add(18,()=>sideRect(-HW,17.4,18.4,0,2.05,'#6A2A2A',()=>{ g.fillStyle='#4A1A1A'; g.fillRect(-46,-48,92,96); txt('？',0,-10,40,'#C8A0A0'); g.fillStyle='#D8C890'; g.fillRect(30,0,8,8); }));
+  // the right wall: cleaning closet, extinguisher, emergency exit
+  add(7.5,()=>sideRect(HW,7,8,0,2.05,'#8A9098',()=>{ if(isA('cleanDoor')){ g.fillStyle='#0A0A0A'; g.beginPath(); g.moveTo(-50,-50); g.lineTo(-22,-50); g.lineTo(-22,50); g.lineTo(-50,50); g.fill(); const bl=Math.sin(S.t*3)>.9?.15:1; g.fillStyle=`rgba(255,240,180,${bl})`; g.beginPath(); g.arc(-40,-12,2.6,0,7); g.arc(-30,-12,2.6,0,7); g.fill(); }
+    g.fillStyle='#E8E8E8'; g.fillRect(-30,-30,60,12); txt('清掃用具室',0,-24,8,'#333'); g.fillStyle='#C8C0A0'; g.fillRect(30,2,8,6); }));
+  if(!isA('noExt')) add(12.5,()=>sideRect(HW,12.3,12.7,.05,.7,'#C82A2A',()=>{ g.fillStyle='#E84A3A'; g.fillRect(-40,-50,30,100); g.fillStyle='#222'; g.fillRect(-36,-62,20,14); txt('消火器',10,-20,12,'#fff'); }));
+  add(18,()=>{ sideRect(HW,17.5,18.5,0,2.0,'#9AA0A8',()=>{ g.fillStyle='#7A8088'; g.fillRect(-46,-48,92,96); g.fillStyle='#C8C0A0'; g.fillRect(-38,2,8,6); txt('非常口',0,-30,10,'#333'); });
+    sideRect(HW,17.6,18.4,2.12,2.4,'#2AA05A',()=>{ g.save(); g.translate(-22,0); if(isA('exitMirror')) g.scale(-1,1); runner(); g.restore(); g.fillStyle='#fff'; g.fillRect(4,-30,40,60); g.fillStyle='#2AA05A'; g.fillRect(12,-20,24,44); }); });
+  if(isA('hands')) add(15,()=>sideRect(HW,14,16.5,.6,1.9,'rgba(0,0,0,0)',()=>{ g.fillStyle='rgba(170,20,20,.85)'; for(const [x,y,r] of [[-38,-20,.2],[-14,10,-.3],[8,-30,.1],[30,6,.4],[44,-22,-.2],[-30,30,.3]]){ g.save(); g.translate(x,y); g.rotate(r); g.beginPath(); g.ellipse(0,4,5,7,0,0,7); g.fill(); for(let k=0;k<5;k++){ g.fillRect(-5+k*2.3,-10,1.6,8); } g.restore(); } }));
+  // ceiling vent
+  add(6,()=>{ if(!visible(5.6,6.4)) return; const a=cz2(5.6), b=cz2(6.4); const p=[P(-.35,CH,a),P(.35,CH,a),P(.35,CH,b),P(-.35,CH,b)]; poly(p,'#5A5A58');
+    g.strokeStyle='#2A2A28'; g.lineWidth=1; for(let k=1;k<5;k++){ const z=a+(b-a)*k/5, l=P(-.35,CH,z), r=P(.35,CH,z); g.beginPath(); g.moveTo(l.x,l.y); g.lineTo(r.x,r.y); g.stroke(); }
+    if(isA('ventEye')){ const c=P(0,CH,(a+b)/2), s=F/Math.max(.5,(6-S.cz)*S.dir); g.fillStyle='#FFE040'; g.beginPath(); g.ellipse(c.x-s*.08,c.y,s*.035,s*.018,0,0,7); g.ellipse(c.x+s*.08,c.y,s*.035,s*.018,0,0,7); g.fill(); } });
+  // the hanging sign (only its front faces you on the way in)
+  add(SIGN_Z,()=>{ const front=S.dir>0; frontRect(-.8,.8,2.02,2.42,SIGN_Z,front?'#1A2A4A':'#3A3A3A',front?()=>{ txt('🚻',-145,0,64,'#fff'); txt('トイレまで',-10,-24,30,'#fff'); txt(`あと ${S.left}`,-10,22,46,'#F2C230','"Dela Gothic One",sans-serif'); txt(isA('signArrow')?'←':'→',150,0,70,'#fff'); }:null);
+    const a=P(-.6,CH,SIGN_Z), b=P(-.6,2.42,SIGN_Z), c=P(.6,CH,SIGN_Z), d=P(.6,2.42,SIGN_Z); g.strokeStyle='#444'; g.lineWidth=1; g.beginPath(); g.moveTo(a.x,a.y); g.lineTo(b.x,b.y); g.moveTo(c.x,c.y); g.lineTo(d.x,d.y); g.stroke(); });
+  // floor things
+  if(isA('puddle')) add(12,()=>{ const r=Math.min(1.1,.25+S.lt*.06); floorBlob(.15,12,r,r*1.3,'rgba(90,120,150,.7)'); const dz=(12-S.cz)*S.dir; if(dz>.5){ const yy=CH-((S.t*2.2)%1)*CH, p=P(.15,yy,12); g.fillStyle='rgba(150,190,230,.9)'; g.beginPath(); g.arc(p.x,p.y,Math.max(1,6/dz),0,7); g.fill(); } });
+  if(isA('shadow')) add(8.5,()=>{ floorBlob(.35+Math.sin(S.t*.8)*.08,8.5,.32,1.1,'rgba(10,10,10,.55)'); floorBlob(.35+Math.sin(S.t*.8)*.08,9.6,.2,.2,'rgba(10,10,10,.55)'); });
+  if(S.paper) add(S.paper.z,()=>{ const p=S.paper; poly([P(.25,.005,cz2(p.z)),P(.45,.005,cz2(p.z)),P(.45,.005,p.z0),P(.25,.005,p.z0)],'#F4F4EC'); billboard(.35,p.z,(x,y,s)=>{ g.fillStyle='#FAFAF2'; g.beginPath(); g.ellipse(x,y-s*.13,s*.12,s*.13,0,0,7); g.fill(); g.fillStyle='#C8C0A8'; g.beginPath(); g.ellipse(x,y-s*.13,s*.04,s*.045,0,0,7); g.fill(); }); });
+  if(S.walker) add(S.walker.z,()=>drawWalker(S.walker));
+  list.sort((a,b)=>b.dz-a.dz); for(const it of list) it.fn();
+}
+function floorBlob(x,z,rx,rz,col){ const pts=[]; for(let k=0;k<20;k++){ const a=k/20*Math.PI*2, zz=z+Math.sin(a)*rz; if((zz-S.cz)*S.dir<.25) continue; pts.push(P(x+Math.cos(a)*rx,.003,zz)); } if(pts.length>2) poly(pts,col); }
+function billboard(x,z,fn){ const dz=(z-S.cz)*S.dir; if(dz<.35) return; const p=P(x,0,z); fn(p.x,p.y,F/dz); }
+function drawWalker(w){
+  billboard(w.x,w.z,(x,y,s)=>{ const h=w.big?2.45:1.72, leg=Math.sin(w.ph)*.12*(w.stareT>0?0:1);
+    g.save(); g.translate(x,y); if(w.big) g.scale(1.3,1);
+    // legs, suit, head
+    g.fillStyle='#2A2A30'; g.fillRect(-s*.13+leg*s*.3,-s*.82,s*.1,s*.82); g.fillRect(s*.03-leg*s*.3,-s*.82,s*.1,s*.82);
+    g.fillStyle='#3A4050'; g.fillRect(-s*.24,-s*(h-.22),s*.48,s*(h-1.05));
+    g.fillStyle='#F0F0F0'; g.fillRect(-s*.05,-s*(h-.22),s*.1,s*.25); g.fillStyle='#8A2A2A'; g.fillRect(-s*.025,-s*(h-.24),s*.05,s*.22);
+    g.fillStyle='#E8C8A8'; g.beginPath(); g.arc(0,-s*(h-.1),s*.12,0,7); g.fill(); g.fillStyle='#2A2A2A'; g.beginPath(); g.arc(0,-s*(h-.06),s*.12,Math.PI,0); g.fill();
+    if(w.stareT>0){ g.fillStyle='#111'; g.beginPath(); g.arc(-s*.045,-s*(h-.12),s*.018,0,7); g.arc(s*.045,-s*(h-.12),s*.018,0,7); g.fill(); g.strokeStyle='#111'; g.lineWidth=Math.max(1,s*.012); g.beginPath(); g.arc(0,-s*(h-.2),s*.05,.2,Math.PI-.2); g.stroke(); }
+    g.fillStyle='#3A2A1A'; g.fillRect(s*.2,-s*1.0,s*.1,s*.22);
+    g.restore(); });
+}
+// the running figure of the emergency exit sign (runs to the right, toward the door)
+function runner(){ g.fillStyle='#fff'; g.strokeStyle='#fff'; g.lineCap='round'; g.lineWidth=7;
+  g.beginPath(); g.arc(8,-24,7,0,7); g.fill();
+  g.beginPath(); g.moveTo(4,-14); g.lineTo(-4,8); g.moveTo(-4,8); g.lineTo(8,20); g.lineTo(6,34); g.moveTo(-4,8); g.lineTo(-16,20); g.lineTo(-26,18); g.moveTo(2,-10); g.lineTo(16,-2); g.moveTo(2,-10); g.lineTo(-12,-6); g.stroke(); }
+function poster(k){
+  if(k==='medicine'){ g.fillStyle='#F4E04A'; g.fillRect(-50,-50,100,100); txt('おなかに',0,-26,14,'#C82A2A'); txt('ハラピタ',0,0,22,'#C82A2A','"Dela Gothic One",sans-serif'); txt('すぐ効く！',0,26,12,'#333'); }
+  else if(k==='man'||k==='man2'){ g.fillStyle='#BFE0F0'; g.fillRect(-50,-50,100,100); g.fillStyle='#F0D0B0'; g.beginPath(); g.arc(0,-8,26,0,7); g.fill(); g.fillStyle='#333'; g.beginPath(); g.arc(0,-14,26,Math.PI,0); g.fill();
+    const stare=k==='man'&&isA('posterEyes'); g.fillStyle=stare?'#fff':'#333';
+    if(stare){ g.beginPath(); g.arc(-9,-8,6,0,7); g.arc(9,-8,6,0,7); g.fill(); g.fillStyle='#A00'; g.beginPath(); g.arc(-9+Math.sin(S.t)*2,-8,2.6,0,7); g.arc(9+Math.sin(S.t)*2,-8,2.6,0,7); g.fill(); g.fillStyle='#600'; g.beginPath(); g.ellipse(0,8,8,6,0,0,7); g.fill(); }
+    else { g.lineWidth=2.5; g.strokeStyle='#333'; g.beginPath(); g.arc(-9,-8,3.5,Math.PI,0); g.moveTo(5.5,-8); g.arc(9,-8,3.5,Math.PI,0); g.stroke(); g.beginPath(); g.arc(0,2,10,.2,Math.PI-.2); g.stroke(); }
+    txt(stare?'みてるよ':'いい笑顔、いい一日。',0,36,stare?14:10,stare?'#A00':'#2A4A6A'); }
+  else if(k==='onsen'){ g.fillStyle='#E8F0E0'; g.fillRect(-50,-50,100,100); txt('♨',0,-14,40,'#C84A3A'); txt('ゆきのさと温泉',0,24,12,'#333'); }
+  else { g.fillStyle='#FFFFFF'; g.fillRect(-50,-50,100,100); txt('🚻',0,-18,30,'#333'); txt('トイレは',0,10,12,'#333'); txt('きれいに使いましょう',0,26,10,'#333'); }
+}
+function drawHUD(){
+  // stomach meter
+  const p=S.pain/100; g.fillStyle='rgba(0,0,0,.55)'; g.fillRect(8,8,W-16,26);
+  txt(p>.8?'😫':p>.5?'😣':'😐',22,21,16,'#fff');
+  g.fillStyle='#333'; g.fillRect(36,14,W-104,14); const col=p>.8?'#E0402A':p>.5?'#E8A030':'#7AB85A'; g.fillStyle=col; g.fillRect(36,14,(W-104)*p,14);
+  g.fillStyle='#fff'; g.font='800 10px sans-serif'; g.textAlign='left'; g.fillText('お腹のげんかい',40,25);
+  txt(`🚻 あと${S.left}`,W-36,21,12,'#F2C230');
+  if(p>.8){ const a=(Math.sin(S.t*8)*.5+.5)*.35; const vg=g.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.7); vg.addColorStop(0,'rgba(120,0,0,0)'); vg.addColorStop(1,`rgba(120,0,0,${a})`); g.fillStyle=vg; g.fillRect(0,0,W,H); }
+}
+function draw(){
+  g.setTransform(1,0,0,1,0,0); SX=S.shake?(Math.random()-.5)*S.shake*2:0; SY=S.shake?(Math.random()-.5)*S.shake*2:0;
+  drawCorridor(); drawThings();
+  if(isA('redLights')){ g.fillStyle='rgba(200,20,10,.28)'; g.fillRect(0,0,W,H); }
+  if(S.flick){ g.fillStyle='rgba(0,0,0,.78)'; g.fillRect(0,0,W,H); }
+  // turning around / leaving the corridor
+  if(S.turnT>0){ g.fillStyle=`rgba(0,0,0,${Math.sin(S.turnT/.45*Math.PI)*.9})`; g.fillRect(0,0,W,H); }
+  if(S.trans>0){ g.fillStyle=`rgba(0,0,0,${Math.min(1,Math.sin(S.trans/.9*Math.PI)*1.6)})`; g.fillRect(0,0,W,H); }
+  if(S.scene==='play'||S.scene==='result') drawHUD();
+  if(S.msg&&S.msgT<2.8&&S.scene==='play'){ g.globalAlpha=Math.min(1,2.8-S.msgT); g.fillStyle='rgba(0,0,0,.72)'; g.fillRect(14,H-62,W-28,40); txt(S.msg,W/2,H-42,14,'#F4F0E0'); g.globalAlpha=1; }
+  if(S.auto){ g.fillStyle='rgba(255,255,255,.75)'; g.font='800 11px sans-serif'; g.textAlign='right'; g.fillText('🤖 AUTO',W-8,H-8); }
+  $('goBtn').classList.toggle('on',S.v>.5);
+}
+
+/* ================= UI ================= */
+function toTitle(){ S.scene='title'; S.resT=0; $('resultOv').hidden=true; $('titleOv').hidden=false; S.anom=null; S.walker=null; S.cz=START_Z; S.dir=1; S.left=8; S.pain=15;
+  $('titleStat').textContent=`ベスト ${S.best.time?S.best.time+'秒':'—'}　トイレにまにあった ${S.best.clears}回　見つけた異変 ${S.seen.size}/${ANOMS.length}`; }
+function setAuto(v){ S.auto=!!v; $('autoBtn').setAttribute('aria-pressed',S.auto); S.resT=0; S.autoGo=false; if(S.auto&&S.scene==='title') start(); }
+function user(){ if(S.auto){ setAuto(false); } }
+const gb=$('goBtn');
+gb.addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); user(); S.holdUser=true; try{ gb.setPointerCapture(e.pointerId); }catch(_){} });
+for(const ev of ['pointerup','pointercancel','lostpointercapture']) gb.addEventListener(ev,()=>{ S.holdUser=false; });
+cv.addEventListener('pointerdown',e=>{ if(S.scene!=='play') return; e.preventDefault(); ac(); user(); S.holdUser=true; try{ cv.setPointerCapture(e.pointerId); }catch(_){} });
+for(const ev of ['pointerup','pointercancel','lostpointercapture']) cv.addEventListener(ev,()=>{ S.holdUser=false; });
+$('backBtn').addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); user(); turnBack(); });
+$('autoBtn').onclick=()=>{ ac(); setAuto(!S.auto); };
+$('autoStartBtn').onclick=()=>{ ac(); setAuto(true); };
+$('startBtn').onclick=()=>{ ac(); user(); start(); };
+$('muteBtn').onclick=()=>{ ac(); setMute(!muted); };
+$('retryBtn').onclick=()=>{ ac(); user(); start(); };
+$('menuBtn').onclick=()=>{ ac(); user(); toTitle(); };
+addEventListener('keydown',e=>{ const k=e.key.toLowerCase();
+  if(k==='o'){ ac(); setAuto(!S.auto); return; } if(k==='m'){ ac(); setMute(!muted); return; }
+  if(k==='arrowup'||k==='w'||k===' '){ e.preventDefault(); ac(); if(S.scene==='play'){ user(); S.keyGo=true; } else if(!e.repeat&&S.scene!=='play'&&k===' '){ user(); start(); } return; }
+  if(k==='arrowdown'||k==='s'){ e.preventDefault(); ac(); user(); if(!e.repeat) turnBack(); } });
+addEventListener('keyup',e=>{ const k=e.key.toLowerCase(); if(k==='arrowup'||k==='w'||k===' ') S.keyGo=false; });
+addEventListener('blur',()=>{ S.keyGo=false; S.holdUser=false; });
+
+/* ================= sound ================= */
+let AC=null, muted=false, hum=null; try{ muted=localStorage.getItem('benjoMute')==='1'; }catch(e){}
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} startHum(); } if(AC&&AC.state==='suspended') AC.resume(); }
+function startHum(){ if(!AC||hum) return; try{ const o=AC.createOscillator(), gn=AC.createGain(); o.type='sine'; o.frequency.value=58; gn.gain.value=muted?0:.025; o.connect(gn).connect(AC.destination); o.start(); hum=gn; }catch(e){} }
+function tone(f,d,type='sine',v=.07,delay=0,f2){ if(muted||!AC) return; const t=AC.currentTime+delay, o=AC.createOscillator(), gn=AC.createGain(); o.type=type; o.frequency.setValueAtTime(f,t); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+d); gn.gain.setValueAtTime(v,t); gn.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(gn).connect(AC.destination); o.start(t); o.stop(t+d+.02); }
+function sfx(k){
+  if(k==='step') tone(90+Math.random()*30,.06,'triangle',.05,0,60);
+  else if(k==='turn') tone(160,.2,'triangle',.05,0,110);
+  else if(k==='growl'){ for(let i=0;i<6;i++) tone(70+Math.random()*40,.22,'sawtooth',.045,i*.18,50+Math.random()*30); }
+  else if(k==='ok') tone(660,.25,'sine',.05);
+  else if(k==='bad'){ tone(110,.5,'sawtooth',.05,0,80); tone(117,.5,'sawtooth',.05,0,84); }
+  else if(k==='start') [262,247,233].forEach((q,i)=>tone(q,.3,'triangle',.05,i*.25));
+  else if(k==='clear') [523,659,784,1046,1318].forEach((q,i)=>tone(q,.2,'sine',.06,i*.12));
+  else if(k==='over'){ [392,370,349,330,311,294].forEach((q,i)=>tone(q,.25,'triangle',.06,i*.2)); tone(2000,1.4,'sine',.02,1.2,800); }
+}
+function setMute(m){ muted=m; $('muteBtn').textContent=m?'音 OFF':'音 ON'; try{ localStorage.setItem('benjoMute',m?'1':'0'); }catch(e){} if(hum) hum.gain.value=m?0:.025; }
+
+setMute(muted); toTitle();
+let last=performance.now();
+function loop(now){ const dt=Math.min(.05,(now-last)/1000); last=now; if(!S.manual) update(dt); draw(); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+
+window.__benjo={ get S(){ return S; }, setAuto, manual(v=true){ S.manual=v; }, step(dt=1/60){ update(dt); }, seed(v){ seed=(Math.abs(v|0)%2147483646)+1; }, start, turnBack, ANOMS,
+  setAnom(id){ S.anom=id; S.walker=id==='noWalker'?null:{z:L-1.5,x:-.78,stareT:0,big:id==='walkerBig',stare:id==='walkerStare',ph:0}; S.paper=null; S.lt=0; } };
+})();
+</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>
