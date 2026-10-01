@@ -127,6 +127,19 @@ const lr=(a,b)=>Math.exp(Math.log(a)+(Math.log(b)-Math.log(a))*rnd());      // l
 function yen(v){ v=Math.floor(v); if(v<1e4) return v.toLocaleString()+'円';
   const u=[[1e12,'兆'],[1e8,'億'],[1e4,'万']]; for(const [d,n] of u) if(v>=d){ const x=v/d; return (x>=100?Math.floor(x).toLocaleString():x>=10?x.toFixed(1):x.toFixed(2))+n+'円'; } }
 
+/* ================= world rich list =================
+   (wealth in yen, rank of the person who has it) at 1 USD = 157 JPY (Sep 2026).
+   Top: Forbes World's Billionaires 2026 (No.1 $839B, No.2 $257B, No.10 $148B, 3,428 people over $1B).
+   Below: UBS Global Wealth Report 2025 (60M adults over $1M, 688M over $100k, 2.26B over $10k, 3.81B adults). */
+const RICH_LIST=[[1.317e14,1],[4.03e13,2],[2.32e13,10],[1.57e11,3428],[1.57e8,6e7],[1.57e7,6.88e8],[1.57e6,2.258e9]], ADULTS=3.81e9;
+function worldRank(w){
+  if(w>=RICH_LIST[0][0]) return 1;
+  for(let i=1;i<RICH_LIST.length;i++){ const [w1,r1]=RICH_LIST[i-1], [w0,r0]=RICH_LIST[i];
+    if(w>=w0){ const k=Math.log(w/w0)/Math.log(w1/w0); return Math.floor(Math.exp(Math.log(r0)+(Math.log(r1)-Math.log(r0))*k))+1; } }
+  const [w0,r0]=RICH_LIST[RICH_LIST.length-1]; return Math.floor(ADULTS-(ADULTS-r0)*Math.max(0,w)/w0);
+}
+function rankStr(r){ if(r<1e4) return r.toLocaleString()+'位'; const u=[[1e8,'億'],[1e4,'万']]; for(const [d,n] of u) if(r>=d){ const x=r/d; return (x>=100?Math.floor(x).toLocaleString():x>=10?x.toFixed(1):x.toFixed(2))+n+'位'; } }
+
 /* ================= people & stages ================= */
 const T={
   student:{n:'学生',m:[0,5000],col:'#5A8AD8',sp:1},
@@ -211,17 +224,17 @@ function startStage(i){
   if(i>S.best.stage){ S.best.stage=i; if(!S.auto) saveBest(); }
   hideAll(); sfx('start');
 }
-function hideAll(){ $('storyOv').hidden=true; $('shopOv').hidden=true; $('nameOv').hidden=true; }
+function hideAll(){ if(S.rankDirty){ S.rankDirty=0; saveBest(); } $('storyOv').hidden=true; $('shopOv').hidden=true; $('nameOv').hidden=true; }
 function story(title,text,btn,fn,showAuto){ S.scene='story'; $('storyTitle').textContent=title; $('storyText').textContent=text; $('storyBtn').textContent=btn; storyFn=fn; $('autoStartBtn').hidden=!showAuto; $('storyOv').hidden=false; S.endT=0; }
 let storyFn=null;
 function titleScreen(){ S.money=0; S.lv={...LV0}; S.ending=null;
-  story('マネーダイソン','他人のお金を吸い取る力を手にした男、マネーダイソン。\n街の人に手をかざして資産を吸い、能力をきたえ、\n世界一の大富豪をめざせ！\n\n'+`（とうたつ：STAGE ${S.best.stage+1}／クリア ${S.best.clears}回）`,'はじめる',()=>stageIntro(0),true); }
+  story('マネーダイソン','他人のお金を吸い取る力を手にした男、マネーダイソン。\n街の人に手をかざして資産を吸い、能力をきたえ、\n世界一の大富豪をめざせ！\n\n'+`（とうたつ：STAGE ${S.best.stage+1}／クリア ${S.best.clears}回${S.best.rank?`／最高 長者番付 ${rankStr(S.best.rank)}`:''}）`,'はじめる',()=>stageIntro(0),true); }
 function recText(i){ const r=STAGES[i].rec, ks=Object.keys(r); if(!ks.length) return ''; return '\n\n⭐ おすすめ能力：'+ks.map(k=>`${SK.find(s=>s.id===k).n}Lv${r[k]}${S.lv[k]>=r[k]?'✓':''}`).join('・'); }
 function stageIntro(i){ const st=STAGES[i]; story(`STAGE ${i+1}　${st.n}`,st.intro+'\n\n💡 '+st.tip+recText(i)+`\n\n目標：${yen(st.goal)}`,'この街へ',()=>startStage(i),false); }
 function stageClear(){
   S.scene='cleared'; sfx('clear');
-  if(S.stage<STAGES.length-1){ story('STAGE CLEAR!',`${STAGES[S.stage].n}で ${yen(S.money)} 集めた。\n\n次の街はもっときびしい。着いたら💰ショップで能力をきたえよう。`+recText(S.stage+1),'次の街へ',()=>stageIntro(S.stage+1),false); }
-  else { S.best.clears++; if(!S.auto) saveBest(); story('世界一の大富豪',`マネーダイソンの資産は ${yen(S.money)}。\nついに世界のお金持ちのトップに立った。\n\nそして男は、あるものに目をつけた――。`,'某SNSを買う',()=>{ if(S.auto){ endingStart('マネーダイソン'); } else { $('storyOv').hidden=true; $('nameOv').hidden=false; } },false); }
+  if(S.stage<STAGES.length-1){ story('STAGE CLEAR!',`${STAGES[S.stage].n}で ${yen(S.money)} 集めた。\n🏆 世界長者番付 ${rankStr(worldRank(S.money))}\n\n次の街はもっときびしい。着いたら💰ショップで能力をきたえよう。`+recText(S.stage+1),'次の街へ',()=>stageIntro(S.stage+1),false); }
+  else { S.best.clears++; if(!S.auto) saveBest(); story('世界一の大富豪',`マネーダイソンの資産は ${yen(S.money)}。\n🏆 世界長者番付 1位。\nついに世界のお金持ちのトップに立った。\n\nそして男は、あるものに目をつけた――。`,'某SNSを買う',()=>{ if(S.auto){ endingStart('マネーダイソン'); } else { $('storyOv').hidden=true; $('nameOv').hidden=false; } },false); }
 }
 function faint(){ S.scene='down'; sfx('lose'); story('たおれた…',`たたかれすぎて、マネーダイソンはたおれた。\n${STAGES[S.stage].n}のはじめからやり直しだ。`,'もう一度',()=>{ S.money=S.start.money; S.lv={...S.start.lv}; startStage(S.stage); },false); }
 
@@ -332,6 +345,9 @@ function update(dt){
   if(S.npcs.filter(n=>n.state==='drained').length>8){ const d=S.npcs.find(n=>n.state==='drained'); d.state='leaveD'; }
   if(S.alarm>0){ S.alarm-=dt; if(S.alarm<=0){ S.alarm=0; for(const n of S.npcs) if(n.t.police&&n.state==='chase') n.state='walk'; S.msg='逃げきった！'; S.msgT=0; } }
   $('touchBtn').disabled=!nearestTouchable();
+  const rk=worldRank(S.money), tier=Math.ceil(Math.log10(rk));
+  if(S.rankTier!=null&&tier<S.rankTier&&S.alarm<=0){ S.msg=rk===1?'🏆 世界長者番付 1位！':`🏆 長者番付 ${rankStr(Math.pow(10,tier))}以内に入った！`; S.msgT=0; sfx('coin'); }
+  S.rankTier=tier; if(!S.auto&&(!S.best.rank||rk<S.best.rank)){ S.best.rank=rk; S.rankDirty=1; }
   if(S.money>=st.goal&&S.scene==='play') stageClear();
 }
 function enrage(n){
@@ -538,9 +554,10 @@ function drawHud(){
   const st=STAGES[S.stage], p=S.p;
   g.fillStyle='rgba(16,10,26,.88)'; g.fillRect(0,0,W,TOP);
   g.fillStyle='#F2C23A'; g.font='800 16px "M PLUS Rounded 1c",sans-serif'; g.textAlign='left'; g.fillText('💰 '+yen(S.money),8,18);
+  { const mw=g.measureText('💰 '+yen(S.money)).width, r=worldRank(S.money); g.font='800 10px "M PLUS Rounded 1c",sans-serif'; g.fillStyle=r<=10?'#FFE070':'#D8C8F0'; g.fillText(`🏆 長者番付 ${rankStr(r)}`,14+mw,17); }
   g.fillStyle='#E8E0F0'; g.font='800 10px "M PLUS Rounded 1c",sans-serif'; g.fillText(`STAGE ${S.stage+1} ${st.n}　目標 ${yen(st.goal)}`,8,36);
   const k=Math.min(1,S.money/st.goal); g.fillStyle='#2C2240'; g.fillRect(200,28,150,8); g.fillStyle='#F2C23A'; g.fillRect(200,28,150*k,8);
-  g.textAlign='right'; g.font='13px sans-serif'; g.fillText('❤️'.repeat(Math.max(0,p.hp))+'🤍'.repeat(Math.max(0,hpOf(S.lv.hp)-p.hp)),W-8,18);
+  g.textAlign='right'; g.font='13px sans-serif'; const mh=hpOf(S.lv.hp); g.fillText(mh<=6?'❤️'.repeat(Math.max(0,p.hp))+'🤍'.repeat(Math.max(0,mh-p.hp)):`❤️ ${Math.max(0,p.hp)}/${mh}`,W-8,18);
   if(S.revT>0){ g.fillStyle='rgba(200,30,40,.12)'; g.fillRect(0,TOP,W,H-TOP); g.fillStyle='#FFD0B0'; g.textAlign='center'; g.font='800 13px "M PLUS Rounded 1c",sans-serif'; g.fillText(`✊ 革命中：警察まひ ${Math.ceil(S.revT)}秒`,W/2,TOP+18); }
   if(S.alarm>0){ g.fillStyle=`rgba(224,67,61,${.25+.2*Math.sin(S.t*12)})`; g.fillRect(0,TOP,W,H-TOP); g.fillStyle='#fff'; g.textAlign='center'; g.font='800 14px "M PLUS Rounded 1c",sans-serif'; g.fillText(`🚨 警察に追われている！ ${Math.ceil(S.alarm)}秒`,W/2,TOP+18); }
   if(S.msg&&S.msgT<2.2){ g.globalAlpha=Math.min(1,2.2-S.msgT); g.fillStyle='rgba(16,10,26,.8)'; g.fillRect(40,H/2-24,280,40); g.fillStyle='#F2C23A'; g.textAlign='center'; g.font='800 17px "M PLUS Rounded 1c",sans-serif'; g.fillText(S.msg,W/2,H/2+2); g.globalAlpha=1; }
@@ -620,7 +637,7 @@ function loop(now){ const dt=Math.min(.05,(now-last)/1000); last=now; if(!S.manu
 requestAnimationFrame(loop);
 
 window.__dyson={ get S(){ return S; }, setAuto, manual(v=true){ S.manual=v; }, step(dt=1/60){ update(dt); }, seed(v){ seed=(Math.abs(v|0)%2147483646)+1; },
-  startStage, stageIntro, buy, useSkill, syncSkillBar, directTouch, openShop, closeShop, endingStart, spendMoney, STAGES, yen };
+  startStage, stageIntro, buy, useSkill, syncSkillBar, worldRank, rankStr, directTouch, openShop, closeShop, endingStart, spendMoney, STAGES, yen };
 })();
 </script>
 <!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
