@@ -81,6 +81,7 @@ button:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
     <a href="../">← 一覧</a>
     <h1>女゛ぁ！</h1>
     <button class="mini" id="autoBtn" aria-pressed="false" title="Oキー">🤖 オート</button>
+    <button class="mini" id="voiceBtn" aria-pressed="true" title="Vキー">🗣 声</button>
     <button class="mini" id="muteBtn">音 ON</button>
   </div>
   <div id="status">
@@ -91,7 +92,7 @@ button:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
   <canvas id="scene" width="360" height="190"></canvas>
   <div id="msg"></div>
   <div id="acts"></div>
-  <p class="keys">数字キー 1〜8：行動　Enter / スペース：つぎへ　U：能力アップ　G：女の子　O：オート　M：音</p>
+  <p class="keys">数字キー 1〜8：行動　Enter / スペース：つぎへ　U：能力アップ　G：女の子　O：オート　M：音　V：読み上げ</p>
 
   <div class="ov" id="titleOv">
     <div class="card" id="title">
@@ -194,6 +195,8 @@ const H={
     end:'「みんなアタシのこと、不良って言うけど。\nアンタだけは、ふつうに話しかけてくれた。\n…すき。ネコと同じくらい。いや、それ以上」\n\n捨て猫の名前は、ふたりで決めた。'},
 };
 const GONTA={n:'熊谷ゴンタ',s:'ゴンタ',col:'#6A5A4A'};
+// reading voices: pitch / speed for each character (the device's own Japanese voice reads the lines)
+const VOICE={hinata:[1.6,1.15],rin:[1.3,.95],reika:[1.15,.95],yume:[1.7,1.05],ageha:[1.5,1.2],koharu:[1.8,1.1],akane:[.95,1.1],nene:[1.2,.9],gonta:[.55,1],narr:[1,1.05],shout:[.8,1.25]};
 const ENDS=['hinata','rin','reika','yume','ageha','koharu','akane','nene','todai','major','bunbu','pro','alone','danshi'];
 const END_N={todai:'東大合格',major:'メジャーリーガー',bunbu:'文武両道',pro:'プロ野球選手',alone:'ひとりぼっち',danshi:'男子校3年間'};
 
@@ -453,8 +456,25 @@ function graduation(){
 function say(lines,then){ S.q=lines.slice(); S.after=then; S.mode='msg'; showNext(); }
 function showNext(){
   const m=S.q.shift(); if(!m){ const f=S.after; S.after=null; if(f) f(); render(); return; }
-  S.cur=m; render(); drawScene();
+  S.cur=m; render(); drawScene(); speakLine(m);
 }
+/* ================= reading lines aloud (Web Speech API) ================= */
+let voiceOn=true; try{ voiceOn=localStorage.getItem('onnaVoice')!=='0'; }catch(e){}
+function speechText(t){ return String(t).replace(/女゛(ぁ*)/g,(_,a)=>'おんな'+a).replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu,'').replace(/[▼★⚠…]+/g,'、').replace(/\n+/g,'。').replace(/[。、]{2,}/g,'。').trim(); }
+let jaVoices=null;
+function pickVoice(female){ try{ if(!jaVoices||!jaVoices.length) jaVoices=speechSynthesis.getVoices().filter(v=>/^ja/i.test(v.lang)); }catch(e){ return null; }
+  if(!jaVoices.length) return null; const male=/Otoya|Hattori|Ichiro|Keita|Daichi|Male|男/i;
+  return jaVoices.find(v=>female?!male.test(v.name):male.test(v.name))||jaVoices[0]; }
+function speak(text,kind){
+  if(muted||!voiceOn) return; let sy; try{ sy=window.speechSynthesis; }catch(e){} if(!sy) return;
+  const t=speechText(text); if(!t) return;
+  try{ sy.cancel(); const u=new SpeechSynthesisUtterance(t), v=VOICE[kind]||VOICE.narr; u.lang='ja-JP'; u.pitch=v[0]; u.rate=v[1];
+    const vc=pickVoice(H[kind]?true:kind!=='gonta'&&kind!=='shout'?null:false); if(vc&&kind!=='narr') try{ u.voice=vc; }catch(e){}
+    S.speaking=true; S.speakEst=Math.min(9,t.length/(7.5*v[1])+.8); u.onend=u.onerror=()=>{ S.speaking=false; }; sy.speak(u); }catch(e){ S.speaking=false; }
+}
+function speakLine(m){ if(!m) return; speak(m.t,m.shout?'shout':m.g?m.g:m.who==='gonta'?'gonta':'narr'); }
+function stopSpeak(){ S.speaking=false; try{ speechSynthesis.cancel(); }catch(e){} }
+function setVoice(v){ voiceOn=!!v; $('voiceBtn').setAttribute('aria-pressed',voiceOn); $('voiceBtn').textContent=voiceOn?'🗣 声':'🤐 声'; try{ localStorage.setItem('onnaVoice',voiceOn?'1':'0'); }catch(e){} if(!voiceOn) stopSpeak(); }
 function renderMsg(){
   const m=S.cur; const who=m&&m.g?H[m.g].n:m&&m.who==='gonta'?GONTA.n:'';
   $('msg').innerHTML=(who?`<b>${who}</b><br>`:'')+(m&&m.shout?`<div class="shout" style="font-size:34px;margin:4px 0">${esc(m.t)}</div>`:esc(m?m.t:''))+(S.mode==='msg'?'<span class="nx">▼ タップ</span>':'');
@@ -514,7 +534,7 @@ function openGirls(){ if(S.mode==='title') return;
   $('girlsList').querySelectorAll('canvas').forEach(c=>{ const x=c.getContext('2d'); drawGirl(x,c.dataset.g,48,100,.7,girl(c.dataset.g).like>=60?'l':'n'); });
   $('girlsOv').hidden=false; }
 function showEnd(title,shout,text,key){
-  S.mode='end'; if(!S.auto) clearSave(); $('endTitle').textContent=title; $('endShout').hidden=!shout; $('endShout').textContent=shout; $('endText').textContent=text+`\n\n📖 エンディング ${Object.keys(S.best.seen).length}/${ENDS.length}`;
+  S.mode='end'; if(!S.auto) clearSave(); speak((shout?shout+'。':'')+text,key==='danshi'||key==='alone'?'shout':H[key]?key:'narr'); $('endTitle').textContent=title; $('endShout').hidden=!shout; $('endShout').textContent=shout; $('endText').textContent=text+`\n\n📖 エンディング ${Object.keys(S.best.seen).length}/${ENDS.length}`;
   const x=$('endCv').getContext('2d'); x.clearRect(0,0,320,170);
   if(H[key]){ const gr=x.createLinearGradient(0,0,0,170); gr.addColorStop(0,'#FFD8E4'); gr.addColorStop(1,'#FFF4F6'); x.fillStyle=gr; x.fillRect(0,0,320,170); petals(x,320,170,40); drawGirl(x,key,160,180,1.25,'l'); }
   else if(key==='todai'||key==='major'||key==='bunbu'||key==='pro'){ x.fillStyle=key==='todai'?'#F4E8D8':'#5AA05A'; x.fillRect(0,0,320,170);
@@ -661,6 +681,7 @@ function tick(dt){
   if(!S.auto) return;
   S.autoT+=dt;
   if(S.mode==='title'){ if(S.autoT>.6){ S.autoT=0; newGame($('nameIn').value.trim()||'前田ダイソン'); } return; }
+  if(S.speaking&&S.autoT<(S.speakEst||3)&&(S.mode==='msg'||S.mode==='end')) return;
   if(S.mode==='end'){ if(S.autoT>4){ S.autoT=0; toTitle(); } return; }
   if(S.autoT<.55) return; S.autoT=0;
   if(S.mode==='msg') return showNext();
@@ -680,6 +701,7 @@ $('startBtn').onclick=()=>{ ac(); user(); newGame($('nameIn').value.trim()||'前
 $('autoStartBtn').onclick=()=>{ ac(); setAuto(true); newGame($('nameIn').value.trim()||'前田ダイソン'); };
 $('autoBtn').onclick=()=>{ ac(); setAuto(!S.auto); };
 $('muteBtn').onclick=()=>{ ac(); setMute(!muted); };
+$('voiceBtn').onclick=()=>{ ac(); setVoice(!voiceOn); if(voiceOn&&S.cur&&S.mode==='msg') speakLine(S.cur); };
 $('chCancel').onclick=()=>{ ac(); user(); cancelChoose(); };
 $('upClose').onclick=()=>{ ac(); $('upOv').hidden=true; };
 $('girlsClose').onclick=()=>{ ac(); $('girlsOv').hidden=true; };
@@ -689,6 +711,7 @@ addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();
   if(k==='o'){ ac(); setAuto(!S.auto); return; }
   if(k==='m'){ ac(); setMute(!muted); return; }
+  if(k==='v'){ ac(); setVoice(!voiceOn); return; }
   if(k==='u'){ ac(); user(); if($('upOv').hidden) openUp(); else $('upOv').hidden=true; return; }
   if(k==='g'){ ac(); user(); if($('girlsOv').hidden) openGirls(); else $('girlsOv').hidden=true; return; }
   if(k==='escape'){ $('upOv').hidden=true; $('girlsOv').hidden=true; if(S.mode==='choose'&&!$('chCancel').hidden) cancelChoose(); return; }
@@ -708,9 +731,10 @@ function sfx(k){
   else if(k==='boom'){ tone(90,.6,'sawtooth',.1,0,40); }
   else if(k==='clear') [523,659,784,1046].forEach((f,i)=>tone(f,.2,'triangle',.07,i*.12));
 }
-function setMute(m){ muted=m; $('muteBtn').textContent=m?'音 OFF':'音 ON'; try{ localStorage.setItem('onnaMute',m?'1':'0'); }catch(e){} }
+function setMute(m){ muted=m; if(m) stopSpeak(); $('muteBtn').textContent=m?'音 OFF':'音 ON'; try{ localStorage.setItem('onnaMute',m?'1':'0'); }catch(e){} }
 
-setMute(muted); toTitle();
+setMute(muted); setVoice(voiceOn); toTitle();
+try{ speechSynthesis.onvoiceschanged=()=>{ jaVoices=null; }; }catch(e){}
 let last=performance.now();
 function loop(now){ const dt=Math.min(.1,(now-last)/1000); last=now; if(!S.manual) tick(dt); if(S.mode==='title'||S.mode==='end') drawScene(); requestAnimationFrame(loop); }
 requestAnimationFrame(loop);
