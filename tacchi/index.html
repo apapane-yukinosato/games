@@ -12,18 +12,23 @@
 :root{--bg:#FFF8EC;--ink:#4A3A2A;--card:#FFFFFF;--line:#F2DCC0;--mute:#A08A70;--pink:#FF7A9A}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html,body{margin:0;background:var(--bg);color:var(--ink)}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink)}
 body{font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 button{font:inherit;color:inherit}
 button:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
-#app{max-width:520px;margin:0 auto;padding:8px 10px 14px;padding-top:calc(8px + env(safe-area-inset-top,0px));position:relative}
 #top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 #top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
 #top h1{flex:1;margin:0;text-align:center;font-size:17px;font-weight:800;color:#E06A3A}
 .mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--card);cursor:pointer;white-space:nowrap}
 .mini[aria-pressed=true]{background:var(--pink);border-color:var(--pink);color:#fff}
-#cv{display:block;width:100%;aspect-ratio:3/4;border-radius:20px;background:#BFE6FF;touch-action:none}
-#bar{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:8px}
+#app{max-width:none;height:100vh;height:100dvh;display:flex;flex-direction:column;margin:0;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));padding-top:calc(6px + env(safe-area-inset-top,0px))}
+#wrap{position:relative;flex:1;min-height:0;margin-top:4px}
+#cv{display:block;width:100%;height:100%;border-radius:18px;touch-action:none}
+#bar{position:absolute;left:6px;right:6px;bottom:6px;display:flex;gap:5px;justify-content:center}
+#bar .sc{flex:1;max-width:64px;aspect-ratio:auto;min-height:0;height:52px;background:rgba(255,255,255,.82);backdrop-filter:blur(2px)}
+#bar .sc.endless{max-width:72px;font-size:12px;font-weight:800;flex-direction:column;line-height:1.1}
+#bar .sc.endless.on{background:#FFE27A;border-color:#E0A820}
+.note,.back2{display:none!important}
 .sc{aspect-ratio:1;border:3px solid var(--line);border-radius:18px;background:var(--card);font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;padding:0}
 .sc.on{border-color:var(--pink);box-shadow:0 0 0 3px #FFD0DC}
 .sc i{position:absolute;right:2px;top:-2px;font-size:12px;font-style:normal}
@@ -41,10 +46,9 @@ button:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
     <button class="mini" id="autoBtn" aria-pressed="false" title="Oキー">🤖 オート</button>
     <button class="mini" id="muteBtn">音 ON</button>
   </div>
-  <canvas id="cv" width="360" height="480" aria-label="さわってあそぶ画面"></canvas>
-  <div id="bar"></div>
+  <div id="wrap"><canvas id="cv" width="360" height="480" aria-label="さわってあそぶ画面"></canvas><div id="bar"></div></div>
   <p class="note" id="note"></p>
-  <p class="keys">クリックでタッチ　1〜6 面をえらぶ　O オート　M 音</p>
+  <p class="keys">クリックでタッチ　1〜6 面をえらぶ　O オート　E ずっと　M 音</p>
   <a class="back2" href="../">← ゲーム一覧にもどる</a>
 </div>
 
@@ -55,7 +59,27 @@ const $=id=>document.getElementById(id);
 let seed=(Date.now()%2147483646)+1; const rnd=()=>{ seed=seed*16807%2147483647; return (seed-1)/2147483646; };
 const clamp=(v,a,b)=>v<a?a:v>b?b:v, pick=a=>a[Math.floor(rnd()*a.length)], lerp=(a,b,k)=>a+(b-a)*k;
 const W=360,H=480, GROUND=430;
-const cv=$('cv'), g=cv.getContext('2d');
+const cv=$('cv'), SG=cv.getContext('2d');
+
+/* ================= full-screen stage =================
+   The scene is drawn on a fixed 360x480 stage and shown as large as possible;
+   the stage's edge rows/columns are stretched to fill the rest of the screen,
+   so the sky and the ground reach the edges of any phone. */
+const stage=document.createElement('canvas'); stage.width=720; stage.height=960;
+const FIT={s:1,dx:0,dy:0};
+function fitCanvas(){ const r=cv.getBoundingClientRect(); const dpr=Math.min(2,window.devicePixelRatio||1); const w=Math.max(1,Math.round(r.width*dpr)), h=Math.max(1,Math.round(r.height*dpr)); if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; } }
+// the edges are copied once per scene (not every frame) so things flying past the border do not smear
+const edge=document.createElement('canvas'); const eg=edge.getContext('2d'); let edgeKey=null, edgeWait=0;
+function present(key,bgSrc){ if(key!==edgeKey){ edgeKey=key; edgeWait=2; } if(edgeWait>0&&--edgeWait===0){ edge.width=stage.width; edge.height=stage.height; eg.drawImage(stage,0,0); }
+  const src=bgSrc||(edgeWait>0?stage:edge), sg=SG, SW=stage.width, SH=stage.height, cw=cv.width, ch=cv.height, s=Math.min(cw/SW,ch/SH), dw=SW*s, dh=SH*s, dx=(cw-dw)/2, dy=(ch-dh)/2; FIT.s=s; FIT.dx=dx; FIT.dy=dy;
+  sg.imageSmoothingEnabled=true;
+  if(dy>0){ sg.drawImage(src,0,0,SW,2,0,0,cw,dy+2); sg.drawImage(src,0,SH-2,SW,2,0,dy+dh-2,cw,ch-dy-dh+2); }
+  if(dx>0){ sg.drawImage(src,0,0,2,SH,0,dy,dx+2,dh); sg.drawImage(src,SW-2,0,2,SH,dx+dw-2,dy,cw-dx-dw+2,dh); }
+  sg.drawImage(stage,dx,dy,dw,dh); }
+function toStage(e){ const r=cv.getBoundingClientRect(), px=(e.clientX-r.left)/r.width*cv.width, py=(e.clientY-r.top)/r.height*cv.height;
+  return [clamp((px-FIT.dx)/FIT.s/2,0,W),clamp((py-FIT.dy)/FIT.s/2,0,H)]; }
+addEventListener('resize',fitCanvas); fitCanvas();
+const g=stage.getContext('2d');
 
 /* ================= scenes ================= */
 const SCENES=[
@@ -66,7 +90,7 @@ const SCENES=[
   {id:'car',ic:'🚗',n:'のりもの',goal:8,say:'のりもの'},
   {id:'fire',ic:'🎆',n:'はなび',goal:10,say:'はなび'},
 ];
-const S={idx:0,objs:[],parts:[],count:0,clearT:0,t:0,auto:false,manual:false,autoT:0,taps:0,spawnT:0,hand:null,
+const S={endless:(()=>{ try{ return localStorage.getItem('tacchiEndless')==='1'; }catch(e){ return false; } })(),idx:0,objs:[],parts:[],count:0,clearT:0,t:0,auto:false,manual:false,autoT:0,taps:0,spawnT:0,hand:null,
   best:(()=>{ try{ return JSON.parse(localStorage.getItem('tacchiBest')||'null')||{taps:0,clears:{}}; }catch(e){ return {taps:0,clears:{}}; } })()};
 function saveBest(){ if(S.auto) return; try{ localStorage.setItem('tacchiBest',JSON.stringify(S.best)); }catch(e){} }
 const sc=()=>SCENES[S.idx];
@@ -136,7 +160,7 @@ function update(dt){
   if(id==='fire'){ for(const r of S.objs){ if(r.k!=='rocket') continue; r.y-=420*dt; r.x+=(r.tx-r.x)*dt*3; if(r.y<=r.ty){ r.dead=1; firework(r.x,r.ty,r.col); } } S.objs=S.objs.filter(r=>!r.dead); }
   for(const p of S.parts){ p.t+=dt; if(p.vx!=null){ p.x+=p.vx*dt; p.y+=p.vy*dt; } if(p.k==='dot'||p.k==='spark'){ p.vy+=(p.g||0)*dt; p.vx*=Math.pow(.4,dt); } if(p.k==='drop'){ p.vy+=200*dt; } if(p.k==='conf') p.rot+=dt*5; }
   S.parts=S.parts.filter(p=>p.t<(p.k==='conf'?4:p.k==='spark'?1.6:p.k==='ring'?.5:1.1));
-  if(S.clearT>0){ S.clearT-=dt; if(S.clearT<=0){ S.clearT=0; startScene(S.idx+1); } }
+  if(S.clearT>0){ S.clearT-=dt; if(S.clearT<=0){ S.clearT=0; startScene(S.endless?S.idx:S.idx+1); } }
   if(S.auto) autoTick(dt);
   if(S.hand){ S.hand.t+=dt; if(S.hand.t>.6) S.hand=null; }
 }
@@ -256,24 +280,27 @@ function drawHud(){
   if(S.hand){ g.globalAlpha=1-S.hand.t/.6; emoji('👆',S.hand.x+10,S.hand.y+26,34); g.globalAlpha=1; }
   if(S.auto){ g.fillStyle='rgba(255,255,255,.85)'; g.font='800 11px sans-serif'; g.textAlign='left'; g.fillText('🤖 AUTO',8,H-8); }
 }
-function draw(){ g.setTransform(1,0,0,1,0,0);
+function draw(){ g.setTransform(2,0,0,2,0,0);
   const id=sc().id; ({apple:drawApple,bubble:drawBubble,egg:drawEgg,fish:drawFish,car:drawCar,fire:drawFire})[id]();
   drawParts(); drawHud(); }
 
 /* ================= UI ================= */
+// endless mode: keep playing the same game instead of moving on after a clear
+function toggleEndless(){ S.endless=!S.endless; try{ localStorage.setItem('tacchiEndless',S.endless?'1':'0'); }catch(e){} speak(S.endless?'ずっと おなじ あそび':'じゅんばんに あそぼう'); renderBar(); }
 function renderBar(){
-  $('bar').innerHTML=SCENES.map((s,i)=>`<button class="sc${i===S.idx?' on':''}" data-i="${i}" aria-label="${s.n}">${s.ic}${S.best.clears[s.id]?'<i>⭐</i>':''}</button>`).join('');
-  $('bar').querySelectorAll('.sc').forEach(b=>b.onclick=()=>{ ac(); user(); startScene(+b.dataset.i); });
+  $('bar').innerHTML=SCENES.map((s,i)=>`<button class="sc${i===S.idx?' on':''}" data-i="${i}" aria-label="${s.n}">${s.ic}${S.best.clears[s.id]?'<i>⭐</i>':''}</button>`).join('')+`<button class="sc endless${S.endless?' on':''}" id="endlessBtn" aria-pressed="${!!S.endless}" title="Eキー">🔁<br>ずっと</button>`;
+  $('endlessBtn').onclick=()=>{ ac(); user(); toggleEndless(); };
+  $('bar').querySelectorAll('.sc[data-i]').forEach(b=>b.onclick=()=>{ ac(); user(); startScene(+b.dataset.i); });
   $('note').textContent=`${sc().ic} ${sc().n}　｜　これまでのタッチ ${S.best.taps}回`;
 }
 function setAuto(v){ S.auto=!!v; $('autoBtn').setAttribute('aria-pressed',S.auto); S.autoT=.4; }
 function user(){ if(S.auto) setAuto(false); }
-cv.addEventListener('pointerdown',e=>{ e.preventDefault(); const r=cv.getBoundingClientRect(); user(); tapAt((e.clientX-r.left)/r.width*W,(e.clientY-r.top)/r.height*H); });
+cv.addEventListener('pointerdown',e=>{ e.preventDefault(); user(); const [x,y]=toStage(e); tapAt(x,y); });
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 $('autoBtn').onclick=()=>{ ac(); setAuto(!S.auto); };
 $('muteBtn').onclick=()=>{ ac(); setMute(!muted); };
 addEventListener('keydown',e=>{ const k=e.key.toLowerCase();
-  if(k==='o'){ ac(); setAuto(!S.auto); return; } if(k==='m'){ ac(); setMute(!muted); return; }
+  if(k==='o'){ ac(); setAuto(!S.auto); return; } if(k==='e'){ ac(); user(); toggleEndless(); return; } if(k==='m'){ ac(); setMute(!muted); return; }
   if(k>='1'&&k<='6'){ ac(); user(); startScene(+k-1); return; }
   if(k===' '||k==='enter'){ e.preventDefault(); ac(); user(); tapAt(60+Math.random()*240,80+Math.random()*300); } });
 
@@ -304,7 +331,7 @@ function setMute(m){ muted=m; $('muteBtn').textContent=m?'音 OFF':'音 ON'; try
 
 setMute(muted); startScene(0);
 let last=performance.now();
-function loop(now){ const dt=Math.min(.05,(now-last)/1000); last=now; if(!S.manual) update(dt); draw(); requestAnimationFrame(loop); }
+function loop(now){ const dt=Math.min(.05,(now-last)/1000); last=now; if(!S.manual) update(dt); draw(); present(S.idx); requestAnimationFrame(loop); }
 requestAnimationFrame(loop);
 setInterval(()=>{ if(!S.auto) saveBest(); },5000);
 
