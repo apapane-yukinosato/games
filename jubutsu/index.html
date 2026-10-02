@@ -165,6 +165,11 @@ const S={bossLv:24,mode:'title',area:0,px:5,py:11,face:'up',walk:0,ox:0,oy:0,mov
   B:null,msgs:[],msgT:0,onMsgsDone:null,auto:false,manual:false,autoT:0,t:0,steps:0,keys:{},pad:null,ovFn:null,endT:0,flash:0,shake:0,
   best:(()=>{ try{ return JSON.parse(localStorage.getItem('jubutsuBest')||'null')||{clears:0,species:0}; }catch(e){ return {clears:0,species:0}; } })()};
 function saveBest(){ if(S.auto) return; try{ localStorage.setItem('jubutsuBest',JSON.stringify(S.best)); }catch(e){} }
+const SAVE_KEYS=['area','px','py','face','party','box','shelf','money','items','badges','owned','steps'];
+function saveGame(quiet=false){ if(S.auto) return false; try{ const o={}; for(const k of SAVE_KEYS) o[k]=S[k]; localStorage.setItem('jubutsuSave',JSON.stringify(o)); if(!quiet) sfx('coin'); return true; }catch(e){ return false; } }
+function loadSave(){ try{ const raw=localStorage.getItem('jubutsuSave'); if(!raw) return null; const o=JSON.parse(raw); if(o&&Array.isArray(o.party)&&o.party.length>0&&typeof o.area==='number') return o; }catch(e){} return null; }
+function clearSave(){ try{ localStorage.removeItem('jubutsuSave'); }catch(e){} }
+function resumeGame(){ const sv=loadSave(); if(!sv) return; for(const k of SAVE_KEYS) if(k in sv) S[k]=sv[k]; closeOv(); S.mode='field'; S.B=null; S.path=[]; S.ox=S.oy=0; S.moveT=0; syncUI(); showMsg(); sfx('step'); say('師匠「よく戻ったな。冒険の続きを始めよう」'); }
 const area=()=>AREAS[S.area];
 const tileAt=(x,y)=>(area().map[y]||'')[x]||'#';
 const solid=c=>'#CSMBTw'.includes(c);
@@ -180,16 +185,35 @@ function fieldHint(){ if(S.mode==='battle') return S.B&&S.B.phase==='cmd'?`${SP[
 /* ================= start ================= */
 function titleScreen(){ S.mode='title'; S.msgs=[]; S.onMsgsDone=null;
   const best=S.best.clears?`クリア ${S.best.clears}回`:'';
+  const sv=loadSave();
+  let contHtml='';
+  if(sv){
+    const aName=AREAS[sv.area]?AREAS[sv.area].n:'師匠の骨董店';
+    const topMon=sv.party[0]?`${SP[sv.party[0].sp].n} Lv${sv.party[0].lv}`:'呪物';
+    const bCount=Array.isArray(sv.badges)?sv.badges.filter(Boolean).length:0;
+    contHtml=`<button class="go" id="btnResume">▶ つづきから（${aName}・印 ${bCount}/4・${topMon}）</button>
+      <div style="font-size:11px;color:#8A7A5A;margin:6px 0 2px">―― 新しくはじめる（最初のしもべを選択） ――</div>`;
+  }
   openOv(`<h2>呪物買付</h2><p class="sub">古い骨董店に弟子入りした、新人骨董商のあなた。\n師匠が、奥の蔵から3つの箱を出してきた。\n「最初のしもべを、ひとつ選びなさい」</p>
+    ${contHtml}
     <div class="starters">${STARTERS.map(k=>`<button data-k="${k}"><canvas width="72" height="72" data-sp="${k}"></canvas>${SP[k].n}<br><span class="tp ${SP[k].t}">${TY[SP[k].t].n}</span></button>`).join('')}</div>
     <p class="sub">🎎人形は🦴骨に強い　🦴骨は🏺遺物に強い　🏺遺物は🎎人形に強い\n${best}</p>
-    <button class="go alt" id="ovAuto">🤖 オートで見る</button><a class="back" href="../">← ゲーム一覧にもどる</a>`);
-  drawThumbs(); $('ovCard').querySelectorAll('.starters button').forEach(b=>b.onclick=()=>{ ac(); user(); newGame(b.dataset.k); });
+    <button class="go alt" id="ovAuto">🤖 オートで見る</button>
+    ${sv?`<button class="go alt" id="delSave" style="background:#5A2A2A;color:#F4D0D0;box-shadow:0 4px 0 #2A1010;font-size:12px;min-height:36px">🗑️ セーブデータを消去</button>`:''}
+    <a class="back" href="../">← ゲーム一覧にもどる</a>`);
+  drawThumbs();
+  if(sv&&$('btnResume')) $('btnResume').onclick=()=>{ ac(); user(); resumeGame(); };
+  if(sv&&$('delSave')) $('delSave').onclick=()=>{ user(); if(confirm('セーブデータを削除しますか？\n（この操作は取り消せません）')){ clearSave(); titleScreen(); } };
+  $('ovCard').querySelectorAll('.starters button').forEach(b=>b.onclick=()=>{
+    ac(); user();
+    if(sv&&!confirm('前のセーブデータは上書きされます。新しくはじめますか？')) return;
+    newGame(b.dataset.k);
+  });
   $('ovAuto').onclick=()=>{ ac(); setAuto(true); }; syncUI(); }
 function newGame(k){ closeOv(); S.party=[mkMon(k,5)]; S.box=[]; S.shelf=[]; S.money=600; S.items={fuda:5,joufuda:0,shio:2,miki:0}; S.badges=[0,0,0,0]; S.owned={[k]:1}; S.steps=0;
-  enterArea(0,6,2); S.mode='field';
+  enterArea(0,6,2); S.mode='field'; saveGame(true);
   say([`師匠「${SP[k].n} か。いい目をしておる」`,'師匠「呪物は、草むらの瘴気にひそんでおる。弱らせて「封印の札」を投げれば、しもべになる」','師匠「集めた呪物は、店に並べて売ることもできる。各地の呪物師を倒し、4つの印を集めるのじゃ」','師匠「……封印の地で、呪物の始祖が目ざめようとしておる。たのんだぞ」']); }
-function enterArea(i,x,y){ S.area=i; S.px=x; S.py=y; S.path=[]; S.ox=S.oy=0; S.moveT=0;
+function enterArea(i,x,y){ S.area=i; S.px=x; S.py=y; S.path=[]; S.ox=S.oy=0; S.moveT=0; saveGame(true);
   if(area().home&&S.shelf.length){ const fee=S.shelf.reduce((a,m)=>a+Math.round(valueOf(m)*.04),0); if(fee>0&&S.mode==='field'){ S.money+=fee; say(`店に並べた呪物の見物料が入った！ +${yen(fee)}`); } } }
 
 /* ================= field ================= */
@@ -220,19 +244,22 @@ function openWorld(){ S.mode='menu'; S.ovKind='world'; const b=S.badges.filter(B
   openOv(`<h2>🗺️ どこへ行く？</h2><p class="sub">手持ちの呪物：${S.party.map(m=>`${SP[m.sp].n} Lv${m.lv}`).join('、')}\n所持金 ${yen(S.money)}　印 ${b}/4</p>
     ${AREAS.map((a,i)=>`<button class="go${i?' alt':''}" data-i="${i}" ${a.final&&b<4?'disabled':''}>${a.home?'🏪 ':a.final?'⛩️ ':''}${a.n}${a.lv?`（野生 Lv${a.lv[0]}〜${a.lv[1]}）${S.badges[i-1]?' 🔖':''}`:''}${a.final?(b<4?'（印が4つ必要）':'（呪物の始祖）'):''}</button>`).join('')}`);
   $('ovCard').querySelectorAll('button[data-i]').forEach(btn=>btn.onclick=()=>{ ac(); user(); travel(+btn.dataset.i); }); syncUI(); }
-function travel(i){ closeOv(); S.mode='field'; const [ex,ey]=[5,11]; enterArea(i,ex,ey); sfx('step'); syncUI(); showMsg(); }
+function travel(i){ closeOv(); S.mode='field'; const [ex,ey]=[5,11]; enterArea(i,ex,ey); sfx('step'); saveGame(true); syncUI(); showMsg(); }
 function openShop(){ S.mode='menu'; S.ovKind='shop'; renderShop(); }
 function renderShop(){ const it=S.items;
   openOv(`<h2>🏪 師匠の店</h2><p class="sub">所持金 ${yen(S.money)}　札 ${it.fuda}／上級札 ${it.joufuda}／塩 ${it.shio}／御神酒 ${it.miki}</p>
     <button class="go" id="heal">🧂 お祓いしてもらう（手持ちを全回復・無料）</button>
     <div class="list">${[['fuda','🧧 封印の札',120,'呪物を封印する'],['joufuda','📿 上級封印札',360,'封印しやすい'],['shio','🧂 お清めの塩',90,'体力を45回復'],['miki','🍶 御神酒',300,'体力を全回復']].map(([k,n,p,d])=>`<div class="it"><span style="font-size:24px;text-align:center">${n.slice(0,2)}</span><div><b>${n.slice(2)}</b><small>${d}　${yen(p)}</small></div><div class="bt"><button data-buy="${k}" data-p="${p}" ${S.money<p?'disabled':''}>買う</button></div></div>`).join('')}</div>
     <button class="go alt" id="kura">📦 蔵（集めた呪物の管理・販売）</button>
+    <button class="go alt" id="shopSave">💾 帳簿をつける（セーブ）</button>
     <button class="go alt" id="leave">もどる</button>`);
   $('heal').onclick=()=>{ ac(); user(); healAll(); renderShop(); say('師匠「はらいたまえ、きよめたまえ……」手持ちの呪物が元気になった！'); };
   $('ovCard').querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{ ac(); user(); buyItem(b.dataset.buy,+b.dataset.p); renderShop(); });
-  $('kura').onclick=()=>{ ac(); user(); renderKura(); }; $('leave').onclick=()=>{ user(); closeOv(); S.mode='field'; syncUI(); showMsg(); }; syncUI(); }
-function buyItem(k,p){ if(S.money<p) return; S.money-=p; S.items[k]++; sfx('coin'); }
-function healAll(){ for(const m of S.party) m.hp=hpOf(m); sfx('heal'); }
+  $('kura').onclick=()=>{ ac(); user(); renderKura(); };
+  $('shopSave').onclick=()=>{ user(); if(saveGame()){ say('師匠「よし、帳簿をつけておいたぞ。またいつでも休むがよい」'); } };
+  $('leave').onclick=()=>{ user(); closeOv(); S.mode='field'; syncUI(); showMsg(); }; syncUI(); }
+function buyItem(k,p){ if(S.money<p) return; S.money-=p; S.items[k]++; sfx('coin'); saveGame(true); }
+function healAll(){ for(const m of S.party) m.hp=hpOf(m); sfx('heal'); saveGame(true); }
 function renderKura(){ const all=[...S.party.map(m=>({m,where:'party'})),...S.shelf.map(m=>({m,where:'shelf'})),...S.box.map(m=>({m,where:'box'}))];
   openOv(`<h2>📦 蔵と店の棚</h2><p class="sub">手持ちは4体まで。棚（6つ）に並べると、店に帰るたびに見物料が入る。\n種類 ${Object.keys(S.owned).length}/15　所持金 ${yen(S.money)}</p>
     <div class="list">${all.map(({m,where},i)=>`<div class="it"><canvas width="44" height="44" data-sp="${m.sp}"></canvas><div><b>${SP[m.sp].n} Lv${m.lv}<span class="tp ${SP[m.sp].t}">${TY[SP[m.sp].t].n}</span></b><small>${where==='party'?'手持ち':where==='shelf'?'店の棚':'蔵'}　HP ${m.hp}/${hpOf(m)}　値段 ${yen(valueOf(m))}</small></div>
@@ -243,16 +270,18 @@ function renderKura(){ const all=[...S.party.map(m=>({m,where:'party'})),...S.sh
   $('ovCard').querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{ ac(); user(); const {m,where}=all[+b.dataset.i]; moveMon(m,where,b.dataset.a); renderKura(); }); }
 function moveMon(m,from,to){ const list={party:S.party,shelf:S.shelf,box:S.box}; if(from==='party'&&S.party.length<=1&&to!=='party') return;
   const src=list[from]; src.splice(src.indexOf(m),1);
-  if(to==='sell'){ S.money+=valueOf(m); sfx('coin'); return; }
+  if(to==='sell'){ S.money+=valueOf(m); sfx('coin'); saveGame(true); return; }
   if(to==='party'&&S.party.length>=4){ src.push(m); return; } if(to==='shelf'&&S.shelf.length>=6){ src.push(m); return; }
-  list[to].push(m); }
+  list[to].push(m); saveGame(true); }
 function openParty(){ if(S.mode!=='field'||S.msgs.length) return; S.mode='menu'; S.ovKind='party'; const b=S.badges.filter(Boolean).length;
   openOv(`<h2>📜 メニュー</h2><p class="sub">${area().n}　所持金 ${yen(S.money)}　印 ${b}/4\n札 ${S.items.fuda}／上級札 ${S.items.joufuda}／塩 ${S.items.shio}／御神酒 ${S.items.miki}　種類 ${Object.keys(S.owned).length}/15</p>
     <div class="list">${S.party.map(m=>`<div class="it"><canvas width="44" height="44" data-sp="${m.sp}"></canvas><div><b>${SP[m.sp].n} Lv${m.lv}<span class="tp ${SP[m.sp].t}">${TY[SP[m.sp].t].n}</span></b><small>HP ${m.hp}/${hpOf(m)}　経験 ${m.xp}/${xpNeed(m.lv)}　技：${movesOf(m).map(x=>x.n).join('・')}</small></div><div class="bt"><button data-heal="${m.id}" ${S.items.shio<1||m.hp>=hpOf(m)?'disabled':''}>塩</button></div></div>`).join('')}</div>
+    <button class="go" id="saveP">💾 冒険を記録（セーブ）</button>
     ${area().home?'':'<button class="go alt" id="goWorld">🗺️ 地図をひらく（移動）</button>'}<button class="go alt" id="closeP">とじる</button>`);
   drawThumbs(); $('closeP').onclick=()=>{ user(); closeOv(); S.mode='field'; syncUI(); showMsg(); };
+  $('saveP').onclick=()=>{ user(); if(saveGame()){ say('進行状況を記録した！'); closeOv(); S.mode='field'; syncUI(); } };
   if($('goWorld')) $('goWorld').onclick=()=>{ user(); openWorld(); };
-  $('ovCard').querySelectorAll('[data-heal]').forEach(b=>b.onclick=()=>{ user(); const m=S.party.find(x=>x.id==b.dataset.heal); if(m&&S.items.shio>0){ S.items.shio--; m.hp=Math.min(hpOf(m),m.hp+45); sfx('heal'); } closeOv(); S.mode='field'; openParty(); }); syncUI(); }
+  $('ovCard').querySelectorAll('[data-heal]').forEach(b=>b.onclick=()=>{ user(); const m=S.party.find(x=>x.id==b.dataset.heal); if(m&&S.items.shio>0){ S.items.shio--; m.hp=Math.min(hpOf(m),m.hp+45); sfx('heal'); saveGame(true); } closeOv(); S.mode='field'; openParty(); }); syncUI(); }
 
 /* ================= battle ================= */
 const cur=()=>S.party[S.B.me], foe=()=>S.B.team[S.B.ei];
@@ -290,7 +319,7 @@ function throwFuda(k){ const B=S.B, f=foe(); const key=k==='joufuda'?'joufuda':'
   const ratio=f.hp/hpOf(f), ch=clamp((1-ratio*.78)*SP[f.sp].rate*(key==='joufuda'?1.7:1)*1.6,.04,.97), ok=rnd()<ch;
   const L=[{t:`${key==='joufuda'?'上級封印札':'封印の札'}を投げつけた！`,fx:()=>{ B.fuda=.01; sfx('throw'); }},{t:'……ゆら……ゆら……',fx:()=>sfx('shake')}];
   if(ok){ L.push({t:`${SP[f.sp].n} を 封印した！`,fx:()=>{ B.caught=true; B.fuda=2; sfx('seal'); }}); const m=f; m.xp=0;
-    const where=S.party.length<4?'party':'box'; (where==='party'?S.party:S.box).push(m); const isNew=!S.owned[m.sp]; S.owned[m.sp]=1;
+    const where=S.party.length<4?'party':'box'; (where==='party'?S.party:S.box).push(m); const isNew=!S.owned[m.sp]; S.owned[m.sp]=1; saveGame(true);
     L.push(`${isNew?'新しい種類！ ':''}${SP[m.sp].n} は${where==='party'?'手持ちに加わった':'師匠の店の蔵に送られた'}。（値うち ${yen(valueOf(m))}）`); }
   else L.push({t:'札がやぶれた！ 封印に失敗した……',fx:()=>{ B.fuda=0; sfx('miss'); }});
   return L; }
@@ -319,10 +348,12 @@ function endBattle(kind){ const B=S.B;
   if(kind==='lose'){ S.money=Math.floor(S.money/2); healAll(); S.mode='field'; S.B=null; enterArea(0,5,10); return say(['……気がつくと、師匠の店にいた。','師匠「無理をするでない。呪物は、ちゃんと育ててやるのじゃ」（所持金が半分になった）']); }
   if(kind==='boss') return ending();
   backToField(); }
-function backToField(){ S.mode='field'; S.B=null; syncUI(); showMsg(); }
+function backToField(){ S.mode='field'; S.B=null; saveGame(true); syncUI(); showMsg(); }
 
 /* ================= ending ================= */
-function ending(){ S.mode='ending'; S.endT=0; S.best.clears++; S.best.species=Math.max(S.best.species,Object.keys(S.owned).length); saveBest(); sfx('end'); syncUI();
+function ending(){ S.mode='ending'; S.endT=0; S.best.clears++; S.best.species=Math.max(S.best.species,Object.keys(S.owned).length); saveBest();
+  S.area=0; S.px=5; S.py=10; S.face='up'; S.badges=[1,1,1,1]; saveGame(true);
+  sfx('end'); syncUI();
   S.endLines=['呪物の始祖は、光につつまれて消えていった。','その日、この世から「呪い」が消えた。','人形は、ただの古いお人形に。','骨は、静かな標本に。','遺物は、大切な昔の道具に。','師匠の店に並ぶ呪物たちは――','だれかに愛された、ただの骨董品になった。','あなたの店には、今日もお客さんが来る。','「この子、いい顔してるねえ」','――おしまい――']; }
 
 /* ================= auto: train, collect, sell, heal, and beat every 呪物師 in order ================= */
@@ -526,7 +557,7 @@ function update(dt){ S.t+=dt; S.flash=Math.max(0,S.flash-dt*2); S.shake=Math.max
 let last=performance.now();
 function loop(now){ const dt=Math.min(.05,(now-last)/1000); last=now; if(!S.manual) update(dt); draw(); requestAnimationFrame(loop); }
 setMute(muted); titleScreen(); requestAnimationFrame(loop);
-window.__jubutsu={ get S(){ return S; }, setAuto, manual(v=true){ S.manual=v; }, step(dt=1/60){ update(dt); }, seed(v){ seed=(Math.abs(v|0)%2147483646)+1; }, newGame, act, nextMsg, travel, SP, AREAS };
+window.__jubutsu={ get S(){ return S; }, setAuto, manual(v=true){ S.manual=v; }, step(dt=1/60){ update(dt); }, seed(v){ seed=(Math.abs(v|0)%2147483646)+1; }, newGame, act, nextMsg, travel, SP, AREAS, saveGame, loadSave, clearSave, resumeGame };
 })();
 </script>
 <!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
