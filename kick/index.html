@@ -94,11 +94,11 @@ const fmt=n=>n>=1e12?(n/1e12).toFixed(1)+'兆':n>=1e8?Math.round(n/1e8).toLocale
 
 /* ================= stages: ever bigger monsters ================= */
 const STAGES=[
-  {n:'公園の大ガエル',where:'ゆきのさと公園',boss:'frog',minion:'slime',count:6,zoom:1,hp:8e6,danger:1,sky:['#8CC8F0','#D8F0FF'],ground:'#7AB85A'},
-  {n:'港の大ガニ',where:'みなと町の港',boss:'crab',minion:'crabling',count:8,zoom:.85,hp:4.5e7,danger:2,sky:['#7AB8E8','#F0E8C8'],ground:'#C8B890'},
-  {n:'岩石ゴーレム',where:'しらかば山のふもと',boss:'golem',minion:'pebble',count:9,zoom:.72,hp:3e8,danger:3,sky:['#E8A870','#F8D8A8'],ground:'#9A8A6A'},
-  {n:'暴竜ドラグーン',where:'夕焼けの中央区',boss:'dragon',minion:'bat',count:10,zoom:.6,hp:2e9,danger:4,sky:['#5A3A7A','#F07A4A'],ground:'#6A6A70'},
-  {n:'宇宙怪獣 ホシクイ',where:'夜の都心',boss:'eater',minion:'eye',count:12,zoom:.5,hp:9.9e12,danger:5,sky:['#0A0A2A','#3A2A5A'],ground:'#3A3A48'},
+  {n:'公園の大ガエル',where:'ゆきのさと公園',boss:'frog',minion:'slime',count:6,zoom:1,hp:8e6,danger:1,atk:1.5,pow:'3万',sky:['#8CC8F0','#D8F0FF'],ground:'#7AB85A'},
+  {n:'港の大ガニ',where:'みなと町の港',boss:'crab',minion:'crabling',count:8,zoom:.85,hp:4.5e7,danger:2,atk:2.5,pow:'80万',sky:['#7AB8E8','#F0E8C8'],ground:'#C8B890'},
+  {n:'岩石ゴーレム',where:'しらかば山のふもと',boss:'golem',minion:'pebble',count:9,zoom:.72,hp:3e8,danger:3,atk:4,pow:'5000万',sky:['#E8A870','#F8D8A8'],ground:'#9A8A6A'},
+  {n:'暴竜ドラグーン',where:'夕焼けの中央区',boss:'dragon',minion:'bat',count:10,zoom:.6,hp:2e9,danger:4,atk:7,pow:'30億',sky:['#5A3A7A','#F07A4A'],ground:'#6A6A70'},
+  {n:'宇宙怪獣 ホシクイ',where:'夜の都心',boss:'eater',minion:'eye',count:12,zoom:.5,hp:9.9e12,danger:5,atk:12,pow:'1京',sky:['#0A0A2A','#3A2A5A'],ground:'#3A3A48'},
 ];
 const MIN={ // little monsters: size, speed, hp, flying, colors
   slime:{w:26,h:22,sp:55,hp:3000,fly:false,c:['#6AD06A','#3A9A3A']},
@@ -131,7 +131,10 @@ function startStage(i){
 function say(m){ S.msg=m; S.msgT=0; }
 function pop(x,y,txt,col,size){ S.pops.push({x,y,t:0,txt,col:col||'#fff',size:size||14}); }
 const city=()=>S.bld.reduce((a,b)=>a+b.hp,0)/S.bld.length;
-function hurtBld(b,d,x,y){ if(!b||b.hp<=0) return; b.hp=Math.max(0,b.hp-d); b.hit=.2; if(b.hp<=0){ sfx('crash'); for(let k=0;k<10;k++) S.pieces.push({x:b.x+rnd()*b.w,y:GY-rnd()*b.h*.5,vx:(rnd()-.5)*120,vy:-rnd()*200,r:rnd()*6,vr:(rnd()-.5)*6,s:6+rnd()*8,c:'#8A8070',t:0,life:3}); } }
+// the monsters get stronger every stage: later ones bring a building down in a few hits
+function hurtBld(b,d){ if(!b||b.hp<=0) return; b.hp=Math.max(0,b.hp-d*st().atk); b.hit=.2;
+  if(b.hp<=0){ sfx('crash'); S.shake=Math.max(S.shake,8); pop(b.x+b.w/2,GY-b.h*.6,'ビル崩壊！','#FF8A6A',16);
+    for(let k=0;k<26;k++) S.pieces.push({x:b.x+rnd()*b.w,y:GY-rnd()*b.h,vx:(rnd()-.5)*220,vy:-rnd()*300,r:rnd()*6,vr:(rnd()-.5)*6,s:6+rnd()*14,c:pick(['#8A8070','#A89C88','#6A6052']),t:0,life:3}); } }
 function nearBld(x){ let best=null,bd=1e9; for(const b of S.bld){ if(b.hp<=0) continue; const d=Math.abs(b.x+b.w/2-x); if(d<bd){ bd=d; best=b; } } return best; }
 
 /* ================= update ================= */
@@ -199,7 +202,10 @@ function minionTick(m,dt){
   // they also attack the hero if he is right there… for nothing
   const h=S.hero; if(Math.abs(h.x-m.x)<26&&Math.abs(h.y-m.y)<40&&rnd()<dt*1.2) noDamage(m.x,m.y-m.h);
 }
-function noDamage(x,y){ const h=S.hero; pop(h.x,h.y-74,'ノーダメージ','#C8E8FF',12); pop(x,y,'ペチ','#fff',11); sfx('tap'); h.bored+=1; }
+function noDamage(x,y,big){ const h=S.hero; h.bored+=1;
+  if(big){ pop(h.x,h.y-30,big,'#FF6A4A',22); pop(h.x,h.y-96,`攻撃力 ${st().pow} → ダメージ 0`,'#C8E8FF',13); S.pops.push({x:h.x,y:h.y-30,t:0,txt:'',ring:1,big:1}); S.shake=Math.max(S.shake,10); sfx('thud'); sfx('boomS'); }
+  else { pop(h.x,h.y-74,'ノーダメージ','#C8E8FF',12); pop(x,y,'ペチ','#fff',11); sfx('tap'); } }
+const HEAVY={frog:'ボディプレス!!',crab:'ギガントクロー!!',golem:'岩石パンチ!!',dragon:'灼熱ブレス!!',eater:'破滅の光線!!'};
 /* --- the boss --- */
 function bossIn(){ const s=st(), k=BOSS[s.boss], side=S.hero.x<WW/2?1:-1;
   const vw=VW0/s.zoom, d=Math.max(vw*.5,k.w*.5+120), bx=clamp(S.hero.x+(S.hero.x+d<WW-k.w/2?d:-d),k.w/2+10,WW-k.w/2-10);
@@ -207,8 +213,9 @@ function bossIn(){ const s=st(), k=BOSS[s.boss], side=S.hero.x<WW/2?1:-1;
   if(b.kind==='dragon') b.y=GY-300; if(b.kind==='eater') { b.y=GY-170; b.x=WW/2; }
   S.boss=b; S.shake=10; sfx('roar'); say(`⚠ 怪人出現！「${s.n}」 危険度${'★'.repeat(s.danger)}`); }
 function bossTick(b,dt){
-  if(!b.alive) return; b.t+=dt; b.ph+=dt; b.cd-=dt; b.flee-=dt; b.actT+=dt;
+  if(!b.alive) return; b.t+=dt; b.ph+=dt; b.cd-=dt; b.flee-=dt; b.actT+=dt; b.heavy=(b.heavy==null?1.5:b.heavy)-dt;
   const h=S.hero, dxh=h.x-b.x, near=Math.abs(dxh)<b.w/2+90;
+  if(near&&b.heavy<=0&&b.vis>.9&&!b.under){ b.heavy=2.6+rnd()*1.5; noDamage(h.x,h.y-40,HEAVY[b.kind]); }
   const tb=()=>{ const al=S.bld.filter(q=>q.hp>0); return al.length?pick(al):null; };
   if(b.kind==='frog'){
     if(b.act==='hop'){ b.vy+=GRAV*.8*dt; b.x+=b.vx*dt; b.y+=b.vy*dt; if(b.y>=GY){ b.y=GY; b.act='idle'; b.actT=0; S.shake=5; sfx('thud'); } }
@@ -391,7 +398,7 @@ function drawShots(){ for(const s of S.shots){
   else { g.fillStyle='rgba(255,120,30,.85)'; g.beginPath(); g.arc(s.x,s.y,s.r,0,7); g.fill(); g.fillStyle='rgba(255,230,120,.9)'; g.beginPath(); g.arc(s.x,s.y,s.r*.5,0,7); g.fill(); } } }
 function drawPieces(){ for(const p of S.pieces){ g.save(); g.globalAlpha=Math.min(1,(p.life-p.t)*1.5); g.translate(p.x,p.y); g.rotate(p.r); g.fillStyle=p.c; g.beginPath(); g.moveTo(-p.s/2,-p.s/3); g.lineTo(p.s/3,-p.s/2); g.lineTo(p.s/2,p.s/3); g.lineTo(-p.s/4,p.s/2); g.closePath(); g.fill(); g.restore(); } }
 function drawPops(){ for(const p of S.pops){ const a=Math.max(0,1-p.t/1.3);
-  if(p.ring){ g.strokeStyle=`rgba(255,255,255,${a})`; g.lineWidth=3; g.beginPath(); g.ellipse(p.x,p.y,10+p.t*80,4+p.t*20,0,0,7); g.stroke(); continue; }
+  if(p.ring){ const k=p.big?3:1; g.strokeStyle=p.big?`rgba(255,140,80,${a})`:`rgba(255,255,255,${a})`; g.lineWidth=3*k; g.beginPath(); g.ellipse(p.x,p.y,10+p.t*80*k,4+p.t*20*k*(p.big?2:1),0,0,7); g.stroke(); continue; }
   g.globalAlpha=a; g.font=`800 ${p.size/Z*Math.min(1,.6+p.t*3)}px "Dela Gothic One","M PLUS Rounded 1c",sans-serif`; g.textAlign='center'; g.lineWidth=4/Z; g.strokeStyle='rgba(0,0,0,.7)'; g.strokeText(p.txt,p.x,p.y-p.t*30); g.fillStyle=p.col; g.fillText(p.txt,p.x,p.y-p.t*30); g.globalAlpha=1; } }
 function drawHUD(){
   g.setTransform(1,0,0,1,0,0);
@@ -455,6 +462,7 @@ function sfx(k){
   else if(k==='pow'){ noise(.2,.14,1200); tone(160,.2,'square',.06,0,60); }
   else if(k==='boom'){ noise(1.2,.3,500); tone(90,1,'sawtooth',.1,0,30); noise(.6,.15,3000,.05); }
   else if(k==='tap') tone(1400,.05,'square',.03);
+  else if(k==='boomS'){ noise(.5,.18,600); }
   else if(k==='crash') noise(.4,.1,700);
   else if(k==='thud'){ tone(70,.3,'sine',.12,0,40); noise(.2,.08,300); }
   else if(k==='roar'){ tone(120,1,'sawtooth',.07,0,70); tone(126,1,'sawtooth',.06,0,74); }
