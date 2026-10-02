@@ -71,15 +71,24 @@ const g=stage.getContext('2d');
 /* ================= data ================= */
 // each animal has favorite foods (a big "だいすき！") but eats anything
 const ANIMALS=[
-  {e:'🐰',n:'うさぎさん',fav:['🥕','🥬'],bg:['#D8F0C8','#F4FFE8'],cry:[[900,.08,1300],[900,.08,1300]]},
-  {e:'🐵',n:'おさるさん',fav:['🍌','🍑'],bg:['#CDEBC0','#EAF8DC'],cry:[[800,.1,1400],[900,.15,1600]]},
-  {e:'🐶',n:'わんちゃん',fav:['🍖','🦴'],bg:['#FFE8C8','#FFF6E8'],cry:[[600,.12],[600,.12]]},
-  {e:'🐼',n:'ぱんださん',fav:['🎋','🍎'],bg:['#E0F2E0','#F6FFF2'],cry:[[350,.2,450]]},
-  {e:'🐱',n:'ねこちゃん',fav:['🐟','🥛'],bg:['#FFE4EC','#FFF4F8'],cry:[[700,.35,500]]},
-  {e:'🐻',n:'くまさん',fav:['🍯','🍓'],bg:['#F2E0C8','#FFF4E4'],cry:[[220,.3,180]]},
+  {e:'🐰',mouth:.75,n:'うさぎさん',fav:['🥕','🥬'],bg:['#D8F0C8','#F4FFE8'],cry:[[900,.08,1300],[900,.08,1300]]},
+  {e:'🐵',mouth:.76,n:'おさるさん',fav:['🍌','🍑'],bg:['#CDEBC0','#EAF8DC'],cry:[[800,.1,1400],[900,.15,1600]]},
+  {e:'🐶',mouth:.81,n:'わんちゃん',fav:['🍖','🦴'],bg:['#FFE8C8','#FFF6E8'],cry:[[600,.12],[600,.12]]},
+  {e:'🐼',mouth:.81,n:'ぱんださん',fav:['🎋','🍎'],bg:['#E0F2E0','#F6FFF2'],cry:[[350,.2,450]]},
+  {e:'🐱',mouth:.77,n:'ねこちゃん',fav:['🐟','🥛'],bg:['#FFE4EC','#FFF4F8'],cry:[[700,.35,500]]},
+  {e:'🐻',mouth:.84,n:'くまさん',fav:['🍯','🍓'],bg:['#F2E0C8','#FFF4E4'],cry:[[220,.3,180]]},
 ];
 const ALL_FOOD=['🥕','🍌','🍖','🍎','🐟','🍯','🍓','🍙','🍪','🍇','🍑','🥬','🧀','🍰','🥛','🍞','🌽','🍉'];
-const MOUTH={x:180,y:205,r:46}, GOAL=6;
+const MOUTH={x:180,y:205,r:46}, GOAL=6, FACE={x:180,y:170,size:230};
+// where the animal's own mouth is: measure the emoji as this device draws it (iPhone and Android fonts differ),
+// then go down to the mouth line of that face (a fraction of the face height)
+const mouthCache={};
+function placeMouth(){ const a=an(); let m=mouthCache[a.e];
+  if(!m||(!m.ok&&performance.now()-m.at>500)){ m={dx:0,dy:Math.round(-115+a.mouth*230),ok:false,at:performance.now()}; mouthCache[a.e]=m;
+    try{ const c=document.createElement('canvas'); c.width=c.height=400; const q=c.getContext('2d'); q.font=`${FACE.size}px sans-serif`; q.textAlign='center'; q.textBaseline='middle'; q.fillText(a.e,200,200);
+      const d=q.getImageData(0,0,400,400).data; let t=400,bt=-1,l=400,r=-1; for(let y=0;y<400;y++) for(let x=0;x<400;x++) if(d[(y*400+x)*4+3]>40){ if(y<t) t=y; if(y>bt) bt=y; if(x<l) l=x; if(x>r) r=x; }
+      if(bt-t>100){ m={dx:Math.round((l+r)/2-200),dy:Math.round(t+(bt-t)*a.mouth-200),ok:true}; mouthCache[a.e]=m; } }catch(e){} }
+  MOUTH.x=FACE.x+m.dx; MOUTH.y=FACE.y+m.dy; }
 const S={endless:(()=>{ try{ return localStorage.getItem('moguEndless')==='1'; }catch(e){ return false; } })(),
   ai:0,foods:[],parts:[],fed:0,chew:0,say:null,clearT:0,t:0,auto:false,manual:false,autoT:0,drag:null,hand:null,blink:0,
   best:(()=>{ try{ return JSON.parse(localStorage.getItem('moguBest')||'null')||{fed:0,clears:{}}; }catch(e){ return {fed:0,clears:{}}; } })()};
@@ -87,7 +96,7 @@ function saveBest(){ if(S.auto) return; try{ localStorage.setItem('moguBest',JSO
 const an=()=>ANIMALS[S.ai];
 const SLOTS=[[60,410],[140,420],[220,420],[300,410]];
 
-function startAnimal(i){ S.ai=(i+ANIMALS.length)%ANIMALS.length; S.fed=0; S.chew=0; S.say=null; S.clearT=0; S.parts=[]; S.drag=null; S.foods=[];
+function startAnimal(i){ S.ai=(i+ANIMALS.length)%ANIMALS.length; placeMouth(); S.fed=0; S.chew=0; S.say=null; S.clearT=0; S.parts=[]; S.drag=null; S.foods=[];
   for(let k=0;k<4;k++) refill(k); renderBar(); speak(`${an().n}、おなかすいたな。あーん`); sfx('start'); }
 function refill(k){ const a=an(); const e=rnd()<.45?pick(a.fav):pick(ALL_FOOD.filter(f=>!a.fav.includes(f)));
   S.foods[k]={e,slot:k,x:SLOTS[k][0],y:SLOTS[k][1],hx:SLOTS[k][0],hy:SLOTS[k][1],st:'come',sc:0,t:0,fly:null}; }
@@ -148,13 +157,13 @@ function draw(){
   g.fillStyle='#E06A4A'; g.fillRect(0,356,W,6);
   // the animal: a big head with its own face, then a mouth that opens wide
   const chew=S.chew>0, full=S.clearT>0, bob=Math.sin(S.t*2)*4+(S.boing>0?Math.sin(S.boing*20)*6:0), sc=chew?1+Math.sin(S.t*24)*.04:1;
-  g.save(); g.translate(180,170+bob); g.scale(sc,sc); emoji(a.e,0,0,230); g.restore();
+  placeMouth(); g.save(); g.translate(FACE.x,FACE.y+bob); g.scale(sc,sc); emoji(a.e,0,0,FACE.size); g.restore();
   // the open mouth (a big target for little fingers)
   const mo=full?.15:chew?.25+Math.abs(Math.sin(S.t*14))*.35:1;
   g.fillStyle='#8A2A3A'; g.beginPath(); g.ellipse(MOUTH.x,MOUTH.y+bob,34,30*mo+2,0,0,7); g.fill();
   if(mo>.5){ g.fillStyle='#FF8AA0'; g.beginPath(); g.ellipse(MOUTH.x,MOUTH.y+bob+12*mo,20,10*mo,0,0,7); g.fill(); }
   if(!chew&&!full){ g.strokeStyle='rgba(255,255,255,.8)'; g.lineWidth=3; g.setLineDash([6,6]); g.beginPath(); g.arc(MOUTH.x,MOUTH.y+bob,MOUTH.r+6+Math.sin(S.t*4)*3,0,7); g.stroke(); g.setLineDash([]); }
-  if(chew||full){ g.fillStyle='rgba(255,120,150,.45)'; g.beginPath(); g.ellipse(120,200+bob,20,13,0,0,7); g.ellipse(240,200+bob,20,13,0,0,7); g.fill(); }
+  if(chew||full){ g.fillStyle='rgba(255,120,150,.45)'; g.beginPath(); g.ellipse(MOUTH.x-60,MOUTH.y-8+bob,20,13,0,0,7); g.ellipse(MOUTH.x+60,MOUTH.y-8+bob,20,13,0,0,7); g.fill(); }
   // speech
   const txt=S.say?S.say.txt:full?'おなかいっぱい！':(S.t%4<2?'あーん':null);
   if(txt){ g.font='800 22px "M PLUS Rounded 1c",sans-serif'; const w=g.measureText(txt).width+30; g.fillStyle='#fff'; g.strokeStyle='#E0703A'; g.lineWidth=3; g.beginPath(); g.roundRect?g.roundRect(180-w/2,22,w,40,20):g.rect(180-w/2,22,w,40); g.fill(); g.stroke(); g.fillStyle='#E0433D'; g.textAlign='center'; g.fillText(txt,180,50); }
