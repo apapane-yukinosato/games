@@ -4,7 +4,7 @@ GitHub Pages で公開している、ブラウザで遊べる小さなゲーム�
 
 ## 構成
 
-- `index.html` … ゲーム一覧のメニュー。ゲームを追加したら `<li>` のカードを1つ足す
+- `index.html` … ゲーム一覧のメニュー。カテゴリ（ちいさな子むけ・アクション・うでだめし・パズル・推理・アドベンチャー・RPG・育成・シミュレーション）ごとの `<section class="cat">` に分かれている。ゲームを追加したら、合うカテゴリの `<ul class="list">` の先頭に `<li>` のカードを1つ足し、上の `.chip` の数と見出しの「○こ」を1つ増やす。新作には `<span class="new">NEW</span>` をつけ、古いものの NEW は外す（NEW は最新4つ程度）
 - `README.md` … ゲーム一覧の表（URL つき）。ゲームを追加したら1行足す。公開 URL は https://apapane-yukinosato.github.io/games/
 - `<game>/index.html` … 1ゲーム＝1フォルダ＝1ファイル（HTML/CSS/JS をすべて1ファイルに入れる）
 - 外部ライブラリは基本なし（`candy/` だけ three.js を CDN から読む）。音は WebAudio で合成する
