@@ -117,7 +117,7 @@ const T={
 const STAGES=[
   {n:'森にのまれた街',goal:300,drain:1,dmg:4,mix:{kid:3,young:3,adult:3,elder:2},count:10,trees:{sapling:7,tree:2},bg:['#3A4A2A','#4A5A34'],
    intro:'お金がなくなった世界で、街はまたたく間に荒れはてた。\nビルはつたにおおわれ、道路は森にのまれた。\n人々は毛皮を着て、石器を手にくらしている。\n\nだが、ダイソン自身も年老いていた。\n残りの寿命は、あとわずか――。',
-   tip:'人に手をかざすと、その人の寿命が自分に流れこむ（吸われた人は年をとる）。\n木からも吸える。ダイソンの寿命は、何もしなくても毎秒へっていく！'},
+   tip:'人に手をかざすと、その人の寿命が自分に流れこむ（吸われた人は年をとる）。\n木からも吸える。ダイソンの寿命は、何もしなくても毎秒へっていく！\n\n🎯 特別標的を最後まで吸うとボーナス。吸い続けるほど警戒度が上がり、MAXになると全員が襲ってくる。短く吸って逃げるか、コンボを伸ばすかが勝負。'},
   {n:'マンモスの草原',goal:2000,drain:3,dmg:15,mix:{kid:2,young:3,adult:3,warrior:2,mammoth:2,elder:1},count:11,trees:{sapling:4,tree:4},bg:['#6A7A3A','#8A9A4A'],
    intro:'街の外には、どこまでも草原が広がっていた。\nマンモスがもどってきている。\n戦士たちは、石の槍を持っている。',tip:'戦士は怒ると突進してくる。マンモスは暴走する。\n🪨ショップで寿命をはらって能力をきたえよう。'},
   {n:'巨木の森',goal:20000,drain:10,dmg:80,mix:{young:2,adult:2,warrior:3,shaman:2,mammoth:2,kid:2},count:11,trees:{tree:5,giant:4},bg:['#1E3A1E','#2A4A26'],
@@ -143,7 +143,7 @@ const SK=[
 
 /* ================= state ================= */
 const LV0={pow:1,rng:1,stl:1,arm:1,spd:1,multi:1,fire:0,stop:0,hole:0};
-const S={scene:'story',stage:0,life:30,lv:{...LV0},npcs:[],trees:[],fx:[],shots:[],fires:[],rocks:[],p:null,t:0,sucking:false,targets:[],paused:false,auto:false,manual:false,msg:'',msgT:9,endT:0,stopT:0,stopUsed:false,holeUsed:false,fireCd:0,quake:0,earthT:0,shake:0,
+const S={scene:'story',stage:0,life:30,lv:{...LV0},npcs:[],trees:[],fx:[],shots:[],fires:[],rocks:[],p:null,t:0,sucking:false,targets:[],paused:false,auto:false,manual:false,msg:'',msgT:9,endT:0,stopT:0,stopUsed:false,holeUsed:false,fireCd:0,quake:0,earthT:0,shake:0,alert:0,combo:0,comboT:0,focusType:null,contract:null,contractDone:0,
   move:null,keys:{},best:(()=>{ try{ return JSON.parse(localStorage.getItem('dyson2Best')||'null')||{stage:0,clears:0,max:0}; }catch(e){ return {stage:0,clears:0,max:0}; } })(),stats:{sucked:0,aged:0,trees:0,hits:0},ending:null};
 let nid=1;
 function saveBest(){ if(S.auto) return; try{ localStorage.setItem('dyson2Best',JSON.stringify(S.best)); }catch(e){} }
@@ -160,7 +160,7 @@ function startStage(i){
   for(const [k,n] of Object.entries(s.trees)) for(let j=0;j<n;j++){ let x,y,ok=false,tries=0; while(!ok&&tries++<50){ x=lr(AREA.x0+20,AREA.x1-20); y=lr(AREA.y0+20,AREA.y1-60); ok=S.trees.every(t=>Math.hypot(t.x-x,t.y-y)>t.t.r+T[k].r+16); }
     const tr=mkNpc(k,x,y); tr.state='tree'; S.trees.push(tr); }
   if(s.earth){ const spots=[[90,150],[270,150],[180,250],[80,360],[280,360],[180,420]]; for(const [x,y] of spots){ const v=mkNpc('vent',x,y); v.state='vent'; S.trees.push(v); } }
-  S.start={life:S.life,lv:{...S.lv}}; say(`第${i+1}章　${s.n}`); hideAll(); sfx('start'); syncButtons();
+  S.start={life:S.life,lv:{...S.lv}}; S.alert=0; S.combo=0; S.comboT=0; S.contractDone=0; S.focusType=null; S.contract=Object.keys(s.mix||{}).filter(k=>T[k]).sort(()=>rnd()-.5)[0]||null; say(`第${i+1}章　${s.n}`); hideAll(); sfx('start'); syncButtons();
   if(i>S.best.stage){ S.best.stage=i; saveBest(); }
 }
 function say(m){ S.msg=m; S.msgT=0; }
@@ -197,11 +197,12 @@ function update(dt){
   p.x=clamp(p.x,AREA.x0,AREA.x1); p.y=clamp(p.y,AREA.y0,AREA.y1); if(p.inv>0) p.inv-=dt;
   // sucking years
   S.targets=S.sucking?suckTargets():[];
-  for(const n of S.targets){ let rate=powOf(S.lv.pow)*(n.type==='vent'?380:1), take=Math.min(n.life,rate*dt); n.life-=take; S.life+=take; S.stats.sucked+=take; if(n.age!=null&&n.t.kind!=='vent') n.age+=take;
+  for(const n of S.targets){ let rate=powOf(S.lv.pow)*(n.type==='vent'?380:1), take=Math.min(n.life,rate*dt); const bonus=(S.contract&&n.type===S.contract)?1.8:1; const comboMult=1+Math.min(1.5,Math.floor(S.combo/3)*.15); take*=bonus*comboMult; take=Math.min(n.life,take); n.life-=take; S.life+=take; S.stats.sucked+=take; S.alert=Math.min(100,S.alert+dt*(n.t.kind==='tree'?1.5:4)*(1+S.combo*.025)); S.comboT=0.9; if(n.age!=null&&n.t.kind!=='vent') n.age+=take;
     n.sus+=dt*stlOf(S.lv.stl)*(n.t.kind==='tree'?0:n.t.kind==='vent'?.32:n.nearFire?0:.55)*(S.stopT>0?0:1);
     if(rnd()<dt*8) fx({k:'sand',x:n.x,y:n.y-12,tx:p.x,ty:p.y-12});
-    if(n.life<=0.5) drained(n); else if(n.sus>=1) anger(n); }
-  if(S.stopT>0){ S.stopT-=dt; }
+    if(n.life<=0.5){ const wasContract=S.contract&&n.type===S.contract; drained(n); if(wasContract){ S.contractDone++; S.life+=Math.max(5,n.max*.25); fx({k:'txt',x:n.x,y:n.y-54,txt:'🎯 特別報酬！ +'+yrs(Math.max(5,n.max*.25)),col:'#FFD65A',big:1}); } S.combo++; } else if(n.sus>=1) anger(n); }
+  if(S.stopT>0){ S.stopT-=dt; } else { S.alert=Math.max(0,S.alert-dt*2.2); }
+  S.comboT-=dt; if(S.comboT<=0) S.combo=0;
   else {
     for(const n of S.npcs) npcTick(n,dt);
     for(const s2 of S.shots) shotTick(s2,dt); S.shots=S.shots.filter(x=>!x.done);
@@ -216,6 +217,7 @@ function update(dt){
   if(!s.earth){ const alive=S.npcs.filter(n=>n.state!=='old'&&n.state!=='leave').length; if(alive<s.count&&rnd()<dt*.6) spawnPerson(true); }
   if(S.life>S.best.max){ S.best.max=S.life; }
   syncButtons();
+  if(S.alert>=100){ S.alert=70; S.combo=0; say('🚨 警戒MAX！ 全員がダイソンを狙っている！'); for(const n of S.npcs) if(n.state==='walk') { n.state='angry'; n.angryT=5; n.cd=.4; } }
   if(S.life<=0){ S.life=0; return lifeOut(); }
   if(s.earth?S.trees.every(v=>v.life<=0.5):S.life>=s.goal) stageClear();
 }
@@ -223,7 +225,7 @@ function drained(n){ n.life=0;
   if(n.t.kind==='tree'){ n.state='dead'; S.stats.trees++; fx({k:'txt',x:n.x,y:n.y-n.t.r-8,txt:'枯れた…',col:'#C8B890'}); for(let k=0;k<8;k++) fx({k:'leaf',x:n.x+lr(-n.t.r,n.t.r),y:n.y-n.t.r,vx:lr(-30,30),vy:lr(10,50),life:1.6}); sfx('wither'); }
   else if(n.t.kind==='vent'){ n.state='dead'; fx({k:'txt',x:n.x,y:n.y-28,txt:'地脈が止まった',col:'#FFB080'}); S.shake=10; sfx('quake'); }
   else { n.state='old'; n.oldT=0; S.stats.aged++; fx({k:'txt',x:n.x,y:n.y-34,txt:pick(['ほっほっほ…','よっこらしょ…','あれ、腰が…','ずいぶん年をとったのう']),col:'#E8E0C8'}); sfx('old'); } }
-function anger(n){ if(n.t.kind==='tree') return; n.sus=0; n.wary=5; const p=S.p;
+function anger(n){ if(n.t.kind==='tree') return; S.alert=Math.min(100,S.alert+18); S.combo=0; S.comboT=0; n.sus=0; n.wary=5; const p=S.p;
   if(n.t.kind==='vent'){ n.erupt=1.2; fx({k:'txt',x:n.x,y:n.y-30,txt:'ゴゴゴゴ…',col:'#FFB080'}); fx({k:'warn',x:n.x,y:n.y,r:70,life:1.2}); return; }
   const r=n.t.react; n.angryT=6;
   if(r==='flee'){ n.state='flee'; fx({k:'txt',x:n.x,y:n.y-30,txt:'うわーん！ 年とったー！',col:'#FFE0A0'}); for(const m of S.npcs) if(m!==n&&m.t.react==='stone'&&Math.hypot(m.x-n.x,m.y-n.y)<130){ m.state='angry'; m.angryT=6; m.cd=.5; } sfx('cry'); }
@@ -263,7 +265,7 @@ function syncButtons(){ $('skBtn').hidden=!S.lv.fire; $('skBtn').disabled=S.fire
   const any=S.lv.stop||S.lv.hole; $('skbar').hidden=!any; $('sk_stop').hidden=!S.lv.stop; $('sk_hole').hidden=!S.lv.hole;
   $('sk_stop').disabled=S.stopUsed||S.scene!=='play'; $('sk_stop').querySelector('small').textContent=S.stopT>0?`停止中 ${Math.ceil(S.stopT)}秒`:S.stopUsed?'使用ずみ':'1面に1回';
   $('sk_hole').disabled=S.holeUsed||S.scene!=='play'; $('sk_hole').querySelector('small').textContent=S.holeUsed?'使用ずみ':'1面に1回'; }
-function useFire(){ if(S.scene!=='play'||!S.lv.fire||S.fireCd>0) return; S.fireCd=25; const p=S.p; S.fires.push({x:p.x,y:p.y-4,t:0}); for(const n of S.npcs){ if(Math.hypot(n.x-p.x,n.y-p.y)<160&&n.state==='angry'){ n.state='walk'; n.angryT=0; } n.sus=Math.max(0,n.sus-.4); }
+function useFire(){ if(S.scene!=='play'||!S.lv.fire||S.fireCd>0) return; S.fireCd=25; S.alert=Math.max(0,S.alert-35); S.combo=0; S.comboT=0; const p=S.p; S.fires.push({x:p.x,y:p.y-4,t:0}); for(const n of S.npcs){ if(Math.hypot(n.x-p.x,n.y-p.y)<160&&n.state==='angry'){ n.state='walk'; n.angryT=0; } n.sus=Math.max(0,n.sus-.4); }
   fx({k:'txt',x:p.x,y:p.y-40,txt:'一万円札でたき火。あったかい。',col:'#FFD080'}); say('🔥 お金は、燃やすとあったかい'); sfx('fire'); }
 function useStop(){ if(S.scene!=='play'||!S.lv.stop||S.stopUsed) return; S.stopUsed=true; S.stopT=6; say('⏸ 時間よ、止まれ'); sfx('stop'); }
 function useHole(){ if(S.scene!=='play'||!S.lv.hole||S.holeUsed) return; S.holeUsed=true; const p=S.p; let tot=0;
@@ -401,6 +403,10 @@ function drawHUD(){ const s=st();
   else { g.textAlign='right'; g.fillStyle='#fff'; g.font='800 10px sans-serif'; g.fillText(`目標 ${yrs(s.goal)}`,W-8,36); g.fillStyle='#333'; g.fillRect(200,42,W-208,10); g.fillStyle='#F2C23A'; g.fillRect(200,42,(W-208)*clamp(S.life/s.goal,0,1),10); }
   if(S.stopT>0){ g.fillStyle='rgba(120,140,255,.18)'; g.fillRect(0,76,W,H); g.fillStyle='#C8D8FF'; g.font='800 14px sans-serif'; g.textAlign='center'; g.fillText(`⏸ 時間停止 ${S.stopT.toFixed(1)}`,W/2,96); }
   if(S.msg&&S.msgT<2.6){ g.globalAlpha=Math.min(1,2.6-S.msgT); g.fillStyle='rgba(0,0,0,.6)'; g.fillRect(14,H-44,W-28,28); g.fillStyle='#FFF4C8'; g.font='800 12px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.fillText(S.msg,W/2,H-25); g.globalAlpha=1; }
+  // warning / combo / contract HUD
+  g.textAlign='left'; g.font='800 10px sans-serif'; g.fillStyle='#fff'; g.fillText('🚨 警戒度',8,73); g.fillStyle='#321'; g.fillRect(62,65,110,7); g.fillStyle=S.alert>75?'#FF4D4D':S.alert>45?'#F2C23A':'#7AC85A'; g.fillRect(62,65,110*S.alert/100,7);
+  if(S.combo>=2){ g.fillStyle='#FFD65A'; g.font='800 12px sans-serif'; g.textAlign='right'; g.fillText(`🔥 ${S.combo}連続吸引 ×${(1+Math.min(1.5,Math.floor(S.combo/3)*.15)).toFixed(2)}`,W-8,73); }
+  if(S.contract){ g.textAlign='center'; g.fillStyle='#C8E8FF'; g.font='800 10px sans-serif'; g.fillText(`🎯 特別標的：${T[S.contract]?.n||S.contract}　${S.contractDone?'達成！':'完全に吸うとボーナス'}`,W/2,86); }
   if(S.auto){ g.fillStyle='rgba(255,255,255,.8)'; g.font='800 11px sans-serif'; g.textAlign='right'; g.fillText('🤖 AUTO',W-8,H-6); }
 }
 function drawEnding(){ const E=S.ending, t=E.t;
