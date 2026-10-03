@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="スマホ代・保険・車の固定費をどんどん削って、10年後・20年後の「もし」を数字で見る家計見直しシミュレーター">
+<title>家計見直しシミュレーター</title>
+<style>
+:root{
+  --bg:#17233B; --bg2:#22335A; --bg3:#2D4272; --card:#FFF8EC; --ink:#2A2440; --mute:#98A3C4; --soft:#C9D3EE;
+  --gold:#F6C343; --green:#5BD19A; --red:#FF6B6B; --blue:#6FB7FF;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:#fff;font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  overscroll-behavior:none;-webkit-tap-highlight-color:transparent;line-height:1.5}
+#app{max-width:520px;margin:0 auto;padding:8px 14px calc(28px + env(safe-area-inset-bottom,0px))}
+#top{display:flex;align-items:center;gap:8px;padding:2px 0 6px}
+#top a{color:var(--soft);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mini{font:inherit;font-size:12px;font-weight:800;border:0;border-radius:999px;padding:6px 10px;background:var(--bg2);color:#fff;cursor:pointer}
+.mini[aria-pressed=true]{background:#E0A83A;color:#2A2440}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.btn{font:inherit;font-weight:800;font-size:16px;border:0;border-radius:14px;padding:13px 18px;background:var(--gold);color:#2A2440;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
+.btn.sub{background:var(--bg3);color:#fff}
+.btn.block{display:block;width:100%}
+#tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:2px 0 8px;position:sticky;top:0;z-index:5;background:var(--bg);padding:4px 0}
+#tabs button{font:inherit;font-size:13px;font-weight:800;border:0;border-radius:10px;padding:8px 2px;background:var(--bg2);color:var(--soft);cursor:pointer}
+#tabs button[aria-selected=true]{background:var(--gold);color:#2A2440}
+/* title */
+#title{text-align:center;padding:26px 6px 10px}
+#title .big{font-size:64px;line-height:1.1}
+#title h2{font-size:26px;margin:8px 0 4px}
+#title p{color:var(--soft);font-size:14px;margin:6px 0}
+#title .row{display:flex;flex-direction:column;gap:10px;margin:20px auto 8px;max-width:320px}
+.note{font-size:11px;color:var(--mute);margin:14px 2px 0}
+/* summary */
+.sum{background:var(--bg2);border-radius:16px;padding:10px 12px;margin-bottom:10px}
+.sum .r{display:flex;justify-content:space-between;font-size:13px;color:var(--soft)}
+.sum .r b{color:#fff;font-variant-numeric:tabular-nums}
+.sum .rest{display:flex;justify-content:space-between;align-items:baseline;margin-top:4px;font-weight:800}
+.sum .rest span{font-size:13px}
+.sum .rest b{font-size:28px;font-variant-numeric:tabular-nums}
+.sum .rest b.bad{color:var(--red)} .sum .rest b.ok{color:var(--gold)} .sum .rest b.good{color:var(--green)}
+.bar{display:flex;height:12px;border-radius:99px;overflow:hidden;background:#0F1930;margin:6px 0}
+.bar i{display:block;height:100%;transition:width .5s}
+.sv{font-size:12px;color:var(--green);font-weight:800;margin-top:2px}
+.prog{font-size:12px;color:var(--soft);display:flex;justify-content:space-between;margin-bottom:6px}
+/* cut cards */
+.it{background:var(--card);color:var(--ink);border-radius:16px;padding:10px 12px;margin-bottom:10px}
+.it h3{margin:0 0 6px;font-size:15px;display:flex;align-items:center;gap:6px}
+.it h3 small{margin-left:auto;font-size:11px;font-weight:800;color:#2E8B62}
+.opts{display:grid;gap:6px}
+.opt{font:inherit;text-align:left;border:2px solid #E3D9C2;background:#fff;border-radius:12px;padding:8px 10px;color:var(--ink);cursor:pointer;display:flex;justify-content:space-between;gap:8px;align-items:center;font-weight:800;font-size:14px}
+.opt .p{font-variant-numeric:tabular-nums;white-space:nowrap;font-size:14px}
+.opt[aria-pressed=true]{border-color:#2E8B62;background:#E8F8EF}
+.opt[aria-pressed=true].first{border-color:#D9534F;background:#FDECEA}
+.nt{font-size:12px;color:#5C5675;margin:6px 2px 0}
+.pop{position:fixed;left:50%;top:38%;transform:translate(-50%,0);z-index:20;pointer-events:none;font-size:26px;font-weight:800;color:var(--green);text-shadow:0 2px 8px #000;opacity:0;white-space:nowrap}
+.pop.go{animation:pop 1.1s ease-out}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,10px) scale(.7)}20%{opacity:1;transform:translate(-50%,0) scale(1.1)}100%{opacity:0;transform:translate(-50%,-50px) scale(1)}}
+/* panels */
+.pn{background:var(--bg2);border-radius:16px;padding:12px;margin-bottom:10px}
+.pn h3{margin:0 0 6px;font-size:15px}
+.pn p{margin:4px 0;font-size:13px;color:var(--soft)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.chip{font:inherit;font-size:13px;font-weight:800;border:2px solid transparent;border-radius:999px;padding:7px 12px;background:var(--bg3);color:#fff;cursor:pointer}
+.chip[aria-pressed=true],.chip[aria-selected=true]{background:var(--gold);color:#2A2440}
+.fld{margin:8px 0}
+.fld label{display:flex;justify-content:space-between;font-size:13px;font-weight:800;color:var(--soft)}
+.fld label b{color:#fff;font-variant-numeric:tabular-nums}
+.fld input[type=range]{width:100%;accent-color:var(--gold);margin:2px 0}
+.out{background:#0F1930;border-radius:14px;padding:10px 12px;margin-top:8px}
+.out .l{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:3px 0;color:var(--soft)}
+.out .l b{color:#fff;font-variant-numeric:tabular-nums;text-align:right}
+.out .l.g b{color:var(--green)} .out .l.r b{color:var(--red)}
+.verdict{font-size:14px;font-weight:800;margin:8px 0 2px;padding:8px 10px;border-radius:12px;background:#33224A;color:#FFE08A}
+.fine{font-size:11px;color:var(--mute);margin-top:6px}
+/* result */
+.rank{text-align:center;padding:14px 10px}
+.rank .e{font-size:44px}
+.rank .t{font-size:20px;font-weight:800}
+.rank .big{font-size:34px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1.2}
+.rank .df{font-size:14px;color:var(--green);font-weight:800}
+svg.ch{width:100%;height:auto;display:block}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+.tbl td{padding:5px 2px;border-bottom:1px solid #31456F}
+.tbl td:last-child{text-align:right;font-weight:800}
+.lg{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--soft);margin-top:4px}
+.lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.ends{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>💸 家計見直しシミュレーター</h1>
+    <button class="mini" id="bSnd" aria-pressed="true">🔊</button>
+    <button class="mini" id="bAuto" aria-pressed="false" title="オートモード（Oキー）">🤖 オート</button>
+  </div>
+  <div id="title">
+    <div class="big">💸</div>
+    <h2>家計見直しシミュレーター</h2>
+    <p>スマホ・保険・車…ありがちな家計は、毎月じわじわお金が消えていく。</p>
+    <p>固定費をどんどん削って、浮いたお金を投資にまわしたら<br>10年後・20年後はどうなる？ 数字で見てみよう。</p>
+    <div class="row">
+      <button class="btn block" id="bStart">スタート</button>
+      <button class="btn sub block" id="bWhat">🔮「もしも」電卓だけ使う</button>
+    </div>
+    <div class="note">書籍『お金の大学』（両＠リベ大学長）の「まず固定費を見直す」「貯める・増やす・守る」という考え方をもとにした学習用シミュレーターです。金額は目安のモデルで、将来の利益を保証するものではありません。</div>
+  </div>
+  <div id="game" hidden>
+    <div id="tabs" role="tablist">
+      <button role="tab" data-tab="cut">① けずる</button>
+      <button role="tab" data-tab="grow">② ふやす</button>
+      <button role="tab" data-tab="res">③ けっか</button>
+      <button role="tab" data-tab="what">🔮 もしも</button>
+    </div>
+    <div id="main"></div>
+  </div>
+</div>
+<div class="pop" id="pop"></div>
+
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s);
+const yen=n=>{ n=Math.round(n); const a=Math.abs(n), s=n<0?'-':'';
+  if(a>=1e8) return s+(a/1e8).toFixed(2).replace(/\.?0+$/,'')+'億円';
+  if(a>=1e4) return s+Math.round(a/1e4).toLocaleString('ja-JP')+'万円';
+  return s+a.toLocaleString('ja-JP')+'円'; };
+const yenF=n=>Math.round(n).toLocaleString('ja-JP')+'円';
+
+/* ---------- data ---------- */
+const INCOME=300000, VARC=100000, NISA_ROOM=18000000, TAX=0.20315;
+const ITEMS=[
+ {id:'phone',ic:'📱',name:'スマホ代（夫婦2台）',opts:[
+   {t:'大手キャリア',c:16000,n:'いまの契約。使わない付帯サービスもセットで高い'},
+   {t:'サブブランド',c:9000,n:'少し安いが、まだ高め'},
+   {t:'格安SIM・オンライン専用プラン',c:4400,n:'回線品質はほぼ同じで半額以下になる（目安）'}]},
+ {id:'saving',ic:'🐷',name:'貯蓄性保険（終身・養老など）',opts:[
+   {t:'そのまま続ける',c:15000,n:'返戻率が低く、早く解約すると元本割れすることも'},
+   {t:'解約して投資へ',c:0,n:'解約返戻金（目安80万円）を投資にまわす。ただし解約損が出る場合もある'}]},
+ {id:'cancer',ic:'🏥',name:'医療保険・がん保険',opts:[
+   {t:'そのまま続ける',c:7000,n:'治療費は「高額療養費制度」で月の自己負担に上限がある'},
+   {t:'共済（掛け捨て）に変更',c:2500,n:'安い共済で最低限だけ備える'},
+   {t:'やめて貯蓄で備える',c:0,n:'高額療養費制度＋貯蓄で備える（「もしも」電卓で比べてみよう）'}]},
+ {id:'life',ic:'👨‍👩‍👧',name:'死亡保障（生命保険）',opts:[
+   {t:'手厚い保障のまま',c:10000,n:'子どもが大きくなるほど必要な保障は減っていく'},
+   {t:'掛け捨ての定期保険に',c:3000,n:'必要額だけを安い掛け捨てで（遺族年金も考慮）'}]},
+ {id:'carins',ic:'🚗',name:'自動車保険（任意保険）',opts:[
+   {t:'代理店型',c:9000,n:'対面で安心だけど、人件費ぶん高い'},
+   {t:'ネット型（ダイレクト）',c:5000,n:'同じ補償でも安くなることが多い'}]},
+ {id:'carbody',ic:'💥',name:'車両保険',opts:[
+   {t:'フルカバーで付ける',c:5000,n:'使うと等級が下がって翌年から保険料もアップ'},
+   {t:'はずして貯金で備える',c:0,n:'対人・対物は無制限のまま、自分の車の修理だけ自己負担'}]},
+ {id:'energy',ic:'💡',name:'電気・ガス',opts:[
+   {t:'地域の大手のまま',c:18000,n:'契約プランを見直したことがない'},
+   {t:'プラン・会社を見直す',c:16000,n:'乗りかえで1割ほど下がることも（目安）'}]},
+ {id:'subs',ic:'📺',name:'サブスク（動画・音楽・アプリ）',opts:[
+   {t:'なんとなく全部契約',c:6000,n:'月に一度も使っていないものがある'},
+   {t:'使うものだけ残す',c:1500,n:'解約はアプリからすぐできる'}]},
+ {id:'loan',ic:'🏠',name:'住居（住宅ローン／家賃）',opts:[
+   {t:'契約したまま',c:95000,n:'金利や家賃を見直したことがない'},
+   {t:'借りかえ・家賃交渉',c:88000,n:'低金利への借りかえや更新時の交渉（目安）'}]}
+];
+const ALLOC={
+  bank:{t:'💴 預金のみ',w:[1,0,0],d:'ほぼ増えない（年0.1%）'},
+  world:{t:'🌏 全世界株式',w:[0,1,0],d:'投資信託で世界中に分散（想定 年5%）'},
+  div:{t:'🏦 高配当株',w:[0,0,1],d:'配当3.5%＋成長で想定 年4.5%'},
+  mix:{t:'⚖️ 半々（おすすめ）',w:[0,.5,.5],d:'全世界株式と高配当株を半分ずつ'}
+};
+const SCN=[['悲観',-0.03,'#E8A33D'],['標準',0,'#5BD19A'],['楽観',0.02,'#6FB7FF']];
+const INIT_PICK={}; ITEMS.forEach(it=>INIT_PICK[it.id]=0);
+const BASE_COST=ITEMS.reduce((s,it)=>s+it.opts[0].c,0);   // 181,000
+
+/* ---------- math ---------- */
+const fvA=(m,L,r,n)=>{ const i=r/12,g=Math.pow(1+i,n); return L*g+(i?m*(g-1)/i:m*n); };
+function pfVal(m,L,w,delta,y,nisa){
+  const n=y*12, C=m*n+L; let tot=0,gain=0;
+  [[w[0],0.001],[w[1],Math.max(0,0.05+delta)],[w[2],Math.max(0,0.045+delta)]].forEach(([wt,r])=>{
+    if(!wt) return; const v=fvA(m*wt,L*wt,r,n); tot+=v; gain+=Math.max(0,v-C*wt); });
+  const sh=!C?0:(nisa?Math.max(0,C-NISA_ROOM)/C:1);
+  return tot-gain*sh*TAX;
+}
+const costOf=pick=>ITEMS.reduce((s,it)=>s+it.opts[pick[it.id]].c,0);
+function plan(pick,alloc,share,nisa){
+  const cost=costOf(pick), sur=INCOME-VARC-cost, sp=Math.max(0,sur);
+  const m=sp*share/100, rest=sp-m, keep=pick.saving===0, L=keep?0:800000, w=ALLOC[alloc].w;
+  const out={cost,sur,m,rest,L,before:[],low:[],mid:[],high:[]};
+  const sur0=INCOME-VARC-BASE_COST;
+  for(let y=0;y<=30;y++){
+    const n=y*12, ins=keep?fvA(15000,800000,0.005,n):0, bank=fvA(rest,0,0.001,n);
+    out.low.push(pfVal(m,L,w,-0.03,y,nisa)+bank+ins);
+    out.mid.push(pfVal(m,L,w,0,y,nisa)+bank+ins);
+    out.high.push(pfVal(m,L,w,0.02,y,nisa)+bank+ins);
+    out.before.push(fvA(sur0,0,0.001,n)+fvA(15000,800000,0.005,n));
+  }
+  out.divM = (()=>{ const wt=w[2]; if(!wt) return 0; const v=fvA(m*wt,L*wt,0.045,240); return v*0.035*(nisa?1:1-TAX)/12; })();
+  return out;
+}
+function irrYear(m,total,n){ // annual rate such that monthly deposits m reach total after n months
+  let lo=-0.2,hi=0.5; for(let k=0;k<60;k++){ const mid=(lo+hi)/2; if(fvA(m,0,mid,n)<total) lo=mid; else hi=mid; } return (lo+hi)/2;
+}
+function cancerOOP(months,med,extra){
+  const cap=85800+Math.max(0,med-286000)*0.01; let tot=0; const blocks=[];
+  for(let k=0;k<months;k++){
+    const mo=Math.min(med*0.3,k>=3?44400:cap); const b=Math.floor(k/12); blocks[b]=(blocks[b]||0)+mo; }
+  blocks.forEach(b=>tot+=Math.min(b,530000));
+  return tot+extra;
+}
+
+/* ---------- 「もしも」calculators ---------- */
+const P=(k,l,min,max,step,val,f)=>({k,l,min,max,step,val,f});
+const fY=v=>yenF(v), fYr=v=>v+'年', fPc=v=>v+'%', fM=v=>v+'か月', fX=v=>v+'回';
+const CALCS={
+ save:{tab:'💰 毎月○円を○年',title:'毎月○円を、○年つづけたら？',
+   presets:[['保険料 1万円',{m:10000}],['スマホ代の差 1.1万円',{m:11000}],['サブスク 4,500円',{m:4500}],['3万円',{m:30000}]],
+   f:[P('m','毎月の金額',1000,100000,1000,10000,fY),P('y','期間',1,40,1,20,fYr),P('r','もし運用したときの年利',0,10,0.5,5,fPc)],
+   run(v){ const n=v.y*12, paid=v.m*n, fv=fvA(v.m,0,v.r/100,n);
+     return {h:`毎月${yenF(v.m)}を${v.y}年払うと${yen(paid)}。同じお金を年${v.r}%で積み立てたら${yen(fv)}`,
+       rows:[['払い続けた合計（戻ってこない前提）',yen(paid),'r'],['同額を年'+v.r+'%で運用すると',yen(fv),'g'],['運用で増えた分',yen(fv-paid),'g'],['5年ごとの目安（運用）',[5,10,15,20,25,30].filter(x=>x<=v.y).map(x=>x+'年:'+yen(fvA(v.m,0,v.r/100,x*12))).join(' ')||'—','']],
+       fine:'税金は考慮していません。新NISAなら運用益が非課税です。'}; }},
+ cancer:{tab:'🏥 がん保険',title:'がん保険の保険料 vs 治療費',
+   presets:[['ふつうに入院＋抗がん剤',{med:600000,months:12,extra:200000}],['ずっと通院治療',{med:300000,months:36,extra:100000}],['重い治療（半年）',{med:1000000,months:6,extra:300000}]],
+   f:[P('prem','がん保険の保険料（月）',500,15000,500,3500,fY),P('y','払い続ける年数',5,40,1,20,fYr),P('months','治療の期間',1,36,1,12,fM),P('med','1か月の医療費（10割）',100000,2000000,50000,600000,fY),P('extra','差額ベッド・食事・交通費など',0,1000000,50000,200000,fY),P('r','もし貯めて運用したときの年利',0,8,0.5,5,fPc)],
+   run(v){ const paid=v.prem*12*v.y, oop=cancerOOP(v.months,v.med,v.extra), alt=fvA(v.prem,0,v.r/100,v.y*12);
+     const cap=85800+Math.max(0,v.med-286000)*0.01;
+     const verdict = paid>oop ? `保険料の総額のほうが${yen(paid-oop)}高い。保険料を貯めておけば、このがん治療ならまかなえる計算` : `この治療では自己負担が${yen(oop-paid)}高く、保険金が出れば助かる計算`;
+     return {h:verdict,
+       rows:[[`保険料の総額（月${yenF(v.prem)}×${v.y}年）`,yen(paid),'r'],['高額療養費制度のあとの月の上限（1〜3か月目）',yenF(Math.min(v.med*0.3,cap)),''],['4か月目以降（多数回該当）',yenF(Math.min(v.med*0.3,44400)),''],['治療費の自己負担（年間上限53万円を反映）＋その他',yen(oop),'g'],['保険料を貯めて運用したら',yen(alt),'g']],
+       fine:'高額療養費は年収約370〜770万円の区分（2026年8月改定後）の目安。生涯でがんになる確率は男性63.3%・女性50.8%（国立がん研究センター・2021年データ）だが、保険に入っている20年間にかかる確率は低く（目安：40歳から20年で男性7%・女性9%）、先進医療の技術料は公的保険の対象外なので特約や貯蓄で備える考え方もある。'}; }},
+ car:{tab:'🚗 車両保険',title:'車両保険の保険料 vs 修理代',
+   presets:[['10年に1回こする',{times:2,repair:300000}],['大きな事故1回',{times:1,repair:1500000}]],
+   f:[P('prem','車両保険の保険料（年）',10000,150000,5000,60000,fY),P('y','乗る年数',1,30,1,20,fYr),P('repair','1回の修理代',100000,3000000,100000,500000,fY),P('times','事故で修理する回数',0,5,1,1,fX),P('ded','免責（自己負担）',0,200000,50000,50000,fY),P('r','もし貯めて運用したときの年利',0,8,0.5,5,fPc)],
+   run(v){ const paid=v.prem*v.y, back=v.times*Math.max(0,v.repair-v.ded), selfPay=v.times*v.repair, alt=fvA(v.prem/12,0,v.r/100,v.y*12);
+     const diff=paid-back;
+     return {h: diff>0 ? `保険金でもどるのは${yen(back)}。払った${yen(paid)}のほうが${yen(diff)}高い` : `修理が重なると、保険のほうが${yen(-diff)}得する計算`,
+       rows:[[`保険料の総額（年${yenF(v.prem)}×${v.y}年）`,yen(paid),'r'],[`修理代を全部自腹で払うと（${v.times}回）`,yen(selfPay),''],['保険金で受け取れる額',yen(back),'g'],['保険料を貯めて運用したら',yen(alt),'g']],
+       fine:'保険を使うと等級が下がり、数年は保険料が上がります（ここでは考慮していません）。貯金が少ない間は付ける選択もあります。'}; }},
+ endow:{tab:'🐷 貯蓄性保険',title:'貯蓄性保険は本当に貯まる？',
+   presets:[['月1.5万円・返戻率105%',{m:15000,rate:105}],['返戻率が100%割れ',{m:15000,rate:95}]],
+   f:[P('m','保険料（月）',5000,50000,1000,15000,fY),P('y','払う年数',10,30,1,20,fYr),P('rate','満期の返戻率',80,120,1,105,fPc),P('r','もし運用したときの年利',0,8,0.5,5,fPc)],
+   run(v){ const n=v.y*12, paid=v.m*n, got=paid*v.rate/100, irr=irrYear(v.m,got,n), alt=fvA(v.m,0,v.r/100,n);
+     return {h:`払込${yen(paid)}が${yen(got)}になる。実質の年利は約${(irr*100).toFixed(2)}%。投資なら${yen(alt)}`,
+       rows:[['払込総額',yen(paid),'r'],['満期でもらえる額',yen(got),''],['実質の年利（目安）',(irr*100).toFixed(2)+'%',''],['同額を年'+v.r+'%で運用したら',yen(alt),'g'],['差額',yen(alt-got),'g']],
+       fine:'保険には死亡保障もついているので、単純比較は目安です。途中解約すると返戻率はさらに下がることがあります。'}; }},
+ div:{tab:'🏦 高配当株',title:'配当で毎月○円もらうには？',
+   presets:[['月5万円',{t:50000}],['月10万円',{t:100000}],['月3万円',{t:30000}]],
+   f:[P('t','ほしい配当（月）',10000,200000,10000,50000,fY),P('yl','配当利回り（税引前）',2,6,0.5,3.5,fPc),P('s','毎月の積立額',10000,200000,10000,50000,fY),P('r','株価の成長＋配当の再投資の年利',2,8,0.5,5,fPc)],
+   run(v){ const need=v.t*12/(v.yl/100), needT=v.t*12/(v.yl/100*(1-TAX)); let mo=0; while(mo<720&&fvA(v.s,0,v.r/100,mo)<needT) mo++;
+     return {h:`月${yen(v.t)}の配当には、課税口座で約${yen(needT)}の株が必要（新NISAなら約${yen(need)}）`,
+       rows:[['必要な株式（NISA・非課税）',yen(need),'g'],['必要な株式（課税口座・約20.3%）',yen(needT),'r'],['毎月'+yen(v.s)+'を積み立てると、課税口座で達成まで',mo>=720?'60年以上':(Math.floor(mo/12)+'年'+(mo%12)+'か月'),'']],
+       fine:'配当は減ることもあります。分散して長く持つのが基本です。'}; }}
+};
+
+/* ---------- state ---------- */
+const S={phase:'title',tab:'cut',pick:Object.assign({},INIT_PICK),alloc:'mix',share:50,nisa:true,years:20,
+  calc:'save',cv:{},auto:false,snd:true,best:0,runs:0};
+for(const k in CALCS){ S.cv[k]={}; CALCS[k].f.forEach(f=>S.cv[k][f.k]=f.val); }
+try{ S.best=+localStorage.getItem('kakeiBest')||0; if(localStorage.getItem('kakeiSnd')==='0') S.snd=false; }catch(_){}
+
+/* ---------- sound ---------- */
+let AC=null;
+function tone(f,d,type,vol,slide){ if(!S.snd) return; try{
+  AC=AC||new (window.AudioContext||window.webkitAudioContext)(); const t=AC.currentTime, o=AC.createOscillator(), g=AC.createGain();
+  o.type=type||'sine'; o.frequency.setValueAtTime(f,t); if(slide) o.frequency.exponentialRampToValueAtTime(slide,t+d);
+  g.gain.setValueAtTime(vol||.08,t); g.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+d+.02); }catch(_){} }
+const sCut=()=>{ tone(900,.18,'sawtooth',.05,200); setTimeout(()=>tone(660,.12,'triangle',.07),120); };
+const sTap=()=>tone(520,.07,'triangle',.05);
+const sFan=()=>[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.25,'triangle',.08),i*120));
+function setSnd(b){ S.snd=b; $('#bSnd').setAttribute('aria-pressed',b); $('#bSnd').textContent=b?'🔊':'🔇'; try{localStorage.setItem('kakeiSnd',b?'1':'0');}catch(_){} }
+
+/* ---------- timers (virtual clock so tests can fast-forward) ---------- */
+let autoT=0, autoQ=[], autoI=0, popT=0;
+function tick(dt){
+  if(popT>0){ popT-=dt; if(popT<=0) $('#pop').classList.remove('go'); }
+  if(!S.auto) return;
+  if(S.phase==='title'){ autoT-=dt; if(autoT<=0){ startGame(); buildAuto(); } return; }
+  autoT-=dt;
+  while(S.auto&&autoT<=0&&autoI<autoQ.length){ const [d,fn]=autoQ[autoI++]; fn(); autoT+=d; }
+  if(S.auto&&autoI>=autoQ.length&&autoT<=0){ restart(); buildAuto(); }
+}
+let last=0;
+function loop(ts){ const dt=last?Math.min(100,ts-last):0; last=ts; tick(dt); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+
+function buildAuto(){
+  autoQ=[]; autoI=0; autoT=800;
+  const q=(d,fn)=>autoQ.push([d,fn]);
+  q(900,()=>setTab('cut'));
+  // biggest monthly savings first
+  const order=ITEMS.map(it=>({id:it.id,best:it.opts.length-1,save:it.opts[0].c-it.opts[it.opts.length-1].c})).sort((a,b)=>b.save-a.save);
+  order.forEach(o=>q(850,()=>pick(o.id,o.best)));
+  q(1400,()=>setTab('grow'));
+  q(1000,()=>setAlloc('mix')); q(800,()=>setNisa(true)); q(900,()=>setShare(90));
+  q(1500,()=>setTab('res'));
+  q(2400,()=>setYears(10)); q(2400,()=>setYears(20)); q(2400,()=>setYears(30)); q(1800,()=>setYears(20));
+  q(1200,()=>setTab('what'));
+  ['save','cancer','car','endow','div'].forEach(k=>q(2600,()=>setCalc(k)));
+  q(1500,()=>{});
+}
+
+/* ---------- actions ---------- */
+function startGame(){
+  S.phase='game'; $('#title').hidden=true; $('#game').hidden=false; setTab('cut'); }
+function restart(){
+  S.pick=Object.assign({},INIT_PICK); S.alloc='mix'; S.share=50; S.nisa=true; S.years=20; S.runs++;
+  setTab('cut'); window.scrollTo(0,0); }
+function setTab(t){ S.tab=t; render(); if(t==='res'){ recordBest(); sFan(); } }
+function pick(id,i){ const it=ITEMS.find(x=>x.id===id); if(!it||!it.opts[i]) return;
+  const before=S.pick[id]; S.pick[id]=i; render();
+  const d=it.opts[before].c-it.opts[i].c;
+  if(d>0){ sCut(); const p=$('#pop'); p.textContent='ズバッ！ 月 −'+yenF(d); p.classList.remove('go'); void p.offsetWidth; p.classList.add('go'); popT=1100; } else sTap(); }
+function setAlloc(k){ S.alloc=k; sTap(); render(); }
+function setNisa(b){ S.nisa=b; sTap(); render(); }
+function setShare(v){ S.share=v; render(); }
+function setYears(y){ S.years=y; sTap(); render(); }
+function setCalc(k){ S.calc=k; sTap(); render(); }
+function result(){ return plan(S.pick,S.alloc,S.share,S.nisa); }
+function recordBest(){ const v=Math.round(result().mid[20]); if(v>S.best){ S.best=v; try{localStorage.setItem('kakeiBest',String(v));}catch(_){} } }
+function setAuto(b){ S.auto=!!b; $('#bAuto').setAttribute('aria-pressed',S.auto);
+  if(S.auto){ if(S.phase==='title'){ autoT=600; } else if(autoI>=autoQ.length||!autoQ.length){ buildAuto(); } else autoT=500; } }
+
+/* ---------- render ---------- */
+function summary(){
+  const r=result(), fixed=r.cost, sur=r.sur;
+  const pf=Math.min(100,fixed/INCOME*100), pv=VARC/INCOME*100, ps=Math.max(0,100-pf-pv);
+  const cls=sur<0?'bad':sur<40000?'ok':'good', saved=BASE_COST-fixed;
+  return `<div class="sum"><div class="r"><span>手取り（月）</span><b>${yenF(INCOME)}</b></div>
+  <div class="r"><span>固定費</span><b>${yenF(fixed)}</b></div>
+  <div class="r"><span>食費・日用品など</span><b>${yenF(VARC)}</b></div>
+  <div class="bar" aria-hidden="true"><i style="width:${pf}%;background:#FF8F6B"></i><i style="width:${pv}%;background:#6FB7FF"></i><i style="width:${ps}%;background:#5BD19A"></i></div>
+  <div class="rest"><span>毎月のこり</span><b class="${cls}">${yenF(sur)}</b></div>
+  ${saved>0?`<div class="sv">✂️ 固定費を月${yenF(saved)}（年${yen(saved*12)}）けずった！</div>`:'<div class="sv" style="color:var(--mute)">下のカードから見直してみよう</div>'}</div>`;
+}
+function renderCut(){
+  const done=ITEMS.filter(it=>S.pick[it.id]>0).length;
+  let h=summary()+`<div class="prog"><span>見直し ${done}/${ITEMS.length}</span><span>${done===ITEMS.length?'ぜんぶ完了！':'タップで切りかえ'}</span></div>`;
+  ITEMS.forEach(it=>{
+    const sel=S.pick[it.id], d=it.opts[0].c-it.opts[sel].c;
+    h+=`<div class="it"><h3><span aria-hidden="true">${it.ic}</span>${it.name}${d>0?`<small>−${yenF(d)}/月</small>`:''}</h3><div class="opts">`+
+      it.opts.map((o,i)=>`<button class="opt${i===0?' first':''}" data-act="pick" data-id="${it.id}" data-i="${i}" aria-pressed="${sel===i}"><span>${o.t}</span><span class="p">${o.c?yenF(o.c)+'/月':'0円'}</span></button>`).join('')+
+      `</div><div class="nt">${it.opts[sel].n}</div></div>`;
+  });
+  h+=`<button class="btn block" data-act="tab" data-t="grow">② 浮いたお金をふやす →</button>`;
+  return h;
+}
+function renderGrow(){
+  const r=result();
+  let h=summary()+`<div class="pn"><h3>浮いたお金のうち、何%を投資にまわす？</h3>
+   <div class="fld"><label>投資にまわす割合<b>${S.share}%（月${yenF(r.m)}）</b></label><input type="range" id="rShare" min="0" max="100" step="10" value="${S.share}"></div>
+   <p>残りは預金へ。生活費の3〜6か月分の貯金（生活防衛資金）は先に確保しておこう。</p></div>
+   <div class="pn"><h3>何に投資する？</h3><div class="chips">`+
+   Object.keys(ALLOC).map(k=>`<button class="chip" data-act="alloc" data-k="${k}" aria-pressed="${S.alloc===k}">${ALLOC[k].t}</button>`).join('')+
+   `</div><p>${ALLOC[S.alloc].d}</p>
+   <h3 style="margin-top:10px">新NISA（運用益が非課税）</h3><div class="chips">
+   <button class="chip" data-act="nisa" data-v="1" aria-pressed="${S.nisa}">使う</button><button class="chip" data-act="nisa" data-v="0" aria-pressed="${!S.nisa}">使わない（税20.315%）</button></div>
+   <p>生涯の非課税枠は1,800万円。枠をこえた分には税金がかかる想定で計算します。</p></div>
+   <div class="pn"><h3>20年後の予想</h3><div class="out">`+
+   `<div class="l"><span>見直す前</span><b>${yen(r.before[20])}</b></div>`+
+   SCN.map((s,i)=>`<div class="l g"><span>見直し後（${s[0]}）</span><b>${yen([r.low,r.mid,r.high][i][20])}</b></div>`).join('')+
+   `</div><div class="fine">${r.L?'解約返戻金80万円も投資に入れています。':''}想定年利：全世界株式5%、高配当株4.5%（悲観−3pt／楽観＋2pt）、預金0.1%。</div></div>
+   <button class="btn block" data-act="tab" data-t="res">③ けっかを見る →</button>`;
+  return h;
+}
+function chartSVG(r,yr){
+  const W=340,H=190,pl=44,pr=8,pt=10,pb=22, max=Math.max(...r.high,1)*1.05;
+  const X=y=>pl+(W-pl-pr)*y/30, Y=v=>pt+(H-pt-pb)*(1-v/max);
+  const line=(a,c,w,dash)=>`<polyline fill="none" stroke="${c}" stroke-width="${w}" ${dash?'stroke-dasharray="4 3"':''} points="${a.map((v,y)=>X(y).toFixed(1)+','+Y(v).toFixed(1)).join(' ')}"/>`;
+  let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="資産のすいい">`;
+  [0,.5,1].forEach(f=>{ const v=max*f; s+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="#31456F" stroke-width="1"/><text x="${pl-4}" y="${Y(v)+4}" fill="#98A3C4" font-size="10" text-anchor="end">${yen(v)}</text>`; });
+  [0,10,20,30].forEach(y=>s+=`<text x="${X(y)}" y="${H-6}" fill="#98A3C4" font-size="10" text-anchor="middle">${y}年</text>`);
+  s+=line(r.before,'#B0B8D0',2,true)+line(r.low,SCN[0][2],1.5)+line(r.high,SCN[2][2],1.5)+line(r.mid,SCN[1][2],3);
+  s+=`<line x1="${X(yr)}" x2="${X(yr)}" y1="${pt}" y2="${H-pb}" stroke="#F6C343" stroke-width="1" stroke-dasharray="3 3"/><circle cx="${X(yr)}" cy="${Y(r.mid[yr])}" r="4" fill="#F6C343"/>`;
+  return s+'</svg>';
+}
+function renderRes(){
+  const r=result(), yr=S.years, mid=r.mid[20], gap=mid-r.before[20], saved=BASE_COST-r.cost;
+  const rk=mid>=30000000?['👑','家計マスター']:mid>=20000000?['💎','資産家']:mid>=10000000?['🌱','つみたて上手']:mid>=5000000?['🔰','見直しはじめ']:['😵','おうちピンチ'];
+  let h=`<div class="pn rank"><div class="e">${rk[0]}</div><div class="t">${rk[1]}</div><p>20年後の資産（標準シナリオ）</p><div class="big">${yen(mid)}</div>
+   <div class="df">見直す前より ${yen(gap)} 多い！</div><p>ベスト：${yen(Math.max(S.best,Math.round(mid)))}</p></div>
+   <div class="pn"><h3>資産のすいい</h3><div class="chips">`+[10,20,30].map(y=>`<button class="chip" data-act="years" data-y="${y}" aria-pressed="${yr===y}">${y}年後</button>`).join('')+`</div>${chartSVG(r,yr)}
+   <div class="lg"><span><i style="background:#B0B8D0"></i>見直す前</span><span><i style="background:${SCN[0][2]}"></i>悲観</span><span><i style="background:${SCN[1][2]}"></i>標準</span><span><i style="background:${SCN[2][2]}"></i>楽観</span></div></div>
+   <div class="pn"><h3>${yr}年後のくらべ</h3><table class="tbl">
+   <tr><td>見直す前（預金＋貯蓄性保険）</td><td>${yen(r.before[yr])}</td></tr>
+   <tr><td style="color:${SCN[0][2]}">見直し後・悲観</td><td>${yen(r.low[yr])}</td></tr>
+   <tr><td style="color:${SCN[1][2]}">見直し後・標準</td><td>${yen(r.mid[yr])}</td></tr>
+   <tr><td style="color:${SCN[2][2]}">見直し後・楽観</td><td>${yen(r.high[yr])}</td></tr></table></div>
+   <div class="pn"><h3>もしも、の数字</h3><div class="out">
+   <div class="l"><span>削れた固定費（月）</span><b>${yenF(saved)}</b></div>
+   <div class="l"><span>${yr}年ぶんの合計（運用なし）</span><b>${yen(saved*12*yr)}</b></div>
+   <div class="l g"><span>毎月${yen(r.m)}を${yr}年投資すると</span><b>${yen(r.mid[yr])}</b></div>
+   ${r.divM>0?`<div class="l g"><span>20年後の配当（月・目安）</span><b>${yen(r.divM)}</b></div>`:''}</div>
+   <div class="fine">将来の利益を保証するものではありません。税金や手数料は概算です。</div></div>
+   <div class="ends"><button class="btn" data-act="tab" data-t="what">🔮「もしも」電卓で、ほかの固定費も比べる</button>
+   <button class="btn sub" data-act="restart">もういちど</button><a class="btn sub" href="../">← ゲーム一覧にもどる</a></div>`;
+  return h;
+}
+function renderWhat(){
+  const c=CALCS[S.calc], v=S.cv[S.calc];
+  let h=`<div class="pn"><h3>🔮 「もしも」を数字にする</h3><div class="chips" role="tablist">`+
+    Object.keys(CALCS).map(k=>`<button class="chip" role="tab" data-act="calc" data-k="${k}" aria-selected="${S.calc===k}">${CALCS[k].tab}</button>`).join('')+
+    `</div></div><div class="pn"><h3>${c.title}</h3>`+
+    (c.presets?`<div class="chips">`+c.presets.map((p,i)=>`<button class="chip" data-act="preset" data-i="${i}">${p[0]}</button>`).join('')+`</div>`:'')+
+    c.f.map(f=>`<div class="fld"><label>${f.l}<b id="v_${f.k}">${f.f(v[f.k])}</b></label><input type="range" data-f="${f.k}" min="${f.min}" max="${f.max}" step="${f.step}" value="${v[f.k]}"></div>`).join('')+
+    `<div id="cout"></div></div><div class="ends"><a class="btn sub" href="../">← ゲーム一覧にもどる</a></div>`;
+  return h;
+}
+function calcOut(){
+  const c=CALCS[S.calc], o=c.run(S.cv[S.calc]);
+  return `<div class="verdict">${o.h}</div><div class="out">`+o.rows.map(r=>`<div class="l ${r[2]}"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('')+`</div><div class="fine">${o.fine}</div>`;
+}
+function render(){
+  document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===S.tab));
+  const m=$('#main');
+  m.innerHTML = S.tab==='cut'?renderCut():S.tab==='grow'?renderGrow():S.tab==='res'?renderRes():renderWhat();
+  if(S.tab==='what') $('#cout').innerHTML=calcOut();
+  if(S.tab==='grow'){ const r=$('#rShare'); r.oninput=()=>{ S.share=+r.value; const y=window.scrollY; render(); window.scrollTo(0,y); $('#rShare').focus(); }; }
+  if(S.tab==='what') m.querySelectorAll('input[data-f]').forEach(inp=>{ inp.oninput=()=>{ const k=inp.dataset.f; S.cv[S.calc][k]=+inp.value; const f=CALCS[S.calc].f.find(x=>x.k===k); $('#v_'+k).textContent=f.f(+inp.value); $('#cout').innerHTML=calcOut(); }; });
+}
+
+/* ---------- events ---------- */
+$('#main').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return; humanTouch();
+  const a=b.dataset.act;
+  if(a==='pick') pick(b.dataset.id,+b.dataset.i);
+  else if(a==='tab'){ setTab(b.dataset.t); window.scrollTo(0,0); }
+  else if(a==='alloc') setAlloc(b.dataset.k);
+  else if(a==='nisa') setNisa(b.dataset.v==='1');
+  else if(a==='years') setYears(+b.dataset.y);
+  else if(a==='calc') setCalc(b.dataset.k);
+  else if(a==='preset'){ Object.assign(S.cv[S.calc],CALCS[S.calc].presets[+b.dataset.i][1]); sTap(); render(); }
+  else if(a==='restart'){ restart(); }
+});
+$('#tabs').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b){ humanTouch(); setTab(b.dataset.tab); window.scrollTo(0,0); } });
+$('#bStart').onclick=()=>{ humanTouch(); startGame(); };
+$('#bWhat').onclick=()=>{ humanTouch(); S.calc='save'; startGame(); setTab('what'); };
+$('#bSnd').onclick=()=>setSnd(!S.snd);
+$('#bAuto').onclick=()=>setAuto(!S.auto);
+function humanTouch(){ if(S.auto) setAuto(false); }
+addEventListener('keydown',e=>{
+  if(e.key==='o'||e.key==='O'){ setAuto(!S.auto); return; }
+  if(S.auto&&!e.metaKey&&!e.ctrlKey&&e.key!=='Shift') humanTouch();
+});
+$('#main').addEventListener('input',()=>humanTouch());
+setSnd(S.snd);
+
+window.__kakei={S,plan,costOf,ITEMS,CALCS,cancerOOP,fvA,
+  result,calcOut,step:dt=>tick(dt),setAuto,setTab,pick,setAlloc,setNisa,setShare,setYears,setCalc,startGame,restart,
+  get phase(){return S.phase;},get tab(){return S.tab;}};
+})();
+</script>
+
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>
