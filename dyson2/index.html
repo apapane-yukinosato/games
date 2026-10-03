@@ -201,15 +201,16 @@ function update(dt){
     n.sus+=dt*stlOf(S.lv.stl)*(n.t.kind==='tree'?0:n.t.kind==='vent'?.32:n.nearFire?0:.55)*(S.stopT>0?0:1);
     if(rnd()<dt*8) fx({k:'sand',x:n.x,y:n.y-12,tx:p.x,ty:p.y-12});
     if(n.life<=0.5){ const wasContract=S.contract&&n.type===S.contract; drained(n); if(wasContract){ S.contractDone++; S.life+=Math.max(5,n.max*.25); fx({k:'txt',x:n.x,y:n.y-54,txt:'🎯 特別報酬！ +'+yrs(Math.max(5,n.max*.25)),col:'#FFD65A',big:1}); } S.combo++; } else if(n.sus>=1) anger(n); }
-  if(S.stopT>0){ S.stopT-=dt; } else { S.alert=Math.max(0,S.alert-dt*2.2); }
-  S.comboT-=dt; if(S.comboT<=0) S.combo=0;
+  if(S.stopT>0){ S.stopT-=dt; }
   else {
+    S.alert=Math.max(0,S.alert-dt*2.2);
     for(const n of S.npcs) npcTick(n,dt);
     for(const s2 of S.shots) shotTick(s2,dt); S.shots=S.shots.filter(x=>!x.done);
     for(const v of S.trees){ if(v.wary>0) v.wary-=dt; if(!S.targets.includes(v)) v.sus=Math.max(0,v.sus-dt*.08); if(v.type==='vent'&&v.erupt>0){ v.erupt-=dt; if(v.erupt<=0) eruption(v); } }
     if(s.earth) earthTick(dt);
     for(const r of S.rocks){ r.t+=dt; if(r.t>=r.at&&!r.hit){ r.hit=true; fx({k:'boom',x:r.x,y:r.y}); S.shake=4; if(Math.hypot(p.x-r.x,p.y-r.y)<r.r) hurt(r.dmg,'rock',r.x,r.y); } } S.rocks=S.rocks.filter(r=>r.t<r.at+.4);
   }
+  S.comboT-=dt; if(S.comboT<=0) S.combo=0;
   for(const f of S.fires){ f.t+=dt; } S.fires=S.fires.filter(f=>f.t<9);
   for(const n of S.npcs){ n.nearFire=S.fires.some(f=>Math.hypot(f.x-n.x,f.y-n.y)<90); }
   S.fireCd=Math.max(0,S.fireCd-dt);
