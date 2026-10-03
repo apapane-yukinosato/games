@@ -22,9 +22,11 @@ button{font:inherit;color:inherit}
 #scr{flex:none;display:flex;justify-content:center}
 #cv{display:block;border-radius:6px;touch-action:none;box-shadow:0 0 0 2px #1b2050}
 #pad{flex:1;min-height:150px;display:flex;align-items:center;justify-content:space-between;padding:6px 6px}
-#dpad{display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(3,54px);gap:3px}
-.dp{border:0;border-radius:12px;background:#1d2250;color:#c8d0ff;font-size:20px;box-shadow:0 3px 0 #090b1e;cursor:pointer;padding:0}
-.dp.on{background:#343c84;transform:translateY(2px);box-shadow:0 1px 0 #090b1e}
+#stick{position:relative;flex:1;align-self:stretch;margin-right:10px;border-radius:18px;background:radial-gradient(circle at 50% 50%,rgba(60,70,150,.18),rgba(0,0,0,0) 70%);touch-action:none;cursor:pointer}
+#sbase{position:absolute;width:112px;height:112px;margin:-56px 0 0 -56px;left:50%;top:50%;border-radius:50%;background:rgba(40,48,110,.55);border:2px solid rgba(160,170,255,.35);transition:opacity .2s;opacity:.55;pointer-events:none}
+#stick.on #sbase{opacity:1;transition:none}
+#sknob{position:absolute;left:50%;top:50%;width:50px;height:50px;margin:-25px 0 0 -25px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#7a86e8,#343c9a);box-shadow:0 3px 0 #090b1e;pointer-events:none}
+#shint{position:absolute;left:0;right:0;bottom:4px;text-align:center;font-size:10px;color:#6a72a8;pointer-events:none}
 #ab{display:flex;gap:14px;align-items:center}
 .ab{width:72px;height:72px;border-radius:50%;border:0;font-size:15px;font-weight:800;color:#fff;box-shadow:0 4px 0 #090b1e;cursor:pointer;line-height:1.1;padding:0}
 .ab small{font-size:10px;font-weight:700;opacity:.85}
@@ -47,7 +49,7 @@ button{font:inherit;color:inherit}
   </div>
   <div id="scr"><canvas id="cv" width="768" height="672" aria-label="ゲーム画面"></canvas></div>
   <div id="pad">
-    <div id="dpad"><span></span><button class="dp" data-d="1" aria-label="上">▲</button><span></span><button class="dp" data-d="2" aria-label="左">◀</button><span></span><button class="dp" data-d="3" aria-label="右">▶</button><span></span><button class="dp" data-d="0" aria-label="下">▼</button><span></span></div>
+    <div id="stick" aria-label="移動スティック（どこをさわっても出てきます）"><div id="sbase"><div id="sknob"></div></div><div id="shint">さわった場所から なぞって移動</div></div>
     <div id="ab"><button class="ab" id="bB">B<br><small>メニュー</small></button><button class="ab" id="bA">A<br><small>けってい</small></button></div>
   </div>
   <div id="endBar" hidden><a class="mini" href="../">← ゲーム一覧にもどる</a><button class="mini" id="endTitle">タイトルへ</button></div>
@@ -1292,11 +1294,18 @@ addEventListener('keydown',e=>{ const k=e.key.toLowerCase();
   if(k==='z'||k==='enter'||k===' '){ e.preventDefault(); if(!e.repeat) onA(); return; }
   if(k==='x'||k==='escape'||k==='backspace'){ e.preventDefault(); if(!e.repeat) onB(); return; } });
 addEventListener('keyup',e=>{ const k=e.key.toLowerCase(); if(k in KEYD) onDirUp(KEYD[k]); });
+// floating stick: the base appears where the thumb lands, and the slide direction becomes ↑↓←→
 let padRep=null;
-document.querySelectorAll('.dp').forEach(b=>{ const d=+b.dataset.d;
-  const down=e=>{ e.preventDefault(); b.classList.add('on'); onDir(d); clearInterval(padRep); let n=0; padRep=setInterval(()=>{ n++; if(n>2&&(UI.length||(B&&B.tsel))) onDir(d); },120); };
-  const up=e=>{ b.classList.remove('on'); onDirUp(d); clearInterval(padRep); };
-  b.addEventListener('pointerdown',down); b.addEventListener('pointerup',up); b.addEventListener('pointerleave',up); b.addEventListener('pointercancel',up); });
+(()=>{ const area=$('stick'), base=$('sbase'), knob=$('sknob'); let pid=null, ox=0, oy=0, cur=-1;
+  const setDir=d=>{ if(d===cur) return; if(cur>=0) onDirUp(cur); cur=d; clearInterval(padRep); if(d<0) return; onDir(d); let n=0; padRep=setInterval(()=>{ n++; if(n>2&&(UI.length||(B&&B.tsel))) onDir(d); },120); };
+  const place=(x,y)=>{ const r=area.getBoundingClientRect(); base.style.left=(x-r.left)+'px'; base.style.top=(y-r.top)+'px'; };
+  area.addEventListener('pointerdown',e=>{ e.preventDefault(); if(pid!==null) return; pid=e.pointerId; try{ area.setPointerCapture(pid); }catch(_){} ox=e.clientX; oy=e.clientY; place(ox,oy); knob.style.transform=''; area.classList.add('on'); user(); });
+  area.addEventListener('pointermove',e=>{ if(e.pointerId!==pid) return; let dx=e.clientX-ox, dy=e.clientY-oy; const dist=Math.hypot(dx,dy), R=40;
+    if(dist>R){ ox+=dx*(1-R/dist)*.5; oy+=dy*(1-R/dist)*.5; place(ox,oy); dx=e.clientX-ox; dy=e.clientY-oy; }
+    const k=Math.min(1,R/Math.max(1,Math.hypot(dx,dy))); knob.style.transform=`translate(${dx*k}px,${dy*k}px)`;
+    if(Math.hypot(dx,dy)<14) setDir(-1); else setDir(Math.abs(dx)>Math.abs(dy)?(dx>0?3:2):(dy>0?0:1)); });
+  const end=e=>{ if(e.pointerId!==pid) return; pid=null; setDir(-1); knob.style.transform=''; area.classList.remove('on'); base.style.left='50%'; base.style.top='50%'; };
+  area.addEventListener('pointerup',end); area.addEventListener('pointercancel',end); })();
 for(const [id,fn] of [['bA',onA],['bB',onB]]){ const b=$(id); b.addEventListener('pointerdown',e=>{ e.preventDefault(); b.classList.add('on'); fn(); }); const up=()=>b.classList.remove('on'); b.addEventListener('pointerup',up); b.addEventListener('pointerleave',up); }
 cv.addEventListener('pointerdown',e=>{ e.preventDefault(); user(); const r=cv.getBoundingClientRect(); const x=(e.clientX-r.left)/r.width*W, y=(e.clientY-r.top)/r.height*H;
   if(D){ dlgA(); return; }
