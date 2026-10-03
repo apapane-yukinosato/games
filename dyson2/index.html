@@ -160,7 +160,7 @@ function startStage(i){
   for(const [k,n] of Object.entries(s.trees)) for(let j=0;j<n;j++){ let x,y,ok=false,tries=0; while(!ok&&tries++<50){ x=lr(AREA.x0+20,AREA.x1-20); y=lr(AREA.y0+20,AREA.y1-60); ok=S.trees.every(t=>Math.hypot(t.x-x,t.y-y)>t.t.r+T[k].r+16); }
     const tr=mkNpc(k,x,y); tr.state='tree'; S.trees.push(tr); }
   if(s.earth){ const spots=[[90,150],[270,150],[180,250],[80,360],[280,360],[180,420]]; for(const [x,y] of spots){ const v=mkNpc('vent',x,y); v.state='vent'; S.trees.push(v); } }
-  S.start={life:S.life,lv:{...S.lv}}; S.alert=0; S.combo=0; S.comboT=0; S.comboClock=0; S.contractDone=0; S.focusType=null; S.contract=Object.keys(s.mix||{}).filter(k=>T[k]).sort(()=>rnd()-.5)[0]||null; say(`第${i+1}章　${s.n}`); hideAll(); sfx('start'); syncButtons();
+  S.start={life:S.life,lv:{...S.lv}}; S.alert=0; S.combo=0; S.comboT=0; S.comboClock=0; S.contractDone=0; S.lastSpawn=-99; S.focusType=null; S.contract=Object.keys(s.mix||{}).filter(k=>T[k]).sort(()=>rnd()-.5)[0]||null; say(`第${i+1}章　${s.n}`); hideAll(); sfx('start'); syncButtons();
   if(i>S.best.stage){ S.best.stage=i; saveBest(); }
 }
 function say(m){ S.msg=m; S.msgT=0; }
@@ -215,7 +215,20 @@ function update(dt){
   for(const n of S.npcs){ n.nearFire=S.fires.some(f=>Math.hypot(f.x-n.x,f.y-n.y)<90); }
   S.fireCd=Math.max(0,S.fireCd-dt);
   S.npcs=S.npcs.filter(n=>n.state!=='gone');
-  if(!s.earth){ const alive=S.npcs.filter(n=>n.state!=='old'&&n.state!=='leave').length; if(alive<s.count&&rnd()<dt*.6) spawnPerson(true); }
+  if(!s.earth){
+    const alive=S.npcs.filter(n=>n.state!=='old'&&n.state!=='leave').length;
+    // 吸い尽くして人が減ったとき、次の犠牲者を待たせない。
+    // 特に第3章は人の入れ替わりを速くして、テンポを維持する。
+    const refillRate=S.stage===2?2.8:.9;
+    if(alive<s.count){
+      const missing=s.count-alive;
+      const add=Math.min(missing,Math.max(1,Math.floor(refillRate*dt+(S.stage===2?rnd():0))));
+      if(S.t-S.lastSpawn>=(S.stage===2?.18:0.65)){
+        for(let k=0;k<add;k++) spawnPerson(true);
+        S.lastSpawn=S.t;
+      }
+    }
+  }
   if(S.life>S.best.max){ S.best.max=S.life; }
   syncButtons();
   if(S.alert>=100){ S.alert=70; S.combo=0; say('🚨 警戒MAX！ 全員がダイソンを狙っている！'); for(const n of S.npcs) if(n.state==='walk') { n.state='angry'; n.angryT=5; n.cd=.4; } }
