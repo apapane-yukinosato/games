@@ -143,7 +143,7 @@ const SK=[
 
 /* ================= state ================= */
 const LV0={pow:1,rng:1,stl:1,arm:1,spd:1,multi:1,fire:0,stop:0,hole:0};
-const S={scene:'story',stage:0,life:30,lv:{...LV0},npcs:[],trees:[],fx:[],shots:[],fires:[],rocks:[],p:null,t:0,sucking:false,targets:[],paused:false,auto:false,manual:false,msg:'',msgT:9,endT:0,stopT:0,stopUsed:false,holeUsed:false,fireCd:0,quake:0,earthT:0,shake:0,alert:0,combo:0,comboT:0,focusType:null,contract:null,contractDone:0,
+const S={scene:'story',stage:0,life:30,lv:{...LV0},npcs:[],trees:[],fx:[],shots:[],fires:[],rocks:[],p:null,t:0,sucking:false,targets:[],paused:false,auto:false,manual:false,msg:'',msgT:9,endT:0,stopT:0,stopUsed:false,holeUsed:false,fireCd:0,quake:0,earthT:0,shake:0,alert:0,combo:0,comboT:0,comboClock:0,focusType:null,contract:null,contractDone:0,
   move:null,keys:{},best:(()=>{ try{ return JSON.parse(localStorage.getItem('dyson2Best')||'null')||{stage:0,clears:0,max:0}; }catch(e){ return {stage:0,clears:0,max:0}; } })(),stats:{sucked:0,aged:0,trees:0,hits:0},ending:null};
 let nid=1;
 function saveBest(){ if(S.auto) return; try{ localStorage.setItem('dyson2Best',JSON.stringify(S.best)); }catch(e){} }
@@ -160,7 +160,7 @@ function startStage(i){
   for(const [k,n] of Object.entries(s.trees)) for(let j=0;j<n;j++){ let x,y,ok=false,tries=0; while(!ok&&tries++<50){ x=lr(AREA.x0+20,AREA.x1-20); y=lr(AREA.y0+20,AREA.y1-60); ok=S.trees.every(t=>Math.hypot(t.x-x,t.y-y)>t.t.r+T[k].r+16); }
     const tr=mkNpc(k,x,y); tr.state='tree'; S.trees.push(tr); }
   if(s.earth){ const spots=[[90,150],[270,150],[180,250],[80,360],[280,360],[180,420]]; for(const [x,y] of spots){ const v=mkNpc('vent',x,y); v.state='vent'; S.trees.push(v); } }
-  S.start={life:S.life,lv:{...S.lv}}; S.alert=0; S.combo=0; S.comboT=0; S.contractDone=0; S.focusType=null; S.contract=Object.keys(s.mix||{}).filter(k=>T[k]).sort(()=>rnd()-.5)[0]||null; say(`第${i+1}章　${s.n}`); hideAll(); sfx('start'); syncButtons();
+  S.start={life:S.life,lv:{...S.lv}}; S.alert=0; S.combo=0; S.comboT=0; S.comboClock=0; S.contractDone=0; S.focusType=null; S.contract=Object.keys(s.mix||{}).filter(k=>T[k]).sort(()=>rnd()-.5)[0]||null; say(`第${i+1}章　${s.n}`); hideAll(); sfx('start'); syncButtons();
   if(i>S.best.stage){ S.best.stage=i; saveBest(); }
 }
 function say(m){ S.msg=m; S.msgT=0; }
@@ -210,7 +210,7 @@ function update(dt){
     if(s.earth) earthTick(dt);
     for(const r of S.rocks){ r.t+=dt; if(r.t>=r.at&&!r.hit){ r.hit=true; fx({k:'boom',x:r.x,y:r.y}); S.shake=4; if(Math.hypot(p.x-r.x,p.y-r.y)<r.r) hurt(r.dmg,'rock',r.x,r.y); } } S.rocks=S.rocks.filter(r=>r.t<r.at+.4);
   }
-  S.comboT-=dt; if(S.comboT<=0) S.combo=0;
+  S.comboT-=dt; S.comboClock-=dt; if(S.sucking&&S.targets.length&&S.comboClock<=0){ S.combo=Math.min(12,S.combo+1); S.comboClock=.75; S.comboT=1.15; } if(S.comboT<=0){ S.combo=0; S.comboClock=0; }
   for(const f of S.fires){ f.t+=dt; } S.fires=S.fires.filter(f=>f.t<9);
   for(const n of S.npcs){ n.nearFire=S.fires.some(f=>Math.hypot(f.x-n.x,f.y-n.y)<90); }
   S.fireCd=Math.max(0,S.fireCd-dt);
@@ -226,7 +226,7 @@ function drained(n){ n.life=0;
   if(n.t.kind==='tree'){ n.state='dead'; S.stats.trees++; fx({k:'txt',x:n.x,y:n.y-n.t.r-8,txt:'枯れた…',col:'#C8B890'}); for(let k=0;k<8;k++) fx({k:'leaf',x:n.x+lr(-n.t.r,n.t.r),y:n.y-n.t.r,vx:lr(-30,30),vy:lr(10,50),life:1.6}); sfx('wither'); }
   else if(n.t.kind==='vent'){ n.state='dead'; fx({k:'txt',x:n.x,y:n.y-28,txt:'地脈が止まった',col:'#FFB080'}); S.shake=10; sfx('quake'); }
   else { n.state='old'; n.oldT=0; S.stats.aged++; fx({k:'txt',x:n.x,y:n.y-34,txt:pick(['ほっほっほ…','よっこらしょ…','あれ、腰が…','ずいぶん年をとったのう']),col:'#E8E0C8'}); sfx('old'); } }
-function anger(n){ if(n.t.kind==='tree') return; S.alert=Math.min(100,S.alert+18); S.combo=0; S.comboT=0; n.sus=0; n.wary=5; const p=S.p;
+function anger(n){ if(n.t.kind==='tree') return; S.alert=Math.min(100,S.alert+18); S.combo=0; S.comboT=0; S.comboClock=0; n.sus=0; n.wary=5; const p=S.p;
   if(n.t.kind==='vent'){ n.erupt=1.2; fx({k:'txt',x:n.x,y:n.y-30,txt:'ゴゴゴゴ…',col:'#FFB080'}); fx({k:'warn',x:n.x,y:n.y,r:70,life:1.2}); return; }
   const r=n.t.react; n.angryT=6;
   if(r==='flee'){ n.state='flee'; fx({k:'txt',x:n.x,y:n.y-30,txt:'うわーん！ 年とったー！',col:'#FFE0A0'}); for(const m of S.npcs) if(m!==n&&m.t.react==='stone'&&Math.hypot(m.x-n.x,m.y-n.y)<130){ m.state='angry'; m.angryT=6; m.cd=.5; } sfx('cry'); }
@@ -266,7 +266,7 @@ function syncButtons(){ $('skBtn').hidden=!S.lv.fire; $('skBtn').disabled=S.fire
   const any=S.lv.stop||S.lv.hole; $('skbar').hidden=!any; $('sk_stop').hidden=!S.lv.stop; $('sk_hole').hidden=!S.lv.hole;
   $('sk_stop').disabled=S.stopUsed||S.scene!=='play'; $('sk_stop').querySelector('small').textContent=S.stopT>0?`停止中 ${Math.ceil(S.stopT)}秒`:S.stopUsed?'使用ずみ':'1面に1回';
   $('sk_hole').disabled=S.holeUsed||S.scene!=='play'; $('sk_hole').querySelector('small').textContent=S.holeUsed?'使用ずみ':'1面に1回'; }
-function useFire(){ if(S.scene!=='play'||!S.lv.fire||S.fireCd>0) return; S.fireCd=25; S.alert=Math.max(0,S.alert-35); S.combo=0; S.comboT=0; const p=S.p; S.fires.push({x:p.x,y:p.y-4,t:0}); for(const n of S.npcs){ if(Math.hypot(n.x-p.x,n.y-p.y)<160&&n.state==='angry'){ n.state='walk'; n.angryT=0; } n.sus=Math.max(0,n.sus-.4); }
+function useFire(){ if(S.scene!=='play'||!S.lv.fire||S.fireCd>0) return; S.fireCd=25; S.alert=Math.max(0,S.alert-35); S.combo=0; S.comboT=0; S.comboClock=0; const p=S.p; S.fires.push({x:p.x,y:p.y-4,t:0}); for(const n of S.npcs){ if(Math.hypot(n.x-p.x,n.y-p.y)<160&&n.state==='angry'){ n.state='walk'; n.angryT=0; } n.sus=Math.max(0,n.sus-.4); }
   fx({k:'txt',x:p.x,y:p.y-40,txt:'一万円札でたき火。あったかい。',col:'#FFD080'}); say('🔥 お金は、燃やすとあったかい'); sfx('fire'); }
 function useStop(){ if(S.scene!=='play'||!S.lv.stop||S.stopUsed) return; S.stopUsed=true; S.stopT=6; say('⏸ 時間よ、止まれ'); sfx('stop'); }
 function useHole(){ if(S.scene!=='play'||!S.lv.hole||S.holeUsed) return; S.holeUsed=true; const p=S.p; let tot=0;
@@ -359,6 +359,7 @@ function drawPerson(n){ const age=n.age, k=n.t.kind; g.save(); g.translate(n.x,n
   g.restore();
   if(n.state==='angry'){ g.fillStyle='#FF6A5A'; g.font='800 12px sans-serif'; g.textAlign='center'; g.fillText('💢',n.x+8,n.y-40); }
   if(n.nearFire&&n.state==='walk'){ g.fillStyle='rgba(255,220,150,.9)'; g.font='800 9px sans-serif'; g.textAlign='center'; g.fillText('ぽかぽか',n.x,n.y-42); }
+  if(S.contract&&n.type===S.contract&&n.life>0.5){ g.strokeStyle='#FFD65A'; g.lineWidth=2; g.setLineDash([4,3]); g.beginPath(); g.arc(n.x,n.y-20,18+Math.sin(S.t*5)*2,0,7); g.stroke(); g.setLineDash([]); }
   drawTag(n); }
 function drawTag(n){ if(n.state==='old'||n.state==='leave') return; if(n.sus>0.05){ g.fillStyle='rgba(0,0,0,.5)'; g.fillRect(n.x-12,n.y-50,24,4); g.fillStyle=n.sus>.7?'#FF5A4A':'#F2C23A'; g.fillRect(n.x-12,n.y-50,24*Math.min(1,n.sus),4); } }
 function drawDyson(){ const p=S.p, L=S.life, young=L>=1000?3:L>=150?2:L>=40?1:0;
