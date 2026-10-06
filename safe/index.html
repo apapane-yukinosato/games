@@ -120,8 +120,8 @@ const sfx={
 
 // ---- haptics ----
 // Android: navigator.vibrate / iPhone (iOS 18+ Safari): <input type="checkbox" switch> を click すると触覚が出る
-const PAT={tick:[6],burst:[22,28,22,28,40],buzz:[70,35,70,35,70,35,110],open:[30,40,30,40,30,40,80]};
-const REP={tick:1,burst:3,buzz:5,open:4};
+const PAT={tick:[6],burst:[40,30,40,30,90],buzz:[70,35,70,35,70,35,110],open:[30,40,30,40,30,40,80]};
+const REP={tick:1,burst:5,buzz:5,open:4};
 function swTick(){ const l=document.createElement('label'); l.style.cssText='position:fixed;left:-120px;top:-120px;opacity:0;pointer-events:none'; l.innerHTML='<input type="checkbox" switch>'; document.body.appendChild(l); l.click(); setTimeout(()=>l.remove(),60); }
 function haptic(k){ S.hap.count++; S.hap.last=k; if(!hapOn) return;
   try{ if(typeof navigator.vibrate==='function'){ navigator.vibrate(PAT[k]); return; } }catch(_){}
@@ -266,11 +266,15 @@ function draw(){
 
 // ---- input ----
 const stepBy=n=>{ if(S.mode==='play') setVal(Math.round(S.val)+n); refresh(); };
-let dragA=null;
+let dragA=null, lastBuzz=0;
 const ang=e=>{ const r=cv.getBoundingClientRect(), x=(e.clientX-r.left)/r.width*W-CX, y=(e.clientY-r.top)/r.height*H-CY; return Math.atan2(x,-y); };
 cv.addEventListener('pointerdown',e=>{ if(S.mode!=='play') return; dragA=ang(e); try{ cv.setPointerCapture(e.pointerId); }catch(_){} });
-cv.addEventListener('pointermove',e=>{ if(dragA==null||S.mode!=='play') return; const a=ang(e); let d=a-dragA; while(d>Math.PI) d-=2*Math.PI; while(d<-Math.PI) d+=2*Math.PI; dragA=a; setVal(S.val+d/(2*Math.PI)*100); });
-const endDrag=()=>{ if(dragA==null) return; dragA=null; if(S.mode==='play') S.val=Math.round(S.val)%100; };
+cv.addEventListener('pointermove',e=>{ if(dragA==null||S.mode!=='play') return; const a=ang(e); let d=a-dragA; while(d>Math.PI) d-=2*Math.PI; while(d<-Math.PI) d+=2*Math.PI; dragA=a; setVal(S.val+d/(2*Math.PI)*100);
+  // 正解の数字の上にいるあいだは、指を動かすたびにブルブル（音なしでもわかる）
+  const now=performance.now();
+  if(Math.round(S.val)%100===S.locks[S.idx]&&now-lastBuzz>70){ lastBuzz=now; haptic('burst'); } });
+// 指をはなす瞬間は iPhone でも確実に触覚が出るので、正解ならここでブルッ！
+const endDrag=()=>{ if(dragA==null) return; dragA=null; if(S.mode==='play'){ S.val=Math.round(S.val)%100; if(S.val===S.locks[S.idx]) haptic('burst'); } };
 cv.addEventListener('pointerup',endDrag); cv.addEventListener('pointercancel',endDrag);
 $('m5').onclick=()=>stepBy(-5); $('m1').onclick=()=>stepBy(-1); $('p1').onclick=()=>stepBy(1); $('p5').onclick=()=>stepBy(5);
 $('lockBtn').onclick=tryLock;
