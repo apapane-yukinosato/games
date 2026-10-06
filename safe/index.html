@@ -109,9 +109,15 @@ const aud=()=>{ if(!sndOn) return null; try{ if(!ac) ac=new (window.AudioContext
 function tone(f,d,type,v,when,f2){ const a=aud(); if(!a) return; const o=a.createOscillator(), g=a.createGain(), t0=a.currentTime+(when||0);
   o.type=type||'square'; o.frequency.setValueAtTime(f,t0); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t0+d);
   g.gain.setValueAtTime(v||.06,t0); g.gain.exponentialRampToValueAtTime(.0001,t0+d); o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0+d+.03); }
+let nb=null;
+function clickSnd(lv,when){ const a=aud(); if(!a) return; if(!nb){ nb=a.createBuffer(1,Math.floor(a.sampleRate*.03),a.sampleRate); const d=nb.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3); }
+  const t0=a.currentTime+(when||0), src=a.createBufferSource(), f=a.createBiquadFilter(), g=a.createGain();
+  src.buffer=nb; f.type='bandpass'; f.frequency.value=lv>=2?3800:lv===1?3000:2400; f.Q.value=1.2; g.gain.value=lv>=2?1.6:1.1;
+  src.connect(f); f.connect(g); g.connect(a.destination); src.start(t0);
+  tone(lv>=2?260:200,.025,'sine',.09,when||0,90); }
 const sfx={
-  click(lv){ tone(lv>=2?2600:lv===1?2000:1500,.025,'square',lv>=2?.07:.045); },
-  burst(){ tone(1000,.05,'square',.08); tone(1500,.05,'square',.08,.05); tone(2200,.09,'square',.08,.1); },
+  click(lv){ clickSnd(lv); },
+  burst(){ clickSnd(2); clickSnd(2,.06); clickSnd(2,.12); tone(900,.18,'sine',.05,.0,1400); },
   lock(){ tone(150,.18,'sawtooth',.14,0,55); tone(900,.05,'square',.06,.02); },
   wrong(){ tone(120,.34,'sawtooth',.1,0,70); tone(125,.34,'square',.05,0,72); },
   clear(){ [523,659,784,1047].forEach((f,i)=>tone(f,.16,'triangle',.1,i*.09)); tone(1318,.4,'triangle',.1,.4); },
@@ -123,7 +129,11 @@ const sfx={
 const PAT={tick:[6],burst:[40,30,40,30,90],buzz:[70,35,70,35,70,35,110],open:[30,40,30,40,30,40,80]};
 const REP={tick:1,burst:5,buzz:5,open:4};
 function swTick(){ const l=document.createElement('label'); l.style.cssText='position:fixed;left:-120px;top:-120px;opacity:0;pointer-events:none'; l.innerHTML='<input type="checkbox" switch>'; document.body.appendChild(l); l.click(); setTimeout(()=>l.remove(),60); }
-function haptic(k){ S.hap.count++; S.hap.last=k; if(!hapOn) return;
+function haptic(k,n){ n=n||1; S.hap.count+=n; S.hap.last=k; if(!hapOn) return;
+  // 'tick' を n 回ぶん：クリック音1回ごとに1回ブルッとする（iPhone は同じ操作の中でまとめて鳴らす）
+  if(k==='tick'){
+    try{ if(typeof navigator.vibrate==='function'){ const p=[]; for(let i=0;i<n;i++){ p.push(8); if(i<n-1) p.push(22); } navigator.vibrate(p); return; } }catch(_){}
+    for(let i=0;i<n;i++) swTick(); return; }
   try{ if(typeof navigator.vibrate==='function'){ navigator.vibrate(PAT[k]); return; } }catch(_){}
   for(let i=0;i<REP[k];i++){ if(i) setTimeout(swTick,i*45); else swTick(); } }
 const hapKind=()=>{ if(typeof navigator.vibrate==='function') return 'vib';
@@ -137,9 +147,10 @@ function setVal(nv){
   if(S.mode!=='play') return;
   const a=Math.round(old)%100, b=Math.round(S.val)%100; if(a===b) return;
   const d=((b-a+150)%100)-50, dir=Math.sign(d), cnt=Math.min(Math.abs(d),40), tg=S.locks[S.idx];
-  let top=0, sounds=0;
-  for(let i=1;i<=cnt;i++){ const m=((a+dir*i)%100+100)%100, lv=feel(m,tg); if(lv>top) top=lv; if(lv>0&&sounds<3){ sounds++; if(lv===3) sfx.burst(); else sfx.click(lv); } }
-  if(top>=3) haptic('burst'); else if(top>0) haptic('tick');
+  // クリック音が鳴る数字ごとに、ブルッも1回ずつ
+  let ticks=0, hit=false;
+  for(let i=1;i<=cnt;i++){ const m=((a+dir*i)%100+100)%100, lv=feel(m,tg); if(lv===3) hit=true; else if(lv>0&&ticks<8){ ticks++; sfx.click(lv); } }
+  if(hit){ sfx.burst(); haptic('burst'); } else if(ticks) haptic('tick',ticks);
 }
 function genLocks(n){ const out=[]; let prev=Math.round(S.val)%100; for(let i=0;i<n;i++){ let x; do{ x=Math.floor(Math.random()*100); }while(circ(x,prev)<15); out.push(x); prev=x; } return out; }
 function startStage(){ S.n=Math.min(5,1+(S.stage>>1)); S.locks=genLocks(S.n); S.idx=0; S.t=20+12*S.n; S.mode='play'; S.banner=''; S.aw=.06; hideOv(); refresh(); }
