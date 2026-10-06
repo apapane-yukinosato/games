@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="iPhone（Safari）で使えるセンサーやハードウェアの動きを、その場でためして確認できるページ。加速度・ジャイロ・コンパス・位置情報・カメラ・マイク・触覚・タッチ・ゲームコントローラーなど">
+<title>iPhoneセンサーラボ</title>
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-180.png">
+<style>
+:root{--bg:#0B1218;--bg2:#15222D;--card:#16232F;--line:#2A3E50;--ink:#E8F1F8;--mute:#8FA6B8;--acc:#4FD6C0;--acc2:#F2C23A;--bad:#FF6B6B;--ok:#5BE08A;color-scheme:dark}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;overscroll-behavior:none}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Hiragino Sans","Yu Gothic",system-ui,sans-serif;font-size:14px;line-height:1.55;-webkit-tap-highlight-color:transparent;padding-bottom:calc(40px + env(safe-area-inset-bottom,0px));overscroll-behavior:none}
+header{position:sticky;top:0;z-index:30;background:rgba(11,18,24,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:calc(8px + env(safe-area-inset-top,0px)) 12px 6px}
+.hd{display:flex;align-items:center;gap:10px;max-width:760px;margin:0 auto}
+.hd a{color:var(--acc);text-decoration:none;font-weight:800;font-size:13px;white-space:nowrap}
+.hd h1{flex:1;margin:0;font-size:16px;text-align:center}
+.nav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:6px 0 2px;max-width:760px;margin:0 auto}
+.nav::-webkit-scrollbar{display:none}
+.nav a{flex:none;color:var(--ink);background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:4px 10px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap}
+main{max-width:760px;margin:0 auto;padding:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:0 0 14px;scroll-margin-top:96px}
+.card h2{margin:0 0 2px;font-size:17px}
+.card .d{margin:0 0 10px;color:var(--mute);font-size:12.5px}
+.warn{background:#3A2A10;border:1px solid #8A6420;color:#FFD590;border-radius:12px;padding:10px 12px;margin:0 0 14px;font-size:13px}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;align-items:center}
+button,.btn,select,textarea,input[type=text]{font:inherit}
+button,.btn{border:0;border-radius:12px;padding:10px 14px;background:var(--acc);color:#04201B;font-weight:800;font-size:14px;cursor:pointer;display:inline-block;text-align:center;text-decoration:none}
+button.sub,.btn.sub{background:#24384A;color:var(--ink)}
+button.on{background:var(--acc2);color:#2A2008}
+button:disabled{opacity:.45}
+select,textarea,input[type=text]{background:#0E1923;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 10px;max-width:100%}
+textarea{width:100%;resize:vertical}
+input[type=range]{width:100%;accent-color:var(--acc)}
+label.lb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute)}
+table.kv{width:100%;border-collapse:collapse;font-size:12.5px}
+table.kv th{width:42%;text-align:left;color:var(--mute);font-weight:600;padding:3px 8px 3px 0;vertical-align:top}
+table.kv td{padding:3px 0;font-variant-numeric:tabular-nums;word-break:break-all}
+table.kv tr+tr{border-top:1px solid #1F3141}
+canvas.cv{display:block;width:100%;background:#0A131B;border:1px solid var(--line);border-radius:12px}
+video,audio,img.pv{max-width:100%;border-radius:12px;background:#000;display:block}
+.st{display:inline-block;border-radius:99px;padding:1px 9px;font-size:11px;font-weight:800;background:#24384A;color:var(--mute)}
+.st.ok{background:#134A2A;color:var(--ok)}
+.st.ng{background:#4A1D1D;color:var(--bad)}
+.sumg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.chip{display:flex;align-items:center;gap:6px;background:#0E1923;border:1px solid var(--line);border-radius:10px;padding:6px 8px;font-size:12px;font-weight:700;text-decoration:none;color:var(--ink)}
+.chip i{font-style:normal}
+.chip.ok{border-color:#1F6A3A}
+.chip.ng{color:var(--mute)}
+.big{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--acc)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stage3d{perspective:500px;height:150px;display:flex;align-items:center;justify-content:center;background:#0A131B;border:1px solid var(--line);border-radius:12px}
+.ph3d{width:62px;height:112px;border:3px solid var(--acc);border-radius:12px;background:linear-gradient(160deg,#1E3A4A,#0E1F2B);position:relative;transition:transform .05s linear}
+.ph3d::after{content:"";position:absolute;left:50%;top:5px;width:16px;height:4px;margin-left:-8px;border-radius:3px;background:var(--acc)}
+.pop{animation:pop .4s}
+@keyframes pop{0%{transform:scale(1.25);color:var(--acc2)}100%{transform:none}}
+#dead{position:fixed;inset:0;z-index:100;display:flex;align-items:flex-end;justify-content:center;padding:24px;color:#fff;font-weight:800;font-size:13px;text-shadow:0 0 4px #000}
+.small{font-size:11.5px;color:var(--mute)}
+.mono{font-family:ui-monospace,Menlo,monospace}
+.hapsw{width:51px;height:31px}
+</style>
+</head>
+<body>
+<header>
+  <div class="hd"><a href="../">← 一覧</a><h1>📲 iPhone センサーラボ</h1><span class="st" id="net"></span></div>
+  <nav class="nav" id="nav"></nav>
+</header>
+<main id="main">
+  <div class="warn" id="insecure" hidden>⚠️ このページは https で開かれていないため、センサー・カメラ・マイク・位置情報は使えません。</div>
+  <div class="card" id="s-sum">
+    <h2>✅ この iPhone で使える機能</h2>
+    <p class="d">いま開いているブラウザで、機能そのものがあるかを自動チェック。 ✅ は使える、⚪ は使えない（またはこのブラウザにない）。タップで下の実験へ。</p>
+    <div class="row"><b id="sumcnt" class="big" style="font-size:22px"></b></div>
+    <div class="sumg" id="sumg"></div>
+    <div class="row"><button id="bAll">▶ モーション・傾き・位置情報をまとめて開始</button><button class="sub" id="bStopAll">■ ぜんぶ停止</button></div>
+    <p class="small">許可ダイアログが出たら「許可」を押してください。許可は Safari の設定（Web サイト）でいつでも取り消せます。センサーの値はこの端末の中だけで表示され、どこにも送信されません。</p>
+    <p class="small">⚪ のままのもの（LiDAR・気圧計・環境光センサー・近接センサー・UWB・Bluetooth・NFC など）は、Safari の Web ページからは直接さわれないハードです。</p>
+  </div>
+</main>
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const f=(v,d=2)=>v==null||Number.isNaN(+v)?'—':(+v).toFixed(d);
+const yn=v=>v?'<span class="st ok">あり</span>':'<span class="st ng">なし</span>';
+const kv=(el,o)=>{ let h=''; for(const k in o) h+='<tr><th>'+k+'</th><td>'+o[k]+'</td></tr>'; el.innerHTML=h; };
+const errMsg=e=>{ const n=e&&e.name||'Error'; const m={NotAllowedError:'許可されていません（Safari の設定でこのサイトの許可を確認してください）',NotFoundError:'対応する装置が見つかりません',NotReadableError:'他のアプリが使用中か、装置を読み取れません',OverconstrainedError:'条件に合う装置がありません',SecurityError:'安全でない環境のため使えません（https が必要）',AbortError:'中断されました',NotSupportedError:'この環境では対応していません',InvalidStateError:'いまは実行できない状態です'}[n]; return n+(m?'：'+m:(e&&e.message?'：'+esc(e.message):'')); };
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const sections=[]; const stops=[]; const api={};
+function sec(id,icon,title,desc,body,init){ sections.push({id,icon,title,desc,body,init}); }
+async function askPerm(C){ if(typeof C!=='undefined'&&C&&typeof C.requestPermission==='function'){ try{ return (await C.requestPermission())==='granted'; }catch(e){ return false; } } return true; }
+function sizeCanvas(c,h){ const w=c.clientWidth||300; const d=Math.min(2,window.devicePixelRatio||1); c.width=Math.round(w*d); c.height=Math.round((h||c.clientHeight||120)*d); return d; }
+
+/* ================= device ================= */
+sec('device','📱','デバイス情報・画面','画面サイズ、解像度、リフレッシュレート（ProMotion は 120Hz）、安全領域（ノッチ）、ブラウザの設定など。',
+ '<table class="kv"></table><div class="row"><button class="sub" data-a="dead">🧪 ドット抜け・焼きつきチェック（全画面の色）</button></div>',
+ root=>{
+  const t=root.querySelector('table'); let fps=0,n=0,t0=0; const probe=document.createElement('div'); probe.style.cssText='position:fixed;left:0;top:0;visibility:hidden;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)'; document.body.appendChild(probe);
+  const raf=ts=>{ if(!t0) t0=ts; n++; if(ts-t0>=1000){ fps=Math.round(n*1000/(ts-t0)); n=0; t0=ts; } requestAnimationFrame(raf); }; requestAnimationFrame(raf);
+  const mq=q=>matchMedia(q).matches;
+  const upd=()=>{ const cs=getComputedStyle(probe), vv=window.visualViewport, so=screen.orientation;
+    kv(t,{'機種・OS（UA）':'<span class="mono">'+esc(navigator.userAgent)+'</span>','platform':esc(navigator.platform||'—'),'言語 / タイムゾーン':esc(navigator.language)+' / '+esc(Intl.DateTimeFormat().resolvedOptions().timeZone),
+     '画面（CSS px）':screen.width+' × '+screen.height,'画面（実ピクセル）':Math.round(screen.width*devicePixelRatio)+' × '+Math.round(screen.height*devicePixelRatio)+'（DPR '+devicePixelRatio+'）','表示領域':innerWidth+' × '+innerHeight+(vv?'（visualViewport '+Math.round(vv.width)+' × '+Math.round(vv.height)+'・拡大 '+f(vv.scale)+'）':''),
+     '安全領域（上/右/下/左）':[cs.paddingTop,cs.paddingRight,cs.paddingBottom,cs.paddingLeft].join(' / '),'向き':so?so.type+'（'+so.angle+'°）':'—','リフレッシュレート（実測）':fps?'約 '+fps+' Hz'+(fps>75?' 🚀 ProMotion':''):'測定中…','色深度':screen.colorDepth+' bit',
+     'ホーム画面アプリで起動':yn(navigator.standalone||mq('(display-mode: standalone)')),'https（安全な環境）':yn(window.isSecureContext),'タッチ点の最大数':navigator.maxTouchPoints,'CPU コア数':navigator.hardwareConcurrency||'—',
+     'ダークモード':yn(mq('(prefers-color-scheme: dark)')),'視差効果を減らす':yn(mq('(prefers-reduced-motion: reduce)')),'ハイコントラスト':yn(mq('(prefers-contrast: more)')),'広色域 P3':yn(mq('(color-gamut: p3)')),'HDR':yn(mq('(dynamic-range: high)')),'ホバー可 / 精密ポインタ':yn(mq('(hover: hover)'))+' '+yn(mq('(pointer: fine)')),
+     'Cookie':yn(navigator.cookieEnabled),'オンライン':yn(navigator.onLine)}); };
+  upd(); setInterval(upd,1000); addEventListener('resize',upd);
+  root.querySelector('[data-a=dead]').onclick=()=>{ const cols=['#000','#fff','#f00','#0f0','#00f','#888']; let i=0; const d=document.createElement('div'); d.id='dead'; d.style.background=cols[0]; d.textContent='タップで次の色（'+cols.length+'色）'; d.onclick=()=>{ i++; if(i>=cols.length){ d.remove(); return; } d.style.background=cols[i]; d.textContent='タップで次の色（'+(i+1)+'/'+cols.length+'）'; }; document.body.appendChild(d); };
+ });
+
+/* ================= motion ================= */
+sec('motion','🎢','モーション（加速度・ジャイロ）','加速度センサーとジャイロスコープ。iPhone を振ったり傾けたりしてみよう。（iOS は初回に許可が必要）',
+ '<div class="row"><button data-a="go">▶ 開始（許可を求める）</button><button class="sub" data-a="stop">■ 停止</button><span class="st" data-r="st">停止中</span></div><canvas class="cv" height="130"></canvas><table class="kv" style="margin-top:8px"></table><div class="row"><b>ふった回数：<span class="big" data-r="sh">0</span></b><button class="sub" data-a="rs">リセット</button></div>',
+ root=>{
+  const q=s=>root.querySelector(s), cv=q('canvas'), t=q('table'), st=q('[data-r=st]'); let on=false,last=null,shakes=0,lastShake=0,iv=0; const buf=[[],[],[]]; const N=150;
+  const handler=e=>{ last=e; const g=e.accelerationIncludingGravity, a=e.acceleration; if(g){ [g.x,g.y,g.z].forEach((v,i)=>{ buf[i].push(v||0); if(buf[i].length>N) buf[i].shift(); }); }
+    const mag=a&&a.x!=null?Math.hypot(a.x,a.y,a.z):(g?Math.abs(Math.hypot(g.x,g.y,g.z)-9.81):0); const now=Date.now(); if(mag>14&&now-lastShake>450){ lastShake=now; shakes++; const s=q('[data-r=sh]'); s.textContent=shakes; s.classList.remove('pop'); void s.offsetWidth; s.classList.add('pop'); } };
+  const draw=()=>{ const d=sizeCanvas(cv,130), g=cv.getContext('2d'), W=cv.width, H=cv.height; g.fillStyle='#0A131B'; g.fillRect(0,0,W,H); g.strokeStyle='#1F3141'; g.beginPath(); g.moveTo(0,H/2); g.lineTo(W,H/2); g.stroke();
+    ['#FF6B6B','#5BE08A','#6AB4FF'].forEach((c,k)=>{ g.strokeStyle=c; g.lineWidth=2*d; g.beginPath(); buf[k].forEach((v,i)=>{ const x=i/(N-1)*W, y=H/2-(v/20)*(H/2); i?g.lineTo(x,y):g.moveTo(x,y); }); g.stroke(); }); g.fillStyle='#8FA6B8'; g.font=(11*d)+'px sans-serif'; g.fillText('赤 x / 緑 y / 青 z（含 重力・±20 m/s²）',6*d,14*d); };
+  const show=()=>{ const e=last||{}, a=e.acceleration||{}, g=e.accelerationIncludingGravity||{}, r=e.rotationRate||{}; kv(t,{'加速度 x / y / z（m/s²）':f(a.x)+' / '+f(a.y)+' / '+f(a.z),'重力込み x / y / z':f(g.x)+' / '+f(g.y)+' / '+f(g.z),'角速度 alpha / beta / gamma（°/s）':f(r.alpha,1)+' / '+f(r.beta,1)+' / '+f(r.gamma,1),'更新間隔':e.interval!=null?f(e.interval,1)+' ms（約 '+Math.round(1000/e.interval)+' Hz）':'—','イベント':last?'届いています':'まだ届いていません'}); draw(); };
+  const stop=()=>{ if(!on) return; removeEventListener('devicemotion',handler); clearInterval(iv); on=false; st.textContent='停止中'; st.className='st'; };
+  const go=async()=>{ if(on) return; if(!('DeviceMotionEvent' in window)){ st.textContent='非対応'; st.className='st ng'; return; } const ok=await askPerm(window.DeviceMotionEvent); if(!ok){ st.textContent='許可されませんでした'; st.className='st ng'; return; } addEventListener('devicemotion',handler); on=true; st.textContent='計測中'; st.className='st ok'; iv=setInterval(show,100); setTimeout(()=>{ if(on&&!last){ st.textContent='値が届きません（この端末にセンサーがない可能性）'; st.className='st ng'; } },3000); };
+  q('[data-a=go]').onclick=go; q('[data-a=stop]').onclick=stop; q('[data-a=rs]').onclick=()=>{ shakes=0; q('[data-r=sh]').textContent='0'; };
+  show(); stops.push(stop); api.motion={go,stop,handler,get shakes(){return shakes;}};
+ });
+
+/* ================= orientation ================= */
+sec('orient','🧭','傾き・コンパス・水平器','デバイスの向き（alpha / beta / gamma）と方位。コンパスや水平器として動きます。',
+ '<div class="row"><button data-a="go">▶ 開始（許可を求める）</button><button class="sub" data-a="stop">■ 停止</button><span class="st" data-r="st">停止中</span></div><div class="pair"><canvas class="cv" data-c="comp" height="170"></canvas><canvas class="cv" data-c="lvl" height="170"></canvas></div><div class="stage3d" style="margin-top:10px"><div class="ph3d"></div></div><table class="kv" style="margin-top:8px"></table>',
+ root=>{
+  const q=s=>root.querySelector(s), t=q('table'), st=q('[data-r=st]'), ph=q('.ph3d'); let on=false,last=null,iv=0;
+  const handler=e=>{ last=e; };
+  const cardinal=h=>['北','北東','東','南東','南','南西','西','北西'][Math.round(((h%360)+360)%360/45)%8];
+  const show=()=>{ const e=last||{}; const al=e.alpha, be=e.beta, ga=e.gamma; const head=e.webkitCompassHeading!=null?e.webkitCompassHeading:(al!=null?(360-al)%360:null);
+    kv(t,{'alpha（z 軸まわり・0〜360°）':f(al,1),'beta（前後の傾き・-180〜180°）':f(be,1),'gamma（左右の傾き・-90〜90°）':f(ga,1),'コンパス方位（webkitCompassHeading）':e.webkitCompassHeading!=null?f(e.webkitCompassHeading,1)+'° '+cardinal(e.webkitCompassHeading):'— （alpha から推定：'+(head!=null?f(head,0)+'°':'—')+'）','方位の精度':e.webkitCompassAccuracy!=null?'±'+f(e.webkitCompassAccuracy,0)+'°':'—','absolute':e.absolute==null?'—':String(e.absolute)});
+    ph.style.transform='rotateX('+(-(be||0))+'deg) rotateY('+(ga||0)+'deg) rotateZ('+(-(al||0))+'deg)';
+    // compass
+    let c=q('[data-c=comp]'), d=sizeCanvas(c,170), g=c.getContext('2d'), W=c.width, H=c.height, R=Math.min(W,H)/2-8*d; g.fillStyle='#0A131B'; g.fillRect(0,0,W,H); g.save(); g.translate(W/2,H/2); g.rotate(-(head||0)*Math.PI/180); g.strokeStyle='#2A3E50'; g.lineWidth=2*d; g.beginPath(); g.arc(0,0,R,0,7); g.stroke(); g.fillStyle='#E8F1F8'; g.font='bold '+(16*d)+'px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; [['北',0,'#FF6B6B'],['東',90,'#E8F1F8'],['南',180,'#E8F1F8'],['西',270,'#E8F1F8']].forEach(([s,a,col])=>{ g.save(); g.rotate(a*Math.PI/180); g.fillStyle=col; g.fillText(s,0,-R+18*d); g.restore(); }); g.restore();
+    g.fillStyle='#4FD6C0'; g.beginPath(); g.moveTo(W/2,H/2-R+30*d); g.lineTo(W/2-7*d,H/2); g.lineTo(W/2+7*d,H/2); g.closePath(); g.fill(); g.fillStyle='#E8F1F8'; g.textAlign='center'; g.font='bold '+(14*d)+'px sans-serif'; g.fillText(head!=null?f(head,0)+'° '+cardinal(head):'—',W/2,H/2+R-14*d);
+    // level
+    c=q('[data-c=lvl]'); d=sizeCanvas(c,170); g=c.getContext('2d'); W=c.width; H=c.height; R=Math.min(W,H)/2-8*d; g.fillStyle='#0A131B'; g.fillRect(0,0,W,H); g.strokeStyle='#2A3E50'; g.lineWidth=2*d; g.beginPath(); g.arc(W/2,H/2,R,0,7); g.stroke(); g.beginPath(); g.arc(W/2,H/2,R*0.33,0,7); g.stroke(); g.beginPath(); g.moveTo(W/2-R,H/2); g.lineTo(W/2+R,H/2); g.moveTo(W/2,H/2-R); g.lineTo(W/2,H/2+R); g.stroke();
+    const bx=Math.max(-1,Math.min(1,(ga||0)/45)), by=Math.max(-1,Math.min(1,(be||0)/45)); const flat=Math.abs(be||0)<1.5&&Math.abs(ga||0)<1.5&&last; g.fillStyle=flat?'#5BE08A':'#F2C23A'; g.beginPath(); g.arc(W/2+bx*(R-12*d),H/2+by*(R-12*d),12*d,0,7); g.fill(); g.fillStyle='#8FA6B8'; g.font=(11*d)+'px sans-serif'; g.textAlign='center'; g.fillText('水平器 '+(flat?'✓ 水平':'（平らに置くと中央）'),W/2,14*d); };
+  const stop=()=>{ if(!on) return; removeEventListener('deviceorientation',handler); clearInterval(iv); on=false; st.textContent='停止中'; st.className='st'; };
+  const go=async()=>{ if(on) return; if(!('DeviceOrientationEvent' in window)){ st.textContent='非対応'; st.className='st ng'; return; } const ok=await askPerm(window.DeviceOrientationEvent); if(!ok){ st.textContent='許可されませんでした'; st.className='st ng'; return; } addEventListener('deviceorientation',handler); on=true; st.textContent='計測中'; st.className='st ok'; iv=setInterval(show,60); setTimeout(()=>{ if(on&&!last){ st.textContent='値が届きません'; st.className='st ng'; } },3000); };
+  q('[data-a=go]').onclick=go; q('[data-a=stop]').onclick=stop; show(); stops.push(stop); api.orient={go,stop,handler};
+ });
+
+/* ================= geolocation ================= */
+sec('geo','📍','位置情報（GPS）','緯度・経度・精度・高度・速度・進行方向。歩くと軌跡が描かれます。',
+ '<div class="row"><button data-a="once">📍 現在地を1回取得</button><button data-a="watch">▶ 追跡開始</button><button class="sub" data-a="stop">■ 停止</button><span class="st" data-r="st">停止中</span></div><canvas class="cv" height="150"></canvas><table class="kv" style="margin-top:8px"></table>',
+ root=>{
+  const q=s=>root.querySelector(s), t=q('table'), st=q('[data-r=st]'), cv=q('canvas'); let wid=null; const trail=[]; let lastP=null,n=0;
+  const gerr=e=>({1:'許可されていません（設定 > プライバシー > 位置情報サービス / Safari）',2:'位置を取得できません（電波状況など）',3:'タイムアウトしました'}[e.code]||e.message);
+  const show=()=>{ const p=lastP; const c=p&&p.coords||{}; kv(t,{'緯度':f(c.latitude,6),'経度':f(c.longitude,6),'精度（m）':f(c.accuracy,1),'高度（m）':f(c.altitude,1),'高度の精度（m）':f(c.altitudeAccuracy,1),'速度（m/s）':c.speed!=null?f(c.speed,2)+'（'+f(c.speed*3.6,1)+' km/h）':'—','進行方向（°）':f(c.heading,0),'取得時刻':p?new Date(p.timestamp).toLocaleTimeString('ja-JP'):'—','更新回数':n});
+    const d=sizeCanvas(cv,150), g=cv.getContext('2d'), W=cv.width, H=cv.height; g.fillStyle='#0A131B'; g.fillRect(0,0,W,H); g.fillStyle='#8FA6B8'; g.font=(11*d)+'px sans-serif'; g.fillText('軌跡（北が上）',6*d,14*d);
+    if(trail.length){ const la0=trail[0][0], lo0=trail[0][1], kx=Math.cos(la0*Math.PI/180)*111320, pts=trail.map(p=>[(p[1]-lo0)*kx,-(p[0]-la0)*110540]); let mx=5; pts.forEach(p=>{ mx=Math.max(mx,Math.abs(p[0]),Math.abs(p[1])); }); const sc=(Math.min(W,H)/2-14*d)/mx; g.strokeStyle='#4FD6C0'; g.lineWidth=2*d; g.beginPath(); pts.forEach((p,i)=>{ const x=W/2+p[0]*sc, y=H/2+p[1]*sc; i?g.lineTo(x,y):g.moveTo(x,y); }); g.stroke(); const e=pts[pts.length-1]; g.fillStyle='#F2C23A'; g.beginPath(); g.arc(W/2+e[0]*sc,H/2+e[1]*sc,5*d,0,7); g.fill(); } };
+  const ok=p=>{ lastP=p; n++; trail.push([p.coords.latitude,p.coords.longitude]); if(trail.length>300) trail.shift(); st.textContent='取得できました'; st.className='st ok'; show(); };
+  const ng=e=>{ st.textContent=gerr(e); st.className='st ng'; };
+  const opt={enableHighAccuracy:true,timeout:20000,maximumAge:0};
+  const once=()=>{ if(!navigator.geolocation){ st.textContent='非対応'; st.className='st ng'; return; } st.textContent='取得中…'; st.className='st'; navigator.geolocation.getCurrentPosition(ok,ng,opt); };
+  const watch=()=>{ if(!navigator.geolocation){ st.textContent='非対応'; st.className='st ng'; return; } if(wid!=null) return; st.textContent='追跡中…'; st.className='st ok'; wid=navigator.geolocation.watchPosition(ok,ng,opt); };
+  const stop=()=>{ if(wid!=null){ navigator.geolocation.clearWatch(wid); wid=null; st.textContent='停止中'; st.className='st'; } };
+  q('[data-a=once]').onclick=once; q('[data-a=watch]').onclick=watch; q('[data-a=stop]').onclick=stop; show(); stops.push(stop); api.geo={once,watch,stop};
+ });
+
+/* ================= camera ================= */
+sec('camera','📷','カメラ','前面・背面カメラの映像、解像度、ライト（トーチ）、ズーム、撮影。',
+ '<div class="row"><select data-r="face"><option value="environment">背面カメラ</option><option value="user">前面カメラ</option></select><select data-r="res"><option value="640">低 640</option><option value="1280" selected>中 1280</option><option value="1920">高 1920</option></select></div><div class="row"><button data-a="go">▶ カメラ開始</button><button class="sub" data-a="stop">■ 停止</button><button class="sub" data-a="shot">📸 撮影</button><button class="sub" data-a="torch" hidden>🔦 ライト</button><span class="st" data-r="st">停止中</span></div><video playsinline muted autoplay style="width:100%;max-height:340px"></video><div data-r="zoomw" hidden class="row"><label class="lb" style="flex:1">🔍 ズーム <input type="range" data-r="zoom" style="flex:1"></label></div><div class="row"><img class="pv" data-r="img" hidden style="max-height:200px"><a class="btn sub" data-r="dl" hidden download="photo.jpg">保存</a></div><table class="kv"></table><div class="row"><label class="btn sub" style="margin:0">📲 カメラアプリで撮影<input type="file" accept="image/*" capture="environment" hidden data-r="cap"></label><span class="small" data-r="capi"></span></div>',
+ root=>{
+  const q=s=>root.querySelector(s), t=q('table'), st=q('[data-r=st]'), v=q('video'); let stream=null,torch=false;
+  const info=async()=>{ if(!stream){ kv(t,{'状態':'停止中'}); return; } const tr=stream.getVideoTracks()[0], s=tr.getSettings(), c=tr.getCapabilities?tr.getCapabilities():{}; let devs=[]; try{ devs=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='videoinput'); }catch(_){}
+    kv(t,{'カメラ名':esc(tr.label||'—'),'解像度':(s.width||'?')+' × '+(s.height||'?'),'フレームレート':f(s.frameRate,0)+' fps','向き（facingMode）':esc(s.facingMode||'—'),'ライト':yn(c.torch),'ズーム':c.zoom?f(c.zoom.min,1)+'〜'+f(c.zoom.max,1)+'倍':'なし','フォーカス':esc((c.focusMode||[]).join(', ')||'—'),'接続中のカメラ数':devs.length+'台'+(devs.length?'：'+devs.map(d=>esc(d.label||'(名前は許可後)')).join(' / '):'')}); const zw=q('[data-r=zoomw]'); if(c.zoom){ zw.hidden=false; const z=q('[data-r=zoom]'); z.min=c.zoom.min; z.max=c.zoom.max; z.step=c.zoom.step||0.1; z.value=s.zoom||c.zoom.min; } else zw.hidden=true; q('[data-a=torch]').hidden=!c.torch; };
+  const stop=()=>{ if(stream){ stream.getTracks().forEach(x=>x.stop()); stream=null; } v.srcObject=null; st.textContent='停止中'; st.className='st'; torch=false; info(); };
+  const go=async()=>{ stop(); if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ st.textContent='非対応（https が必要）'; st.className='st ng'; return; } const w=+q('[data-r=res]').value; try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:q('[data-r=face]').value},width:{ideal:w},height:{ideal:Math.round(w*0.5625)}},audio:false}); v.srcObject=stream; await v.play().catch(()=>{}); st.textContent='撮影中'; st.className='st ok'; info(); }catch(e){ st.textContent=errMsg(e); st.className='st ng'; } };
+  q('[data-a=go]').onclick=go; q('[data-a=stop]').onclick=stop;
+  q('[data-a=shot]').onclick=()=>{ if(!stream||!v.videoWidth) return; const c=document.createElement('canvas'); c.width=v.videoWidth; c.height=v.videoHeight; c.getContext('2d').drawImage(v,0,0); const u=c.toDataURL('image/jpeg',0.9); const im=q('[data-r=img]'); im.src=u; im.hidden=false; const a=q('[data-r=dl]'); a.href=u; a.hidden=false; };
+  q('[data-a=torch]').onclick=async()=>{ if(!stream) return; torch=!torch; try{ await stream.getVideoTracks()[0].applyConstraints({advanced:[{torch}]}); q('[data-a=torch]').classList.toggle('on',torch); }catch(e){ torch=false; st.textContent=errMsg(e); st.className='st ng'; } };
+  q('[data-r=zoom]').oninput=async e=>{ try{ await stream.getVideoTracks()[0].applyConstraints({advanced:[{zoom:+e.target.value}]}); }catch(_){} };
+  q('[data-r=face]').onchange=()=>{ if(stream) go(); }; q('[data-r=res]').onchange=()=>{ if(stream) go(); };
+  q('[data-r=cap]').onchange=e=>{ const fl=e.target.files[0]; q('[data-r=capi]').textContent=fl?esc(fl.name)+'（'+Math.round(fl.size/1024)+' KB）':''; if(fl){ const im=q('[data-r=img]'); im.src=URL.createObjectURL(fl); im.hidden=false; } };
+  info(); stops.push(stop); api.camera={go,stop};
+ });
+
+/* ================= microphone ================= */
+sec('mic','🎤','マイク','音量（dB）、周波数スペクトル、音の高さ（Hz・音名）、録音して再生。',
+ '<div class="row"><button data-a="go">▶ マイク開始</button><button class="sub" data-a="stop">■ 停止</button><button class="sub" data-a="rec">⏺ 3秒録音</button><span class="st" data-r="st">停止中</span></div><canvas class="cv" height="140"></canvas><table class="kv" style="margin-top:8px"></table><audio controls data-r="au" hidden style="width:100%;margin-top:8px"></audio>',
+ root=>{
+  const q=s=>root.querySelector(s), t=q('table'), st=q('[data-r=st]'), cv=q('canvas'); let stream=null,ctx=null,an=null,raf=0,rms=0,db=-120,pitch=0,peak=0;
+  const NN=['ド','ド#','レ','レ#','ミ','ファ','ファ#','ソ','ソ#','ラ','ラ#','シ'];
+  const note=h=>{ const m=Math.round(69+12*Math.log2(h/440)); return NN[((m%12)+12)%12]+(Math.floor(m/12)-1)+'（'+m+'）'; };
+  const acf=(buf,sr)=>{ let r=0; for(const v of buf) r+=v*v; if(Math.sqrt(r/buf.length)<0.012) return 0; const n=buf.length, min=Math.floor(sr/1000), max=Math.floor(sr/80); let bc=0,bo=-1; const c=new Float32Array(max+1); for(let o=min;o<=max;o++){ let s=0; for(let i=0;i<n-o;i+=2) s+=buf[i]*buf[i+o]; c[o]=s; if(s>bc){ bc=s; bo=o; } } return bo>0?sr/bo:0; };
+  const loop=()=>{ if(!an) return; const tb=new Float32Array(an.fftSize); an.getFloatTimeDomainData(tb); let s=0; for(const v of tb) s+=v*v; rms=Math.sqrt(s/tb.length); db=rms>0?20*Math.log10(rms):-120; pitch=acf(tb,ctx.sampleRate); const fb=new Uint8Array(an.frequencyBinCount); an.getByteFrequencyData(fb); let mi=0; fb.forEach((v,i)=>{ if(v>fb[mi]) mi=i; }); peak=fb[mi]>40?mi*ctx.sampleRate/an.fftSize:0;
+    const d=sizeCanvas(cv,140), g=cv.getContext('2d'), W=cv.width, H=cv.height; g.fillStyle='#0A131B'; g.fillRect(0,0,W,H); const bars=64, bw=W/bars; for(let i=0;i<bars;i++){ const idx=Math.floor(Math.pow(i/bars,2)*fb.length*0.5), v=fb[idx]/255; g.fillStyle='hsl('+(170-v*130)+',80%,'+(35+v*25)+'%)'; g.fillRect(i*bw,H-v*H,bw-1,v*H); } const lv=Math.max(0,Math.min(1,(db+70)/70)); g.fillStyle='rgba(255,255,255,.85)'; g.fillRect(0,0,W*lv,6*d);
+    kv(t,{'音量（dBFS）':f(db,1)+' dB（'+Math.round(lv*100)+'%）','音の高さ（自己相関）':pitch?f(pitch,1)+' Hz　'+note(pitch):'—（声や口笛を出してみて）','いちばん強い周波数':peak?f(peak,0)+' Hz':'—','サンプルレート':ctx?ctx.sampleRate+' Hz':'—'}); raf=requestAnimationFrame(loop); };
+  const stop=()=>{ cancelAnimationFrame(raf); if(stream){ stream.getTracks().forEach(x=>x.stop()); stream=null; } if(ctx){ ctx.close().catch(()=>{}); ctx=null; } an=null; st.textContent='停止中'; st.className='st'; };
+  const go=async()=>{ stop(); if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ st.textContent='非対応（https が必要）'; st.className='st ng'; return; } try{ stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}}); const AC=window.AudioContext||window.webkitAudioContext; ctx=new AC(); await ctx.resume(); const src=ctx.createMediaStreamSource(stream); an=ctx.createAnalyser(); an.fftSize=2048; an.smoothingTimeConstant=0.6; src.connect(an); st.textContent='聞いています'; st.className='st ok'; loop(); }catch(e){ st.textContent=errMsg(e); st.className='st ng'; } };
+  q('[data-a=go]').onclick=go; q('[data-a=stop]').onclick=stop;
+  q('[data-a=rec]').onclick=async()=>{ if(!stream){ await go(); } if(!stream||typeof MediaRecorder==='undefined'){ st.textContent='録音に非対応'; st.className='st ng'; return; } const mt=['audio/mp4','audio/webm;codecs=opus','audio/webm'].find(m=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(m)); const mr=new MediaRecorder(stream,mt?{mimeType:mt}:undefined), ch=[]; mr.ondataavailable=e=>ch.push(e.data); mr.onstop=()=>{ const b=new Blob(ch,{type:mr.mimeType||'audio/mp4'}); const a=q('[data-r=au]'); a.src=URL.createObjectURL(b); a.hidden=false; st.textContent='録音できました（'+Math.round(b.size/1024)+' KB・'+esc(mr.mimeType)+'）'; st.className='st ok'; }; mr.start(); st.textContent='録音中…（3秒）'; st.className='st on'; await sleep(3000); if(mr.state!=='inactive') mr.stop(); };
+  kv(t,{'状態':'停止中'}); stops.push(stop); api.mic={go,stop};
+ });
+
+/* ================= speaker / tts ================= */
+sec('audio','🔊','スピーカー・音声読み上げ','音を鳴らして左右のスピーカーを確認。読み上げ（TTS）も。消音スイッチ（サイレント）が ON だと鳴らないことがあります。',
+ '<div class="row"><button data-a="tone">▶ ピーー（鳴らす）</button><button class="sub" data-a="scale">🎹 ドレミ</button><select data-r="pan"><option value="-1">左だけ</option><option value="0" selected>中央</option><option value="1">右だけ</option></select><select data-r="wave"><option>sine</option><option>square</option><option>sawtooth</option><option>triangle</option></select></div><label class="lb">周波数 <b data-r="fv">440</b> Hz<input type="range" min="60" max="2000" value="440" data-r="freq"></label><label class="lb">音量 <b data-r="vv">10</b>%<input type="range" min="0" max="50" value="10" data-r="vol"></label><div class="row"><span class="st" data-r="st">停止中</span></div><hr style="border:0;border-top:1px solid var(--line)"><textarea rows="2" data-r="txt">こんにちは。iPhone のスピーカーのテストです。</textarea><div class="row"><select data-r="voice"></select><button data-a="say">🗣 読み上げ</button><button class="sub" data-a="mute">■</button></div>',
+ root=>{
+  const q=s=>root.querySelector(s), st=q('[data-r=st]'); let ctx=null,osc=null,gn=null,pn=null;
+  const getCtx=async()=>{ if(!ctx){ const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null; ctx=new AC(); } if(ctx.state!=='running') await ctx.resume(); return ctx; };
+  const mk=async(freq)=>{ const c=await getCtx(); if(!c){ st.textContent='WebAudio 非対応'; st.className='st ng'; return null; } const o=c.createOscillator(), g=c.createGain(); o.type=q('[data-r=wave]').value; o.frequency.value=freq; g.gain.value=q('[data-r=vol]').value/100; let out=g; if(c.createStereoPanner){ const p=c.createStereoPanner(); p.pan.value=+q('[data-r=pan]').value; g.connect(p); out=p; pn=p; } o.connect(g); out.connect(c.destination); gn=g; return o; };
+  const stopTone=()=>{ if(osc){ try{ osc.stop(); }catch(_){} osc=null; } st.textContent='停止中'; st.className='st'; q('[data-a=tone]').classList.remove('on'); q('[data-a=tone]').textContent='▶ ピーー（鳴らす）'; };
+  q('[data-a=tone]').onclick=async()=>{ if(osc){ stopTone(); return; } osc=await mk(+q('[data-r=freq]').value); if(!osc) return; osc.start(); st.textContent='鳴っています（ctx: '+ctx.state+'）'; st.className='st ok'; q('[data-a=tone]').classList.add('on'); q('[data-a=tone]').textContent='■ とめる'; };
+  q('[data-r=freq]').oninput=e=>{ q('[data-r=fv]').textContent=e.target.value; if(osc) osc.frequency.value=+e.target.value; };
+  q('[data-r=vol]').oninput=e=>{ q('[data-r=vv]').textContent=e.target.value; if(gn) gn.gain.value=e.target.value/100; };
+  q('[data-r=pan]').onchange=e=>{ if(pn) pn.pan.value=+e.target.value; }; q('[data-r=wave]').onchange=e=>{ if(osc) osc.type=e.target.value; };
+  q('[data-a=scale]').onclick=async()=>{ stopTone(); for(const fr of [261.6,293.7,329.6,349.2,392,440,493.9,523.3]){ const o=await mk(fr); if(!o) return; o.start(); await sleep(260); o.stop(); } };
+  const tts=window.speechSynthesis; const vs=q('[data-r=voice]');
+  const loadV=()=>{ if(!tts) return; const l=tts.getVoices().slice().sort((a,b)=>(b.lang.startsWith('ja')-a.lang.startsWith('ja'))||a.name.localeCompare(b.name)); vs.innerHTML=l.map((v,i)=>'<option value="'+i+'">'+esc(v.name)+'（'+esc(v.lang)+'）</option>').join('')||'<option>声なし</option>'; vs._l=l; };
+  if(tts){ loadV(); tts.onvoiceschanged=loadV; } else vs.innerHTML='<option>読み上げ非対応</option>';
+  q('[data-a=say]').onclick=()=>{ if(!tts) return; tts.cancel(); const u=new SpeechSynthesisUtterance(q('[data-r=txt]').value); const v=vs._l&&vs._l[+vs.value]; if(v){ u.voice=v; u.lang=v.lang; } else u.lang='ja-JP'; tts.speak(u); };
+  q('[data-a=mute]').onclick=()=>{ if(tts) tts.cancel(); stopTone(); };
+  stops.push(stopTone,()=>{ if(tts) tts.cancel(); });
+ });
+
+/* ================= haptics ================= */
+sec('haptic','📳','触覚（ハプティクス）','iPhone の Safari には振動 API（navigator.vibrate）がありません。かわりに「スイッチ」部品の触覚を使ったワザで、ブルッとできるか確かめます（iOS のバージョンによっては動きません）。',
+ '<table class="kv"></table><div class="row"><button data-a="h1">トン（1回）</button><button data-a="h3">トントントン</button><button data-a="hp">ドドドド…（連打）</button><button class="sub" data-a="vib">navigator.vibrate(200)</button></div><div class="row"><label class="lb"><input type="checkbox" switch class="hapsw"> ← 手でさわる本物のスイッチ（ブルッと来るか）</label></div><p class="small" data-r="res"></p>',
+ root=>{
+  const q=s=>root.querySelector(s), t=q('table'); const res=q('[data-r=res]');
+  const tick=()=>{ const l=document.createElement('label'); l.style.cssText='position:fixed;left:-120px;top:-120px;opacity:0;pointer-events:none'; l.innerHTML='<input type="checkbox" switch>'; document.body.appendChild(l); l.click(); setTimeout(()=>l.remove(),60); };
+  kv(t,{'navigator.vibrate':yn(typeof navigator.vibrate==='function'),'スイッチ部品（switch 属性）':yn((()=>{ const i=document.createElement('input'); i.type='checkbox'; i.setAttribute('switch',''); document.body.appendChild(i); const a=getComputedStyle(i).appearance||getComputedStyle(i).webkitAppearance; i.remove(); return /switch/.test(a||''); })())});
+  q('[data-a=h1]').onclick=()=>{ tick(); res.textContent='1回送りました。ブルッと来ましたか？'; };
+  q('[data-a=h3]').onclick=async()=>{ for(let i=0;i<3;i++){ tick(); await sleep(130); } res.textContent='3回送りました。'; };
+  q('[data-a=hp]').onclick=async()=>{ for(let i=0;i<12;i++){ tick(); await sleep(60); } res.textContent='12回連打しました。'; };
+  q('[data-a=vib]').onclick=()=>{ if(typeof navigator.vibrate!=='function'){ res.textContent='navigator.vibrate は、このブラウザにはありません。'; return; } const r=navigator.vibrate(200); res.textContent='navigator.vibrate(200) の結果：'+r; };
+  api.haptic={tick};
+ });
+
+/* ================= touch ================= */
+sec('touch','👆','タッチ・ポインター・ジェスチャー','マルチタッチ（何本指まで？）、接触の大きさ、筆圧、2本指のひろげる・回す（Safari のジェスチャーイベント）。',
+ '<canvas class="cv" data-r="pad" height="220" style="touch-action:none;background:#0C1A24"></canvas><div class="row"><button class="sub" data-a="clr">消す</button><span class="small">この枠の中を指でさわってね</span></div><table class="kv"></table>',
+ root=>{
+  const q=s=>root.querySelector(s), cv=q('canvas'), t=q('table'); const S={touches:[],max:0,taps:0,dbl:0,long:0,ptr:'—',press:'—',tilt:'—',sc:'—',rot:'—',force:false,lastTap:0,down:0}; let trail=[];
+  const draw=()=>{ const d=sizeCanvas(cv,220), g=cv.getContext('2d'), W=cv.width, H=cv.height; g.fillStyle='#0C1A24'; g.fillRect(0,0,W,H); g.lineWidth=3*d; trail.forEach(p=>{ g.fillStyle='rgba(79,214,192,.25)'; g.beginPath(); g.arc(p.x*d,p.y*d,6*d,0,7); g.fill(); }); const cols=['#FF6B6B','#F2C23A','#5BE08A','#6AB4FF','#C58AFF','#FF9AD0']; S.touches.forEach((p,i)=>{ const c=cols[i%cols.length]; g.strokeStyle=c; g.fillStyle=c+'55'; const r=Math.max(16,Math.max(p.rx,p.ry)*2)*d; g.beginPath(); g.arc(p.x*d,p.y*d,r,0,7); g.fill(); g.stroke(); g.fillStyle='#fff'; g.font='bold '+(13*d)+'px sans-serif'; g.fillText('#'+(i+1),p.x*d-8*d,p.y*d-r-6*d); }); g.fillStyle='#8FA6B8'; g.font=(12*d)+'px sans-serif'; g.fillText('指の数：'+S.touches.length,8*d,16*d); };
+  const show=()=>{ const rows={'いま触れている指':S.touches.length+'本（最大 '+S.max+'本）','タップ / ダブル / 長押し':S.taps+' / '+S.dbl+' / '+S.long,'ポインター種別':esc(S.ptr),'筆圧 pressure':S.press,'傾き tilt（Apple Pencil など）':S.tilt,'ジェスチャー 拡大率 / 回転':S.sc+' / '+S.rot,'force（感圧）':S.force?'値あり':'値なし（0 のまま）'}; S.touches.forEach((p,i)=>{ rows['#'+(i+1)]='x '+f(p.x,0)+' y '+f(p.y,0)+' / 半径 '+f(p.rx,1)+'×'+f(p.ry,1)+' / force '+f(p.force,2); }); kv(t,rows); draw(); };
+  const upd=e=>{ const r=cv.getBoundingClientRect(); S.touches=[...e.touches].map(x=>({x:x.clientX-r.left,y:x.clientY-r.top,rx:x.radiusX||0,ry:x.radiusY||0,force:x.force||0})); S.max=Math.max(S.max,S.touches.length); if(S.touches.some(p=>p.force>0&&p.force!==1)) S.force=true; S.touches.forEach(p=>{ trail.push({x:p.x,y:p.y}); }); if(trail.length>400) trail=trail.slice(-400); };
+  ['touchstart','touchmove'].forEach(n=>cv.addEventListener(n,e=>{ e.preventDefault(); upd(e); show(); },{passive:false}));
+  ['touchend','touchcancel'].forEach(n=>cv.addEventListener(n,e=>{ e.preventDefault(); upd(e); show(); },{passive:false}));
+  cv.addEventListener('pointerdown',e=>{ S.down=Date.now(); S.ptr=e.pointerType+(e.isPrimary?'（primary）':''); S.press=f(e.pressure,2); S.tilt=f(e.tiltX,0)+'° / '+f(e.tiltY,0)+'°'; show(); });
+  cv.addEventListener('pointermove',e=>{ S.press=f(e.pressure,2); S.tilt=f(e.tiltX,0)+'° / '+f(e.tiltY,0)+'°'; });
+  cv.addEventListener('pointerup',()=>{ const now=Date.now(), dur=now-S.down; if(dur>500) S.long++; else { S.taps++; if(now-S.lastTap<300) S.dbl++; S.lastTap=now; } show(); });
+  ['gesturestart','gesturechange','gestureend'].forEach(n=>cv.addEventListener(n,e=>{ e.preventDefault(); S.sc=f(e.scale,2); S.rot=f(e.rotation,0)+'°'; show(); }));
+  q('[data-a=clr]').onclick=()=>{ trail=[]; S.max=0; S.taps=S.dbl=S.long=0; S.sc=S.rot='—'; show(); }; show(); api.touch={S};
+ });
+
+/* ================= gamepad ================= */
+sec('pad','🎮','ゲームコントローラー','Bluetooth で接続した PS / Xbox / MFi コントローラー。ボタンを押すと反応します（接続後にいちど何かボタンを押す）。',
+ '<div class="row"><span class="st" data-r="st">コントローラーなし</span><button class="sub" data-a="rumble" hidden>📳 コントローラーを振動</button></div><table class="kv"></table>',
+ root=>{
+  const q=s=>root.querySelector(s), t=q('table'), st=q('[data-r=st]'); let raf=0;
+  const loop=()=>{ const gp=(navigator.getGamepads?[...navigator.getGamepads()]:[]).filter(Boolean); if(!gp.length){ st.textContent='コントローラーなし'; st.className='st'; kv(t,{}); q('[data-a=rumble]').hidden=true; raf=0; return; } st.textContent=gp.length+'台 接続中'; st.className='st ok'; const o={}; gp.forEach(g=>{ o['['+g.index+'] '+esc(g.id)]='mapping：'+esc(g.mapping||'—')+'<br>ボタン：'+(g.buttons.map((b,i)=>b.value>0.1?'B'+i+(b.value<1?'('+f(b.value,2)+')':''):'').filter(Boolean).join(' ')||'—')+'<br>スティック：'+g.axes.map(a=>f(a,2)).join(' / ')+'<br>振動：'+yn(!!g.vibrationActuator); }); kv(t,o); q('[data-a=rumble]').hidden=!gp.some(g=>g.vibrationActuator); raf=requestAnimationFrame(loop); };
+  addEventListener('gamepadconnected',()=>{ if(!raf) loop(); }); addEventListener('gamepaddisconnected',()=>{ setTimeout(()=>{ if(!raf) loop(); },50); });
+  q('[data-a=rumble]').onclick=()=>{ (navigator.getGamepads?[...navigator.getGamepads()]:[]).filter(Boolean).forEach(g=>{ if(g.vibrationActuator) g.vibrationActuator.playEffect('dual-rumble',{duration:500,strongMagnitude:1,weakMagnitude:1}); }); };
+  if(!navigator.getGamepads){ st.textContent='Gamepad API 非対応'; st.className='st ng'; } else loop();
+ });
+
+/* ================= battery / network ================= */
+sec('net','🔋','バッテリー・ネットワーク','電池残量や回線の種類を取る API は、iPhone の Safari には（ほぼ）ありません。通信の速さは実測できます。',
+ '<table class="kv"></table><div class="row"><button data-a="spd">⚡ 通信速度を測る</button><span class="small" data-r="r"></span></div>',
+ root=>{
+  const q=s=>root.querySelector(s), t=q('table'); let bat=null;
+  const upd=()=>{ const c=navigator.connection||navigator.mozConnection||navigator.webkitConnection; kv(t,{'オンライン':yn(navigator.onLine),'Battery Status API':yn(!!navigator.getBattery),'電池':bat?Math.round(bat.level*100)+'%（'+(bat.charging?'充電中':'放電中')+'）':'— （取得できません）','Network Information API':yn(!!c),'回線の種類 / 速度':c?esc((c.type||'—')+' / '+(c.effectiveType||'—')+' / '+(c.downlink!=null?c.downlink+' Mbps':'—')+' / rtt '+(c.rtt!=null?c.rtt+'ms':'—')):'—'}); };
+  addEventListener('online',upd); addEventListener('offline',upd); if(navigator.getBattery) navigator.getBattery().then(b=>{ bat=b; ['levelchange','chargingchange'].forEach(n=>b.addEventListener(n,upd)); upd(); }).catch(()=>{}); upd();
+  q('[data-a=spd]').onclick=async()=>{ const r=q('[data-r=r]'); r.textContent='測定中…'; try{ const t0=performance.now(); const x=await fetch('../icon-512.png?'+Date.now(),{cache:'no-store'}); const b=await x.blob(); const ms=performance.now()-t0; r.textContent=Math.round(b.size/1024)+' KB を '+Math.round(ms)+' ms → 約 '+f(b.size*8/1000/ms,1)+' Mbps（小さなファイルなので目安）'; }catch(e){ r.textContent='失敗：'+esc(e.message); } };
+ });
+
+/* ================= screen / wake lock ================= */
+sec('screen','🖥','画面ロック・全画面・向き','画面スリープの防止（Wake Lock）、全画面、画面の向きの固定。',
+ '<div class="row"><button data-a="wl">☀️ 画面をつけたままにする</button><button class="sub" data-a="fs">⛶ 全画面にする</button><button class="sub" data-a="lock">🔒 向きを固定してみる</button></div><p class="small" data-r="r"></p><table class="kv"></table>',
+ root=>{
+  const q=s=>root.querySelector(s), t=q('table'), r=q('[data-r=r]'); let wl=null;
+  const upd=()=>{ const so=screen.orientation; kv(t,{'Screen Wake Lock':yn('wakeLock' in navigator),'Wake Lock 状態':wl&&!wl.released?'<span class="st ok">保持中</span>':'<span class="st">なし</span>','Fullscreen API':yn(document.fullscreenEnabled||document.webkitFullscreenEnabled),'全画面中':yn(!!(document.fullscreenElement||document.webkitFullscreenElement)),'screen.orientation':so?so.type+'（'+so.angle+'°）':'なし','向きのロック lock()':yn(so&&typeof so.lock==='function'),'ページの表示状態':document.visibilityState}); };
+  q('[data-a=wl]').onclick=async()=>{ if(wl&&!wl.released){ await wl.release(); q('[data-a=wl]').classList.remove('on'); upd(); return; } if(!('wakeLock' in navigator)){ r.textContent='Wake Lock に非対応です。'; return; } try{ wl=await navigator.wakeLock.request('screen'); wl.addEventListener('release',()=>{ q('[data-a=wl]').classList.remove('on'); upd(); }); q('[data-a=wl]').classList.add('on'); r.textContent='画面がスリープしなくなりました（もう一度押すと解除）。'; upd(); }catch(e){ r.textContent=errMsg(e); } };
+  q('[data-a=fs]').onclick=async()=>{ const el=document.documentElement; const fn=el.requestFullscreen||el.webkitRequestFullscreen; if(!fn){ r.textContent='このブラウザでは、ページの全画面表示ができません（ホーム画面に追加すると全画面で使えます）。'; return; } try{ await fn.call(el); r.textContent='全画面になりました。'; }catch(e){ r.textContent=errMsg(e); } };
+  q('[data-a=lock]').onclick=async()=>{ const so=screen.orientation; if(!so||!so.lock){ r.textContent='画面の向きのロックには対応していません。'; return; } try{ await so.lock('portrait'); r.textContent='縦に固定しました。'; }catch(e){ r.textContent=errMsg(e); } };
+  ['visibilitychange','fullscreenchange','webkitfullscreenchange'].forEach(n=>document.addEventListener(n,upd)); addEventListener('orientationchange',upd); if(screen.orientation) screen.orientation.addEventListener('change',upd); upd();
+  stops.push(()=>{ if(wl&&!wl.released) wl.release(); });
+ });
+
+/* ================= biometrics / apple pay ================= */
+sec('bio','🔐','Face ID・Touch ID・Apple Pay','生体認証は「そのデータ」ではなく「認証できたか」だけが Web に届きます。パスキー（WebAuthn）の認証ダイアログを出せるか確かめます。',
+ '<table class="kv"></table><div class="row"><button data-a="pk">🔑 認証ダイアログを出してみる（テスト用パスキー）</button></div><p class="small" data-r="r">※ Face ID / Touch ID の確認が出ます。テスト用のパスキーがこの端末に1つ作られることがありますが、このページ以外では使われません。</p>',
+ root=>{
+  const q=s=>root.querySelector(s), t=q('table'), r=q('[data-r=r]'); const o={'WebAuthn（パスキー）':yn(!!window.PublicKeyCredential),'本体の生体認証が使える':'確認中…','Apple Pay（ApplePaySession）':yn(!!window.ApplePaySession),'Apple Pay 支払い可能':'—','Payment Request API':yn(!!window.PaymentRequest)}; kv(t,o);
+  if(window.PublicKeyCredential&&PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(v=>{ o['本体の生体認証が使える']=yn(v); kv(t,o); }).catch(()=>{ o['本体の生体認証が使える']='—'; kv(t,o); }); else { o['本体の生体認証が使える']='—'; kv(t,o); }
+  if(window.ApplePaySession){ try{ o['Apple Pay 支払い可能']=yn(ApplePaySession.canMakePayments()); kv(t,o); }catch(e){ o['Apple Pay 支払い可能']='エラー：'+esc(e.name); kv(t,o); } }
+  q('[data-a=pk]').onclick=async()=>{ if(!window.PublicKeyCredential||!navigator.credentials){ r.textContent='WebAuthn に非対応です。'; return; } try{ const c=await navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rp:{name:'iPhoneセンサーラボ'},user:{id:crypto.getRandomValues(new Uint8Array(16)),name:'hw-test',displayName:'センサーラボ テスト'},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},timeout:60000}}); r.textContent='✅ 認証に成功しました（credential id の長さ '+c.rawId.byteLength+' バイト）。'; }catch(e){ r.textContent='結果：'+errMsg(e); } };
+ });
+
+/* ================= share / clipboard / files ================= */
+sec('share','📤','共有・クリップボード・ファイル','共有シート、コピー／ペースト、写真・動画・ファイルの選択。',
+ '<div class="row"><button data-a="share">📤 共有シートを開く</button><button data-a="cw">📋 コピー</button><button data-a="cr">📥 ペースト</button></div><p class="small" data-r="r"></p><div class="row"><label class="btn sub">🖼 写真ライブラリ<input type="file" accept="image/*" hidden></label><label class="btn sub">📹 動画を撮る<input type="file" accept="video/*" capture hidden></label><label class="btn sub">🎙 音声を録る<input type="file" accept="audio/*" capture hidden></label><label class="btn sub">📁 ファイル（複数可）<input type="file" multiple hidden></label></div><div data-r="fl" class="small"></div><img class="pv" data-r="img" hidden style="max-height:160px">',
+ root=>{
+  const q=s=>root.querySelector(s), r=q('[data-r=r]');
+  q('[data-a=share]').onclick=async()=>{ if(!navigator.share){ r.textContent='Web Share API に非対応です。'; return; } try{ await navigator.share({title:'iPhoneセンサーラボ',text:'iPhone のセンサーを全部ためせるページ',url:location.href}); r.textContent='共有シートを閉じました（共有できた場合もあります）。'; }catch(e){ r.textContent=errMsg(e); } };
+  q('[data-a=cw]').onclick=async()=>{ try{ await navigator.clipboard.writeText('iPhoneセンサーラボ '+new Date().toLocaleTimeString('ja-JP')); r.textContent='コピーしました。どこかにペーストして確認してね。'; }catch(e){ r.textContent=errMsg(e); } };
+  q('[data-a=cr]').onclick=async()=>{ try{ const s=await navigator.clipboard.readText(); r.textContent='ペーストした内容：'+esc(s.slice(0,200)); }catch(e){ r.textContent=errMsg(e); } };
+  root.querySelectorAll('input[type=file]').forEach(i=>i.onchange=()=>{ const fs=[...i.files]; q('[data-r=fl]').innerHTML=fs.map(x=>esc(x.name)+'：'+esc(x.type||'?')+'・'+Math.round(x.size/1024).toLocaleString('ja-JP')+' KB').join('<br>'); const im=q('[data-r=img]'); const x=fs.find(y=>/^image\//.test(y.type)); if(x){ im.src=URL.createObjectURL(x); im.hidden=false; } else im.hidden=true; });
+ });
+
+/* ================= speech recognition ================= */
+sec('stt','🗣','音声認識','しゃべった言葉を文字にします（Safari の音声認識。マイクと音声認識の許可が必要です）。',
+ '<div class="row"><select data-r="lang"><option value="ja-JP">日本語</option><option value="en-US">English</option></select><button data-a="go">▶ 開始</button><button class="sub" data-a="stop">■ 停止</button><span class="st" data-r="st">停止中</span></div><div class="panel" data-r="out" style="min-height:60px;background:#0E1923;border:1px solid var(--line);border-radius:12px;padding:10px;font-size:15px"></div>',
+ root=>{
+  const q=s=>root.querySelector(s), st=q('[data-r=st]'), out=q('[data-r=out]'); const SR=window.SpeechRecognition||window.webkitSpeechRecognition; let rec=null;
+  if(!SR){ st.textContent='非対応'; st.className='st ng'; }
+  const stop=()=>{ if(rec){ try{ rec.stop(); }catch(_){} rec=null; } st.textContent='停止中'; st.className='st'; };
+  q('[data-a=go]').onclick=()=>{ if(!SR) return; stop(); rec=new SR(); rec.lang=q('[data-r=lang]').value; rec.interimResults=true; rec.continuous=true; let fin=''; rec.onresult=e=>{ let it=''; for(let i=e.resultIndex;i<e.results.length;i++){ const x=e.results[i]; if(x.isFinal) fin+=x[0].transcript+' '; else it+=x[0].transcript; } out.innerHTML=esc(fin)+'<span style="color:var(--mute)">'+esc(it)+'</span>'; }; rec.onerror=e=>{ st.textContent='エラー：'+esc(e.error); st.className='st ng'; }; rec.onend=()=>{ if(rec){ st.textContent='終了'; st.className='st'; } }; try{ rec.start(); st.textContent='聞いています'; st.className='st ok'; }catch(e){ st.textContent=errMsg(e); st.className='st ng'; } };
+  q('[data-a=stop]').onclick=stop; stops.push(stop);
+ });
+
+/* ================= storage / notifications ================= */
+sec('store','💾','ストレージ・通知','端末に保存できる量、各種ストレージ、通知（iPhone ではホーム画面に追加したアプリでのみ）。',
+ '<table class="kv"></table><div class="row"><button class="sub" data-a="persist">🔒 永続化をお願いする</button><button class="sub" data-a="notif">🔔 通知を許可する</button><button class="sub" data-a="nt">通知を出してみる</button></div><p class="small" data-r="r"></p>',
+ root=>{
+  const q=s=>root.querySelector(s), t=q('table'), r=q('[data-r=r]'); const o={};
+  const show=()=>kv(t,o);
+  const idb=!!window.indexedDB; let ls=false; try{ localStorage.setItem('hw_t','1'); localStorage.removeItem('hw_t'); ls=true; }catch(_){}
+  Object.assign(o,{'localStorage':yn(ls),'IndexedDB':yn(idb),'Cache Storage':yn(!!window.caches),'Service Worker':yn('serviceWorker' in navigator),'使用量 / 上限':'確認中…','永続化':'—','Notification':yn(!!window.Notification),'通知の許可':window.Notification?Notification.permission:'—','Push API':yn('PushManager' in window),'ホーム画面アプリ':yn(navigator.standalone||matchMedia('(display-mode: standalone)').matches)}); show();
+  if(navigator.storage&&navigator.storage.estimate) navigator.storage.estimate().then(e=>{ o['使用量 / 上限']=f(e.usage/1048576,1)+' MB / '+f(e.quota/1048576,0)+' MB'; show(); }).catch(()=>{}); else { o['使用量 / 上限']='非対応'; show(); }
+  if(navigator.storage&&navigator.storage.persisted) navigator.storage.persisted().then(v=>{ o['永続化']=yn(v); show(); });
+  q('[data-a=persist]').onclick=async()=>{ if(!navigator.storage||!navigator.storage.persist){ r.textContent='非対応です。'; return; } const v=await navigator.storage.persist(); o['永続化']=yn(v); show(); r.textContent=v?'永続化されました。':'永続化は認められませんでした。'; };
+  q('[data-a=notif]').onclick=async()=>{ if(!window.Notification){ r.textContent='Notification に非対応です（iPhone では「ホーム画面に追加」したアプリでのみ使えます）。'; return; } try{ const p=await Notification.requestPermission(); o['通知の許可']=p; show(); r.textContent='結果：'+p; }catch(e){ r.textContent=errMsg(e); } };
+  q('[data-a=nt]').onclick=()=>{ if(!window.Notification||Notification.permission!=='granted'){ r.textContent='先に通知を許可してください。'; return; } try{ new Notification('iPhoneセンサーラボ',{body:'通知のテストです',icon:'../icon-180.png'}); }catch(e){ r.textContent=errMsg(e); } };
+ });
+
+/* ================= summary & boot ================= */
+const mdev=navigator.mediaDevices;
+const FEATS=[
+ ['モーション（加速度・ジャイロ）','DeviceMotionEvent' in window,'motion','🎢'],['傾き・コンパス','DeviceOrientationEvent' in window,'orient','🧭'],['位置情報',!!navigator.geolocation,'geo','📍'],
+ ['カメラ・マイク取得',!!(mdev&&mdev.getUserMedia),'camera','📷'],['録音（MediaRecorder）',typeof MediaRecorder!=='undefined','mic','🎤'],['Web Audio',!!(window.AudioContext||window.webkitAudioContext),'audio','🔊'],
+ ['読み上げ（TTS）',!!window.speechSynthesis,'audio','🗣'],['音声認識',!!(window.SpeechRecognition||window.webkitSpeechRecognition),'stt','🎙'],['バイブ API',typeof navigator.vibrate==='function','haptic','📳'],
+ ['マルチタッチ',navigator.maxTouchPoints>1,'touch','👆'],['Pointer Events',!!window.PointerEvent,'touch','🖱'],['ジェスチャー（拡大・回転）','GestureEvent' in window,'touch','🤏'],
+ ['ゲームコントローラー',!!navigator.getGamepads,'pad','🎮'],['電池 API',!!navigator.getBattery,'net','🔋'],['回線情報 API',!!(navigator.connection||navigator.mozConnection),'net','📶'],
+ ['画面を消さない',"wakeLock" in navigator,'screen','☀️'],['全画面',!!(document.fullscreenEnabled||document.webkitFullscreenEnabled),'screen','⛶'],['向きのロック',!!(screen.orientation&&screen.orientation.lock),'screen','🔒'],
+ ['パスキー（Face ID 等）',!!window.PublicKeyCredential,'bio','🔐'],['Apple Pay',!!window.ApplePaySession,'bio','💳'],['共有シート',!!navigator.share,'share','📤'],
+ ['クリップボード',!!(navigator.clipboard&&navigator.clipboard.writeText),'share','📋'],['通知',!!window.Notification,'store','🔔'],['Push',('PushManager' in window),'store','📨'],['Service Worker',('serviceWorker' in navigator),'store','⚙️'],
+ ['WebGL2',!!document.createElement('canvas').getContext('webgl2'),'device','🧊'],['WebGPU',('gpu' in navigator),'device','🚀'],
+ ['Bluetooth',('bluetooth' in navigator),null,'🔵'],['NFC',('NDEFReader' in window),null,'🏷'],['USB',('usb' in navigator),null,'🔌'],['シリアル',('serial' in navigator),null,'🔗'],['HID',('hid' in navigator),null,'⌨️'],
+ ['汎用センサー API',('Accelerometer' in window),null,'📡'],['環境光センサー',('AmbientLightSensor' in window),null,'💡'],['WebXR（AR/VR）',!!navigator.xr,null,'🥽'],
+ ['バーコード読取',('BarcodeDetector' in window),null,'▮▯'],['画面共有',!!(mdev&&mdev.getDisplayMedia),null,'🖥'],['連絡先ピッカー',('contacts' in navigator),null,'👥'],['ファイル保存 API',('showOpenFilePicker' in window),null,'💽']
+];
+const SHORT={device:'デバイス',motion:'モーション',orient:'コンパス',geo:'位置情報',camera:'カメラ',mic:'マイク',audio:'スピーカー',haptic:'触覚',touch:'タッチ',pad:'コントローラー',net:'電池・通信',screen:'画面',bio:'Face ID',share:'共有・ファイル',stt:'音声認識',store:'保存・通知'};
+function boot(){
+  const main=$('#main'); if(!window.isSecureContext) $('#insecure').hidden=false;
+  sections.forEach(s=>{ const el=document.createElement('section'); el.className='card'; el.id='s-'+s.id; el.innerHTML='<h2>'+s.icon+' '+s.title+'</h2><p class="d">'+s.desc+'</p>'+s.body; main.appendChild(el); try{ s.init(el); }catch(e){ el.insertAdjacentHTML('beforeend','<p class="small" style="color:var(--bad)">初期化エラー：'+esc(e.message)+'</p>'); console.error(s.id,e); } });
+  const g=$('#sumg'); let ok=0; g.innerHTML=FEATS.map(x=>{ if(x[1]) ok++; const tag=x[2]?'a href="#s-'+x[2]+'"':'div'; return '<'+tag+' class="chip '+(x[1]?'ok':'ng')+'"><i>'+(x[1]?'✅':'⚪')+'</i><span>'+x[3]+' '+x[0]+'</span></'+(x[2]?'a':'div')+'>'; }).join('');
+  $('#sumcnt').textContent=ok+' / '+FEATS.length+' 対応';
+  $('#nav').innerHTML=[['sum','✅ 対応一覧']].concat(sections.map(s=>[s.id,s.icon+' '+(SHORT[s.id]||s.title)])).map(x=>'<a href="#s-'+x[0]+'">'+x[1]+'</a>').join('');
+  const net=()=>{ const n=$('#net'); n.textContent=navigator.onLine?'オンライン':'オフライン'; n.className='st '+(navigator.onLine?'ok':'ng'); }; net(); addEventListener('online',net); addEventListener('offline',net);
+  $('#bAll').onclick=async()=>{ await api.motion.go(); await api.orient.go(); api.geo.watch(); };
+  $('#bStopAll').onclick=()=>stops.forEach(fn=>{ try{ fn(); }catch(_){} });
+}
+boot();
+window.__hw={api,sections:sections.map(s=>s.id),feats:FEATS.map(x=>[x[0],x[1]]),stops};
+})();
+</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>

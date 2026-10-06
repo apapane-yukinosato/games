@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="未知の惑星で資材を掘って基地を大きくする。帰り道はエイリアンに注意。夜は基地を守りぬけ。">
+<title>スペース・マイナー</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&display=swap">
+<style>
+:root{ --bg:#140C12; --panel:#26161F; --line:#4A2B38; --ink:#F6ECE6; --mute:#B89AA6; --red:#FF5A4F; --gold:#FFC857; --cyan:#5CE1FF; --green:#6BE38A; color-scheme:dark; }
+[hidden]{display:none!important}
+html,body{min-height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;overscroll-behavior:none}
+button{font:inherit;color:inherit}
+#app{max-width:640px;margin:0 auto;padding:8px 10px 14px;box-sizing:border-box}
+#top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:18px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--panel);cursor:pointer;white-space:nowrap}
+.mini[aria-pressed=true]{background:var(--red);border-color:var(--red);color:#fff}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#game{position:relative}
+#hud{display:grid;grid-template-columns:auto 1fr auto;gap:4px 8px;align-items:center;background:var(--panel);border-radius:12px;padding:6px 10px;font-size:12px;font-weight:800}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar{position:relative;height:9px;border-radius:5px;background:#12090E;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px}
+#stock{grid-column:1/4;display:flex;gap:10px;justify-content:space-between;font-size:13px}
+#cv{display:block;width:100%;aspect-ratio:1/1;margin:6px 0;border-radius:10px;background:#3A1E1A;touch-action:none}
+#ctrl{display:flex;align-items:center;gap:10px;touch-action:none}
+#stick{position:relative;width:140px;height:140px;flex:none;border-radius:50%;background:radial-gradient(circle,#3A2330 0 45%,#241520 46%);border:2px solid var(--line);touch-action:none}
+#knob{position:absolute;left:50px;top:50px;width:40px;height:40px;border-radius:50%;background:#7A4A60;pointer-events:none}
+#mid{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.cmd{min-height:42px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-weight:800;font-size:13px;cursor:pointer}
+.cmd:disabled{opacity:.35;cursor:not-allowed}
+.cmd.hot{background:#6A3A20;border-color:var(--gold)}
+#shootBtn{width:104px;height:104px;border-radius:50%;border:0;background:radial-gradient(circle at 35% 30%,#8FF0FF,#1A8FB0);box-shadow:0 6px 0 #0C4A5C;font-weight:800;font-size:16px;color:#08202A;touch-action:none;flex:none}
+#shootBtn.on{transform:translateY(4px);box-shadow:0 2px 0 #0C4A5C}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.row2 .cmd{font-size:12px;white-space:nowrap;padding:0 2px}
+#buildBtn{position:relative}
+#buildBtn .badge{position:absolute;top:-6px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--gold);color:#2A1500;font-size:11px;line-height:18px;padding:0 4px}
+#buildWin{position:absolute;left:0;right:0;top:0;z-index:4;display:flex;justify-content:center;padding:8px;box-sizing:border-box;background:rgba(10,4,8,.55);border-radius:10px}
+#buildWin .win{width:100%;max-width:560px;background:#1E1118;border:1px solid var(--gold);border-radius:14px;padding:10px;box-sizing:border-box;box-shadow:0 10px 30px rgba(0,0,0,.6);display:flex;flex-direction:column}
+#buildWin h3{margin:0 0 8px;font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+#buildWin h3 small{font-size:11px;color:var(--mute);font-weight:800}
+#closeBuild{white-space:nowrap;flex:none;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:6px 12px;font-weight:800;cursor:pointer}
+#blist{overflow:auto}
+.blist{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.bi{display:grid;gap:2px;text-align:left;border:1px solid var(--line);border-radius:10px;background:#1C1017;padding:6px 8px;cursor:pointer;font-size:12px}
+.bi b{font-size:13px}
+.bi small{color:var(--mute);font-size:11px;line-height:1.35}
+.bi .cost{font-size:12px}
+.bi:disabled{opacity:.4;cursor:not-allowed}
+.bi.ok{border-color:var(--gold);background:#3A2418}
+.bi.done{opacity:.35}
+.ov{position:absolute;top:0;left:0;right:0;min-height:100%;display:flex;align-items:flex-start;justify-content:center;background:rgba(10,4,8,.7);z-index:5;border-radius:10px}
+.box{background:#1E1118;border:1px solid var(--line);border-radius:16px;padding:14px;width:100%;box-sizing:border-box;margin:0 auto}
+.box h2{margin:0;text-align:center;font-size:28px;font-weight:800;color:var(--gold);letter-spacing:2px}
+.sub2{text-align:center;font-size:12px;color:var(--mute);margin:6px 0 10px;line-height:1.6}
+.big{width:100%;font-weight:800;font-size:17px;min-height:50px;border:0;border-radius:14px;cursor:pointer;background:var(--red);color:#fff;box-shadow:0 4px 0 #8A2018;margin-top:8px}
+.big.alt{background:#4A2B38;box-shadow:0 4px 0 #2A1720}
+.big:active{transform:translateY(3px);box-shadow:none}
+details{font-size:12px;line-height:1.6;background:#2A1822;border-radius:10px;padding:6px 10px;margin:8px 0}
+summary{font-weight:800;cursor:pointer}
+details ul{margin:4px 0;padding-left:18px}
+.stars{text-align:center;font-size:38px;color:var(--gold);letter-spacing:4px}
+.stars .off{color:#4A2B38}
+.rows{display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:13px;margin:10px 0}
+.rows b{text-align:right;font-variant-numeric:tabular-nums}
+.back{display:block;text-align:center;margin-top:10px;font-size:13px;font-weight:800;color:var(--mute);text-decoration:none}
+</style>
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-180.png">
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>スペース・マイナー</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false" title="Oキー">🤖 オート</button>
+    <button class="mini" id="muteBtn">音 ON</button>
+  </div>
+  <div id="game">
+    <div id="hud">
+      <span class="num" id="hDay">☀️ 1日目</span>
+      <div class="bar"><i id="dayBar" style="background:#FFC857"></i></div>
+      <span class="num" id="hLv">🏠 Lv1</span>
+      <span class="num">❤️ あなた</span>
+      <div class="bar"><i id="hpBar" style="background:#6BE38A"></i></div>
+      <span class="num" id="hHp">100</span>
+      <span class="num">🛡 コアHP</span>
+      <div class="bar"><i id="coreBar" style="background:#5CE1FF"></i></div>
+      <span class="num" id="hCore">100</span>
+      <div id="stock"></div>
+    </div>
+    <canvas id="cv" aria-label="惑星のマップ"></canvas>
+    <div id="ctrl">
+      <div id="stick" aria-label="移動スティック"><div id="knob"></div></div>
+      <div id="mid">
+        <div id="carry" style="text-align:center;font-size:18px;min-height:24px"></div>
+        <div class="row2"><button class="cmd" id="dropBtn">📦置く</button><button class="cmd" id="homeBtn">🏠基地へ</button></div>
+        <button class="cmd" id="buildBtn">🏗 建設（B）<span class="badge" id="bBadge" hidden></span></button>
+      </div>
+      <button id="shootBtn" aria-label="撃つ">🔫 撃つ<br><small style="font-size:11px">SPACE</small></button>
+    </div>
+    <div id="buildWin" hidden>
+      <div class="win" role="dialog" aria-label="建設メニュー">
+        <h3><span>🏗 建設 <small id="bHint"></small></span><button id="closeBuild">✕ とじる</button></h3>
+        <div class="blist" id="blist"></div>
+      </div>
+    </div>
+
+    <div class="ov" id="titleOv">
+      <div class="box">
+        <h2>SPACE MINER</h2>
+        <p class="sub2">未知の惑星に降りた採掘隊。資材を掘って基地を大きくし、<br>5日目の夜が明けるまでに <b>宇宙港</b> を完成させよう。</p>
+        <details open>
+          <summary>あそびかた</summary>
+          <ul>
+            <li>スティック（矢印キー / WASD）で移動。資材のそばで止まると掘れる</li>
+            <li>🏗 建設ボタン（B キー）で建設ウィンドウが開く。建てられるのは基地の中にいるとき。開いている間はゲームが止まる</li>
+            <li>🔫 撃つ：ボタン（PC は <b>SPACE キー</b>）。近くの敵を自動でねらう。押しつづけると連射</li>
+            <li>背負えるのは3つまで。重い物を持つほど遅くなる。基地に入ると資材が入る</li>
+            <li><b>荷物を持っているとエイリアンに狙われる</b>。撃って戦うか、荷物を置いて逃げるか</li>
+            <li>🧊氷は近く、🪨鉱石・🔩レアメタルはもっと遠く、💎クリスタルはエイリアンの巣の近く</li>
+            <li>🌙 夜はエイリアンが基地を襲う。コアを壊されたら負け。フェンスと砲台でそなえよう</li>
+            <li>やられても基地で復活できる（荷物はその場に落ちる）</li>
+          </ul>
+        </details>
+        <button class="big" id="startBtn">▶ 着陸する</button>
+        <button class="big alt" id="autoStartBtn">🤖 オートで見る</button>
+        <p class="sub2" id="bestLine"></p>
+        <a class="back" href="../">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+    <div class="ov" id="resultOv" hidden>
+      <div class="box">
+        <h2 id="rTitle"></h2>
+        <p class="sub2" id="rMsg"></p>
+        <div class="stars" id="rStars"></div>
+        <div class="rows" id="rRows"></div>
+        <button class="big" id="againBtn">もう一回</button>
+        <a class="back" href="../">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+// ---------- world ----------
+const WS=3200, CX=1600, CY=1600, CYCLE=120, NIGHT_AT=84, DAYS=5, BASE_R=110;
+const RES={ice:{name:'氷',ic:'🧊',w:1,t:1.0,col:'#9FE8FF'},ore:{name:'鉱石',ic:'🪨',w:2,t:1.5,col:'#C98B55'},rare:{name:'レアメタル',ic:'🔩',w:2,t:1.8,col:'#C7B8FF'},crystal:{name:'クリスタル',ic:'💎',w:1,t:1.6,col:'#FF7AD9'}};
+const ENEMY={crawler:{name:'クローラー',hp:2,speed:175,dmg:8,r:14,col:'#9BE36B'},snatcher:{name:'スナッチャー',hp:3,speed:150,dmg:4,r:15,col:'#FFB347'},brute:{name:'ブルート',hp:9,speed:85,dmg:22,r:24,col:'#C36BFF'}};
+const DIRS={N:[0,-1],E:[1,0],S:[0,1],W:[-1,0]};
+const DNAME={N:'北',E:'東',S:'南',W:'西'};
+const BUILDS=[
+  {id:'fence1',name:'エネルギーフェンス',desc:'安全地帯が広がる。夜はコアの前で敵を受け止める',cost:{ice:4,ore:1}},
+  {id:'roadN',name:'北の舗装路',desc:'道の上は1.5倍速く歩ける',cost:{ice:3,ore:2},road:'N'},
+  {id:'roadE',name:'東の舗装路',desc:'道の上は1.5倍速く歩ける',cost:{ice:3,ore:2},road:'E'},
+  {id:'roadS',name:'南の舗装路',desc:'道の上は1.5倍速く歩ける',cost:{ice:3,ore:2},road:'S'},
+  {id:'roadW',name:'西の舗装路',desc:'道の上は1.5倍速く歩ける',cost:{ice:3,ore:2},road:'W'},
+  {id:'rover',name:'採掘ローバー',desc:'背負える数が 3 → 5 に増える',cost:{ore:4,rare:1}},
+  {id:'gun',name:'ブラスター強化',desc:'弾の威力が2倍になる',cost:{ore:3,rare:2}},
+  {id:'tBase',name:'基地の砲台',desc:'基地のまわりの敵を自動で撃つ',cost:{ore:3,rare:1}},
+  {id:'tN',name:'北の中継砲台',desc:'北の道のとちゅうで敵を撃つ',cost:{ore:3,rare:2},tower:'N'},
+  {id:'tE',name:'東の中継砲台',desc:'東の道のとちゅうで敵を撃つ',cost:{ore:3,rare:2},tower:'E'},
+  {id:'tS',name:'南の中継砲台',desc:'南の道のとちゅうで敵を撃つ',cost:{ore:3,rare:2},tower:'S'},
+  {id:'tW',name:'西の中継砲台',desc:'西の道のとちゅうで敵を撃つ',cost:{ore:3,rare:2},tower:'W'},
+  {id:'drone',name:'運搬ドローン',desc:'近くの氷と鉱石を自動で運んでくれる',cost:{ice:4,ore:3,rare:1}},
+  {id:'fence2',name:'フェンス強化',desc:'フェンスがさらに広く・かたくなる',cost:{ore:4,rare:2},need:'fence1'},
+  {id:'port',name:'🚀 宇宙港',desc:'完成すればクリア！',cost:{ore:6,rare:4,crystal:5}},
+];
+let rand=Math.random;
+function rng(seed){ return ()=>{ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+
+let G=null, phase='title', auto=false, autoT=0, manualClock=false, paused=false;
+let best={}; try{ best=JSON.parse(localStorage.getItem('minerBest')||'{}')||{}; }catch(e){}
+function newGame(){
+  const nodes=[], nests=[], deco=[];
+  const place=(type,r0,r1,angles,count,amt)=>{ for(const a0 of angles){ const r=r0+rand()*(r1-r0), a=a0+(rand()-.5)*.35, cx=CX+Math.cos(a)*r, cy=CY+Math.sin(a)*r;
+    for(let i=0;i<count;i++){ const b=rand()*Math.PI*2, d=20+rand()*70; nodes.push({x:cx+Math.cos(b)*d,y:cy+Math.sin(b)*d,type,amt,max:amt,regrow:0}); } } };
+  const Q=Math.PI/2, diag=[Q/2,Q*1.5,Q*2.5,Q*3.5], card=[-Q,0,Q,Q*2];
+  place('ice',300,420,diag,3,3);
+  place('ore',650,800,card,3,3);
+  place('rare',950,1120,diag,2,2);
+  const nestA=[card[rand()*4|0]]; let a2; do{ a2=card[rand()*4|0]; }while(a2===nestA[0]); nestA.push(a2);
+  for(const a of nestA){ const r=1350; nests.push({x:CX+Math.cos(a)*r,y:CY+Math.sin(a)*r,t:0}); }
+  place('crystal',1200,1260,nestA,3,2);
+  for(let i=0;i<260;i++) deco.push({x:rand()*WS,y:rand()*WS,r:4+rand()*26,k:rand()});
+  G={t:0,day:1,night:false,hp:100,core:100,coreMax:100,fence:0,fenceHp:0,stock:{ice:0,ore:0,rare:0,crystal:0},built:{},
+    p:{x:CX,y:CY+40,vx:0,vy:0,carry:[],gather:null,face:0,cd:0,dead:0,hurt:0},
+    nodes,nests,deco,enemies:[],shots:[],drops:[],fx:[],towers:[],drone:null,waveLeft:0,spawnT:0,
+    dropped:0,deaths:0,kills:0,end:null,msg:'',msgT:0,lastNight:0};
+}
+function say(t){ G.msg=t; G.msgT=3.5; }
+const cap=()=>G.built.rover?5:3;
+const weight=()=>G.p.carry.reduce((a,k)=>a+RES[k].w,0);
+const safeR=()=>BASE_R+(G.built.fence1?90:0)+(G.built.fence2?70:0);
+const inBase=o=>dist(o,{x:CX,y:CY})<BASE_R;
+function onRoad(o){ for(const [k,[dx,dy]] of Object.entries(DIRS)){ if(!G.built['road'+k]) continue; const px=o.x-CX, py=o.y-CY, along=px*dx+py*dy, off=Math.abs(px*dy-py*dx); if(along>0&&along<1350&&off<34) return true; } return false; }
+function pSpeed(){ let s=190*Math.max(.55,1-.07*weight()); if(onRoad(G.p)) s*=1.5; return s; }
+function canBuild(b){ if(G.built[b.id]) return false; if(b.need&&!G.built[b.need]) return false; return Object.entries(b.cost).every(([k,v])=>G.stock[k]>=v); }
+function build(id){
+  const b=BUILDS.find(x=>x.id===id); if(!b||!canBuild(b)||!inBase(G.p)) return false;
+  for(const [k,v] of Object.entries(b.cost)) G.stock[k]-=v; G.built[id]=true;
+  if(id==='fence1'){ G.fence=1; G.fenceHp=80; } if(id==='fence2'){ G.fence=2; G.fenceHp=160; }
+  if(id==='tBase') G.towers.push({x:CX,y:CY-60,cd:0,range:300,base:1});
+  if(b.tower){ const [dx,dy]=DIRS[b.tower]; G.towers.push({x:CX+dx*560,y:CY+dy*560,cd:0,range:320}); }
+  if(id==='drone') G.drone={x:CX,y:CY,carry:null,target:null,t:0};
+  if(id==='port'){ sfx('lv'); finish(true); return true; }
+  say(`${b.name} を建設した！`); sfx('lv'); G.fx.push({x:CX,y:CY,t:0,text:'🏗 '+b.name});
+  return true;
+}
+const level=()=>1+Math.min(4,Object.keys(G.built).length/3|0);
+
+// ---------- enemies ----------
+function spawnEnemy(type,x,y,mode){ const T=ENEMY[type]; G.enemies.push({type,x,y,hp:T.hp,mode,home:{x,y},wander:{x,y},hit:0,loot:null,cd:0,t:rand()*5}); }
+function nearestEnemy(o,r){ let b=null,bd=r; for(const e of G.enemies){ const d=dist(o,e); if(d<bd){ bd=d; b=e; } } return b; }
+function hurtPlayer(d,e){
+  const p=G.p; if(p.dead||p.hurt>0) return; p.hurt=.6; G.hp-=d; sfx('hurt');
+  if(e&&e.type==='snatcher'&&p.carry.length&&!e.loot){ e.loot=p.carry.pop(); e.mode='flee'; say('スナッチャーに荷物を奪われた！撃てば取り返せる'); }
+  else if(p.carry.length&&rand()<.45){ const k=p.carry.pop(); G.drops.push({x:p.x+(rand()-.5)*30,y:p.y+(rand()-.5)*30,type:k,t:0}); G.dropped++; say(`${RES[k].name}を落とした！`); }
+  if(G.hp<=0){ G.hp=0; p.dead=4; G.deaths++; for(const k of p.carry){ G.drops.push({x:p.x+(rand()-.5)*40,y:p.y+(rand()-.5)*40,type:k,t:0}); G.dropped++; } p.carry=[]; p.gather=null; say('やられた…基地で復活する'); sfx('bad'); }
+}
+function updateEnemies(dt){
+  const p=G.p, base={x:CX,y:CY}, sr=safeR();
+  for(const e of G.enemies){ const T=ENEMY[e.type]; e.t+=dt; e.cd=Math.max(0,e.cd-dt); e.hit=Math.max(0,e.hit-dt);
+    let tx=e.wander.x, ty=e.wander.y, sp=T.speed*.45;
+    const dp=dist(e,p), aggro=G.night?420:p.carry.length?300:130;
+    if(e.mode==='flee'){ tx=e.home.x; ty=e.home.y; sp=T.speed*1.05; if(dist(e,e.home)<40){ e.mode='roam'; e.loot=null; } }
+    else if(e.mode==='siege'){
+      if(!p.dead&&dp<75){ tx=p.x; ty=p.y; sp=T.speed; } else { tx=CX; ty=CY; sp=T.speed*.8; }
+      const db=dist(e,base), stopR=G.fenceHp>0?sr:BASE_R*.6;
+      if(db<stopR+6&&!(tx===p.x&&ty===p.y)){ sp=0; if(e.cd<=0){ e.cd=1; if(G.fenceHp>0){ G.fenceHp-=T.dmg*.6; if(G.fenceHp<=0){ G.fenceHp=0; say('⚠ フェンスが破られた！'); sfx('bad'); } } else { G.core-=T.dmg*.5; G.coreHit=.3; if(G.core<=0){ G.core=0; finish(false); } } } }
+    }
+    else if(!p.dead&&dp<aggro&&dist(p,base)>sr){ e.mode='chase'; tx=p.x; ty=p.y; sp=T.speed; }
+    else { if(e.mode==='chase'&&(dp>520||dist(p,base)<sr)) e.mode='roam';
+      if(e.mode==='chase'){ tx=p.x; ty=p.y; sp=T.speed; }
+      else if(dist(e,e.wander)<20||e.t>6){ e.t=0; const a=rand()*Math.PI*2, r=rand()*260; e.wander={x:e.home.x+Math.cos(a)*r,y:e.home.y+Math.sin(a)*r}; } }
+    // enemies never walk into the safe zone by day
+    const dx=tx-e.x, dy=ty-e.y, d=Math.hypot(dx,dy)||1; let nx=e.x+dx/d*sp*dt, ny=e.y+dy/d*sp*dt;
+    if(e.mode!=='siege'&&Math.hypot(nx-CX,ny-CY)<sr){ const a=Math.atan2(ny-CY,nx-CX); nx=CX+Math.cos(a)*sr; ny=CY+Math.sin(a)*sr; if(e.mode==='chase') e.mode='roam'; }
+    e.x=nx; e.y=ny;
+    if(!p.dead&&dist(e,p)<T.r+16&&e.mode!=='flee') hurtPlayer(T.dmg,e);
+  }
+  G.enemies=G.enemies.filter(e=>e.hp>0);
+}
+function killEnemy(e){ e.hp=0; G.kills++; G.fx.push({x:e.x,y:e.y,t:0,boom:ENEMY[e.type].r}); sfx('boom');
+  if(e.loot){ G.drops.push({x:e.x,y:e.y,type:e.loot,t:0}); e.loot=null; }
+  else if(rand()<(e.type==='brute'?.8:.25)){ const k=rand()<.5?'ore':e.type==='brute'?'rare':'ice'; G.drops.push({x:e.x,y:e.y,type:k,t:0}); } }
+
+// ---------- player ----------
+function shoot(from,tgt,dmg,friendly=true){ const dx=tgt.x-from.x, dy=tgt.y-from.y, d=Math.hypot(dx,dy)||1; G.shots.push({x:from.x,y:from.y,vx:dx/d*620,vy:dy/d*620,life:.6,dmg,friendly}); }
+function playerShoot(){ const p=G.p; if(p.dead||p.cd>0) return; const e=nearestEnemy(p,330);
+  p.cd=.24; const dmg=G.built.gun?2:1;
+  if(e) shoot(p,e,dmg); else shoot(p,{x:p.x+Math.cos(p.face)*100,y:p.y+Math.sin(p.face)*100},dmg); sfx('shot'); }
+function dropOne(){ const p=G.p; if(!p.carry.length||p.dead) return; const k=p.carry.pop(); G.drops.push({x:p.x,y:p.y+14,type:k,t:0}); p.gather=null; sfx('drop'); }
+function updatePlayer(dt,mx,my,firing){
+  const p=G.p;
+  if(p.dead){ p.dead-=dt; if(p.dead<=0){ p.dead=0; p.x=CX; p.y=CY+40; G.hp=100; say('基地で復活した'); } return; }
+  p.cd=Math.max(0,p.cd-dt); p.hurt=Math.max(0,p.hurt-dt);
+  const l=Math.hypot(mx,my);
+  if(l>.1){ const k=Math.min(1,l); p.x+=mx/l*k*pSpeed()*dt; p.y+=my/l*k*pSpeed()*dt; p.face=Math.atan2(my,mx); p.gather=null; p.walk=(p.walk||0)+dt; }
+  p.x=Math.max(20,Math.min(WS-20,p.x)); p.y=Math.max(20,Math.min(WS-20,p.y));
+  if(firing) playerShoot();
+  // pick up drops
+  for(const d of G.drops){ if(!d.gone&&dist(d,p)<26&&p.carry.length<cap()){ d.gone=1; p.carry.push(d.type); sfx('get'); } }
+  G.drops=G.drops.filter(d=>!d.gone&&(d.t+=dt)<90);
+  // gathering: stand still next to a node
+  if(l<=.1&&p.carry.length<cap()){
+    let n=null, nd=46; for(const q of G.nodes){ if(q.amt<=0) continue; const d=dist(q,p); if(d<nd){ nd=d; n=q; } }
+    if(n){ if(!p.gather||p.gather.n!==n) p.gather={n,t:0}; p.gather.t+=dt; if(p.gather.t>=RES[n.type].t){ n.amt--; if(n.amt<=0) n.regrow=45; p.carry.push(n.type); p.gather=null; sfx('get'); G.fx.push({x:p.x,y:p.y-30,t:0,text:'+'+RES[n.type].ic}); } }
+    else p.gather=null;
+  }
+  // deliver
+  if(inBase(p)){ if(p.carry.length){ for(const k of p.carry) G.stock[k]++; say(`${p.carry.map(k=>RES[k].ic).join('')} を基地に入れた`); p.carry=[]; sfx('deliver'); } G.hp=Math.min(100,G.hp+dt*8); }
+}
+
+// ---------- main update ----------
+const input={x:0,y:0,fire:false}; let keys={};
+function update(dt){
+  if(buildOpen&&phase==='play') return;   // the game waits while the build window is open
+  if(phase!=='play'||paused||!G||G.end){ if(phase==='result'&&auto){ autoT+=dt; if(autoT>6) start(); } return; }
+  G.t+=dt; const ct=G.t%CYCLE; G.day=Math.floor(G.t/CYCLE)+1;
+  if(G.day>DAYS){ finish(false,'time'); return; }
+  const night=ct>=NIGHT_AT;
+  if(night&&!G.night){ G.night=true; startNight(); } if(!night&&G.night){ G.night=false; say(`☀️ ${G.day}日目の朝。夜を乗りきった！`); for(const e of G.enemies) if(e.mode==='siege') e.mode='roam'; sfx('lv'); }
+  if(!night&&ct>NIGHT_AT-14&&ct-dt<=NIGHT_AT-14){ say('🌆 もうすぐ夜！基地にもどってそなえよう'); sfx('alarm'); }
+  if(G.msgT>0) G.msgT-=dt;
+  // auto or manual control
+  let mx=input.x, my=input.y, fire=input.fire;
+  if(auto){ const a=autoControl(dt); mx=a.x; my=a.y; fire=a.fire; }
+  else { const kx=(keys.ArrowRight||keys.KeyD?1:0)-(keys.ArrowLeft||keys.KeyA?1:0), ky=(keys.ArrowDown||keys.KeyS?1:0)-(keys.ArrowUp||keys.KeyW?1:0); if(kx||ky){ mx=kx; my=ky; } if(keys.Space) fire=true; }
+  updatePlayer(dt,mx,my,fire);
+  // nests keep a few aliens around by day; night brings waves
+  for(const n of G.nests){ n.t+=dt; if(n.t>9&&G.enemies.filter(e=>e.mode!=='siege'&&dist(e,n)<700).length<3+G.day){ n.t=0; const r=rand(); spawnEnemy(r<.55?'crawler':r<.85?'snatcher':'brute',n.x+(rand()-.5)*120,n.y+(rand()-.5)*120,'roam'); } }
+  if(G.waveLeft>0){ G.spawnT-=dt; if(G.spawnT<=0){ G.spawnT=.8; G.waveLeft--; const a=rand()*Math.PI*2, r=1100, x=CX+Math.cos(a)*r, y=CY+Math.sin(a)*r, q=rand(); spawnEnemy(q<.62-G.day*.05?'crawler':q<.9?'brute':'snatcher',x,y,'siege'); } }
+  updateEnemies(dt);
+  // towers
+  for(const t of G.towers){ t.cd=Math.max(0,t.cd-dt); if(t.cd<=0){ const e=nearestEnemy(t,t.range); if(e){ t.cd=.55; shoot(t,e,1); } } }
+  // drone
+  if(G.drone) updateDrone(dt);
+  // shots
+  for(const s of G.shots){ s.x+=s.vx*dt; s.y+=s.vy*dt; s.life-=dt; if(s.friendly) for(const e of G.enemies){ if(e.hp>0&&dist(s,e)<ENEMY[e.type].r+6){ s.life=0; e.hp-=s.dmg; e.hit=.15; if(e.mode==='roam') e.mode='chase'; if(e.hp<=0) killEnemy(e); else sfx('tink'); break; } } }
+  G.shots=G.shots.filter(s=>s.life>0);
+  for(const n of G.nodes) if(n.amt<=0){ n.regrow-=dt; if(n.regrow<=0) n.amt=n.max; }
+  for(const f of G.fx) f.t+=dt; G.fx=G.fx.filter(f=>f.t<1.2);
+  if(G.coreHit) G.coreHit=Math.max(0,G.coreHit-dt);
+}
+function startNight(){ const n=5+G.day*4; G.waveLeft=n; G.spawnT=2; say(`🌙 ${G.day}日目の夜。エイリアンが基地を襲ってくる！（${n}体）`); sfx('alarm'); if(G.fence) G.fenceHp=G.fence===2?160:80; }
+function updateDrone(dt){
+  const d=G.drone; d.t+=dt; const sp=150;
+  if(!d.carry){ if(!d.target||d.target.amt<=0){ let b=null,bd=900; for(const n of G.nodes){ if(n.amt<=0||(n.type!=='ice'&&n.type!=='ore')) continue; const q=dist(n,{x:CX,y:CY}); if(q<bd){ bd=q; b=n; } } d.target=b; }
+    if(!d.target) return; const dx=d.target.x-d.x, dy=d.target.y-d.y, l=Math.hypot(dx,dy); if(l<12){ d.gt=(d.gt||0)+dt; if(d.gt>2.2){ d.gt=0; d.target.amt--; if(d.target.amt<=0) d.target.regrow=45; d.carry=d.target.type; d.target=null; } } else { d.x+=dx/l*sp*dt; d.y+=dy/l*sp*dt; } }
+  else { const dx=CX-d.x, dy=CY-d.y, l=Math.hypot(dx,dy); if(l<30){ G.stock[d.carry]++; d.carry=null; } else { d.x+=dx/l*sp*dt; d.y+=dy/l*sp*dt; } }
+}
+function finish(win,why){
+  if(G.end) return; G.end=win?'win':'lose'; phase='result'; autoT=0;
+  const day=G.t/CYCLE; const st=win?1+(day<=4?1:0)+(G.dropped<=6&&G.core>=50?1:0):0;
+  if(win&&!auto&&(!best.st||st>best.st||st===best.st&&G.t<best.t)){ best={st,t:G.t}; try{ localStorage.setItem('minerBest',JSON.stringify(best)); }catch(e){} }
+  $('rTitle').textContent=win?'🚀 宇宙港 完成！':'💥 基地が陥落…';
+  $('rMsg').textContent=win?`${G.day}日目に宇宙港が完成した！${auto?'　🤖 オート':''}`:why==='time'?'5日目の夜が明けるまでに宇宙港が完成しなかった':'夜の襲撃でコアを破壊された';
+  $('rStars').innerHTML=[1,2,3].map(k=>`<span class="${k<=st?'':'off'}">★</span>`).join('');
+  $('rRows').innerHTML=[['かかった時間',`${G.day}日目 ${Math.round((G.t%CYCLE)/CYCLE*24)}時`],['建てた建物',`${Object.keys(G.built).length} こ`],['たおしたエイリアン',`${G.kills} 体`],['落とした荷物',`${G.dropped} こ`],['やられた回数',`${G.deaths} 回`],['コアの残り',`${Math.round(G.core)}%`]].map(([a,b])=>`<span>${a}</span><b>${b}</b>`).join('')+'<span style="grid-column:1/3;font-size:11px;color:#B89AA6">★2：4日目までに完成　★3：さらに落とした荷物6こ以下・コア50%以上</span>';
+  setTimeout(()=>{ if(phase==='result') $('resultOv').hidden=false; },800); sfx(win?'lv':'bad');
+}
+
+// ---------- auto pilot ----------
+const PLAN=['fence1','roadN','rover','tBase','roadE','gun','roadS','roadW','drone','fence2','port'];
+const BOT={noShoot:false,noNight:false};   // test-only handicaps for balance checks
+function setAuto(v){ auto=v; $('autoBtn').setAttribute('aria-pressed',v); autoT=0; if(v&&phase!=='play') start(); }
+function user(){ if(auto) setAuto(false); }
+function needFor(){ // resources still needed for the next few plan items (port always counted)
+  const need={ice:0,ore:0,rare:0,crystal:0}; let k=0;
+  for(const id of PLAN){ const b=BUILDS.find(x=>x.id===id); if(G.built[id]) continue; if(k++>1&&id!=='port') continue; for(const [r,v] of Object.entries(b.cost)) need[r]+=v; }
+  const towersNeeded=['tN','tE','tS','tW'].filter(id=>!G.built[id]);
+  for(const r in need) need[r]=Math.max(0,need[r]-G.stock[r]);
+  return need;
+}
+function autoControl(dt){
+  const p=G.p, base={x:CX,y:CY}, ct=G.t%CYCLE, out={x:0,y:0,fire:false};
+  if(p.dead) return out;
+  // build whatever is affordable in plan order (also towers on routes we use)
+  if(inBase(p)){ if(canBuild(BUILDS.find(x=>x.id==='port'))) build('port'); else for(const id of PLAN){ const b=BUILDS.find(x=>x.id===id); if(!G.built[id]&&canBuild(b)){ build(id); break; } if(!G.built[id]&&id!=='port') break; }
+    if(G.built.tBase&&G.stock.rare>=4&&G.stock.ore>=5){ for(const id of ['tN','tE','tS','tW']){ const b=BUILDS.find(x=>x.id===id); if(canBuild(b)&&G.nests.some(n=>Math.round((n.x-CX)/1350)===DIRS[b.tower][0]&&Math.round((n.y-CY)/1350)===DIRS[b.tower][1])){ build(id); break; } } } }
+  const threat=G.enemies.filter(e=>dist(e,p)<260);
+  const e=nearestEnemy(p,330); if(e&&!BOT.noShoot) out.fire=true;
+  const go=(t,slow)=>{ const dx=t.x-p.x, dy=t.y-p.y, l=Math.hypot(dx,dy); if(l>6){ out.x=dx/l; out.y=dy/l; } };
+  // night: guard the base
+  const timeLeft=NIGHT_AT-ct, homeTime=dist(p,base)/(pSpeed()*.9)+4;
+  if(!BOT.noNight&&(G.night||timeLeft<homeTime)){ const siege=G.enemies.filter(e=>e.mode==='siege').sort((a,b)=>dist(a,base)-dist(b,base))[0];
+    if(G.night&&siege&&dist(p,base)<safeR()+40&&dist(siege,base)<safeR()+120){ go({x:CX+(siege.x-CX)*.45,y:CY+(siege.y-CY)*.45}); } else go(base); return out; }
+  if(G.hp<35) { go(base); return out; }
+  // carrying & threatened: flee home (drop heavy stuff if cornered)
+  if(p.carry.length&&threat.length){ const danger=threat.reduce((a,e)=>a+(e.type==='brute'?3:1),0);
+    if(danger>=3&&G.hp<55&&p.carry.length&&weight()>=4) dropOne();
+    const snatch=threat.find(e=>e.loot); if(snatch){ go(snatch); return out; }
+    go(base); return out; }
+  if(p.carry.length>=cap()){ go(base); return out; }
+  // loose items nearby
+  const dr=G.drops.filter(d=>dist(d,p)<300)[0]; if(dr&&p.carry.length<cap()){ go(dr); return out; }
+  // pick a node
+  const need=needFor(); let bestN=null, bs=-1;
+  for(const n of G.nodes){ if(n.amt<=0) continue; const nd=need[n.type]; if(nd<=0&&!(n.type==='ice'&&p.carry.length)) continue;
+    const d=dist(n,p)+dist(n,base)*.6, danger=G.enemies.filter(e=>e.mode!=='siege'&&dist(e,n)<280).length;
+    const sc=(nd>0?1+nd*.3:.3)*(n.type==='crystal'?1.6:n.type==='rare'?1.3:1)/(d+80+danger*260);
+    if(sc>bs){ bs=sc; bestN=n; } }
+  if(p.carry.length&&(!bestN||dist(bestN,p)>650)){ go(base); return out; }
+  if(bestN){ if(dist(bestN,p)>30) go(bestN); } else go(base);
+  return out;
+}
+
+// ---------- drawing ----------
+const cv=$('cv'), g=cv.getContext('2d');
+let dark=null;
+function draw(){
+  const dpr=Math.min(2,devicePixelRatio||1), W=cv.clientWidth, H=cv.clientHeight;
+  if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){ cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); }
+  g.setTransform(dpr,0,0,dpr,0,0);
+  const sc=W/760, now=performance.now()/1000;
+  const cam=G?G.p:{x:CX,y:CY};
+  const X=x=>(x-cam.x)*sc+W/2, Y=y=>(y-cam.y)*sc+H/2;
+  g.fillStyle='#4A2620'; g.fillRect(0,0,W,H);
+  if(!G) return;
+  // ground decoration
+  for(const d of G.deco){ const x=X(d.x), y=Y(d.y); if(x<-40||x>W+40||y<-40||y>H+40) continue; g.fillStyle=d.k<.5?'rgba(0,0,0,.12)':'rgba(255,190,150,.06)'; g.beginPath(); g.ellipse(x,y,d.r*sc*1.3,d.r*sc,0,0,7); g.fill(); }
+  // roads
+  g.fillStyle='rgba(210,190,170,.35)';
+  for(const [k,[dx,dy]] of Object.entries(DIRS)){ if(!G.built['road'+k]) continue; const x0=X(CX), y0=Y(CY), x1=X(CX+dx*1350), y1=Y(CY+dy*1350), w=30*sc; g.fillRect(Math.min(x0,x1)-(dy?w:0),Math.min(y0,y1)-(dx?w:0),Math.abs(x1-x0)+(dy?w*2:0),Math.abs(y1-y0)+(dx?w*2:0)); }
+  // safe zone / fence
+  const sr=safeR();
+  g.strokeStyle=G.fenceHp>0?`rgba(92,225,255,${.5+Math.sin(now*4)*.2})`:'rgba(255,255,255,.18)'; g.lineWidth=G.fenceHp>0?3:1.5; g.setLineDash(G.fenceHp>0?[]:[6,6]);
+  g.beginPath(); g.arc(X(CX),Y(CY),sr*sc,0,7); g.stroke(); g.setLineDash([]);
+  // base (grows with level)
+  const lv=level(); g.fillStyle='rgba(180,200,220,.25)'; g.beginPath(); g.arc(X(CX),Y(CY),BASE_R*sc,0,7); g.fill();
+  const domes=[[0,0,38],[-50,20,22],[50,20,22],[0,-55,20],[-55,-35,16],[55,-35,16]].slice(0,1+lv);
+  for(const [dx,dy,r] of domes){ const x=X(CX+dx), y=Y(CY+dy); const gr=g.createRadialGradient(x-r*sc*.3,y-r*sc*.4,2,x,y,r*sc); gr.addColorStop(0,'#F4FAFF'); gr.addColorStop(1,'#7C93A8'); g.fillStyle=gr; g.beginPath(); g.arc(x,y,r*sc,Math.PI,0); g.lineTo(x+r*sc,y+r*sc*.25); g.lineTo(x-r*sc,y+r*sc*.25); g.fill(); }
+  g.fillStyle=G.coreHit?'#FF5A4F':'#5CE1FF'; g.beginPath(); g.arc(X(CX),Y(CY+18),7*sc,0,7); g.fill();
+  { const bw=90*sc, bx0=X(CX)-bw/2, by0=Y(CY)-78*sc, k=G.core/G.coreMax; g.fillStyle='rgba(10,4,8,.75)'; g.fillRect(bx0-3,by0-14*sc,bw+6,22*sc);
+    g.fillStyle='#12090E'; g.fillRect(bx0,by0,bw,6*sc); g.fillStyle=k>.5?'#5CE1FF':k>.25?'#FFC857':'#FF5A4F'; g.fillRect(bx0,by0,bw*k,6*sc);
+    if(G.fenceHp>0){ const fm=G.fence===2?160:80; g.fillStyle='rgba(92,225,255,.35)'; g.fillRect(bx0,by0+7*sc,bw*G.fenceHp/fm,3*sc); }
+    g.fillStyle='#fff'; g.font=`800 ${Math.max(10,10*sc)}px "M PLUS Rounded 1c",sans-serif`; g.textAlign='center'; g.textBaseline='middle'; g.fillText(`コアHP ${Math.ceil(G.core)}/${G.coreMax}`,X(CX),by0-5*sc); }
+  if(G.built.port){ g.fillStyle='#fff'; g.fillRect(X(CX+70),Y(CY-80),10*sc,60*sc); }
+  // towers
+  for(const t of G.towers){ const x=X(t.x), y=Y(t.y); g.fillStyle='#5A6B7C'; g.fillRect(x-10*sc,y-10*sc,20*sc,20*sc); g.fillStyle='#FFC857'; g.beginPath(); g.arc(x,y,6*sc,0,7); g.fill(); g.strokeStyle='rgba(255,200,87,.15)'; g.beginPath(); g.arc(x,y,t.range*sc,0,7); g.stroke(); }
+  // nests
+  for(const n of G.nests){ const x=X(n.x), y=Y(n.y); g.fillStyle='rgba(120,40,120,.5)'; g.beginPath(); g.arc(x,y,70*sc,0,7); g.fill(); g.fillStyle='#3A0E3A'; g.beginPath(); g.arc(x,y,34*sc,0,7); g.fill(); }
+  // nodes
+  g.textAlign='center'; g.textBaseline='middle';
+  for(const n of G.nodes){ const x=X(n.x), y=Y(n.y); if(x<-30||x>W+30||y<-30||y>H+30) continue; const R=RES[n.type];
+    if(n.amt<=0){ g.fillStyle='rgba(0,0,0,.25)'; g.beginPath(); g.arc(x,y,12*sc,0,7); g.fill(); continue; }
+    g.fillStyle=R.col+'55'; g.beginPath(); g.arc(x,y,(16+n.amt*3)*sc,0,7); g.fill(); g.font=`${22*sc}px sans-serif`; g.fillText(R.ic,x,y); }
+  for(const d of G.drops){ const x=X(d.x), y=Y(d.y); g.font=`${18*sc}px sans-serif`; g.globalAlpha=.6+Math.sin(now*6)*.4; g.fillText(RES[d.type].ic,x,y); g.globalAlpha=1; }
+  // drone
+  if(G.drone){ const x=X(G.drone.x), y=Y(G.drone.y); g.fillStyle='#CFE8FF'; g.beginPath(); g.ellipse(x,y,12*sc,6*sc,0,0,7); g.fill(); g.strokeStyle='#CFE8FF'; g.beginPath(); g.moveTo(x-16*sc,y-6*sc); g.lineTo(x+16*sc,y-6*sc); g.stroke(); if(G.drone.carry){ g.font=`${12*sc}px sans-serif`; g.fillText(RES[G.drone.carry].ic,x,y+10*sc); } }
+  // enemies
+  for(const e of G.enemies){ const T=ENEMY[e.type], x=X(e.x), y=Y(e.y), r=T.r*sc, wob=Math.sin(now*10+e.t)*.12;
+    if(x<-40||x>W+40||y<-40||y>H+40) continue;
+    g.fillStyle=e.hit>0?'#fff':T.col; g.beginPath(); g.ellipse(x,y,r*(1+wob),r*(1-wob),0,0,7); g.fill();
+    g.strokeStyle=T.col; g.lineWidth=2*sc; for(let i=0;i<6;i++){ const a=i/6*Math.PI*2+now*3; g.beginPath(); g.moveTo(x+Math.cos(a)*r,y+Math.sin(a)*r); g.lineTo(x+Math.cos(a)*r*1.5,y+Math.sin(a)*r*1.5); g.stroke(); }
+    g.fillStyle='#200'; g.beginPath(); g.arc(x-r*.35,y-r*.2,r*.18,0,7); g.arc(x+r*.35,y-r*.2,r*.18,0,7); g.fill();
+    if(e.loot){ g.font=`${14*sc}px sans-serif`; g.fillText(RES[e.loot].ic,x,y-r*1.4); }
+    if(e.mode==='chase'||e.mode==='siege'){ g.fillStyle='#FF5A4F'; g.font=`800 ${12*sc}px sans-serif`; g.fillText('!',x,y-r*1.4); } }
+  // shots
+  for(const s of G.shots){ g.strokeStyle=s.friendly?'#8FF0FF':'#FF5A4F'; g.lineWidth=3*sc; g.beginPath(); g.moveTo(X(s.x),Y(s.y)); g.lineTo(X(s.x-s.vx*.03),Y(s.y-s.vy*.03)); g.stroke(); }
+  // player (astronaut)
+  const p=G.p;
+  if(!p.dead){ const x=X(p.x), y=Y(p.y), r=16*sc, bob=Math.sin((p.walk||0)*14)*1.5*sc;
+    if(p.hurt>0&&Math.sin(now*40)>0) g.globalAlpha=.4;
+    g.fillStyle='rgba(0,0,0,.3)'; g.beginPath(); g.ellipse(x,y+r*1.1,r*.8,r*.3,0,0,7); g.fill();
+    g.fillStyle='#E9EEF4'; g.beginPath(); g.roundRect(x-r*.7,y-r*.2+bob,r*1.4,r*1.2,r*.3); g.fill();
+    g.fillStyle='#F6F8FB'; g.beginPath(); g.arc(x,y-r*.55+bob,r*.62,0,7); g.fill();
+    g.fillStyle='#2A4A6A'; g.beginPath(); g.ellipse(x+Math.cos(p.face)*r*.18,y-r*.55+bob,r*.42,r*.3,0,0,7); g.fill();
+    g.fillStyle='rgba(255,255,255,.6)'; g.beginPath(); g.arc(x-r*.15,y-r*.65+bob,r*.1,0,7); g.fill();
+    g.fillStyle='#FF7A3C'; g.fillRect(x-r*.7,y+r*.1+bob,r*1.4,r*.12);
+    p.carry.forEach((k,i)=>{ g.font=`${13*sc}px sans-serif`; g.fillText(RES[k].ic,x-r*.9+(i%3)*r*.9,y-r*1.45-(i/3|0)*r*.8+bob); });
+    g.globalAlpha=1;
+    if(p.gather){ g.strokeStyle='#FFC857'; g.lineWidth=4*sc; g.beginPath(); g.arc(x,y,r*1.5,-Math.PI/2,-Math.PI/2+Math.PI*2*p.gather.t/RES[p.gather.n.type].t); g.stroke(); } }
+  // fx
+  for(const f of G.fx){ const x=X(f.x), y=Y(f.y)-f.t*30*sc; g.globalAlpha=1-f.t/1.2;
+    if(f.boom){ g.strokeStyle='#FFC857'; g.lineWidth=3; g.beginPath(); g.arc(X(f.x),Y(f.y),f.boom*sc*(1+f.t*3),0,7); g.stroke(); }
+    else { g.fillStyle='#fff'; g.font=`800 ${14*sc}px "M PLUS Rounded 1c",sans-serif`; g.fillText(f.text,x,y); } g.globalAlpha=1; }
+  // darkness
+  const ct=G.t%CYCLE, dusk=ct<NIGHT_AT-14?0:ct<NIGHT_AT?(ct-(NIGHT_AT-14))/14*.55:ct>CYCLE-6?(CYCLE-ct)/6*.7:.7;
+  if(dusk>0){ if(!dark) dark=document.createElement('canvas'); dark.width=cv.width; dark.height=cv.height; const d=dark.getContext('2d'); d.setTransform(dpr,0,0,dpr,0,0);
+    d.fillStyle=`rgba(8,4,30,${dusk})`; d.fillRect(0,0,W,H); d.globalCompositeOperation='destination-out';
+    const hole=(x,y,r)=>{ const gr=d.createRadialGradient(X(x),Y(y),r*sc*.3,X(x),Y(y),r*sc); gr.addColorStop(0,'rgba(0,0,0,1)'); gr.addColorStop(1,'rgba(0,0,0,0)'); d.fillStyle=gr; d.beginPath(); d.arc(X(x),Y(y),r*sc,0,7); d.fill(); };
+    hole(CX,CY,sr+80); if(!p.dead) hole(p.x,p.y,170); for(const t of G.towers) hole(t.x,t.y,160);
+    g.setTransform(1,0,0,1,0,0); g.drawImage(dark,0,0); g.setTransform(dpr,0,0,dpr,0,0); }
+  // off-screen pointer to base
+  const bx=X(CX), by=Y(CY); if(bx<0||bx>W||by<0||by>H){ const a=Math.atan2(by-H/2,bx-W/2), rx=W/2+Math.cos(a)*(W/2-22), ry=H/2+Math.sin(a)*(H/2-22); g.fillStyle='#5CE1FF'; g.font=`800 ${16}px sans-serif`; g.fillText('🏠',rx,ry); }
+  // minimap
+  const mm=Math.min(110,W*.26), mx0=W-mm-8, my0=8, ms=mm/WS;
+  g.fillStyle='rgba(20,10,16,.75)'; g.fillRect(mx0,my0,mm,mm); g.strokeStyle='#4A2B38'; g.strokeRect(mx0,my0,mm,mm);
+  for(const n of G.nodes){ if(n.amt<=0) continue; g.fillStyle=RES[n.type].col; g.fillRect(mx0+n.x*ms-1,my0+n.y*ms-1,2,2); }
+  for(const n of G.nests){ g.fillStyle='#A040A0'; g.beginPath(); g.arc(mx0+n.x*ms,my0+n.y*ms,4,0,7); g.fill(); }
+  for(const e of G.enemies){ g.fillStyle='#FF5A4F'; g.fillRect(mx0+e.x*ms-1,my0+e.y*ms-1,2.5,2.5); }
+  g.fillStyle='#5CE1FF'; g.fillRect(mx0+CX*ms-3,my0+CY*ms-3,6,6); g.fillStyle='#fff'; g.beginPath(); g.arc(mx0+p.x*ms,my0+p.y*ms,3,0,7); g.fill();
+  // message
+  if(G.msgT>0){ g.globalAlpha=Math.min(1,G.msgT); g.fillStyle='rgba(20,10,16,.75)'; const fs=Math.max(12,W*.03); g.font=`800 ${fs}px "M PLUS Rounded 1c",sans-serif`; const tw=Math.min(W-20,g.measureText(G.msg).width+20); g.fillRect(W/2-tw/2,H-fs*2.6,tw,fs*1.8); g.fillStyle='#fff'; g.fillText(G.msg,W/2,H-fs*1.7,W-30); g.globalAlpha=1; }
+  if(p.dead){ g.fillStyle='rgba(0,0,0,.45)'; g.fillRect(0,0,W,H); g.fillStyle='#fff'; g.font=`800 ${W*.05}px "M PLUS Rounded 1c",sans-serif`; g.fillText(`復活まで ${Math.ceil(p.dead)}`,W/2,H/2); }
+  g.textBaseline='alphabetic';
+}
+
+// ---------- HUD ----------
+let lastBuildKey='';
+function renderHud(){
+  if(!G) return;
+  const ct=G.t%CYCLE; $('hDay').textContent=`${G.night?'🌙':'☀️'} ${Math.min(DAYS,G.day)}日目`;
+  $('dayBar').style.width=(ct/CYCLE*100)+'%'; $('dayBar').style.background=G.night?'#6A5ACD':'#FFC857';
+  $('hLv').textContent=`🏠 Lv${level()}`;
+  $('hpBar').style.width=G.hp+'%'; $('hHp').textContent=Math.round(G.hp);
+  $('coreBar').style.width=G.core+'%'; $('hCore').textContent=`${Math.ceil(G.core)}/${G.coreMax}`+(G.fenceHp>0?`　🛡フェンス${Math.ceil(G.fenceHp)}`:'');
+  $('stock').innerHTML=Object.entries(G.stock).map(([k,v])=>`<span>${RES[k].ic}${v}</span>`).join('');
+  $('carry').textContent=G.p.carry.length?G.p.carry.map(k=>RES[k].ic).join('')+`（${G.p.carry.length}/${cap()}）`:`かばん 0/${cap()}`;
+  $('dropBtn').disabled=!G.p.carry.length; $('homeBtn').disabled=inBase(G.p);
+  const inb=inBase(G.p), okN=BUILDS.filter(b=>canBuild(b)).length;
+  $('bBadge').hidden=!okN; $('bBadge').textContent=okN; $('buildBtn').classList.toggle('hot',inb&&okN>0);
+  const key=inb+':'+JSON.stringify(G.stock)+':'+Object.keys(G.built).join();
+  if(key!==lastBuildKey){ lastBuildKey=key;
+    const doneN=Object.keys(G.built).length; $('bHint').textContent=(inb?'えらぶと建設（一時停止中）':'⚠ 基地の中でだけ建設できる')+(doneN?`　完成 ${doneN}`:'');
+    $('blist').innerHTML=BUILDS.filter(b=>(!b.need||G.built[b.need])&&!G.built[b.id]).map(b=>{ const done=G.built[b.id], ok=!done&&canBuild(b);
+      return `<button class="bi ${done?'done':ok?'ok':''}" data-b="${b.id}" ${ok&&inb?'':'disabled'}><b>${done?'✅ ':''}${b.name}</b><small>${b.desc}</small><span class="cost">${Object.entries(b.cost).map(([k,v])=>`${RES[k].ic}${v}`).join(' ')}</span></button>`; }).join(''); }
+}
+
+// ---------- sound ----------
+let AC=null, muted=false, NB=null;
+try{ muted=localStorage.getItem('minerMute')==='1'; }catch(e){}
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); NB=AC.createBuffer(1,AC.sampleRate,AC.sampleRate); const c=NB.getChannelData(0); for(let i=0;i<c.length;i++) c[i]=Math.random()*2-1; }catch(e){} } if(AC&&AC.state==='suspended') AC.resume(); return AC; }
+function tone(f,d,type='square',v=.05,delay=0,f2){ if(muted||!ac()) return; const t=AC.currentTime+delay, o=AC.createOscillator(), gn=AC.createGain(); o.type=type; o.frequency.setValueAtTime(f,t); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+d); gn.gain.setValueAtTime(v,t); gn.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(gn).connect(AC.destination); o.start(t); o.stop(t+d+.02); }
+function noise(d,v,fq){ if(muted||!ac()) return; const t=AC.currentTime, s=AC.createBufferSource(), f=AC.createBiquadFilter(), gn=AC.createGain(); s.buffer=NB; f.type='lowpass'; f.frequency.setValueAtTime(fq,t); f.frequency.exponentialRampToValueAtTime(80,t+d); gn.gain.setValueAtTime(v,t); gn.gain.exponentialRampToValueAtTime(.0001,t+d); s.connect(f).connect(gn).connect(AC.destination); s.start(t); s.stop(t+d); }
+let lastS={};
+function sfx(k){ const n=performance.now(); if(lastS[k]&&n-lastS[k]<60) return; lastS[k]=n;
+  if(k==='shot') tone(1200,.08,'square',.03,0,500);
+  else if(k==='tink') tone(1800,.04,'square',.03);
+  else if(k==='boom') noise(.35,.25,1600);
+  else if(k==='get') tone(880,.07,'triangle',.07,0,1300);
+  else if(k==='deliver') [523,659,784].forEach((f,i)=>tone(f,.12,'triangle',.07,i*.08));
+  else if(k==='drop') tone(300,.1,'triangle',.06,0,150);
+  else if(k==='hurt') noise(.2,.3,2600);
+  else if(k==='lv') [523,659,784,1047].forEach((f,i)=>tone(f,.18,'square',.05,i*.1));
+  else if(k==='alarm'){ tone(700,.2,'sawtooth',.04); tone(500,.2,'sawtooth',.04,.22); }
+  else if(k==='bad') tone(300,.5,'sawtooth',.05,0,70);
+}
+function setMute(m){ muted=m; $('muteBtn').textContent=m?'音 OFF':'音 ON'; try{ localStorage.setItem('minerMute',m?'1':'0'); }catch(e){} }
+
+// ---------- input ----------
+const stick=$('stick'), knob=$('knob'); let sId=null;
+function stickSet(e){ const r=stick.getBoundingClientRect(); let dx=(e.clientX-r.left-r.width/2)/(r.width/2), dy=(e.clientY-r.top-r.height/2)/(r.height/2); const l=Math.hypot(dx,dy); if(l>1){ dx/=l; dy/=l; } knob.style.transform=`translate(${dx*45}px,${dy*45}px)`; input.x=Math.abs(dx)+Math.abs(dy)<.15?0:dx; input.y=Math.abs(dx)+Math.abs(dy)<.15?0:dy; }
+stick.addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); user(); sId=e.pointerId; stick.setPointerCapture(e.pointerId); stickSet(e); });
+stick.addEventListener('pointermove',e=>{ if(e.pointerId===sId) stickSet(e); });
+const sEnd=e=>{ if(e.pointerId!==sId) return; sId=null; input.x=0; input.y=0; knob.style.transform=''; };
+stick.addEventListener('pointerup',sEnd); stick.addEventListener('pointercancel',sEnd);
+const sb=$('shootBtn');
+sb.addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); user(); input.fire=true; sb.classList.add('on'); });
+const sbUp=()=>{ input.fire=false; sb.classList.remove('on'); }; sb.addEventListener('pointerup',sbUp); sb.addEventListener('pointercancel',sbUp); sb.addEventListener('pointerleave',sbUp);
+$('dropBtn').onclick=()=>{ ac(); user(); dropOne(); };
+let homeGo=false;
+$('homeBtn').onclick=()=>{ ac(); user(); homeGo=true; };
+$('blist').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b||b.disabled) return; ac(); user(); build(b.dataset.b); lastBuildKey=''; renderHud(); if(G.end) closeBuild(); });
+let buildOpen=false;
+function openBuild(){ if(!G||phase!=='play') return; buildOpen=true; input.x=0; input.y=0; input.fire=false; keys={}; const w=$('buildWin'); w.style.top=cv.offsetTop+'px'; w.style.height=cv.offsetHeight+'px'; w.querySelector('.win').style.maxHeight=(cv.offsetHeight-16)+'px'; w.hidden=false; lastBuildKey=''; renderHud(); sfx('get'); }
+function closeBuild(){ buildOpen=false; $('buildWin').hidden=true; }
+$('buildBtn').onclick=()=>{ ac(); user(); buildOpen?closeBuild():openBuild(); };
+$('closeBuild').onclick=()=>closeBuild();
+$('buildWin').addEventListener('click',e=>{ if(e.target.id==='buildWin') closeBuild(); });
+addEventListener('resize',()=>{ if(buildOpen){ const w=$('buildWin'); w.style.top=cv.offsetTop+'px'; w.style.height=cv.offsetHeight+'px'; w.querySelector('.win').style.maxHeight=(cv.offsetHeight-16)+'px'; } });
+addEventListener('keydown',e=>{
+  if(e.code==='KeyO'){ if(!e.repeat){ ac(); setAuto(!auto); } return; }
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
+  if(phase!=='play'){ if(e.code==='Enter'&&!e.repeat){ ac(); start(); } return; }
+  if(!keys[e.code]&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD','Space','KeyX'].includes(e.code)){ ac(); user(); homeGo=false; }
+  keys[e.code]=true; if(e.repeat) return;
+  if(e.code==='KeyB'){ user(); buildOpen?closeBuild():openBuild(); return; }
+  if(e.code==='Escape'&&buildOpen){ closeBuild(); return; }
+  if(buildOpen) return;
+  if(e.code==='KeyX') dropOne();
+  if(e.code==='Space'&&G&&!auto) playerShoot();   // fire on the press itself so quick taps always shoot
+  if(e.code==='KeyP') paused=!paused;
+});
+addEventListener('keyup',e=>{ keys[e.code]=false; });
+addEventListener('blur',()=>{ keys={}; });
+document.addEventListener('visibilitychange',()=>{ if(document.hidden&&phase==='play') paused=true; else paused=false; });
+function start(){ closeBuild(); newGame(); phase='play'; paused=false; homeGo=false; $('titleOv').hidden=true; $('resultOv').hidden=true; lastBuildKey=''; say('まずは近くの🧊氷を掘って基地にはこぼう'); }
+$('startBtn').onclick=()=>{ ac(); start(); };
+$('autoStartBtn').onclick=()=>{ ac(); setAuto(true); };
+$('againBtn').onclick=()=>{ ac(); user(); start(); };
+$('autoBtn').onclick=()=>{ ac(); setAuto(!auto); };
+$('muteBtn').onclick=()=>{ ac(); setMute(!muted); };
+function showBest(){ $('bestLine').textContent=best.st?`ベスト：${'★'.repeat(best.st)}（${Math.floor(best.t/CYCLE)+1}日目）`:''; }
+
+setMute(muted); showBest();
+let last=performance.now();
+function loop(t){ const dt=Math.min(.05,(t-last)/1000); last=t;
+  if(homeGo&&G&&phase==='play'&&!auto){ const dx=CX-G.p.x, dy=CY-G.p.y, l=Math.hypot(dx,dy); if(l<40||input.x||input.y){ homeGo=false; } else { input.hx=dx/l; input.hy=dy/l; } }
+  if(!manualClock){ const ix=input.x, iy=input.y; if(homeGo&&!input.x&&!input.y){ input.x=input.hx; input.y=input.hy; update(dt); input.x=ix; input.y=iy; } else update(dt); }
+  draw(); if(phase==='play') renderHud(); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+
+// test hook
+window.__miner={
+  get s(){ return G&&{phase,t:G.t,day:G.day,night:G.night,hp:G.hp,core:G.core,fenceHp:G.fenceHp,stock:{...G.stock},built:Object.keys(G.built),carry:[...G.p.carry],pos:{x:G.p.x,y:G.p.y},dead:G.p.dead,enemies:G.enemies.length,kills:G.kills,dropped:G.dropped,deaths:G.deaths,end:G.end,auto,shots:G.shots.length}; },
+  bot:BOT, grant(o){ for(const k in o) G.stock[k]+=o[k]; }, home(){ G.p.x=CX; G.p.y=CY+40; }, setAuto, start, seed(n){ rand=rng(n); }, manual(v=true){ manualClock=v; }, step(dt){ update(dt); if(phase==='play') renderHud(); }, build, input,
+};
+})();
+</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>

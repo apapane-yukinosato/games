@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="経理の法廷バトル。従業員の経費申請の説明を聞き、証拠品とのムジュンを見つけたら「異議あり！」で差し戻せ。8件の点数とランクを競おう。">
+<title>逆転経理</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&family=Dela+Gothic+One&display=swap">
+<style>
+:root{--bg:#1A1D2A;--ink:#F4F0E6;--card:#FFFFFF;--line:#3A3F55;--mute:#A8A8B8;--red:#E0342A;--blue:#2A6AD8;--gold:#F2C230;--green:#7CE07C}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#app{max-width:520px;margin:0 auto;padding:8px 10px 16px;padding-top:calc(8px + env(safe-area-inset-top,0px))}
+#top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:16px;font-weight:800;white-space:nowrap;font-family:"Dela Gothic One","M PLUS Rounded 1c",sans-serif;letter-spacing:.05em}
+.mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:#262A3C;cursor:pointer;white-space:nowrap}
+.mini[aria-pressed=true]{background:var(--gold);border-color:var(--gold);color:#222}
+/* the court */
+#wrap{position:relative}
+#stage{position:relative;aspect-ratio:360/250;border-radius:14px;overflow:hidden;background:linear-gradient(#5A3A26,#8A5A36 55%,#3A2416);box-shadow:inset 0 0 0 2px #2A1A10}
+#stage.shake{animation:shake .45s}
+@keyframes shake{0%,100%{transform:none}20%{transform:translate(-8px,3px)}40%{transform:translate(7px,-4px)}60%{transform:translate(-5px,2px)}80%{transform:translate(4px,-1px)}}
+#wall{position:absolute;inset:0 0 38% 0;background:repeating-linear-gradient(90deg,#6A4630 0 38px,#5E3E2A 38px 40px)}
+#desk{position:absolute;left:8%;right:8%;bottom:0;height:34%;background:linear-gradient(#B87A44,#8A5428);border-radius:10px 10px 0 0;box-shadow:0 -4px 0 #6A3E1E}
+#who{position:absolute;left:50%;bottom:24%;transform:translateX(-50%);font-size:min(31vw,128px);line-height:1;filter:drop-shadow(0 6px 6px rgba(0,0,0,.35));transition:transform .2s}
+#who.sweat{animation:sweat 1.2s infinite}
+@keyframes sweat{50%{transform:translateX(-50%) translateY(3px) rotate(-3deg)}}
+#who.break{animation:brk .6s}
+@keyframes brk{0%{transform:translateX(-50%) scale(1)}30%{transform:translateX(-56%) scale(1.15) rotate(-12deg)}60%{transform:translateX(-44%) scale(.95) rotate(8deg)}100%{transform:translateX(-50%)}}
+#plate{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);background:#2A1A10;color:#F2C230;font-weight:800;font-size:12px;padding:3px 10px;border-radius:6px;white-space:nowrap}
+#caseInfo{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.55);border-radius:8px;padding:4px 8px;font-size:11px;font-weight:800;line-height:1.4;max-width:58%}
+#trust{position:absolute;right:8px;top:8px;background:rgba(0,0,0,.55);border-radius:8px;padding:4px 8px;font-size:11px;font-weight:800;text-align:right}
+#trustBar{width:96px;height:8px;background:#333;border-radius:4px;margin-top:3px;overflow:hidden}
+#trustBar i{display:block;height:100%;background:linear-gradient(90deg,#E0342A,#F2C230,#7CE07C);transition:width .4s}
+#scoreTag{margin-top:3px;color:#F2C230}
+/* objection bubble */
+#bubble{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:4}
+#bubble div{font-family:"Dela Gothic One","M PLUS Rounded 1c",sans-serif;font-size:min(13vw,54px);color:#fff;text-shadow:3px 3px 0 #6A0A0A,-2px -2px 0 #6A0A0A,2px -2px 0 #6A0A0A,-2px 2px 0 #6A0A0A;padding:30px 42px;background:var(--red);
+  clip-path:polygon(50% 0,58% 14%,74% 3%,74% 20%,96% 14%,86% 32%,100% 45%,86% 55%,98% 74%,78% 72%,76% 95%,60% 80%,48% 100%,40% 82%,22% 96%,22% 76%,2% 80%,13% 60%,0 46%,14% 34%,4% 14%,26% 20%,28% 2%,42% 14%);animation:pop .55s ease-out}
+#bubble div.mata{background:var(--blue)}
+#bubble div.ok{background:#2A9A4A}
+@keyframes pop{0%{transform:scale(.2) rotate(-10deg)}60%{transform:scale(1.12) rotate(2deg)}100%{transform:scale(1)}}
+#stamp{position:absolute;right:10%;top:22%;z-index:3;width:min(28vw,110px);aspect-ratio:1;border:6px solid var(--red);border-radius:50%;color:var(--red);display:flex;align-items:center;justify-content:center;font-family:"Dela Gothic One",sans-serif;font-size:min(8vw,32px);transform:rotate(-14deg);background:rgba(255,255,255,.75);animation:stampin .35s ease-in}
+@keyframes stampin{0%{transform:scale(2.4) rotate(-14deg);opacity:0}100%{transform:scale(1) rotate(-14deg);opacity:1}}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:5;transition:opacity .25s}
+/* dialogue */
+#box{position:relative;margin-top:8px;background:rgba(20,24,40,.96);border:3px solid #E8E0C8;border-radius:12px;min-height:118px;padding:16px 14px 12px;cursor:pointer}
+#name{position:absolute;left:12px;top:-14px;background:#E8E0C8;color:#1A1D2A;font-weight:800;font-size:13px;padding:2px 12px;border-radius:8px}
+#text{font-size:15px;line-height:1.75;min-height:52px;white-space:pre-wrap}
+#text.testi{color:var(--green)}
+#hint{position:absolute;right:12px;bottom:6px;font-size:12px;color:var(--mute);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.2}}
+#nav{display:flex;align-items:center;gap:8px;margin-top:6px}
+#nav button{min-width:44px;min-height:38px;border-radius:10px;border:1px solid var(--line);background:#262A3C;font-weight:800;font-size:16px;cursor:pointer}
+#nav span{flex:1;text-align:center;font-size:12px;color:var(--mute);font-weight:800}
+#acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+#acts button{min-height:54px;border:0;border-radius:14px;font-weight:800;font-size:18px;cursor:pointer;color:#fff;font-family:"Dela Gothic One","M PLUS Rounded 1c",sans-serif;letter-spacing:.04em}
+#acts button:disabled{opacity:.35;cursor:default}
+#mataBtn{background:linear-gradient(#4A8AF8,#2A5AC8);box-shadow:0 4px 0 #1A3A8A}
+#igiBtn{background:linear-gradient(#F8544A,#C8241A);box-shadow:0 4px 0 #7A1A10}
+#recBtn{background:linear-gradient(#9A7A4A,#6A4A2A);box-shadow:0 4px 0 #3A2A1A;font-size:16px!important}
+#okBtn{background:linear-gradient(#4AB86A,#2A8A4A);box-shadow:0 4px 0 #1A5A2A;font-size:16px!important}
+/* court record */
+#rec{position:fixed;inset:0;z-index:20;background:rgba(10,12,20,.82);display:flex;align-items:flex-end;justify-content:center;padding:10px}
+#recIn{width:100%;max-width:500px;max-height:86vh;overflow:auto;background:#F4ECD8;color:#2A1E10;border-radius:16px;padding:12px;overscroll-behavior:contain}
+#recIn h3{margin:0 0 8px;font-size:16px;text-align:center}
+#recList{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+#recList button{min-height:62px;border:2px solid #C8B890;border-radius:10px;background:#fff;cursor:pointer;font-size:11px;font-weight:800;line-height:1.3;padding:4px}
+#recList button b{display:block;font-size:22px}
+#recList button.on{border-color:#E0342A;background:#FFF0E8}
+#recDetail{margin-top:10px;background:#fff;border-radius:10px;padding:10px 12px;font-size:13.5px;line-height:1.75;min-height:90px;white-space:pre-wrap}
+#recDetail .t{font-weight:800;font-size:15px;margin-bottom:4px}
+#recActs{display:flex;gap:8px;margin-top:10px}
+#recActs button{flex:1;min-height:48px;border:0;border-radius:12px;font-weight:800;font-size:16px;cursor:pointer}
+#presentBtn{background:#E0342A;color:#fff;font-family:"Dela Gothic One",sans-serif}
+#closeRec{background:#D8CCB0}
+/* overlays */
+.ov{position:absolute;inset:0;display:flex;align-items:safe center;justify-content:center;background:rgba(10,12,20,.72);border-radius:14px;padding:10px;z-index:10;overflow-y:auto}
+#app .full{position:fixed;inset:0;z-index:15;border-radius:0}
+.card{background:#F4ECD8;color:#2A1E10;border-radius:18px;padding:16px;width:100%;max-width:400px;text-align:center;margin:auto 0;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.card h2{margin:0;font-family:"Dela Gothic One","M PLUS Rounded 1c",sans-serif;font-size:34px;line-height:1.2;color:#C8241A;letter-spacing:.06em}
+.sub{font-size:13px;color:#6A5A40;margin:6px 0 10px;line-height:1.7;white-space:pre-line}
+.how{text-align:left;font-size:12.5px;line-height:1.75;background:#fff;border-radius:12px;padding:8px 12px;margin:0 0 8px}
+.go{display:block;width:100%;min-height:50px;border:0;border-radius:14px;font-weight:800;font-size:17px;cursor:pointer;margin-top:8px;background:#C8241A;color:#fff;box-shadow:0 4px 0 #7A1A10}
+.go.alt{background:#E8DCC0;color:#2A1E10;box-shadow:0 4px 0 #B8A880}
+.back{display:block;margin-top:10px;font-size:13px;font-weight:800;color:#8A7A5A;text-decoration:none}
+.rank{font-family:"Dela Gothic One",sans-serif;font-size:76px;line-height:1;color:#C8241A;margin:6px 0 0}
+.rank.S{color:#D8A010;text-shadow:0 0 12px rgba(240,190,40,.6)}
+.tbl{width:100%;font-size:13px;border-collapse:collapse;margin:8px 0;background:#fff;border-radius:10px;overflow:hidden}
+.tbl td{padding:5px 10px;border-bottom:1px solid #EEE4CC;text-align:left}.tbl td:last-child{text-align:right;font-weight:800}
+.help{font-size:12px;color:var(--mute);text-align:center;margin:8px 0 0;line-height:1.6}
+@media (pointer:coarse){.pc{display:none}}
+</style>
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-180.png">
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>⚖️ 逆転経理</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false" title="Oキー">🤖 オート</button>
+    <button class="mini" id="muteBtn">音 ON</button>
+  </div>
+  <div id="wrap">
+    <div id="stage">
+      <div id="wall"></div><div id="desk"></div>
+      <div id="who">🧑‍💼</div><div id="plate">申請者</div>
+      <div id="caseInfo">経理部 精算法廷</div>
+      <div id="trust">部長の信頼<div id="trustBar"><i style="width:100%"></i></div><div id="scoreTag">0点</div></div>
+      <div id="stamp" hidden>承認</div>
+      <div id="bubble" hidden><div>異議あり！</div></div>
+      <div id="flash"></div>
+    </div>
+    <div id="box"><div id="name">経理部長</div><div id="text"></div><div id="hint">▼</div></div>
+    <div id="nav" hidden><button id="prevBtn" aria-label="前の証言">◀</button><span id="navTxt">証言 1/4</span><button id="nextBtn" aria-label="次の証言">▶</button></div>
+    <div id="acts">
+      <button id="mataBtn">待った！</button><button id="igiBtn">異議あり！</button>
+      <button id="recBtn">📁 証拠品</button><button id="okBtn">✅ 承認する</button>
+    </div>
+    <div class="ov full" id="titleOv">
+      <div class="card">
+        <h2>逆転経理</h2>
+        <p class="sub">ようこそ、経理部 精算法廷へ。<br>今日も怪しい経費申請が、山のように届いている。</p>
+        <div class="how">
+          📜 申請者の<b>証言</b>を ◀ ▶ で読む<br>
+          ✋ <b>待った！</b>…証言をゆさぶって、くわしく聞く（新しい証言が出ることも）<br>
+          ☝️ <b>異議あり！</b>…証言とムジュンする<b>証拠品</b>をつきつけて差し戻す<br>
+          ✅ ムジュンがなければ<b>承認</b>。正しい申請を差し戻すと、部長の信頼が下がる<br>
+          🏆 8件の点数でランク（S〜D）。見のがしやまちがいは減点、信頼が0でクビ…
+        </div>
+        <button class="go" id="startBtn">⚖️ 開廷する</button>
+        <button class="go alt" id="autoStartBtn">🤖 オートで見る</button>
+        <p class="sub" id="bestTxt"></p>
+        <a class="back" href="../">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+    <div class="ov full" id="resultOv" hidden>
+      <div class="card">
+        <div class="sub" style="margin:0">本日の精算 終了</div>
+        <div class="rank" id="resRank">A</div>
+        <h2 id="resTitle" style="font-size:22px"></h2>
+        <table class="tbl" id="resTbl"></table>
+        <p class="sub" id="resBest"></p>
+        <button class="go" id="retryBtn">⚖️ もう一度開廷する</button>
+        <button class="go alt" id="menuBtn">タイトルへ</button>
+        <a class="back" href="../">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+  </div>
+  <div id="rec" hidden><div id="recIn"><h3 id="recTitle">📁 証拠品ファイル</h3><div id="recList"></div><div id="recDetail"></div>
+    <div id="recActs"><button id="closeRec">とじる</button><button id="presentBtn" hidden>☝️ くらえ！</button></div></div></div>
+  <p class="help">文章をタップで次へ。<span class="pc">PC：←→ 証言　Z 待った　X 異議あり　C 証拠品　A 承認　スペース 次へ　O オート　M 音</span></p>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+let seed=(Date.now()%2147483646)+1; const rnd=()=>{ seed=seed*16807%2147483647; return (seed-1)/2147483646; };
+const pick=a=>a[Math.floor(rnd()*a.length)], ri=(a,b)=>a+Math.floor(rnd()*(b-a+1));
+const yen=n=>'¥'+Math.round(n).toLocaleString('ja-JP');
+
+/* ================= the calendar (October 2026: the 1st is a Thursday, the 12th is スポーツの日) ================= */
+const WD='日月火水木金土', wd=d=>(3+d)%7, HOLI={12:'スポーツの日'};
+const isOff=d=>wd(d)===0||wd(d)===6||!!HOLI[d];
+const ds=d=>`10月${d}日(${WD[wd(d)]})`;
+const workday=()=>{ let d; do d=ri(1,30); while(isOff(d)); return d; };
+const offday=()=>{ let d; do d=ri(1,30); while(!isOff(d)); return d; };
+const calendar=d=>[`2026年10月のカレンダー`,`${d}日は【${WD[wd(d)]}曜日】${HOLI[d]?'・祝日「'+HOLI[d]+'」':''}${isOff(d)?'　→ 会社は休み':'　→ 営業日'}`,`土日祝は休み（休日出勤には事前申請が必要）`];
+const regno=()=>'T'+Array.from({length:13},()=>ri(0,9)).join('');
+const RULES=['① 交際費は 1人あたり 5,000円 まで','② 宿泊費は 1泊 10,000円 まで','③ タクシーは 22時以降まで業務をした日だけ','④ 通勤定期の区間の交通費は出ない','⑤ 同じ領収書を2回申請してはいけない','⑥ 私的な買い物は経費にできない','⑦ 領収書には登録番号（T＋13けた）が必要','⑧ 土日祝の業務は、事前の休日出勤申請が必要'];
+const PEOPLE=[['営業部','盛田 ますお','👨‍💼'],['総務部','細川 ゆい','👩‍💼'],['開発部','早川 シン','🧑‍💻'],['広報部','宴 ひかり','👩‍🎤'],['営業部','遠山 ゆきお','🧔'],['人事部','真田 きよし','👨‍🦳'],['企画部','夜野 たく','👨‍🎨'],['営業部','二階堂 みつ','👩‍🦰'],['製造部','鉄村 ごう','👷'],['経営企画','金子 リッチ','🤵']];
+const CLIENTS=['かぶ商事','ゆきのさと物産','しらかば工業','みなと海運','こぶし銀行'];
+
+/* ================= case templates: each one can be honest or fishy ================= */
+// a statement: {id,t,press(fraud/honest),reveal?:statement}; answer: statement ids + evidence ids that contradict it
+function makeCase(kind,fraud,P){
+  const name=P[1], dept=P[0], form=(o)=>({id:'form',icon:'📝',n:'経費申請書',lines:[`申請者：${dept} ${name}`,...o]});
+  const rules={id:'rules',icon:'📕',n:'経費規程',lines:RULES};
+  const C={kind,fraud,emp:P,ev:[],st:[],ans:null,explain:'',title:'',amount:0};
+  const S=(id,t,pf,ph,extra)=>Object.assign({id,t,press:fraud?pf:ph},extra||{});
+  if(kind==='cafe'){ const d=workday(), shop=pick(['喫茶 しらゆき','カフェ こぶし','珈琲 さくら坂']), real=pick([1280,2800,3450,1960,2640]), claim=fraud?Number('1'+real):real;
+    C.title='会議費'; C.amount=claim;
+    C.ev=[form([`費目：会議費`,`日付：${ds(d)}`,`金額：${yen(claim)}`,`支払先：${shop}`,`目的：取引先との打ち合わせ（2名）`]),
+      {id:'receipt',icon:'🧾',n:'領収書',lines:[`${shop}`,`日付：${ds(d)}`,`金額：${yen(real)}（税込）`,`但し書き：お飲み物代として`,`登録番号：${regno()}`]},rules,{id:'calendar',icon:'📅',n:'カレンダー',lines:calendar(d)}];
+    C.st=[S('a',`${ds(d)}、取引先と打ち合わせをしました。`,'先方の担当者と2人です。新商品の説明をしました。','先方の担当者と2人です。新商品の説明をしました。'),
+      S('b',`場所は「${shop}」です。静かで話しやすいお店なんです。`,'駅前のお店です。よく使います。','駅前のお店です。よく使います。'),
+      S('c',`金額は、領収書どおり ${yen(claim)} です。`,'ええ、領収書を見ながら書きましたから！ まちがいありませんよ！','領収書の金額を、そのまま書き写しました。'),
+      S('d','資料を広げられる、広い席が必要だったんです。','4人がけの席を使わせてもらいました。','4人がけの席を使わせてもらいました。')];
+    C.ans={s:['c'],ev:['receipt']}; C.explain=`領収書の金額は ${yen(real)}！\n申請は ${yen(claim)}…${yen(claim-real)}も水増しされています！`; }
+  else if(kind==='holiday'){ const d=fraud?offday():workday(), amt=pick([640,860,1120]);
+    C.title='交通費'; C.amount=amt;
+    C.ev=[form([`費目：交通費`,`日付：${ds(d)}`,`金額：${yen(amt)}`,`区間：ゆきのさと ⇔ みなと町（往復）`,`目的：取引先訪問`]),
+      {id:'receipt',icon:'💳',n:'ICカード利用明細',lines:[`${ds(d)}　ゆきのさと → みなと町　${yen(amt/2)}`,`${ds(d)}　みなと町 → ゆきのさと　${yen(amt/2)}`]},rules,{id:'calendar',icon:'📅',n:'カレンダー',lines:calendar(d)},
+      {id:'attend',icon:'⏰',n:'勤怠記録',lines:[`${name}　${ds(d)}`,fraud?'出勤：なし（休み）':'出勤 9:02 ／ 退勤 18:10','休日出勤申請：なし']}];
+    C.st=[S('a',`${ds(d).replace(/\(.\)/,'')}は、みなと町の取引先を訪問しました。`,'新しい見積もりを届けに行きました。','新しい見積もりを届けに行きました。'),
+      S('b','平日でしたので、いつもどおりの営業活動です。','え、ええ…平日、でしたよ？ たしか…。','朝から3件まわりました。'),
+      S('c',`電車代は往復で ${yen(amt)} です。`,'ICカードの明細もつけてあります。','ICカードの明細もつけてあります。'),
+      S('d','取引先には、とても喜んでもらえました。','担当の方がわざわざ見送ってくれました。','担当の方がわざわざ見送ってくれました。')];
+    C.ans={s:['b','a'],ev:['calendar','attend']}; C.explain=`${ds(d)}は${HOLI[d]?'祝日（'+HOLI[d]+'）':WD[wd(d)]+'曜日'}！\n会社は休みで、休日出勤の申請もありません！`; }
+  else if(kind==='double'){ const no=ri(1000,9999), amt=pick([6480,4980,7260]), shop='デンキの ゆきのさと店';
+    C.title='消耗品費'; C.amount=amt;
+    const list=[[ri(1000,9999),'細川 ゆい','コピー用紙',3200],[fraud?no:ri(1000,9999),name,'プリンターのインク',fraud?amt:2980],[ri(1000,9999),'鉄村 ごう','作業用手袋',1540]];
+    C.ev=[form([`費目：消耗品費`,`日付：${ds(workday())}`,`金額：${yen(amt)}`,`支払先：${shop}`,`領収書No.：${no}`,`品名：プリンターのインク`]),
+      {id:'receipt',icon:'🧾',n:'領収書',lines:[shop,`No.${no}`,`金額：${yen(amt)}（税込）`,'但し書き：インク代として',`登録番号：${regno()}`]},rules,
+      {id:'settled',icon:'🗂️',n:'精算済みリスト（9月）',lines:list.map(r=>`No.${r[0]}　${r[1]}　${r[2]}　${yen(r[3])}`)}];
+    C.st=[S('a','プリンターのインクが切れたので、買いに行きました。','黒とカラー、両方です。','黒とカラー、両方です。'),
+      S('b',`お店は「${shop}」です。`,'会社から歩いて5分です。','会社から歩いて5分です。'),
+      S('c','この領収書を申請するのは、今回が初めてです。','は、はい！ 初めてです！ …たぶん。','先月はインクを買っていませんから。'),
+      S('d','部署のみんなで使うインクです。','毎日たくさん印刷するんです。','毎日たくさん印刷するんです。')];
+    C.ans={s:['c'],ev:['settled']}; C.explain=`精算済みリストを見てください！\n同じ No.${no} の領収書が、9月にもう精算されています！ 二重申請です！`; }
+  else if(kind==='private'){ const shop=fraud?'ホビーショップ ゆきのさと':'文具の こぶし堂', amt=fraud?pick([4980,6800]):pick([1540,2310]);
+    C.title='消耗品費'; C.amount=amt;
+    C.ev=[form([`費目：消耗品費`,`日付：${ds(workday())}`,`金額：${yen(amt)}`,`支払先：${shop}`,`目的：会議用の文房具`]),
+      {id:'receipt',icon:'🧾',n:'領収書',lines:[shop,`金額：${yen(amt)}（税込）`,`但し書き：${fraud?'プラモデル代として':'ボールペン・ノート代として'}`,`登録番号：${regno()}`]},rules];
+    C.st=[S('a','会議で使う文房具を買いました。','新しいプロジェクトの会議用です。','新しいプロジェクトの会議用です。'),
+      S('b','ボールペンとノートを、部署の人数分です。','ペンです。ノートです。…プラモデルじゃないです。','10人分です。'),
+      S('c','お店は、駅前の文房具屋さんです。','よく行くお店です。…ええ、文房具屋さんです。','よく行くお店です。'),
+      S('d',`金額は ${yen(amt)} でした。`,'領収書どおりです。','領収書どおりです。')];
+    C.ans={s:['b','c'],ev:['receipt']}; C.explain=`領収書のお店は「${shop}」、但し書きは「プラモデル代」！\nこれは私的な買い物です！`; }
+  else if(kind==='party'){ const n=pick([3,4]), per=fraud?ri(90,140)*100:ri(35,50)*100, tot=per*n, cl=pick(CLIENTS);
+    C.title='交際費'; C.amount=tot;
+    C.ev=[form([`費目：交際費`,`日付：${ds(workday())}`,`金額：${yen(tot)}`,`支払先：割烹 しらかば`,`参加者：${cl} ${n-1}名、${name}（計${n}名）`]),
+      {id:'receipt',icon:'🧾',n:'領収書',lines:['割烹 しらかば',`金額：${yen(tot)}（税込）`,'但し書き：お食事代として',`登録番号：${regno()}`]},rules];
+    C.st=[S('a',`取引先の${cl}様と会食しました。`,'大事な契約の前でしたので。','大事な契約の前でしたので。'),
+      S('b',`参加者は、先方${n-1}名と私の、あわせて${n}名です。`,'ええ、まちがいなく。','ええ、まちがいなく。'),
+      S('c','1人あたり 5,000円以内に収めました。','規程はちゃんと読んでいます！ …上限は、たしか…。','コースの一番安いプランにしました。'),
+      S('d','お店は「割烹 しらかば」です。','魚がおいしいお店です。','魚がおいしいお店です。')];
+    C.ans={s:['c'],ev:['receipt','form']}; C.explain=`合計 ${yen(tot)} を ${n}名でわると、1人 ${yen(per)}！\n規程の上限 5,000円 を大きくこえています！`; }
+  else if(kind==='taxi'){ const d=workday(), amt=pick([4820,5660,3980]), tm=pick(['23:40','0:15','23:05']);
+    C.title='交通費（タクシー）'; C.amount=amt;
+    C.ev=[form([`費目：交通費（タクシー）`,`日付：${ds(d)}`,`金額：${yen(amt)}`,`区間：会社 → 自宅`,`理由：残業で終電後`]),
+      {id:'receipt',icon:'🚕',n:'タクシー領収書',lines:['ゆきのさと交通',`${ds(d)}　${tm} 乗車`,`金額：${yen(amt)}`,`登録番号：${regno()}`]},rules,
+      {id:'attend',icon:'⏰',n:'勤怠記録',lines:[`${name}　${ds(d)}`,fraud?'出勤 9:00 ／ 退勤 18:05':'出勤 9:30 ／ 退勤 '+pick(['23:20','22:50','23:35']),fraud?'残業申請：なし':'残業申請：あり（月末の締め作業）']}];
+    C.st=[S('a',`${ds(d).replace(/\(.\)/,'')}は、夜おそくまで残業していました。`,'は、はい…ずっと会社にいましたとも！','月末の締め作業です。'),
+      S('b','終電がなくなったので、タクシーで帰りました。','歩いて帰るには遠すぎるんです。','歩いて帰るには遠すぎるんです。'),
+      S('c',`乗ったのは ${tm} ごろです。`,'領収書に時刻が書いてあります。','領収書に時刻が書いてあります。'),
+      S('d',`金額は ${yen(amt)} でした。`,'深夜料金でした。','深夜料金でした。')];
+    C.ans={s:['a'],ev:['attend']}; C.explain=`勤怠記録では、${ds(d)}の退勤は 18:05！\n残業なんてしていません。タクシーは私用です！`; }
+  else if(kind==='trip'){ const d=workday(), dest=fraud?pick(['名古屋','京都']):'大阪', fare=pick([28600,29200]);
+    C.title='旅費交通費'; C.amount=fare;
+    C.ev=[form([`費目：旅費交通費`,`日付：${ds(d)}`,`金額：${yen(fare)}`,`区間：新幹線 東京 ⇔ 大阪（往復）`,`目的：工場の機械の立ち会い`]),
+      {id:'receipt',icon:'🎫',n:'乗車券の領収書',lines:[`東京 ⇔ 大阪　往復`,`${ds(d)}`,`金額：${yen(fare)}`]},rules,
+      {id:'order',icon:'📋',n:'出張命令書',lines:[`命令者：山田部長`,`出張者：${name}`,`行き先：${dest}工場`,`日程：${ds(d)}（日帰り）`]}];
+    C.st=[S('a',`部長の命令で、${ds(d).replace(/\(.\)/,'')}に出張しました。`,'出張命令書もあります。','出張命令書もあります。'),
+      S('b','行き先は、大阪の工場です。','お、大阪です！ たこ焼きも…いえ、なんでもないです。','新しい機械の立ち会いです。'),
+      S('c',`新幹線で、往復 ${yen(fare)} です。`,'指定席です。','指定席です。'),
+      S('d','日帰りだったので、宿泊費はありません。','夜の新幹線で帰りました。','夜の新幹線で帰りました。')];
+    C.ans={s:['b'],ev:['order']}; C.explain=`出張命令書の行き先は「${dest}工場」！\n大阪までの新幹線代を申請するのはおかしい！`; }
+  else if(kind==='pass'){ const d=workday(), dest=fraud?'中央':'ひばりが丘', amt=fraud?640:980;
+    C.title='交通費'; C.amount=amt;
+    C.ev=[form([`費目：交通費`,`日付：${ds(d)}`,`金額：${yen(amt)}`,`区間：ゆきのさと ⇔ ${dest}（往復）`,`目的：取引先訪問`]),
+      {id:'receipt',icon:'💳',n:'ICカード利用明細',lines:[`${ds(d)}　ゆきのさと → ${dest}　${yen(amt/2)}`,`${ds(d)}　${dest} → ゆきのさと　${yen(amt/2)}`]},rules,
+      {id:'pass',icon:'🪪',n:'通勤定期（人事データ）',lines:[`${name}`,`通勤定期：ゆきのさと 〜 中央`,`有効期限：2027年3月31日`]}];
+    C.st=[S('a',`${ds(d).replace(/\(.\)/,'')}、${dest}の取引先に行きました。`,'打ち合わせが2時間ありました。','打ち合わせが2時間ありました。'),
+      S('b','いつもの通勤とはちがう区間なので、申請しました。','ちがう区間です！ …ちがう、と思います。',`${dest}は、定期の区間の外なんです。`),
+      S('c',`電車代は往復 ${yen(amt)} です。`,'ICカードの明細もつけました。','ICカードの明細もつけました。'),
+      S('d','帰りは、まっすぐ会社にもどりました。','寄り道はしていません。','寄り道はしていません。')];
+    C.ans={s:['b'],ev:['pass']}; C.explain=`通勤定期の区間は「ゆきのさと〜中央」！\n定期で乗れる区間の電車代は、経費になりません！`; }
+  else if(kind==='hotel'){ const d=workday(), price=fraud?pick([18000,15400,22800]):pick([9500,8800,9900]);
+    C.title='宿泊費'; C.amount=price;
+    C.ev=[form([`費目：宿泊費`,`日付：${ds(d)}から1泊`,`金額：${yen(price)}`,`支払先：ホテル みなと`,`目的：みなと町の展示会`]),
+      {id:'receipt',icon:'🏨',n:'ホテルの領収書',lines:['ホテル みなと',`${ds(d)}　1泊（朝食つき）`,`金額：${yen(price)}`,`登録番号：${regno()}`]},rules];
+    C.st=[S('a',`${ds(d).replace(/\(.\)/,'')}から1泊で、みなと町の展示会に行きました。`,'2日目の朝から会場に入りました。','2日目の朝から会場に入りました。'),
+      S('b','ホテルは、規程の上限内のところを選びました。','じょ、上限…？ 朝食つきなので、お得なんです！','駅前のビジネスホテルです。'),
+      S('c',`宿泊費は ${yen(price)} です。`,'領収書どおりです。','領収書どおりです。'),
+      S('d','朝食つきのプランでした。','会場まで歩いて行けました。','会場まで歩いて行けました。')];
+    C.ans={s:['b'],ev:['receipt','rules','form']}; C.explain=`宿泊費は ${yen(price)}！\n経費規程の上限は 1泊 10,000円。上限内ではありません！`; }
+  else if(kind==='invoice'){ const amt=pick([3240,5400,2160]);
+    C.title='交際費（手みやげ）'; C.amount=amt;
+    C.ev=[form([`費目：交際費（手みやげ）`,`日付：${ds(workday())}`,`金額：${yen(amt)}`,`支払先：洋菓子 こぶし`,`目的：取引先への手みやげ`]),
+      {id:'receipt',icon:'🧾',n:'領収書',lines:['洋菓子 こぶし',`金額：${yen(amt)}（税込）`,'但し書き：お菓子代として',`登録番号：${fraud?'（記載なし）':regno()}`]},rules];
+    C.st=[S('a','取引先へのおみやげに、お菓子を買いました。','クッキーのつめ合わせです。','クッキーのつめ合わせです。'),
+      S('b','お店は「洋菓子 こぶし」です。','人気のお店なんですよ。','人気のお店なんですよ。'),
+      S('c','領収書には、登録番号もちゃんと書いてあります。','書いてありますよ！ …たぶん、どこかに。','Tから始まる番号です。'),
+      S('d',`金額は ${yen(amt)} です。`,'領収書どおりです。','領収書どおりです。')];
+    C.ans={s:['c'],ev:['receipt']}; C.explain='領収書をよく見てください！\n登録番号が書いてありません！ 規程⑦違反です！'; }
+  else if(kind==='absent'){ const d=workday(), cl=pick(CLIENTS), tot=ri(28,40)*500;
+    C.title='交際費'; C.amount=tot;
+    C.ev=[form([`費目：交際費`,`日付：${ds(d)}`,`金額：${yen(tot)}`,`支払先：割烹 しらかば`,`参加者：${cl} 4名、山田部長、${name}（計6名）`]),
+      {id:'receipt',icon:'🧾',n:'領収書',lines:['割烹 しらかば',`${ds(d)}`,`金額：${yen(tot)}（税込）`,`登録番号：${regno()}`]},rules,
+      {id:'sched',icon:'🗓️',n:'役員スケジュール',lines:[`山田部長　${ds(d)}`,fraud?'終日：札幌に出張（ホテル泊）':'18:00〜 取引先と会食']}];
+    C.st=[S('a',`${ds(d).replace(/\(.\)/,'')}の夜、${cl}様と会食しました。`,'社内からは、私と山田部長の2人が出席しました。','社内からは、私と山田部長の2人が出席しました。',{reveal:{id:'r',t:'山田部長も同席されて、話がはずみました。',press:fraud?'ぶ、部長は乾杯のあいさつもされました！ …ほんとです！':'部長のおかげで契約がまとまりそうです。'}}),
+      S('b','お店は「割烹 しらかば」です。','個室を予約しました。','個室を予約しました。'),
+      S('c',`参加者は6名、1人あたり 5,000円以内です。`,'合計で '+yen(tot)+' です。','合計で '+yen(tot)+' です。'),
+      S('d','とても有意義な会食でした。','次の打ち合わせの日も決まりました。','次の打ち合わせの日も決まりました。')];
+    C.ans={s:['r'],ev:['sched']}; C.explain=`役員スケジュールを見てください！\nその日、山田部長は札幌に出張中！ 会食にいたはずがありません！`; }
+  return C;
+}
+const KINDS=['cafe','holiday','double','private','party','taxi','trip','pass','hotel','invoice','absent'];
+
+/* ================= game state ================= */
+const N_CASES=8;
+const S={scene:'title',cases:[],ci:0,c:null,phase:'idle',queue:[],qi:0,typed:0,typeT:0,si:0,trust:100,score:0,caseT:0,wrongInCase:0,
+  stats:{caught:0,okd:0,missed:0,falseObj:0,wrong:0},pressed:{},rec:{open:false,mode:'view',sel:null},auto:false,manual:false,autoT:0,autoPlan:null,resT:0,t:0,
+  best:(()=>{ try{ return JSON.parse(localStorage.getItem('keiriBest')||'null')||{score:0,rank:'-'}; }catch(e){ return {score:0,rank:'-'}; } })()};
+function saveBest(){ if(S.auto) return; try{ localStorage.setItem('keiriBest',JSON.stringify(S.best)); }catch(e){} }
+
+function start(){
+  S.cases=[]; const ks=[...KINDS].sort(()=>rnd()-.5).slice(0,N_CASES), ppl=[...PEOPLE].sort(()=>rnd()-.5);
+  let honest=0; ks.forEach((k,i)=>{ const f=rnd()<.68; if(!f) honest++; S.cases.push(makeCase(k,f,ppl[i%ppl.length])); });
+  if(honest===0) S.cases[ri(0,N_CASES-1)]=makeCase(ks[0],false,ppl[0]);   // at least one honest claim
+  S.ci=-1; S.trust=100; S.score=0; S.stats={caught:0,okd:0,missed:0,falseObj:0,wrong:0}; S.scene='play';
+  ['titleOv','resultOv'].forEach(id=>$(id).hidden=true); setTrust(); nextCase();
+}
+function nextCase(){
+  S.ci++; if(S.ci>=S.cases.length) return finish();
+  const c=S.c=S.cases[S.ci]; S.si=0; S.pressed={}; S.wrongInCase=0; S.caseT=0; S.autoPlan=null; c.shown=c.st.map(s=>s.id);
+  $('who').textContent=c.emp[2]; $('who').className=''; $('plate').textContent=`${c.emp[0]}　${c.emp[1]}`;
+  $('caseInfo').innerHTML=`案件 ${S.ci+1}/${S.cases.length}<br>${c.title}　${yen(c.amount)}`;
+  $('stamp').hidden=true;
+  say([{n:c.emp[1],t:pick([`経理さーん、${c.title}の精算、お願いしまーす！`,`${c.title}の申請です。よろしくお願いします！`,`おつかれさまです。${c.title}、通してくださいね。`])},
+       {n:'経理部長',t:'では、申請者の説明を聞こう。'},{n:'',t:`〜 ${c.title}についての証言 〜`,big:1}],()=>startTesti());
+  sfx('open');
+}
+function startTesti(){ S.phase='testi'; S.si=0; renderTesti(); }
+const stmts=()=>S.c.shown.map(id=>findSt(id));
+function findSt(id){ const c=S.c; for(const s of c.st){ if(s.id===id) return s; if(s.reveal&&s.reveal.id===id) return s.reveal; } return null; }
+
+/* ---- dialogue ---- */
+let onDone=null;
+function say(list,cb){ S.phase='talk'; S.queue=list; S.qi=0; S.typed=0; onDone=cb; showLine(); }
+function showLine(){ const L=S.queue[S.qi]; $('name').textContent=L.n||'　'; $('name').style.visibility=L.n?'visible':'hidden'; $('text').className=L.big?'testi':''; S.typed=0; $('text').textContent=''; $('hint').hidden=true; $('nav').hidden=true; buttons();
+  if(L.fx) fx(L.fx); if(L.face!=null) $('who').className=L.face; }
+function advance(){ if(S.phase!=='talk') return; const L=S.queue[S.qi]; if(S.typed<L.t.length){ S.typed=L.t.length; $('text').textContent=L.t; $('hint').hidden=false; return; }
+  S.qi++; if(S.qi>=S.queue.length){ const cb=onDone; onDone=null; S.phase='idle'; if(cb) cb(); } else showLine(); }
+function typeTick(dt){ if(S.phase!=='talk') return; const L=S.queue[S.qi]; if(S.typed<L.t.length){ S.typeT+=dt; while(S.typeT>.028&&S.typed<L.t.length){ S.typeT-=.028; S.typed++; if(S.typed%3===0) sfx('blip'); } $('text').textContent=L.t.slice(0,S.typed); if(S.typed>=L.t.length) $('hint').hidden=false; } }
+function renderTesti(){ const list=stmts(), s=list[S.si]; $('name').textContent=S.c.emp[1]; $('name').style.visibility='visible'; $('text').className='testi'; $('text').textContent=s.t; $('hint').hidden=true;
+  $('nav').hidden=false; $('navTxt').textContent=`証言 ${S.si+1}/${list.length}${S.pressed[s.id]?'　✋済':''}`; buttons(); }
+function buttons(){ const t=S.phase==='testi'; for(const id of ['mataBtn','igiBtn','okBtn']) $(id).disabled=!t; $('recBtn').disabled=S.scene!=='play'; }
+
+/* ---- actions ---- */
+function move(d){ if(S.phase!=='testi') return; const n=stmts().length; S.si=(S.si+d+n)%n; renderTesti(); sfx('page'); }
+function press(){ if(S.phase!=='testi') return; const s=stmts()[S.si]; S.pressed[s.id]=true; const c=S.c;
+  const lines=[{n:'あなた',t:'待った！',fx:'mata'},{n:c.emp[1],t:s.press,face:c.fraud&&c.ans.s.includes(s.id)?'sweat':''}];
+  if(s.reveal&&!c.shown.includes(s.reveal.id)){ c.shown.splice(c.shown.indexOf(s.id)+1,0,s.reveal.id); lines.push({n:'経理部長',t:'今の発言を、証言に加えてもらおう。'}); }
+  say(lines,()=>{ S.phase='testi'; renderTesti(); }); }
+function objection(evId){ if(S.phase!=='testi') return; const c=S.c, s=stmts()[S.si];
+  const right=c.fraud&&c.ans.s.includes(s.id)&&c.ans.ev.includes(evId), evn=c.ev.find(e=>e.id===evId).n;
+  if(right){ const tb=Math.max(0,600-Math.max(0,S.caseT-8)*12), pts=1000+Math.round(tb)+(S.wrongInCase?0:250); S.score+=pts; S.stats.caught++;
+    say([{n:'あなた',t:'異議あり！',fx:'igi'},{n:'あなた',t:`この「${evn}」を見てください！\n${c.explain}`},
+      {n:c.emp[1],t:pick(['ぐ、ぐわあああっ！','そ、そんなバカな…！','うっ…それは、その…','ひぃぃ！ 見ないでぇぇ！']),face:'break',fx:'shake'},
+      {n:'経理部長',t:`よろしい。この申請は──　差し戻しとする！`,fx:'ng'},{n:'',t:`✨ 正しく差し戻した！　+${pts}点${S.wrongInCase?'':'（ノーミス +250）'}`}],()=>nextCase()); setTrust(); }
+  else { S.trust=Math.max(0,S.trust-20); S.score=Math.max(0,S.score-150); S.wrongInCase++; S.stats.wrong++; if(!c.fraud) S.stats.falseObj++;
+    say([{n:'あなた',t:'異議あり！',fx:'igi'},{n:'あなた',t:`この「${evn}」が、証言とムジュンしています！`},{n:c.emp[1],t:pick(['…はい？ どこがですか？','ふふん。それが何か？','え、ムジュンしてませんけど…'])},
+      {n:'経理部長',t:pick(['その証拠品は、この証言とムジュンしていないようだが？','よく見たまえ。どこもおかしくないぞ。']),fx:'shake'},{n:'',t:`部長の信頼 −20　（−150点）`}],
+      ()=>{ setTrust(); if(S.trust<=0) return fired(); S.phase='testi'; renderTesti(); }); setTrust(); }
+}
+function approve(){ if(S.phase!=='testi') return; const c=S.c;
+  if(!c.fraud){ const tb=Math.max(0,500-Math.max(0,S.caseT-6)*12), pts=800+Math.round(tb); S.score+=pts; S.stats.okd++;
+    say([{n:'あなた',t:'ムジュンはありません。承認します！'},{n:'経理部長',t:'うむ。問題なし。承認！',fx:'ok'},{n:c.emp[1],t:'ありがとうございます！',face:''},{n:'',t:`✨ 正しく承認した！　+${pts}点`}],()=>nextCase()); }
+  else { S.stats.missed++; S.trust=Math.max(0,S.trust-40);
+    say([{n:'あなた',t:'ムジュンはありません。承認します！'},{n:'経理部長',t:'うむ。承認！',fx:'ok'},{n:c.emp[1],t:'（しめしめ…）',face:''},
+      {n:'',t:'……3か月後。監査で不正が見つかった。'},{n:'経理部長',t:`${c.explain.replace(/！/g,'。')}\n……なぜ見のがした！`,fx:'shake'},{n:'',t:'不正を見のがした…　部長の信頼 −40'}],
+      ()=>{ setTrust(); if(S.trust<=0) return fired(); nextCase(); }); }
+}
+function fired(){ S.firedFlag=true; say([{n:'経理部長',t:'……君には、経理はまだ早いようだ。'},{n:'',t:'あなたは、倉庫係に異動になった。'}],()=>finish()); }
+function setTrust(){ $('trustBar').firstElementChild.style.width=S.trust+'%'; $('scoreTag').textContent=S.score.toLocaleString()+'点'; }
+
+/* ---- effects ---- */
+let fxT=null;
+function fx(k){ const st=$('stage');
+  if(k==='igi'||k==='mata'){ const b=$('bubble'), d=b.firstElementChild; d.className=k==='mata'?'mata':''; d.textContent=k==='mata'?'待った！':'異議あり！'; b.hidden=false; st.classList.remove('shake'); void st.offsetWidth; st.classList.add('shake');
+    $('flash').style.opacity=.8; setTimeout(()=>$('flash').style.opacity=0,80); clearTimeout(fxT); fxT=setTimeout(()=>b.hidden=true,1100); sfx('igi'); speak(k==='mata'?'待った！':'異議あり！'); }
+  if(k==='shake'){ st.classList.remove('shake'); void st.offsetWidth; st.classList.add('shake'); sfx('hit'); }
+  if(k==='ok'||k==='ng'){ const s=$('stamp'); s.textContent=k==='ok'?'承認':'差戻'; s.style.color=s.style.borderColor=k==='ok'?'#1A8A3A':'#E0342A'; s.hidden=false; s.style.animation='none'; void s.offsetWidth; s.style.animation=''; sfx('stamp'); speak(k==='ok'?'承認！':'差し戻し！'); }
+}
+
+/* ---- court record ---- */
+function openRec(mode){ if(S.scene!=='play') return; if(mode==='present'&&S.phase!=='testi') return; S.rec={open:true,mode,sel:S.rec.sel&&S.c.ev.some(e=>e.id===S.rec.sel)?S.rec.sel:S.c.ev[0].id};
+  $('rec').hidden=false; $('recTitle').textContent=mode==='present'?'☝️ つきつける証拠品をえらべ！':'📁 証拠品ファイル'; $('presentBtn').hidden=mode!=='present'; renderRec(); sfx('page'); }
+function renderRec(){ const c=S.c; $('recList').innerHTML=c.ev.map(e=>`<button data-id="${e.id}" class="${e.id===S.rec.sel?'on':''}"><b>${e.icon}</b>${e.n}</button>`).join('');
+  $('recList').querySelectorAll('button').forEach(b=>b.onclick=()=>{ user(); S.rec.sel=b.dataset.id; renderRec(); sfx('page'); });
+  const e=c.ev.find(x=>x.id===S.rec.sel); $('recDetail').innerHTML=`<div class="t">${e.icon} ${e.n}</div>`+e.lines.map(l=>l.replace(/&/g,'&amp;').replace(/</g,'&lt;')).join('<br>'); }
+function closeRec(){ $('rec').hidden=true; S.rec.open=false; }
+function present(){ const id=S.rec.sel; closeRec(); objection(id); }
+
+/* ---- results ---- */
+const RANKS=[['S',11500,'伝説の経理マスター'],['A',9000,'敏腕経理'],['B',6500,'一人前の経理'],['C',4000,'経理見習い'],['D',0,'経理部から異動…']];
+function finish(){
+  S.scene='result'; S.phase='idle'; S.resT=0; closeRec(); buttons(); const sc=S.score;
+  const r=S.firedFlag?RANKS[4]:RANKS.find(x=>sc>=x[1]); S.firedFlag=false;
+  const nb=sc>S.best.score; if(nb&&!S.auto){ S.best={score:sc,rank:r[0]}; saveBest(); }
+  $('resRank').textContent=r[0]; $('resRank').className='rank '+r[0]; $('resTitle').textContent=r[2];
+  const st=S.stats; $('resTbl').innerHTML=[['点数',sc.toLocaleString()+'点'],['正しく差し戻し',st.caught+'件'],['正しく承認',st.okd+'件'],['不正の見のがし',st.missed+'件'],['まちがった異議',st.wrong+'回'],['部長の信頼',S.trust+'%']].map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join('');
+  $('resBest').textContent=`ベスト ${S.best.score.toLocaleString()}点（ランク ${S.best.rank}）${nb&&!S.auto?'　🎉 新記録！':''}`;
+  $('resultOv').hidden=false; sfx(r[0]==='D'?'bad':'clear');
+}
+
+/* ================= auto: read every statement, look at the evidence, press the suspicious one, then strike ================= */
+function autoTick(dt){
+  if(S.scene!=='play') return; S.autoT-=dt; if(S.autoT>0) return;
+  if(S.rec.open){ if(S.rec.mode==='present'){ S.autoT=.8; present(); } else { S.autoT=.6; closeRec(); } return; }
+  if(S.phase==='talk'){ S.autoT=.55; advance(); return; }
+  if(S.phase!=='testi') return;
+  const c=S.c, list=stmts();
+  if(!S.autoPlan){ S.autoPlan={read:0,looked:false,pressed:false,slip:rnd()<.08}; }
+  const P=S.autoPlan;
+  if(P.read<list.length){ S.autoT=1.1; if(P.read>0) move(1); P.read++; return; }
+  if(!P.looked){ P.looked=true; S.autoT=1.6; const e=c.fraud?c.ev.find(x=>x.id===c.ans.ev[0]):pick(c.ev); S.rec.sel=e.id; openRec('view'); return; }
+  // the suspicious statement: one that hides more when pressed, else the one the evidence contradicts
+  const hid=c.st.find(x=>x.reveal&&!c.shown.includes(x.reveal.id));
+  if(!P.sus||!c.shown.includes(P.sus)||hid&&P.sus!==hid.id||!hid&&c.fraud&&!c.ans.s.includes(P.sus)) P.sus=hid?hid.id:c.fraud?c.ans.s.find(id=>c.shown.includes(id)):pick(list).id;
+  const idx=stmts().findIndex(x=>x.id===P.sus);
+  if(S.si!==idx){ S.autoT=.7; move(idx>S.si?1:-1); return; }
+  if(!S.pressed[P.sus]&&(hid||!P.pressed)){ P.pressed=true; S.autoT=.9; press(); return; }
+  if(c.fraud&&c.ans.s.includes(P.sus)){ S.autoT=.9; S.rec.sel=P.slip?c.ev.find(e=>!c.ans.ev.includes(e.id)).id:c.ans.ev[0]; P.slip=false; openRec('present'); return; }
+  S.autoT=.8; approve();
+}
+
+/* ================= loop ================= */
+function update(dt){ S.t+=dt; if(S.scene==='play'&&S.phase==='testi') S.caseT+=dt; typeTick(dt);
+  if(S.auto){ if(S.scene==='play') autoTick(dt); else { S.resT+=dt; if(S.resT>(S.scene==='title'?.6:4)){ S.resT=0; start(); } } } }
+let last=performance.now();
+function loop(now){ const dt=Math.min(.05,(now-last)/1000); last=now; if(!S.manual) update(dt); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+
+/* ================= UI ================= */
+function user(){ if(S.auto) setAuto(false); }
+function setAuto(v){ S.auto=!!v; $('autoBtn').setAttribute('aria-pressed',S.auto); S.resT=0; S.autoT=.5; if(S.auto&&S.scene==='title') start(); }
+function toTitle(){ S.scene='title'; S.phase='idle'; $('resultOv').hidden=true; $('titleOv').hidden=false; closeRec(); buttons(); $('bestTxt').textContent=`ベスト ${S.best.score.toLocaleString()}点（ランク ${S.best.rank}）`; }
+$('box').addEventListener('click',()=>{ ac(); user(); advance(); });
+$('prevBtn').onclick=e=>{ e.stopPropagation(); ac(); user(); move(-1); };
+$('nextBtn').onclick=e=>{ e.stopPropagation(); ac(); user(); move(1); };
+$('mataBtn').onclick=()=>{ ac(); user(); press(); };
+$('igiBtn').onclick=()=>{ ac(); user(); openRec('present'); };
+$('recBtn').onclick=()=>{ ac(); user(); openRec('view'); };
+$('okBtn').onclick=()=>{ ac(); user(); approve(); };
+$('closeRec').onclick=()=>{ user(); closeRec(); };
+$('presentBtn').onclick=()=>{ ac(); user(); present(); };
+$('rec').addEventListener('click',e=>{ if(e.target===$('rec')){ user(); closeRec(); } });
+$('startBtn').onclick=()=>{ ac(); user(); start(); };
+$('autoStartBtn').onclick=()=>{ ac(); setAuto(true); };
+$('retryBtn').onclick=()=>{ ac(); user(); start(); };
+$('menuBtn').onclick=()=>{ ac(); user(); toTitle(); };
+$('autoBtn').onclick=()=>{ ac(); setAuto(!S.auto); };
+$('muteBtn').onclick=()=>{ ac(); setMute(!muted); };
+addEventListener('keydown',e=>{ const k=e.key.toLowerCase(); if(e.repeat) return;
+  if(k==='o'){ ac(); setAuto(!S.auto); return; } if(k==='m'){ ac(); setMute(!muted); return; }
+  if(S.rec.open){ if(k==='escape'||k==='c'){ user(); closeRec(); } else if((k==='enter'||k===' ')&&S.rec.mode==='present'){ e.preventDefault(); user(); present(); }
+    else if(k==='arrowright'||k==='arrowleft'){ user(); const ev=S.c.ev, i=ev.findIndex(x=>x.id===S.rec.sel); S.rec.sel=ev[(i+(k==='arrowright'?1:-1)+ev.length)%ev.length].id; renderRec(); } return; }
+  if(k==='arrowleft'){ user(); move(-1); } else if(k==='arrowright'){ user(); move(1); }
+  else if(k==='z'){ ac(); user(); press(); } else if(k==='x'){ ac(); user(); openRec('present'); } else if(k==='c'){ ac(); user(); openRec('view'); } else if(k==='a'){ ac(); user(); approve(); }
+  else if(k===' '||k==='enter'){ e.preventDefault(); ac(); user(); if(S.scene==='title') start(); else advance(); } });
+
+/* ================= sound & voice ================= */
+let AC=null, muted=false; try{ muted=localStorage.getItem('keiriMute')==='1'; }catch(e){}
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==='suspended') AC.resume(); }
+function tone(f,d,type='sine',v=.07,delay=0,f2){ if(muted||!AC) return; const t=AC.currentTime+delay, o=AC.createOscillator(), gn=AC.createGain(); o.type=type; o.frequency.setValueAtTime(f,t); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+d); gn.gain.setValueAtTime(v,t); gn.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(gn).connect(AC.destination); o.start(t); o.stop(t+d+.02); }
+function sfx(k){
+  if(k==='blip') tone(880,.025,'square',.018);
+  else if(k==='page') tone(600,.05,'triangle',.04);
+  else if(k==='igi'){ tone(220,.35,'sawtooth',.08,0,110); tone(440,.2,'square',.05,0,880); }
+  else if(k==='hit'){ tone(90,.3,'square',.08,0,50); }
+  else if(k==='stamp'){ tone(140,.12,'square',.09,0,70); }
+  else if(k==='open') [392,523,659].forEach((q,i)=>tone(q,.12,'triangle',.05,i*.08));
+  else if(k==='clear') [523,659,784,1046,784,1046].forEach((q,i)=>tone(q,.16,'square',.05,i*.1));
+  else if(k==='bad') [392,330,262].forEach((q,i)=>tone(q,.2,'triangle',.06,i*.15));
+}
+function speak(t){ if(muted||S.manual||!('speechSynthesis' in window)) return; try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.lang='ja-JP'; u.rate=1.15; u.pitch=1.1; u.volume=1; speechSynthesis.speak(u); }catch(e){} }
+function setMute(m){ muted=m; $('muteBtn').textContent=m?'音 OFF':'音 ON'; try{ localStorage.setItem('keiriMute',m?'1':'0'); }catch(e){} if(m) try{ speechSynthesis.cancel(); }catch(e){} }
+
+setMute(muted); toTitle(); $('text').textContent='経理部 精算法廷。本日も開廷の時間だ。';
+window.__keiri={ get S(){ return S; }, setAuto, manual(v=true){ S.manual=v; }, step(dt=1/60){ update(dt); }, seed(v){ seed=(Math.abs(v|0)%2147483646)+1; }, start, makeCase, KINDS,
+  act:{ move, press, approve, objection, advance, openRec, present } };
+})();
+</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>

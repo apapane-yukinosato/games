@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="監査部が各部署をまわって監査資料を集める。お願いか恫喝か、ゴーレムは使い方しだい。">
+<title>監査部、出動。</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&display=swap">
+<style>
+:root{ --bg:#1E2233; --panel:#2A3048; --line:#3C4466; --ink:#F2F0EA; --mute:#A3A9C4; --red:#E0533D; --green:#3E9E6E; --gold:#F2B233; --blue:#5B9BD5; color-scheme:dark; }
+[hidden]{display:none!important}
+html,body{min-height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+button{font:inherit;color:inherit}
+#app{max-width:640px;margin:0 auto;padding:8px 10px 16px;box-sizing:border-box}
+#top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:18px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--panel);cursor:pointer;white-space:nowrap}
+.mini:disabled{opacity:.5;cursor:not-allowed}
+.mini[aria-pressed=true]{background:var(--red);border-color:var(--red);color:#fff}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#game{position:relative}
+#hud{display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center;background:var(--panel);border-radius:12px;padding:7px 10px;font-size:12px;font-weight:800}
+#hud .num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar{position:relative;height:10px;border-radius:5px;background:#1A1E2E;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px}
+#ev{grid-column:1/4;display:flex;flex-wrap:wrap;gap:4px;font-size:11px}
+#ev span{padding:1px 7px;border-radius:999px;background:#1A1E2E;color:var(--mute)}
+#ev span.ok{background:#2E5E47;color:#D5F5E3}
+#cv{display:block;width:100%;aspect-ratio:28/18;margin:8px 0;border-radius:12px;background:#111;touch-action:manipulation;cursor:pointer}
+.panel{background:var(--panel);border-radius:12px;padding:8px 10px;margin-bottom:8px}
+#act{min-height:64px}
+.say{font-size:13px;line-height:1.5;margin:0 0 6px}
+.say b{color:var(--gold)}
+.row{display:flex;flex-wrap:wrap;gap:6px}
+.big{flex:1;min-width:120px;font-weight:800;font-size:15px;min-height:46px;border:0;border-radius:12px;cursor:pointer;background:var(--blue);color:#fff;box-shadow:0 4px 0 #3A6E9E}
+.big.red{background:var(--red);box-shadow:0 4px 0 #A7331F}
+.big.green{background:var(--green);box-shadow:0 4px 0 #2A6E4B}
+.big.gray{background:#4A5270;box-shadow:0 4px 0 #333A55}
+.big:active:not(:disabled){transform:translateY(3px);box-shadow:none}
+.big:disabled{opacity:.4;cursor:not-allowed}
+.word{flex:1 1 100%;min-height:40px;font-size:13px;text-align:left;padding:6px 10px}
+.word small{display:block;font-size:10px;opacity:.85;font-weight:500}
+.prog{height:12px;border-radius:6px;background:#1A1E2E;overflow:hidden;margin-top:4px}
+.prog i{display:block;height:100%;background:var(--gold);width:0}
+.ph{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:800;margin:0 0 6px;color:var(--mute)}
+.nav{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.nav button,.gbtn{font-size:12px;font-weight:800;min-height:36px;border:1px solid var(--line);border-radius:10px;background:#20263A;cursor:pointer;padding:2px 4px}
+.nav button:disabled,.gbtn:disabled{opacity:.35;cursor:not-allowed}
+.grow{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.sub{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.sub button{flex:1;min-width:30%}
+#log{font-size:12px;color:var(--mute);min-height:18px;margin-top:6px;line-height:1.4}
+.ov{position:absolute;top:0;left:0;right:0;min-height:100%;display:flex;align-items:flex-start;justify-content:center;background:rgba(10,12,20,.6);z-index:5;border-radius:12px}
+.box{background:#F7F3EA;color:#262A3A;border-radius:16px;padding:14px;width:100%;box-sizing:border-box;margin:0 auto}
+.box h2{margin:0;text-align:center;font-size:26px;font-weight:800}
+.box h2 span{color:var(--red)}
+.box .sub2{text-align:center;font-size:12px;color:#6A6F85;margin:4px 0 10px;line-height:1.55}
+.box details{font-size:12px;line-height:1.6;background:#ECE5D6;border-radius:10px;padding:6px 10px;margin:8px 0}
+.box summary{font-weight:800;cursor:pointer}
+.box ul{margin:4px 0;padding-left:18px}
+.stars{text-align:center;font-size:38px;color:var(--gold);letter-spacing:4px;line-height:1.1}
+.stars .off{color:#D8D0BE}
+.rows{display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:13px;margin:10px 0}
+.rows b{text-align:right;font-variant-numeric:tabular-nums}
+.vbtn{display:grid;gap:8px}
+.back{display:block;text-align:center;margin-top:10px;font-size:13px;font-weight:800;color:#6A6F85;text-decoration:none}
+</style>
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-180.png">
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>監査部、出動。</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false" title="オートモードは準備中（鍵がかかっています）" disabled>🔒 オート</button>
+    <button class="mini" id="muteBtn">音 ON</button>
+  </div>
+  <div id="game">
+    <div id="hud">
+      <span class="num" id="hDay">📅 1日目 9:00</span>
+      <div><div class="bar"><i id="uBar" style="background:#E0533D"></i></div></div>
+      <span class="num" id="hU">😡 0%</span>
+      <span class="num" id="hLv">🏢 Lv1</span>
+      <div><div class="bar"><i id="lvBar" style="background:#F2B233"></i></div></div>
+      <span class="num" id="hPt">📦 0/5</span>
+      <div id="ev"></div>
+    </div>
+    <canvas id="cv" aria-label="会社のフロアマップ。タップした場所へ歩きます"></canvas>
+    <div class="panel" id="act"></div>
+    <div class="panel">
+      <p class="ph"><span>🚶 行き先（タップで歩く）</span><span id="carryInfo"></span></p>
+      <div class="nav" id="nav"></div>
+    </div>
+    <div class="panel">
+      <p class="ph"><span id="gTitle">🗿 ゴーレム</span><span id="gCoffee"></span></p>
+      <div class="grow" id="gBtns"></div>
+      <div class="sub" id="gSub"></div>
+      <div id="log"></div>
+    </div>
+
+    <div class="ov" id="titleOv">
+      <div class="box">
+        <h2>監査部、<span>出動。</span></h2>
+        <p class="sub2">決算日まであと3日。監査部は部屋を出て、各部署から監査資料を集める。<br>資料を運ぶほど監査室は大きくなり、最後は役員室の「裏帳簿」へ。</p>
+        <details open>
+          <summary>あそびかた</summary>
+          <ul>
+            <li>マップか「行き先」ボタンをタップすると、その場所へ歩く</li>
+            <li>課長の前で <b>🙇 お願い</b> すると、少し待てば資料がもらえる</li>
+            <li>😤 マークの頑固な課長には <b>😠 恫喝</b>（強い言葉）。😤の数以上の強さが必要</li>
+            <li>恫喝すると「うらみ」がたまる。100%で人事部に通報されて監査部は解散…</li>
+            <li>資料を監査室に運ぶとレベルアップ。Lv5で役員室が開く</li>
+            <li>🗿 ゴーレム：運搬・同行（頑固な課長もお願いでOK）・壁こわし（近道）・留守番</li>
+            <li>役員室の専務には恫喝が効かない。集めた資料を「証拠」として突きつけよう</li>
+          </ul>
+        </details>
+        <div class="vbtn">
+          <button class="big red" id="startBtn">▶ 出動する</button>
+          <button class="big gray" id="autoStartBtn" disabled>🔒 オートモードは準備中</button>
+        </div>
+        <p class="sub2" id="bestLine" style="margin-top:8px"></p>
+        <a class="back" href="../">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+
+    <div class="ov" id="resultOv" hidden>
+      <div class="box">
+        <h2 id="rTitle"></h2>
+        <p class="sub2" id="rMsg"></p>
+        <div class="stars" id="rStars"></div>
+        <div class="rows" id="rRows"></div>
+        <div class="vbtn">
+          <button class="big red" id="againBtn">もう一回</button>
+        </div>
+        <a class="back" href="../">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+
+// ---------- map ----------
+const MW=28, MH=18;
+const FLOOR=0, WALL=1, CRACK=2, LOCK=3, DESK=4;
+const T0=[...Array(MH)].map(()=>Array(MW).fill(WALL));
+const carve=(x0,y0,x1,y1,v=FLOOR)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) T0[y][x]=v; };
+carve(7,5,20,5); carve(7,5,8,12); carve(19,5,20,12); carve(1,12,26,12); carve(1,4,1,12); carve(26,4,26,12);
+carve(1,1,7,3); carve(10,1,17,3); carve(20,1,26,3);
+T0[4][7]=CRACK; T0[4][20]=CRACK; T0[4][13]=LOCK; T0[4][14]=LOCK;
+carve(3,7,5,10); T0[8][6]=FLOOR;
+carve(10,7,17,10); for(const [x,y] of [[9,8],[9,9],[18,8],[18,9],[13,6],[14,6],[13,11],[14,11]]) T0[y][x]=FLOOR;
+carve(22,7,24,10); T0[9][21]=FLOOR;
+carve(2,14,8,16); T0[13][5]=FLOOR; carve(19,14,25,16); T0[13][22]=FLOOR;
+const BASE={x0:10,y0:7,x1:17,y1:10};
+const inBase=(x,y)=>x>=BASE.x0&&x<BASE.x1+1&&y>=BASE.y0&&y<BASE.y1+1;
+
+// ---------- departments ----------
+const DEPTS=[
+  {id:'somu',    name:'総務部',mgr:'山田課長',  desk:[3,8],  ap:[4,8],  room:[3,7,5,10],  col:'#6FA3D8',stub:0,wait:1.6,max:3,regen:9, heavy:false,val:1,line:'はいはい、どうぞ〜',no:''},
+  {id:'keiri',   name:'経理部',mgr:'細井課長',  desk:[24,9], ap:[23,9], room:[22,7,24,10],col:'#7CC4A0',stub:0,wait:4.0,max:4,regen:10,heavy:false,val:1,line:'伝票を1枚ずつ確認しますね…',no:''},
+  {id:'eigyo',   name:'営業部',mgr:'剛田課長',  desk:[3,15], ap:[4,15], room:[2,14,8,16], col:'#E8A04C',stub:1,wait:2.0,max:4,regen:11,heavy:false,val:1,line:'…しょうがねえな',no:'今忙しいんだよ！数字あげてから来い！'},
+  {id:'kaihatsu',name:'開発部',mgr:'早川課長',  desk:[24,15],ap:[23,15],room:[19,14,25,16],col:'#A58BD8',stub:0,wait:2.0,max:4,regen:11,heavy:false,val:1,line:'あ、今ビルド中なんでこれどうぞ',no:'',busy:true},
+  {id:'jinji',   name:'人事部',mgr:'鬼塚課長',  desk:[23,1], ap:[23,2], room:[20,1,26,3], col:'#D87A9A',stub:1,wait:2.5,max:4,regen:13,heavy:false,val:2,line:'…規程どおりにお渡しします',no:'個人情報ですので。お引き取りください',hr:true},
+  {id:'seizo',   name:'製造部',mgr:'岩鉄課長',  desk:[4,1],  ap:[4,2],  room:[1,1,7,3],   col:'#9AA0A8',stub:2,wait:3.0,max:5,regen:14,heavy:true, val:2,line:'…持ってけ。重いぞ',no:'現場は忙しいんだ！帰った帰った！'},
+];
+const DB=Object.fromEntries(DEPTS.map(d=>[d.id,d]));
+const BOSS={name:'役員室',mgr:'黒岩専務',desk:[13,1],ap:[13,2],room:[10,1,17,3],col:'#C9A24A'};
+const WORDS=[
+  {p:1,u:6, text:'「規程第12条に基づき、提出を求めます」'},
+  {p:2,u:12,text:'「監査法人に報告しますよ？」'},
+  {p:3,u:20,text:'「社長に直接お伝えしましょうか」'},
+];
+const QUESTIONS={somu:'備品の購入？ぜんぶ適正だよ',keiri:'伝票ならぜんぶそろっているはずだ',eigyo:'交際費なんて使った覚えはないね',kaihatsu:'システム投資は必要経費だろう',jinji:'人件費に問題などない',seizo:'在庫の数はぴったり合っている'};
+const WALLS=[{id:'wSeizo',name:'製造部への近道',x:7,y:4},{id:'wJinji',name:'人事部への近道',x:20,y:4}];
+const LV=[0,10,26,48,80];            // points needed for Lv1..5
+const DAY=180, DAYS=3, REGEN=2.6;
+
+let rand=Math.random;
+function rng(seed){ return ()=>{ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+// ---------- state ----------
+let G=null, phase='title', auto=false, autoT=0, manualClock=false, keys={};
+function newGame(){
+  const T=T0.map(r=>r.slice());
+  for(const d of [...DEPTS,BOSS]) T[d.desk[1]][d.desk[0]]=DESK;
+  G={T,t:0,urami:0,maxU:0,threats:0,points:0,lv:1,ev:{},ledger:false,
+    p:{x:13.5,y:8.5,path:[],carry:[],busy:null,face:1},
+    dept:Object.fromEntries(DEPTS.map(d=>[d.id,{stock:Math.ceil(d.max*.4),regen:0,present:true,busyT:0,cool:0}])),
+    golem:{x:11.5,y:9.5,path:[],state:'home',coffee:100,carry:[],target:null,t:0},
+    sub:null, returnees:[], blockers:[], retT:0, blockT:0, boss:{hir:0,q:null,cool:0}, floats:[], says:[], log:'', ctx:'', walls:{}, end:null};
+}
+
+// ---------- path finding ----------
+function walkable(x,y,who){
+  if(x<0||y<0||x>=MW||y>=MH) return false;
+  const v=G.T[y][x];
+  if(v===FLOOR) return !(who==='p'&&G.blockers.some(b=>b.x===x&&b.y===y));
+  if(v===LOCK) return G.lv>=5;
+  return false;
+}
+function findPath(sx,sy,tx,ty,who){
+  sx|=0; sy|=0; tx|=0; ty|=0; if(!walkable(tx,ty,who)) return null;
+  const prev=new Int16Array(MW*MH).fill(-1), q=[sy*MW+sx]; prev[sy*MW+sx]=sy*MW+sx;
+  while(q.length){ const c=q.shift(), x=c%MW, y=c/MW|0; if(x===tx&&y===ty){ const path=[]; let k=c; while(k!==sy*MW+sx){ path.unshift([k%MW+.5,(k/MW|0)+.5]); k=prev[k]; } return path; }
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ const nx=x+dx, ny=y+dy; if(!walkable(nx,ny,who)) continue; const n=ny*MW+nx; if(prev[n]<0){ prev[n]=c; q.push(n); } } }
+  return null;
+}
+function moveAlong(e,sp,dt){
+  let left=sp*dt;
+  while(left>0&&e.path.length){ const [tx,ty]=e.path[0], dx=tx-e.x, dy=ty-e.y, d=Math.hypot(dx,dy);
+    if(d<=left){ e.x=tx; e.y=ty; e.path.shift(); left-=d; } else { e.x+=dx/d*left; e.y+=dy/d*left; left=0; }
+    if(Math.abs(dx)>.01) e.face=dx>0?1:-1; }
+}
+const dist=(a,b)=>Math.hypot(a.x-b[0]-.5,a.y-b[1]-.5);
+function goTo(tx,ty){ const p=G.p; if(p.busy) return false; const path=findPath(p.x,p.y,tx,ty,'p'); if(path){ p.path=path; return true; } return false; }
+
+// ---------- helpers ----------
+const cap=()=>G.lv>=4?3:G.lv>=2?2:1;
+const pSpeed=()=>G.p.carry.some(c=>c.heavy)?2.4:4;
+const gSpeed=()=>G.lv>=4?2.8:2.2;
+const gCap=()=>G.lv>=4?5:3;
+function say(x,y,text,col='#fff'){ G.says=G.says.filter(s=>Math.hypot(s.x-x,s.y-y)>.5); G.says.push({x,y,text,t:0,col}); G.log=text; }
+function float(x,y,text,col){ G.floats.push({x,y,text,col,t:0}); }
+function addU(v,why){ G.urami=Math.min(100,G.urami+v); G.maxU=Math.max(G.maxU,G.urami); if(why) float(G.p.x,G.p.y-.6,`😡+${Math.round(v)}`,'#FF8A7A'); if(G.urami>=100&&!G.end) endGame('fired'); }
+function nearDept(){ for(const d of DEPTS) if(dist(G.p,d.desk)<1.6) return d; return null; }
+const nearBoss=()=>G.lv>=5&&dist(G.p,BOSS.desk)<1.6;
+const escortNear=()=>G.golem.state==='escort'&&Math.hypot(G.golem.x-G.p.x,G.golem.y-G.p.y)<3;
+
+// ---------- actions ----------
+function ask(id){
+  const d=DB[id], s=G.dept[id], p=G.p; if(!d||p.busy||G.end) return;
+  if(dist(p,d.desk)>=1.6) return;
+  if(!s.present){ say(d.desk[0]+.5,d.desk[1]-.2,'（外出中…）'); return; }
+  if(s.cool>0||s.askCool>0) return;
+  if(!s.stock){ say(d.desk[0]+.5,d.desk[1]-.2,'もう渡せる資料はないよ'); return; }
+  if(p.carry.length>=cap()){ say(p.x,p.y-.5,'これ以上持てない！監査室に運ぼう'); return; }
+  if(d.stub>0&&!escortNear()){ say(d.desk[0]+.5,d.desk[1]-.2,d.no,'#FFB4A8'); s.askCool=1.5; sfx('no'); return; }
+  const slow=G.urami>=50?1.5:1;
+  p.busy={id,t:0,dur:(escortNear()&&d.stub?2.5:d.wait)*slow}; p.path=[];
+  say(d.desk[0]+.5,d.desk[1]-.2,escortNear()&&d.stub?'ひっ…ゴ、ゴーレム…！すぐ出します！':'ちょっと待ってね…'); sfx('sel');
+}
+function threaten(id,k){
+  const d=DB[id], s=G.dept[id], p=G.p, w=WORDS[k]; if(!d||p.busy||G.end||!w) return;
+  if(dist(p,d.desk)>=1.6||!s.present||s.cool>0) return;
+  if(!s.stock){ say(d.desk[0]+.5,d.desk[1]-.2,'もう渡せる資料はないよ'); return; }
+  if(p.carry.length>=cap()){ say(p.x,p.y-.5,'これ以上持てない！監査室に運ぼう'); return; }
+  G.threats++; say(p.x,p.y-.5,w.text,'#FFD36B');
+  let u=w.u*(d.hr?2:1);
+  if(d.stub===0){ u+=15; addU(u,1); give(d); say(d.desk[0]+.5,d.desk[1]-.2,'えっ…そ、そんな言い方しなくても…','#FFB4A8'); sfx('bad'); return; }
+  if(w.p>=d.stub){ addU(u,1); give(d); say(d.desk[0]+.5,d.desk[1]-.2,'ぐっ…わ、わかった。持っていけ','#FFB4A8'); sfx('threat'); }
+  else { addU(u,1); s.cool=2; say(d.desk[0]+.5,d.desk[1]-.2,'ふん、そんな言葉じゃ動かんぞ','#FFB4A8'); sfx('no'); }
+}
+function give(d){
+  const s=G.dept[d.id], n=Math.min(s.stock,cap()-G.p.carry.length);
+  for(let i=0;i<n;i++) G.p.carry.push({dept:d.id,val:d.val,heavy:d.heavy});
+  s.stock-=n; float(d.desk[0]+.5,d.desk[1],`📦×${n}`,'#FFE08A'); sfx('get');
+}
+function deliver(list,x,y){
+  if(!list.length) return;
+  let v=0; for(const c of list){ if(c.ledger){ G.ledger='home'; continue; } v+=c.val; G.ev[c.dept]=true; }
+  list.length=0; G.points+=v; if(v) float(x,y,`+${v} 📦`,'#FFE08A');
+  while(G.lv<5&&G.points>=LV[G.lv]){ G.lv++; float(13.5,6.5,`🏢 監査室 Lv${G.lv}！`,'#9FE8B8'); G.log=['','','','かばんが大きくなった（2こ持てる）','部下の監査員が来た！近くの部署をまわってくれる','ゴーレム強化＆かばん3こ','役員室の鍵が開いた！裏帳簿を手に入れろ'][G.lv]; sfx('lv'); if(G.lv===3) G.sub={x:14.5,y:9.5,path:[],state:'idle',carry:[],t:0}; }
+  sfx('deliver');
+  if(G.ledger==='home') endGame('clear');
+}
+// boss
+function bossAsk(){ const ks=Object.keys(QUESTIONS).filter(k=>k!==G.boss.last); G.boss.q=ks[rand()*ks.length|0]; say(BOSS.desk[0]+.5,BOSS.desk[1]-.2,`「${QUESTIONS[G.boss.q]}」`,'#FFE7A8'); }
+function evidence(id){
+  if(!nearBoss()||G.ledger||G.boss.cool>0||G.end) return;
+  if(!G.boss.q) bossAsk();
+  if(G.p.carry.length){ say(BOSS.desk[0]+.5,BOSS.desk[1]-.2,'荷物を置いてから来たまえ'); return; }
+  if(id==='skip'){ G.boss.last=G.boss.q; G.boss.cool=1; bossAsk(); return; }
+  if(!G.ev[id]) return;
+  if(id===G.boss.q){ G.boss.hir++; G.boss.last=G.boss.q; float(BOSS.desk[0]+.5,BOSS.desk[1],'ぐっ…！','#FFB4A8'); sfx('hit');
+    if(G.boss.hir>=3){ G.ledger='carry'; G.p.carry=[{ledger:true,val:0,heavy:false}]; say(BOSS.desk[0]+.5,BOSS.desk[1]-.2,'ば、ばかな…裏帳簿が…！','#FFB4A8'); G.log='📕 裏帳簿を手に入れた！監査室へ運べ！'; sfx('lv'); }
+    else { G.boss.cool=.8; bossAsk(); } }
+  else { addU(10,1); G.boss.cool=1.2; say(BOSS.desk[0]+.5,BOSS.desk[1]-.2,'ははは、それは関係ない資料だねえ','#FFE7A8'); sfx('no'); }
+}
+function bossThreat(){ if(!nearBoss()||G.ledger||G.end) return; G.threats++; addU(35,1); say(BOSS.desk[0]+.5,BOSS.desk[1]-.2,'君、誰に向かって口をきいているのかね？（逆効果だ！）','#FFB4A8'); sfx('bad'); }
+
+// golem
+function golemCmd(cmd,arg){
+  const g=G.golem; if(G.end) return;
+  if(cmd==='home'){ if(g.state==='escort'||g.state==='haul_go'||g.state==='smash_go'){ g.state='back'; g.path=findPath(g.x,g.y,11,9,'g')||[]; } return; }
+  if(g.state!=='home') return;
+  if(cmd==='haul'){ const d=DB[arg]; if(!d||g.coffee<30) return; g.coffee-=30; g.state='haul_go'; g.target=arg; g.path=findPath(g.x,g.y,d.ap[0],d.ap[1],'g')||[]; say(g.x,g.y-.6,`${d.name}へ運搬に行く`); sfx('golem'); }
+  else if(cmd==='escort'){ if(g.coffee<15) return; g.coffee-=15; g.state='escort'; sfx('golem'); say(g.x,g.y-.6,'ゴゴゴ…（ついていく）'); }
+  else if(cmd==='smash'){ const w=WALLS.find(w=>w.id===arg); if(!w||G.walls[arg]||g.coffee<25) return; g.coffee-=25; g.state='smash_go'; g.target=arg; g.path=findPath(g.x,g.y,w.x,w.y+1,'g')||[]; sfx('golem'); say(g.x,g.y-.6,`${w.name}を作りに行く`); }
+}
+function updateGolem(dt){
+  const g=G.golem;
+  if(g.state==='home'){ g.coffee=Math.min(100,g.coffee+dt*2.2); if(!g.path.length&&Math.hypot(g.x-11.5,g.y-9.5)>.2) g.path=findPath(g.x,g.y,11,9,'g')||[]; moveAlong(g,gSpeed(),dt); return; }
+  if(g.state==='escort'){
+    g.coffee-=dt*1.5; if(inBase(G.p.x,G.p.y)===false&&!inBase(g.x,g.y)) addU(dt*.5);
+    if(g.coffee<=0){ g.coffee=0; g.state='back'; g.path=findPath(g.x,g.y,11,9,'g')||[]; say(g.x,g.y-.6,'コーヒー切れ…帰る'); return; }
+    const d=Math.hypot(g.x-G.p.x,g.y-G.p.y); if(d>1.4&&(!g.path.length||g.t>.5)){ g.t=0; g.path=(findPath(g.x,g.y,G.p.x,G.p.y,'g')||[]).slice(0,-1); } g.t+=dt;
+    if(d>1.2) moveAlong(g,Math.max(gSpeed(),pSpeed()),dt); return; }
+  moveAlong(g,gSpeed(),dt);
+  if(g.path.length) return;
+  if(g.state==='haul_go'){ const s=G.dept[g.target], n=Math.min(s.stock,gCap()); s.stock-=n; for(let i=0;i<n;i++) g.carry.push({dept:g.target,val:DB[g.target].val}); addU(4); say(g.x,g.y-.6,n?`📦×${n} ゴゴゴ…`:'（資料がなかった）'); g.state='back'; g.path=findPath(g.x,g.y,11,9,'g')||[]; }
+  else if(g.state==='smash_go'){ g.state='smash'; g.t=0; }
+  else if(g.state==='smash'){ g.t+=dt; if(g.t>1.2){ const w=WALLS.find(w=>w.id===g.target); G.T[w.y][w.x]=FLOOR; G.walls[w.id]=true; addU(8); float(w.x+.5,w.y+.5,'💥ドカーン！','#FFD36B'); sfx('smash'); G.log=`${w.name}ができた！（器物損壊でうらみ+8）`; g.state='back'; g.path=findPath(g.x,g.y,11,9,'g')||[]; } }
+  else if(g.state==='back'){ if(inBase(g.x,g.y)){ deliver(g.carry,g.x,g.y); g.state='home'; } else g.path=findPath(g.x,g.y,11,9,'g')||[]; }
+}
+function updateSub(dt){
+  const s=G.sub; if(!s) return; moveAlong(s,3,dt);
+  if(s.state==='idle'){ const c=['somu','keiri'].filter(id=>G.dept[id].stock>0); if(c.length){ const id=c[rand()*c.length|0]; s.dept=id; s.state='go'; s.path=findPath(s.x,s.y,DB[id].ap[0],DB[id].ap[1],'s')||[]; } }
+  else if(s.state==='go'&&!s.path.length){ s.state='ask'; s.t=0; }
+  else if(s.state==='ask'){ s.t+=dt; if(s.t>DB[s.dept].wait*1.3){ const st=G.dept[s.dept]; if(st.stock>0){ st.stock--; s.carry.push({dept:s.dept,val:1}); } s.state='back'; s.path=findPath(s.x,s.y,15,8,'s')||[]; } }
+  else if(s.state==='back'&&!s.path.length){ deliver(s.carry,s.x,s.y); s.state='idle'; }
+}
+
+// ---------- main update ----------
+function update(dt){
+  if(phase!=='play'||G.end) { if(phase==='result'&&auto){ autoT+=dt; if(autoT>5) start(); } return; }
+  G.t+=dt; if(G.t>=DAY*DAYS){ endGame('time'); return; }
+  G.urami=Math.max(0,G.urami-dt*.4);
+  const p=G.p;
+  // keyboard move
+  let kx=(keys.ArrowRight||keys.d?1:0)-(keys.ArrowLeft||keys.a?1:0), ky=(keys.ArrowDown||keys.s?1:0)-(keys.ArrowUp||keys.w?1:0);
+  if((kx||ky)&&!p.busy){ p.path=[]; const l=Math.hypot(kx,ky), sp=pSpeed()*dt, r=.3;
+    const nx=p.x+kx/l*sp, ny=p.y+ky/l*sp; const ok=(x,y)=>[[-r,-r],[r,-r],[-r,r],[r,r]].every(([a,b])=>walkable(Math.floor(x+a),Math.floor(y+b),'p'));
+    if(ok(nx,p.y)) p.x=nx; if(ok(p.x,ny)) p.y=ny; if(kx) p.face=kx; }
+  if(p.path.length){ const [tx,ty]=p.path[0]; if(!walkable(tx|0,ty|0,'p')){ const last=p.path[p.path.length-1]; p.path=findPath(p.x,p.y,last[0],last[1],'p')||[]; } moveAlong(p,pSpeed(),dt); }
+  if(p.busy){ p.busy.t+=dt; if(p.busy.t>=p.busy.dur){ const d=DB[p.busy.id]; p.busy=null; if(G.dept[d.id].stock){ give(d); say(d.desk[0]+.5,d.desk[1]-.2,d.line,'#BFE3FF'); } } }
+  if(inBase(p.x,p.y)&&p.carry.length&&!p.busy) deliver(p.carry,p.x,p.y);
+  // departments
+  for(const d of DEPTS){ const s=G.dept[d.id]; s.cool=Math.max(0,s.cool-dt); s.askCool=Math.max(0,(s.askCool||0)-dt);
+    if(s.stock<d.max){ s.regen+=dt; if(s.regen>=d.regen*REGEN){ s.regen=0; s.stock++; } }
+    if(d.busy){ s.busyT+=dt; const cyc=s.busyT%14; const pr=cyc<9; if(pr!==s.present){ s.present=pr; if(p.busy&&p.busy.id===d.id&&!pr) p.busy=null; } } }
+  G.boss.cool=Math.max(0,G.boss.cool-dt);
+  if(nearBoss()&&!G.boss.q&&!G.ledger) bossAsk();
+  if(!nearBoss()&&G.boss.q&&!G.ledger&&dist(p,BOSS.desk)>3) G.boss.q=null;
+  updateGolem(dt); updateSub(dt);
+  // returnees: employees coming to take documents back
+  if(G.lv>=2){ G.retT+=dt; if(G.retT>32){ G.retT=0; const d=DEPTS[rand()*DEPTS.length|0]; const r={x:d.ap[0]+.5,y:d.ap[1]+.5,path:[],face:1,t:0}; r.path=findPath(r.x,r.y,13,8,'r')||[]; G.returnees.push(r); say(r.x,r.y-.5,'資料、返してもらいます！','#FFC7D6'); } }
+  for(const r of G.returnees){ moveAlong(r,2.2,dt);
+    if(Math.hypot(r.x-p.x,r.y-p.y)<.8){ r.gone=1; say(r.x,r.y-.5,'…わかりました、戻ります'); }
+    else if(inBase(r.x,r.y)){ r.gone=1; if(G.golem.state==='home'){ say(r.x,r.y-.5,'ひぃっ、ゴーレムが！（追い返した）'); } else if(G.points>0){ G.points--; float(r.x,r.y,'-1 📦','#FF8A7A'); G.log='資料を1つ持って帰られた…（留守番のゴーレムがいれば防げる）'; sfx('bad'); } } }
+  G.returnees=G.returnees.filter(r=>!r.gone);
+  // blockers when the whole company is angry
+  G.blockers=G.blockers.filter(b=>(b.t-=dt)>0);
+  if(G.urami>=70){ G.blockT+=dt; if(G.blockT>7){ G.blockT=0; const cand=[]; for(let y=0;y<MH;y++) for(let x=0;x<MW;x++) if(G.T[y][x]===FLOOR&&!inBase(x,y)&&!DEPTS.some(d=>x>=d.room[0]&&x<=d.room[2]&&y>=d.room[1]&&y<=d.room[3])&&Math.hypot(x+.5-p.x,y+.5-p.y)>2) cand.push([x,y]);
+    const c=cand[rand()*cand.length|0]; if(c){ G.blockers.push({x:c[0],y:c[1],t:10}); float(c[0]+.5,c[1]+.5,'😠通せんぼ','#FF8A7A'); } } }
+  for(const s of G.says) s.t+=dt; G.says=G.says.filter(s=>s.t<2.8);
+  for(const f of G.floats) f.t+=dt; G.floats=G.floats.filter(f=>f.t<1.4);
+  if(auto) autoTick(dt);
+}
+function endGame(why){
+  if(G.end) return; G.end=why; phase='result'; autoT=0;
+  const clear=why==='clear';
+  const st=clear?1+(G.maxU<60?1:0)+(G.maxU<60&&G.t<=DAY*2?1:0):0;
+  let best={}; try{ best=JSON.parse(localStorage.getItem('auditBest')||'{}')||{}; }catch(e){}
+  if(clear&&!auto&&(st>(best.stars||0)||st===(best.stars||0)&&G.t<(best.t||1e9))){ best={stars:st,t:Math.round(G.t)}; try{ localStorage.setItem('auditBest',JSON.stringify(best)); }catch(e){} }
+  $('rTitle').innerHTML=clear?'📕 <span>監査完了！</span>':why==='fired'?'📢 監査部 解散…':'⏰ 決算日に間に合わず…';
+  $('rMsg').textContent=clear?(G.threats===0?'称号「仏の監査部」— 一度も恫喝せずに裏帳簿を手に入れた！':'裏帳簿を手に入れた！')+(auto?'　🤖 オート':''):why==='fired'?'うらみが100%になり、人事部に通報された。':'3日間で裏帳簿を手に入れられなかった。';
+  $('rStars').innerHTML=[1,2,3].map(k=>`<span class="${k<=st?'':'off'}">★</span>`).join('');
+  $('rRows').innerHTML=[['かかった時間',clock(G.t)],['集めた資料',`${G.points} こ`],['監査室',`Lv${G.lv}`],['恫喝した回数',`${G.threats} 回`],['うらみの最大',`${Math.round(G.maxU)}%`]].map(([a,b])=>`<span>${a}</span><b>${b}</b>`).join('')+'<span style="grid-column:1/3;font-size:11px;color:#6A6F85">★2：うらみ60%未満　★3：さらに2日目までにクリア</span>';
+  $('resultOv').hidden=false; sfx(clear?'lv':'bad');
+}
+function clock(t){ const d=Math.min(DAYS-1,t/DAY|0), m=Math.floor((t-d*DAY)/DAY*540); return `${d+1}日目 ${9+(m/60|0)}:${String(m%60).padStart(2,'0')}`; }
+
+// ---------- auto ----------
+const AUTO_LOCKED=true;   // auto mode is locked for now (the AI stays for tests)
+function setAuto(v,force){ if(v&&AUTO_LOCKED&&!force) return; auto=v; $('autoBtn').setAttribute('aria-pressed',v); autoT=0; if(v&&phase!=='play') start(); }
+function user(){ if(auto) setAuto(false); }
+function pathLen(tx,ty){ const p=findPath(G.p.x,G.p.y,tx,ty,'p'); return p?p.length:999; }
+function autoTick(dt){
+  autoT+=dt; if(autoT<.25) return; autoT=0;
+  const p=G.p, g=G.golem; if(p.busy) return;
+  // golem: shortcuts first, then haul from far / stubborn departments
+  if(g.state==='home'){
+    const w=WALLS.find(w=>!G.walls[w.id]);
+    if(w&&g.coffee>=60&&G.urami<35) golemCmd('smash',w.id);
+    else if(g.coffee>=55){ const far=['seizo','jinji','eigyo'].map(id=>DB[id]).filter(d=>G.dept[d.id].stock>=2).sort((a,b)=>G.dept[b.id].stock*b.val-G.dept[a.id].stock*a.val)[0]; if(far) golemCmd('haul',far.id); }
+  }
+  // ledger / boss
+  if(G.ledger==='carry'){ if(!p.path.length) goTo(13,8); return; }
+  if(G.lv>=5&&!G.ledger&&p.carry.length===0){
+    if(nearBoss()){ if(G.boss.cool>0) return; if(!G.boss.q) bossAsk(); evidence(G.ev[G.boss.q]?G.boss.q:'skip'); return; }
+    if(!p.path.length) goTo(BOSS.ap[0],BOSS.ap[1]); return;
+  }
+  // intercept a returnee heading for the base
+  if(g.state!=='home'){ const r=G.returnees.find(r=>Math.hypot(r.x-p.x,r.y-p.y)<7); if(r&&p.carry.length<cap()){ p.path=findPath(p.x,p.y,r.x,r.y,'p')||p.path; return; } }
+  if(p.carry.length>=cap()||(G.lv>=5&&p.carry.length)){ if(!inBase(p.x,p.y)&&(!p.path.length||!inBase(...p.path[p.path.length-1]))) goTo(13,8); return; }
+  // at a desk?
+  const d=nearDept();
+  if(d&&!p.path.length){ const s=G.dept[d.id];
+    if(s.stock&&s.present&&s.cool<=0){ if((d.stub===0||escortNear())&&!(s.askCool>0)) ask(d.id); else if(canThreat(d)) threaten(d.id,d.stub-1); }
+    if(p.busy) return; }
+  // pick a target department
+  let best=null, bs=0;
+  for(const dd of DEPTS){ const s=G.dept[dd.id]; if(!s.stock) continue; if(dd.busy&&!s.present) continue;
+    if(dd.stub>0&&!canThreat(dd)) continue; if(dd.hr) continue;
+    if(G.sub&&G.sub.dept===dd.id&&G.sub.state!=='idle'&&s.stock<2) continue;
+    const L=pathLen(dd.ap[0],dd.ap[1]); const sc=Math.min(s.stock,cap()-p.carry.length)*dd.val/(L+6)*(dd.stub?0.8:1)*(G.ev[dd.id]?1:1.6);
+    if(sc>bs){ bs=sc; best=dd; } }
+  if(best){ const [ax,ay]=best.ap; const last=p.path[p.path.length-1]; if(!last||Math.floor(last[0])!==ax||Math.floor(last[1])!==ay){ if(!(Math.floor(p.x)===ax&&Math.floor(p.y)===ay)) goTo(ax,ay); } }
+  else if(p.carry.length) goTo(13,8);
+  else if(!p.path.length&&!inBase(p.x,p.y)) goTo(13,8);
+}
+function canThreat(d){ const w=WORDS[d.stub-1]; return w&&G.urami+w.u*(d.hr?2:1)<48; }
+
+// ---------- UI ----------
+function renderUI(){
+  if(!G) return;
+  $('hDay').textContent='📅 '+clock(G.t);
+  $('uBar').style.width=G.urami+'%'; $('hU').textContent=`😡 ${Math.round(G.urami)}%`;
+  $('hLv').textContent=`🏢 Lv${G.lv}`;
+  const lo=LV[G.lv-1], hi=LV[G.lv]; $('lvBar').style.width=(G.lv>=5?100:Math.min(100,(G.points-lo)/(hi-lo)*100))+'%';
+  $('hPt').textContent=G.lv>=5?`📦 ${G.points}`:`📦 ${G.points}/${hi}`;
+  const evs='証拠：'+DEPTS.map(d=>`<span class="${G.ev[d.id]?'ok':''}">${d.name.replace('部','')}${G.ev[d.id]?'✓':''}</span>`).join('');
+  if($('ev').dataset.k!==evs){ $('ev').innerHTML=evs; $('ev').dataset.k=evs; }
+  $('carryInfo').textContent=G.ledger==='carry'?'📕 裏帳簿を運び中':`かばん 📦${G.p.carry.length}/${cap()}`;
+  // action panel
+  const p=G.p, d=nearDept(); let ctx, html='';
+  if(p.busy){ const dd=DB[p.busy.id]; ctx='busy'; html=`<p class="say">🙇 <b>${dd.mgr}</b>が資料を用意しています…</p><div class="prog"><i id="progI"></i></div>`; }
+  else if(nearBoss()&&!G.ledger){
+    ctx='boss:'+G.boss.q+':'+G.boss.hir+':'+(G.boss.cool>0)+':'+Object.keys(G.ev).length+':'+p.carry.length;
+    html=`<p class="say">👔 <b>${BOSS.mgr}</b>：「${G.boss.q?QUESTIONS[G.boss.q]:'…何の用かね'}」　<small>ひるみ ${'🔥'.repeat(G.boss.hir)}${'・'.repeat(3-G.boss.hir)}</small></p>`+
+      (p.carry.length?'<p class="say">荷物を監査室に置いてから来よう</p>':`<p class="say" style="font-size:11px;color:#A3A9C4">どの部署の資料で反論する？（正しい証拠を3回突きつけると裏帳簿が手に入る）</p><div class="row">${DEPTS.map(dd=>`<button class="big gray" style="min-width:30%;font-size:12px;min-height:38px" data-ev="${dd.id}" ${G.ev[dd.id]&&G.boss.cool<=0?'':'disabled'}>📄${dd.name}</button>`).join('')}</div>
+      <div class="row" style="margin-top:6px"><button class="big gray" data-ev="skip" ${G.boss.cool>0?'disabled':''}>🌀 話をそらす</button><button class="big red" data-bt="1">😠 恫喝</button></div>`);
+  }
+  else if(d){ const s=G.dept[d.id];
+    ctx=`d:${d.id}:${s.present}:${s.stock}:${s.cool>0}:${s.askCool>0}:${p.carry.length}:${escortNear()}:${threatOpen===d.id}`;
+    html=`<p class="say">🏢 <b>${d.name} ${d.mgr}</b> ${'😤'.repeat(d.stub)}${d.hr?'（恫喝するとうらみ2倍）':''}${d.heavy?'（箱が重い）':''}　資料 📦${s.stock}${!s.present?'<br>…課長は席をはずしている。少し待とう':''}${escortNear()&&d.stub?'<br>🗿 ゴーレムがにらみをきかせている！お願いが通る':''}</p>`;
+    if(threatOpen===d.id) html+=`<div class="row">${WORDS.map((w,k)=>`<button class="big red word" data-w="${k}">${w.text}<small>強さ${'💪'.repeat(w.p)}・うらみ +${w.u*(d.hr?2:1)+(d.stub===0?15:0)}${w.p<d.stub?'（足りない）':''}</small></button>`).join('')}<button class="big gray word" data-w="x" style="text-align:center">やめる</button></div>`;
+    else html+=`<div class="row"><button class="big" data-ask="1" ${s.present&&s.stock&&s.cool<=0&&!(s.askCool>0)?'':'disabled'}>🙇 お願い</button><button class="big red" data-th="1" ${s.present&&s.stock&&s.cool<=0?'':'disabled'}>😠 恫喝</button></div>`;
+  }
+  else { ctx='none:'+(G.ledger==='carry')+':'+p.carry.length+':'+(G.lv>=5); html=`<p class="say">${G.ledger==='carry'?'📕 裏帳簿を監査室へ運ぼう！':p.carry.length>=cap()?'かばんがいっぱい。🏠監査室へ運ぼう':G.lv>=5?'役員室が開いた！👔専務から裏帳簿を手に入れよう':'部署へ行って資料をもらおう。マップか下のボタンをタップ'}</p><p class="say" style="font-size:12px;color:#A3A9C4">${G.log||''}</p>`; }
+  if(ctx!==G.ctx||ctx.startsWith('none')&&$('act').dataset.log!==G.log){ G.ctx=ctx; $('act').dataset.log=G.log; $('act').innerHTML=html; }
+  if(p.busy&&$('progI')) $('progI').style.width=Math.min(100,p.busy.t/p.busy.dur*100)+'%';
+  // nav
+  const navK=G.lv+':'+(G.ledger||'');
+  if($('nav').dataset.k!==navK){ $('nav').dataset.k=navK;
+    $('nav').innerHTML=`<button data-go="base">🏠 監査室</button>`+DEPTS.map(d=>`<button data-go="${d.id}">${d.name}${'😤'.repeat(d.stub)}</button>`).join('')+`<button data-go="boss" ${G.lv>=5?'':'disabled'}>👔 役員室${G.lv>=5?'':'🔒'}</button>`; }
+  // golem panel
+  const g=G.golem, gk=`${g.state}:${g.coffee>=30}:${g.coffee>=25}:${g.coffee>=15}:${gOpen}:${Object.keys(G.walls).length}`;
+  $('gCoffee').textContent=`☕ ${Math.round(g.coffee)}%`;
+  const stName={home:'監査室で留守番中',haul_go:'運搬に向かっている',back:'帰っている',escort:'あなたについていく（威圧中）',smash_go:'壁へ向かっている',smash:'壁をこわしている'}[g.state];
+  $('gTitle').textContent=`🗿 ゴーレム：${stName}`;
+  if($('gBtns').dataset.k!==gk){ $('gBtns').dataset.k=gk; const home=g.state==='home';
+    $('gBtns').innerHTML=`<button class="gbtn" data-g="haul" ${home&&g.coffee>=30?'':'disabled'}>📦 運搬<br><small>☕30</small></button><button class="gbtn" data-g="escort" ${home&&g.coffee>=15?'':'disabled'}>👣 同行<br><small>☕15＋</small></button><button class="gbtn" data-g="smash" ${home&&g.coffee>=25&&WALLS.some(w=>!G.walls[w.id])?'':'disabled'}>💥 壁こわし<br><small>☕25</small></button><button class="gbtn" data-g="home" ${home?'disabled':''}>🏠 帰れ<br><small>留守番</small></button>`;
+    $('gSub').innerHTML=gOpen==='haul'&&home?DEPTS.map(d=>`<button class="gbtn" data-gh="${d.id}">${d.name}</button>`).join(''):gOpen==='smash'&&home?WALLS.filter(w=>!G.walls[w.id]).map(w=>`<button class="gbtn" data-gs="${w.id}">${w.name}</button>`).join(''):''; }
+  if(G.ctx.startsWith('none')===false) $('log').textContent=G.log||''; else $('log').textContent='';
+}
+let threatOpen=null, gOpen=null;
+$('act').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b||b.disabled||!G) return; ac(); user(); const d=nearDept();
+  if(b.dataset.ask&&d){ ask(d.id); }
+  else if(b.dataset.th&&d){ threatOpen=d.id; G.ctx=''; }
+  else if(b.dataset.w!=null&&d){ if(b.dataset.w!=='x') threaten(d.id,+b.dataset.w); threatOpen=null; G.ctx=''; }
+  else if(b.dataset.ev){ evidence(b.dataset.ev); G.ctx=''; }
+  else if(b.dataset.bt){ bossThreat(); G.ctx=''; }
+});
+$('nav').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b||b.disabled||!G||phase!=='play') return; ac(); user(); navTo(b.dataset.go); });
+function navTo(k){ threatOpen=null; if(k==='base') goTo(13,8); else if(k==='boss') goTo(BOSS.ap[0],BOSS.ap[1]); else { const d=DB[k]; goTo(d.ap[0],d.ap[1]); } }
+$('gBtns').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b||b.disabled||!G) return; ac(); user(); const k=b.dataset.g;
+  if(k==='haul'||k==='smash'){ gOpen=gOpen===k?null:k; $('gBtns').dataset.k=''; } else { golemCmd(k); gOpen=null; $('gBtns').dataset.k=''; } });
+$('gSub').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b||!G) return; ac(); user(); if(b.dataset.gh) golemCmd('haul',b.dataset.gh); if(b.dataset.gs) golemCmd('smash',b.dataset.gs); gOpen=null; $('gBtns').dataset.k=''; });
+
+// ---------- drawing ----------
+const cv=$('cv'), g=cv.getContext('2d');
+function person(x,y,s,body,head,face){
+  g.fillStyle='rgba(0,0,0,.25)'; g.beginPath(); g.ellipse(x,y+s*.42,s*.34,s*.12,0,0,7); g.fill();
+  g.fillStyle=body; g.beginPath(); g.roundRect(x-s*.28,y-s*.05,s*.56,s*.45,s*.12); g.fill();
+  g.fillStyle=head; g.beginPath(); g.arc(x,y-s*.2,s*.24,0,7); g.fill();
+  g.fillStyle='#222'; g.beginPath(); g.arc(x+face*s*.08-s*.07,y-s*.21,s*.035,0,7); g.arc(x+face*s*.08+s*.07,y-s*.21,s*.035,0,7); g.fill();
+}
+function draw(){
+  const dpr=Math.min(2,devicePixelRatio||1), W=cv.clientWidth, H=cv.clientHeight;
+  if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){ cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); }
+  g.setTransform(dpr,0,0,dpr,0,0); const s=W/MW; cv._s=s;
+  const T=G?G.T:T0, now=performance.now()/1000;
+  g.fillStyle='#14161F'; g.fillRect(0,0,W,H);
+  const roomOf=(x,y)=>{ for(const d of [...DEPTS,BOSS]){ const r=d.room; if(x>=r[0]&&x<=r[2]&&y>=r[1]&&y<=r[3]) return d; } return null; };
+  for(let y=0;y<MH;y++) for(let x=0;x<MW;x++){ const v=T[y][x], X=x*s, Y=y*s;
+    if(v===WALL){ g.fillStyle='#3A3F55'; g.fillRect(X,Y,s,s); g.fillStyle='#474D66'; g.fillRect(X,Y,s,s*.25); continue; }
+    if(v===CRACK){ g.fillStyle='#4A4560'; g.fillRect(X,Y,s,s); g.strokeStyle='#C9B98A'; g.lineWidth=1.2; g.beginPath(); g.moveTo(X+s*.2,Y+s*.1); g.lineTo(X+s*.5,Y+s*.5); g.lineTo(X+s*.3,Y+s*.9); g.moveTo(X+s*.5,Y+s*.5); g.lineTo(X+s*.85,Y+s*.4); g.stroke(); continue; }
+    const rm=roomOf(x,y); g.fillStyle=rm?rm.col+'40':inBase(x,y)?'#2B3450':'#2A2D3C'; g.fillRect(X,Y,s,s);
+    g.strokeStyle='rgba(255,255,255,.04)'; g.strokeRect(X+.5,Y+.5,s-1,s-1);
+    if(v===LOCK){ const open=G&&G.lv>=5; g.fillStyle=open?'#5A4630':'#8B5A2B'; g.fillRect(X,Y,s,s); if(!open){ g.font=`${s*.6}px sans-serif`; g.textAlign='center'; g.textBaseline='middle'; g.fillText('🔒',X+s/2,Y+s/2); } }
+  }
+  // base (grows with level)
+  const lv=G?G.lv:1, k=(lv-1)/4, bx0=12-2*k, bx1=16+2*k, by0=8-1*k, by1=10+1*k;
+  g.fillStyle='#3D5A8A'; g.fillRect(bx0*s,by0*s,(bx1-bx0)*s,(by1-by0)*s);
+  g.strokeStyle='#9FC3F0'; g.lineWidth=2; g.strokeRect(bx0*s,by0*s,(bx1-bx0)*s,(by1-by0)*s);
+  for(let i=0;i<lv+1;i++){ const dx=bx0+.4+i*((bx1-bx0-1)/(lv+.01)); g.fillStyle='#8B6A4E'; g.fillRect(dx*s,(by0+.25)*s,s*.7,s*.4); }
+  g.fillStyle='#DDEBFF'; g.font=`800 ${s*.42}px "M PLUS Rounded 1c",sans-serif`; g.textAlign='center'; g.textBaseline='middle'; g.fillText(`監査室 Lv${lv}`,(bx0+bx1)/2*s,(by1-.3)*s);
+  // room labels & desks
+  g.font=`800 ${s*.4}px "M PLUS Rounded 1c",sans-serif`;
+  for(const d of [...DEPTS,BOSS]){ const r=d.room; g.fillStyle='rgba(255,255,255,.55)'; g.fillText(d.name,(r[0]+r[2]+1)/2*s,(r[3]+.75)*s);
+    const [x,y]=d.desk; g.fillStyle='#7A5A3E'; g.fillRect((x+.08)*s,(y+.45)*s,s*.84,s*.45);
+    const st=G&&G.dept[d.id]; const present=!st||st.present;
+    if(d===BOSS){ if(!G||G.lv<5||!G.ledger) person((x+.5)*s,(y+.35)*s,s*1.05,'#222','#E9C4A0',1); }
+    else if(present) person((x+.5)*s,(y+.35)*s,s,d.stub?'#7A3B3B':'#3B5A7A','#F1CDA8',1);
+    else { g.fillStyle='rgba(255,255,255,.6)'; g.font=`800 ${s*.3}px sans-serif`; g.fillText('外出中',(x+.5)*s,(y+.2)*s); g.font=`800 ${s*.4}px "M PLUS Rounded 1c",sans-serif`; }
+    if(d.stub&&present){ g.font=`${s*.38}px sans-serif`; g.fillText('😤'.repeat(d.stub),(x+.5)*s,(y-.25)*s); g.font=`800 ${s*.4}px "M PLUS Rounded 1c",sans-serif`; }
+    if(st){ for(let i=0;i<st.stock;i++){ g.fillStyle='#D9A55B'; g.fillRect((x+1.05+(i%3)*.3)*s,(y+.62-(i/3|0)*.3)*s,s*.26,s*.24); } }
+  }
+  if(!G) return;
+  // path preview
+  g.fillStyle='rgba(242,178,51,.45)'; for(const [px,py] of G.p.path) { g.beginPath(); g.arc(px*s,py*s,s*.08,0,7); g.fill(); }
+  // blockers & returnees
+  for(const b of G.blockers){ person((b.x+.5)*s,(b.y+.5)*s,s,'#A33','#F1CDA8',1); g.font=`${s*.4}px sans-serif`; g.fillText('😠',(b.x+.5)*s,(b.y-.1)*s); }
+  for(const r of G.returnees){ person(r.x*s,r.y*s,s*.9,'#C06A8A','#F1CDA8',r.face||1); g.font=`${s*.35}px sans-serif`; g.fillText('↩📦',r.x*s,(r.y-.6)*s); }
+  if(G.sub){ person(G.sub.x*s,G.sub.y*s,s*.9,'#5B8FB5','#F1CDA8',1); if(G.sub.carry.length){ g.fillStyle='#D9A55B'; g.fillRect((G.sub.x-.15)*s,(G.sub.y-.75)*s,s*.3,s*.25); } }
+  // golem
+  const gm=G.golem, gx=gm.x*s, gy=gm.y*s, bob=Math.sin(now*3)*s*.03;
+  g.fillStyle='rgba(0,0,0,.3)'; g.beginPath(); g.ellipse(gx,gy+s*.5,s*.5,s*.15,0,0,7); g.fill();
+  g.fillStyle='#8C8577'; g.beginPath(); g.roundRect(gx-s*.45,gy-s*.35+bob,s*.9,s*.8,s*.18); g.fill();
+  g.fillStyle='#A39C8C'; g.beginPath(); g.roundRect(gx-s*.32,gy-s*.75+bob,s*.64,s*.46,s*.14); g.fill();
+  g.fillStyle=gm.state==='escort'?'#FF5A3C':'#FFE15A'; g.fillRect(gx-s*.18,gy-s*.57+bob,s*.1,s*.08); g.fillRect(gx+s*.08,gy-s*.57+bob,s*.1,s*.08);
+  for(let i=0;i<gm.carry.length;i++){ g.fillStyle='#D9A55B'; g.fillRect(gx-s*.4+i*s*.17,gy-s*1.02,s*.15,s*.2); }
+  if(gm.state==='smash'&&Math.sin(now*20)>0){ g.font=`${s*.6}px sans-serif`; g.fillText('💥',gx+s*.5,gy-s*.4); }
+  // player
+  const p=G.p; person(p.x*s,p.y*s,s*1.05,'#23305A','#F1CDA8',p.face);
+  g.fillStyle='#F2B233'; g.font=`800 ${s*.22}px sans-serif`; g.fillText('監',p.x*s,(p.y+.15)*s);
+  p.carry.forEach((c,i)=>{ if(c.ledger){ g.font=`${s*.5}px sans-serif`; g.fillText('📕',p.x*s,(p.y-.8)*s); } else { g.fillStyle=c.heavy?'#9A7040':'#D9A55B'; g.fillRect((p.x-.15)*s,(p.y-.72-i*.22)*s,s*.3,s*.2); } });
+  if(p.busy){ g.strokeStyle='#F2B233'; g.lineWidth=3; g.beginPath(); g.arc(p.x*s,p.y*s-s*.2,s*.45,-Math.PI/2,-Math.PI/2+Math.PI*2*p.busy.t/p.busy.dur); g.stroke(); }
+  // speech & floats
+  g.font=`800 ${Math.max(10,s*.36)}px "M PLUS Rounded 1c",sans-serif`;
+  for(const q of G.says){ const tw=Math.min(W*.6,g.measureText(q.text).width+10), x=Math.max(tw/2+2,Math.min(W-tw/2-2,q.x*s)), y=Math.max(12,q.y*s-s*.6);
+    g.globalAlpha=Math.min(1,(2.8-q.t)*2); g.fillStyle='rgba(15,18,30,.85)'; g.beginPath(); g.roundRect(x-tw/2,y-s*.3,tw,s*.6,6); g.fill(); g.fillStyle=q.col; g.fillText(q.text,x,y,W*.6-10); g.globalAlpha=1; }
+  for(const f of G.floats){ g.globalAlpha=1-f.t/1.4; g.fillStyle=f.col; g.fillText(f.text,f.x*s,(f.y-f.t*.8)*s); g.globalAlpha=1; }
+  g.textBaseline='alphabetic';
+}
+cv.addEventListener('click',e=>{
+  if(!G||phase!=='play') return; ac(); user(); threatOpen=null;
+  const rc=cv.getBoundingClientRect(), s=rc.width/MW, x=Math.floor((e.clientX-rc.left)/s), y=Math.floor((e.clientY-rc.top)/s);
+  for(const d of DEPTS) if(d.desk[0]===x&&d.desk[1]===y){ goTo(d.ap[0],d.ap[1]); return; }
+  if(BOSS.desk[0]===x&&BOSS.desk[1]===y){ goTo(BOSS.ap[0],BOSS.ap[1]); return; }
+  if(!goTo(x,y)){ for(const [dx,dy] of [[0,1],[1,0],[-1,0],[0,-1]]) if(goTo(x+dx,y+dy)) return; }
+});
+
+// ---------- sound ----------
+let AC=null, muted=false;
+try{ muted=localStorage.getItem('auditMute')==='1'; }catch(e){}
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==='suspended')AC.resume(); return AC; }
+function tone(f,d,type='sine',v=.1,delay=0){ if(muted||!ac())return; const t=AC.currentTime+delay, o=AC.createOscillator(), gn=AC.createGain(); o.type=type; o.frequency.value=f; gn.gain.setValueAtTime(v,t); gn.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(gn).connect(AC.destination); o.start(t); o.stop(t+d+.02); }
+function sfx(k){
+  if(k==='sel') tone(660,.08,'triangle');
+  else if(k==='get'){ tone(784,.08,'triangle'); tone(988,.1,'triangle',.1,.08); }
+  else if(k==='deliver'){ [523,659,784].forEach((f,i)=>tone(f,.12,'triangle',.1,i*.07)); }
+  else if(k==='lv'){ [523,659,784,1047].forEach((f,i)=>tone(f,.22,'triangle',.12,i*.1)); }
+  else if(k==='no') tone(220,.2,'square',.05);
+  else if(k==='bad'){ tone(160,.3,'sawtooth',.07); tone(120,.35,'sawtooth',.07,.12); }
+  else if(k==='threat'){ tone(110,.25,'sawtooth',.09); tone(90,.3,'square',.05,.05); }
+  else if(k==='golem'){ tone(70,.35,'sine',.2); tone(55,.4,'sine',.2,.15); }
+  else if(k==='smash'){ tone(60,.5,'sawtooth',.15); tone(90,.3,'square',.08,.05); }
+  else if(k==='hit') tone(330,.15,'square',.07);
+}
+function setMute(m){ muted=m; $('muteBtn').textContent=m?'音 OFF':'音 ON'; try{ localStorage.setItem('auditMute',m?'1':'0'); }catch(e){} }
+
+// ---------- flow & input ----------
+function start(){ newGame(); phase='play'; threatOpen=null; gOpen=null; $('titleOv').hidden=true; $('resultOv').hidden=true; ['ev','nav','gBtns'].forEach(id=>$(id).dataset.k=''); G.log='まずは近くの総務部・経理部へ。🙇お願いで資料をもらおう'; }
+function showBest(){ let b={}; try{ b=JSON.parse(localStorage.getItem('auditBest')||'{}')||{}; }catch(e){} $('bestLine').textContent=b.stars?`ベスト：${'★'.repeat(b.stars)}（${clock(b.t)}）`:''; }
+$('startBtn').onclick=()=>{ ac(); start(); };
+$('autoStartBtn').onclick=()=>{ ac(); setAuto(true); };
+$('againBtn').onclick=()=>{ ac(); user(); start(); };
+$('autoBtn').onclick=()=>{ ac(); setAuto(!auto); };
+$('muteBtn').onclick=()=>{ ac(); setMute(!muted); };
+addEventListener('keydown',e=>{
+  if(e.key==='o'||e.key==='O'){ if(!e.repeat){ ac(); setAuto(!auto); } return; }
+  if(phase!=='play') { if(e.key==='Enter'&&!e.repeat){ ac(); start(); } return; }
+  const k=e.key.length===1?e.key.toLowerCase():e.key;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d'].includes(k)){ e.preventDefault(); if(!keys[k]) user(); keys[k]=true; }
+  if(e.repeat) return;
+  const d=nearDept();
+  if(k==='1'&&d){ user(); ask(d.id); }
+  if(k==='2'&&d){ user(); threatOpen=d.id; G.ctx=''; }
+});
+addEventListener('keyup',e=>{ const k=e.key.length===1?e.key.toLowerCase():e.key; keys[k]=false; });
+addEventListener('blur',()=>{ keys={}; });
+
+setMute(muted); showBest();
+let last=performance.now();
+function loop(t){ const dt=Math.min(.05,(t-last)/1000); last=t; if(!manualClock) update(dt); draw(); if(G&&phase==='play') renderUI(); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+
+// test hook
+window.__audit={
+  get s(){ return G&&{phase,t:G.t,urami:G.urami,maxU:G.maxU,points:G.points,lv:G.lv,ev:{...G.ev},ledger:G.ledger,end:G.end,threats:G.threats,p:{x:G.p.x,y:G.p.y,carry:G.p.carry.length,busy:!!G.p.busy},golem:G.golem.state,coffee:G.golem.coffee,walls:{...G.walls},returnees:G.returnees.length,auto,stock:Object.fromEntries(DEPTS.map(d=>[d.id,G.dept[d.id].stock])),near:(nearDept()||{}).id,boss:{...G.boss}}; },
+  setAuto:v=>setAuto(v,true), start, seed(n){ rand=rng(n); }, manual(v=true){ manualClock=v; }, step(dt){ update(dt); if(G&&phase==='play') renderUI(); },
+  ask, threaten, golem:golemCmd, nav:navTo, evidence,
+};
+})();
+</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>

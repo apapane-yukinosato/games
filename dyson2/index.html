@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="マネーダイソンの続編。世界のお金を吸い尽くし、人類は石器時代へ。お金のない人から吸いつづけたダイソンは、ついに「寿命」を吸えるようになった。人から、木から、そして地球から──。">
+<title>マネーダイソン2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&family=Dela+Gothic+One&display=swap">
+<style>
+:root{--bg:#10140E;--ink:#F0ECE0;--card:#1E2418;--line:#3A4430;--mute:#A0A890;--gold:#F2C23A;--red:#E0433D;--green:#7AC85A;--purple:#8A5AE0}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#app{max-width:520px;margin:0 auto;padding:8px 10px 14px;padding-top:calc(8px + env(safe-area-inset-top,0px))}
+#top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:16px;font-family:"Dela Gothic One",sans-serif;color:var(--gold);letter-spacing:.06em;white-space:nowrap}
+.mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--card);cursor:pointer;white-space:nowrap}
+.mini[aria-pressed=true]{background:var(--red);border-color:var(--red)}
+#wrap{position:relative}
+#cv{display:block;width:100%;aspect-ratio:3/4;border-radius:14px;background:#2A3420;touch-action:none}
+#pad{display:grid;grid-template-columns:1.6fr 1fr;gap:8px;margin-top:8px}
+#suckBtn{grid-row:span 2;min-height:96px;border:0;border-radius:20px;background:radial-gradient(circle at 35% 30%,#B08AF8,#6A3AC8);box-shadow:0 5px 0 #3E2280;font-size:20px;font-weight:800;color:#fff;cursor:pointer;touch-action:none;font-family:"Dela Gothic One",sans-serif}
+#suckBtn.on{transform:translateY(3px);box-shadow:0 2px 0 #3E2280;filter:brightness(1.25)}
+#shopBtn,#skBtn{min-height:44px;border:0;border-radius:14px;font-weight:800;font-size:13px;cursor:pointer;color:#221A10}
+#shopBtn{background:#C8A060;box-shadow:0 4px 0 #7A5A26}
+#skBtn{background:#E8D8A8;box-shadow:0 4px 0 #9A8A5A}
+#skBtn:disabled{opacity:.4}
+.skbar{display:flex;gap:6px;margin-top:8px}
+.skb{flex:1;min-height:44px;border:0;border-radius:12px;font-weight:800;font-size:12px;line-height:1.2;cursor:pointer;color:#fff;background:#3A4A2A;box-shadow:0 3px 0 #1A2410;touch-action:manipulation}
+.skb small{display:block;font-size:10px;opacity:.85}
+.skb:disabled{filter:grayscale(.8) brightness(.7);cursor:default}
+.skb.kinki{background:linear-gradient(135deg,#5A1A7A,#1A0A2A);color:#F2C0FF}
+.ov{position:absolute;inset:0;display:flex;align-items:safe center;justify-content:center;background:rgba(6,8,4,.74);border-radius:14px;padding:12px;z-index:3;overflow-y:auto;overscroll-behavior:contain}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;width:100%;max-width:400px;text-align:center;margin:auto 0}
+.card h2{margin:0;font-family:"Dela Gothic One",sans-serif;font-size:24px;line-height:1.3;color:var(--gold)}
+.story{font-size:14px;line-height:1.85;text-align:left;margin:10px 0;white-space:pre-line}
+.sub{font-size:12px;color:var(--mute);line-height:1.6;margin:6px 0;white-space:pre-line}
+.go{display:block;width:100%;min-height:48px;border:0;border-radius:14px;font-weight:800;font-size:16px;cursor:pointer;margin-top:8px;background:var(--purple);color:#fff;box-shadow:0 4px 0 #4A2A90}
+.go.alt{background:#34402A;box-shadow:0 4px 0 #1A2410}
+.back{display:block;margin-top:10px;font-size:13px;font-weight:800;color:var(--mute);text-decoration:none}
+.skills{display:grid;gap:6px;text-align:left;margin-top:8px}
+.sk{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;background:#28301E;border-radius:12px;padding:8px 10px}
+.sk b{font-size:14px}.sk small{grid-column:1;font-size:11px;color:var(--mute)}
+.sk.kinki{background:#2A0E2E;outline:2px solid #B03AC8}.sk.kinki b{color:#F2A0FF}
+.sk button{grid-row:1/3;grid-column:2;border:0;border-radius:10px;padding:8px 10px;font-weight:800;font-size:12px;background:var(--gold);color:#221A10;cursor:pointer;min-width:96px}
+.sk button:disabled{background:#3A4430;color:#8A9A7A;cursor:default}
+.keys{font-size:11px;color:var(--mute);text-align:center;margin-top:8px;line-height:1.6}
+@media (pointer:coarse){.pc{display:none}}
+</style>
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-180.png">
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>⏳ マネーダイソン2</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false" title="Oキー">🤖 オート</button>
+    <button class="mini" id="muteBtn">音 ON</button>
+  </div>
+  <div id="wrap">
+    <canvas id="cv" width="360" height="480" aria-label="森にのまれた世界で寿命を吸うダイソン"></canvas>
+    <div class="ov" id="storyOv">
+      <div class="card">
+        <h2 id="storyTitle"></h2>
+        <div class="story" id="storyText"></div>
+        <button class="go" id="storyBtn">すすむ</button>
+        <button class="go alt" id="autoStartBtn">🤖 オートで見る</button>
+        <a class="back" href="../" id="storyBack">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+    <div class="ov" id="shopOv" hidden>
+      <div class="card">
+        <h2>🪨 石器ショップ</h2>
+        <p class="sub">お支払いは「寿命」のみ。お金？ それは石ころと同じです。<br>使いすぎると、寿命がつきるので注意。</p>
+        <div class="skills" id="skills"></div>
+        <button class="go" id="closeShop">もどる</button>
+      </div>
+    </div>
+  </div>
+  <div id="pad"><button id="suckBtn">⏳ 吸う<br><small style="font-size:12px;font-family:sans-serif">（長押し）</small></button><button id="shopBtn">🪨 ショップ</button><button id="skBtn" hidden>🔥 たき火</button></div>
+  <div class="skbar" id="skbar" hidden><button class="skb" id="sk_stop">⏸ 時間停止<small></small></button><button class="skb kinki" id="sk_hole">🕳 タイムホール<small></small></button></div>
+  <p class="keys">画面をさわった所へ歩く。<span class="pc">PC：矢印/WASDで移動　スペース長押しで吸う　S ショップ　F たき火　O オート　M 音</span></p>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+let seed=(Date.now()%2147483646)+1; const rnd=()=>{ seed=seed*16807%2147483647; return (seed-1)/2147483646; };
+const clamp=(v,a,b)=>v<a?a:v>b?b:v, pick=a=>a[Math.floor(rnd()*a.length)], lr=(a,b)=>a+(b-a)*rnd();
+const W=360,H=480, AREA={x0:16,x1:344,y0:84,y1:466};
+const cv=$('cv'), g=cv.getContext('2d');
+// years, with 万 / 億 units
+const yrs=n=>{ n=Math.max(0,n); if(n>=1e8) return (n/1e8>=100?Math.round(n/1e8).toLocaleString():(n/1e8).toFixed(1))+'億年'; if(n>=1e4) return (n/1e4>=100?Math.round(n/1e4).toLocaleString():(n/1e4).toFixed(1))+'万年'; return (n<10?n.toFixed(1):Math.round(n).toLocaleString())+'年'; };
+
+/* ================= who has years left ================= */
+const T={
+  kid:{n:'子ども',life:[62,76],age:[5,10],sp:1.25,kind:'person',react:'flee'},
+  young:{n:'若者',life:[45,56],age:[16,24],sp:1.05,kind:'person',react:'stone'},
+  adult:{n:'大人',life:[28,40],age:[30,45],sp:.9,kind:'person',react:'stone'},
+  elder:{n:'長老',life:[2,7],age:[80,95],sp:.5,kind:'person',react:'none'},
+  warrior:{n:'戦士',life:[35,45],age:[22,32],sp:1.1,kind:'person',react:'charge'},
+  shaman:{n:'森の呪術師',life:[300,600],age:[60,80],sp:.7,kind:'person',react:'curse'},
+  hermit:{n:'仙人',life:[3000,6000],age:[300,500],sp:.6,kind:'person',react:'curse'},
+  mammoth:{n:'マンモス',life:[50,70],age:[10,20],sp:.8,kind:'beast',react:'stampede'},
+  sapling:{n:'若木',life:[60,160],kind:'tree',r:12},
+  tree:{n:'大木',life:[600,1600],kind:'tree',r:18},
+  giant:{n:'巨木',life:[5000,12000],kind:'tree',r:26},
+  sacred:{n:'千年樹',life:[40000,90000],kind:'tree',r:34},
+  vent:{n:'地脈',life:[1.6e8,1.8e8],kind:'vent',r:24},
+};
+const STAGES=[
+  {n:'森にのまれた街',goal:300,drain:1,dmg:4,mix:{kid:3,young:3,adult:3,elder:2},count:10,trees:{sapling:7,tree:2},bg:['#3A4A2A','#4A5A34'],
+   intro:'お金がなくなった世界で、街はまたたく間に荒れはてた。\nビルはつたにおおわれ、道路は森にのまれた。\n人々は毛皮を着て、石器を手にくらしている。\n\nだが、ダイソン自身も年老いていた。\n残りの寿命は、あとわずか――。',
+   tip:'人に手をかざすと、その人の寿命が自分に流れこむ（吸われた人は年をとる）。\n木からも吸える。ダイソンの寿命は、何もしなくても毎秒へっていく！\n\n🎯 特別標的を最後まで吸うとボーナス。吸い続けるほど警戒度が上がり、MAXになると全員が襲ってくる。短く吸って逃げるか、コンボを伸ばすかが勝負。'},
+  {n:'マンモスの草原',goal:2000,drain:3,dmg:15,mix:{kid:2,young:3,adult:3,warrior:2,mammoth:2,elder:1},count:11,trees:{sapling:4,tree:4},bg:['#6A7A3A','#8A9A4A'],
+   intro:'街の外には、どこまでも草原が広がっていた。\nマンモスがもどってきている。\n戦士たちは、石の槍を持っている。',tip:'戦士は怒ると突進してくる。マンモスは暴走する。\n🪨ショップで寿命をはらって能力をきたえよう。'},
+  {n:'巨木の森',goal:20000,drain:10,dmg:80,mix:{young:2,adult:2,warrior:3,shaman:2,mammoth:2,kid:2},count:11,trees:{tree:5,giant:4},bg:['#1E3A1E','#2A4A26'],
+   intro:'人がいなくなった土地には、巨大な木々がしげっていた。\n樹齢数千年の巨木たち。\n森の呪術師が、木を守っている。',tip:'呪術師の呪いは、ダイソンの寿命をけずる。\n巨木の寿命はたっぷり。呪術師から目をはなすな。'},
+  {n:'千年樹の聖域',goal:2.5e5,drain:40,dmg:900,mix:{hermit:3,shaman:3,warrior:3},count:9,trees:{giant:3,sacred:4},bg:['#2A2A40','#3A3A54'],
+   intro:'森のいちばん奥。\n千年、いや何万年も生きる「千年樹」と、\n寿命の長い仙人たちが住む聖域。',tip:'千年樹から寿命を吸い尽くせ。仙人の呪いは強い。'},
+  {n:'地球',goal:1e9,drain:1000,dmg:0,earth:1,mix:{},count:0,trees:{},bg:['#3A1A10','#5A2A14'],
+   intro:'人からも、木からも、吸い尽くした。\nダイソンは足もとを見つめた。\n\n──地球にも、寿命がある。\n\n残り、およそ10億年。',tip:'地面の「地脈」から地球の寿命を吸え。\n吸うほど地球は怒り、噴火と地震でダイソンの寿命を削ってくる（寿命の何％かが持っていかれる）。'},
+];
+/* ================= skills (paid in years) ================= */
+const powOf=l=>5*Math.pow(2.6,l-1), rngOf=l=>[56,88,122,156,190][l-1], stlOf=l=>Math.pow(.6,l-1), spdOf=l=>1+.22*(l-1), armOf=l=>Math.pow(.62,l-1);
+const SK=[
+  {id:'pow',n:'吸引力',d:l=>`1秒に ${yrs(powOf(l))} 吸う`,max:9,cost:l=>40*Math.pow(3.1,l-1)},
+  {id:'rng',n:'吸引距離',d:l=>`とどく距離 ${rngOf(l)}`,max:5,cost:l=>50*Math.pow(4.2,l-1)},
+  {id:'stl',n:'気づかれにくさ',d:l=>`気づかれる速さ ${Math.round(stlOf(l)*100)}%`,max:5,cost:l=>40*Math.pow(3.6,l-1)},
+  {id:'arm',n:'石あたま',d:l=>`うける被害 ${Math.round(armOf(l)*100)}%`,max:4,cost:l=>70*Math.pow(4.5,l-1)},
+  {id:'spd',n:'若い足',d:l=>`足の速さ ${Math.round(spdOf(l)*100)}%`,max:4,cost:l=>30*Math.pow(3.6,l-1)},
+  {id:'multi',n:'同時吸引',d:l=>`${l}つから同時に吸う`,max:3,cost:l=>[450,7000][l-1]},
+  {id:'fire',act:1,n:'🔥 お札たき火',desc:'使い道のない一万円札を燃やして、たき火をする。まわりの人は火にあたってぼーっとし、気づかなくなる（25秒ごと）',max:1,cost:()=>90},
+  {id:'stop',act:1,n:'⏸ 時間停止',desc:'6秒間、世界の時間を止める。止まっている間は気づかれない（1つの面で1回）',max:1,cost:()=>3000},
+  {id:'hole',act:1,kinki:1,n:'🕳 禁忌「タイムホール」',desc:'まわりの全員と全部の木から、寿命を一瞬で吸い尽くす。そのあと、空から石の雨がふる（1つの面で1回）',max:1,cost:()=>60000},
+];
+
+/* ================= state ================= */
+const LV0={pow:1,rng:1,stl:1,arm:1,spd:1,multi:1,fire:0,stop:0,hole:0};
+const S={scene:'story',stage:0,life:30,lv:{...LV0},npcs:[],trees:[],fx:[],shots:[],fires:[],rocks:[],p:null,t:0,sucking:false,targets:[],paused:false,auto:false,manual:false,msg:'',msgT:9,endT:0,stopT:0,stopUsed:false,holeUsed:false,fireCd:0,quake:0,earthT:0,shake:0,alert:0,combo:0,comboT:0,comboClock:0,focusType:null,contract:null,contractDone:0,
+  move:null,keys:{},best:(()=>{ try{ return JSON.parse(localStorage.getItem('dyson2Best')||'null')||{stage:0,clears:0,max:0}; }catch(e){ return {stage:0,clears:0,max:0}; } })(),stats:{sucked:0,aged:0,trees:0,hits:0},ending:null};
+let nid=1;
+function saveBest(){ if(S.auto) return; try{ localStorage.setItem('dyson2Best',JSON.stringify(S.best)); }catch(e){} }
+const st=()=>STAGES[S.stage];
+
+function mkNpc(type,x,y){ const t=T[type]; const life=lr(t.life[0],t.life[1]);
+  return {id:nid++,type,t,x,y,tx:x,ty:y,life,max:life,age:t.age?lr(t.age[0],t.age[1]):0,sp:(t.sp||1)*(30+rnd()*8),state:'walk',sus:0,wary:0,idle:0,face:1,angryT:0,cd:0}; }
+function spawnPerson(edge){ const s=st(), keys=Object.keys(s.mix); if(!keys.length) return; const tot=keys.reduce((a,k)=>a+s.mix[k],0); let r=rnd()*tot, type=keys[0]; for(const k of keys){ r-=s.mix[k]; if(r<0){ type=k; break; } }
+  const x=edge?(rnd()<.5?AREA.x0:AREA.x1):lr(AREA.x0,AREA.x1), y=lr(AREA.y0+20,AREA.y1-20); S.npcs.push(mkNpc(type,x,y)); }
+function startStage(i){
+  S.stage=i; const s=st(); S.npcs=[]; S.trees=[]; S.fx=[]; S.shots=[]; S.fires=[]; S.rocks=[]; S.targets=[]; S.stopT=0; S.stopUsed=false; S.holeUsed=false; S.fireCd=0; S.quake=4; S.scene='play'; S.paused=false; S.t=0; S.autoShopT=0;
+  S.p={x:180,y:AREA.y1-30,vx:0,vy:0,inv:0,face:1};
+  for(let k=0;k<s.count;k++) spawnPerson(false);
+  for(const [k,n] of Object.entries(s.trees)) for(let j=0;j<n;j++){ let x,y,ok=false,tries=0; while(!ok&&tries++<50){ x=lr(AREA.x0+20,AREA.x1-20); y=lr(AREA.y0+20,AREA.y1-60); ok=S.trees.every(t=>Math.hypot(t.x-x,t.y-y)>t.t.r+T[k].r+16); }
+    const tr=mkNpc(k,x,y); tr.state='tree'; S.trees.push(tr); }
+  if(s.earth){ const spots=[[90,150],[270,150],[180,250],[80,360],[280,360],[180,420]]; for(const [x,y] of spots){ const v=mkNpc('vent',x,y); v.state='vent'; S.trees.push(v); } }
+  S.start={life:S.life,lv:{...S.lv}}; S.alert=0; S.combo=0; S.comboT=0; S.comboClock=0; S.contractDone=0; S.lastSpawn=-99; S.focusType=null; S.contract=Object.keys(s.mix||{}).filter(k=>T[k]).sort(()=>rnd()-.5)[0]||null; say(`第${i+1}章　${s.n}`); hideAll(); sfx('start'); syncButtons();
+  if(i>S.best.stage){ S.best.stage=i; saveBest(); }
+}
+function say(m){ S.msg=m; S.msgT=0; }
+function fx(o){ S.fx.push(Object.assign({t:0},o)); }
+function hideAll(){ $('storyOv').hidden=true; $('shopOv').hidden=true; }
+let storyFn=null;
+function story(title,text,btn,fn,showAuto){ S.scene='story'; $('storyTitle').textContent=title; $('storyText').textContent=text; $('storyBtn').textContent=btn; storyFn=fn; $('autoStartBtn').hidden=!showAuto; $('storyBack').hidden=!showAuto; $('storyOv').hidden=false; S.endT=0; }
+function titleScreen(){ S.life=30; S.lv={...LV0}; S.ending=null; S.stats={sucked:0,aged:0,trees:0,hits:0};
+  story('マネーダイソン2','世界のお金を吸い尽くした男、マネーダイソン。\nダイソン以外の人間はお金を持てなくなり、\n人類は石器時代――ストーンワールドに逆もどりした。\n\nお金のない人から、それでも吸いつづけたある日。\nダイソンの手に流れこんできたのは、お金より大事なもの──\n「寿命」だった。\n\n吸われた人は、みるみる年をとっていく。\n'+`（とうたつ：第${S.best.stage+1}章　クリア ${S.best.clears}回）`,'はじめる',()=>stageIntro(0),true); }
+function stageIntro(i){ const s=STAGES[i]; story(`第${i+1}章　${s.n}`,s.intro+'\n\n💡 '+s.tip+`\n\n目標：寿命 ${yrs(s.goal)}${s.earth?'（地球の寿命をすべて）':''}`,'この地へ',()=>startStage(i),false); }
+function stageClear(){ S.scene='cleared'; sfx('clear'); const s=st();
+  if(S.stage<STAGES.length-1) story(`第${S.stage+1}章 クリア`,`ダイソンの寿命は ${yrs(S.life)} になった。\n吸われた人たちは、すっかりお年寄りに。\n\n${S.stage===3?'もう、吸える人も木も、ほとんど残っていない。':'次の地へ向かう。'}🪨ショップで能力をきたえよう。`,'次へ',()=>stageIntro(S.stage+1),false);
+  else endingStart(); }
+function lifeOut(){ S.scene='down'; sfx('lose'); story('寿命がつきた…',`ダイソンは、静かに年老いて……ねむりについた。\n第${S.stage+1}章のはじめからやり直しだ。`,'もう一度',()=>{ S.life=S.start.life; S.lv={...S.start.lv}; stageIntro(S.stage); },false); }
+
+/* ================= sucking ================= */
+const canSuck=n=>n.life>0.5&&n.wary<=0&&n.state!=='old'&&n.state!=='leave'&&n.state!=='dead';
+function suckTargets(){ const p=S.p, R=rngOf(S.lv.rng)*(st().earth?1.25:1), all=[...S.npcs,...S.trees].filter(n=>canSuck(n)&&Math.hypot(n.x-p.x,n.y-p.y)<=R+(n.t.r||0));
+  all.sort((a,b)=>(b.life*(b.sus>.85?.1:1))-(a.life*(a.sus>.85?.1:1))); return all.slice(0,S.lv.multi); }
+function update(dt){
+  S.t+=dt; S.msgT+=dt; for(const f of S.fx) f.t+=dt; S.fx=S.fx.filter(f=>f.t<(f.life||1.3)); S.shake=Math.max(0,S.shake-dt*20);
+  if(S.scene==='ending'){ endingTick(dt); return; }
+  if(S.scene!=='play'){ if(S.auto){ S.endT+=dt; if(S.endT>2.2){ S.endT=0; if(!$('storyOv').hidden&&storyFn){ const f=storyFn; f(); } } } return; }
+  if(S.paused){ if(S.auto){ S.endT+=dt; if(S.endT>1.2){ S.endT=0; closeShop(); } } return; }
+  const p=S.p, s=st();
+  if(S.auto) autoTick(dt);
+  // the curse of the power: your own years run out
+  if(S.stopT<=0) S.life-=s.drain*dt;
+  // moving
+  let mx=0,my=0; if(S.move){ const dx=S.move.x-p.x, dy=S.move.y-p.y, d=Math.hypot(dx,dy); if(d>4){ mx=dx/d*Math.min(1,d/24); my=dy/d*Math.min(1,d/24); } }
+  if(S.keys.l) mx-=1; if(S.keys.r) mx+=1; if(S.keys.u) my-=1; if(S.keys.d) my+=1; const ml=Math.hypot(mx,my); if(ml>1){ mx/=ml; my/=ml; }
+  const spd=82*spdOf(S.lv.spd)*(S.sucking?.6:1); p.x+=(mx*spd+p.vx)*dt; p.y+=(my*spd+p.vy)*dt; p.vx*=Math.pow(.03,dt); p.vy*=Math.pow(.03,dt); if(mx) p.face=Math.sign(mx);
+  for(const t of S.trees){ const d=Math.hypot(p.x-t.x,p.y-t.y), m=(t.t.r||10)*.6+8; if(d<m&&d>0){ p.x=t.x+(p.x-t.x)/d*m; p.y=t.y+(p.y-t.y)/d*m; } }
+  p.x=clamp(p.x,AREA.x0,AREA.x1); p.y=clamp(p.y,AREA.y0,AREA.y1); if(p.inv>0) p.inv-=dt;
+  // sucking years
+  S.targets=S.sucking?suckTargets():[];
+  for(const n of S.targets){ let rate=powOf(S.lv.pow)*(n.type==='vent'?380:1), take=Math.min(n.life,rate*dt); const bonus=(S.contract&&n.type===S.contract)?1.8:1; const comboMult=1+Math.min(1.5,Math.floor(S.combo/3)*.15); take*=bonus*comboMult; take=Math.min(n.life,take); n.life-=take; S.life+=take; S.stats.sucked+=take; S.alert=Math.min(100,S.alert+dt*(n.t.kind==='tree'?1.5:4)*(1+S.combo*.025)); S.comboT=0.9; if(n.age!=null&&n.t.kind!=='vent') n.age+=take;
+    n.sus+=dt*stlOf(S.lv.stl)*(n.t.kind==='tree'?0:n.t.kind==='vent'?.32:n.nearFire?0:.55)*(S.stopT>0?0:1);
+    if(rnd()<dt*8) fx({k:'sand',x:n.x,y:n.y-12,tx:p.x,ty:p.y-12});
+    if(n.life<=0.5){ const wasContract=S.contract&&n.type===S.contract; drained(n); if(wasContract){ S.contractDone++; S.life+=Math.max(5,n.max*.25); fx({k:'txt',x:n.x,y:n.y-54,txt:'🎯 特別報酬！ +'+yrs(Math.max(5,n.max*.25)),col:'#FFD65A',big:1}); } S.combo++; } else if(n.sus>=1) anger(n); }
+  if(S.stopT>0){ S.stopT-=dt; }
+  else {
+    S.alert=Math.max(0,S.alert-dt*2.2);
+    for(const n of S.npcs) npcTick(n,dt);
+    for(const s2 of S.shots) shotTick(s2,dt); S.shots=S.shots.filter(x=>!x.done);
+    for(const v of S.trees){ if(v.wary>0) v.wary-=dt; if(!S.targets.includes(v)) v.sus=Math.max(0,v.sus-dt*.08); if(v.type==='vent'&&v.erupt>0){ v.erupt-=dt; if(v.erupt<=0) eruption(v); } }
+    if(s.earth) earthTick(dt);
+    for(const r of S.rocks){ r.t+=dt; if(r.t>=r.at&&!r.hit){ r.hit=true; fx({k:'boom',x:r.x,y:r.y}); S.shake=4; if(Math.hypot(p.x-r.x,p.y-r.y)<r.r) hurt(r.dmg,'rock',r.x,r.y); } } S.rocks=S.rocks.filter(r=>r.t<r.at+.4);
+  }
+  S.comboT-=dt; S.comboClock-=dt; if(S.sucking&&S.targets.length&&S.comboClock<=0){ S.combo=Math.min(12,S.combo+1); S.comboClock=.75; S.comboT=1.15; } if(S.comboT<=0){ S.combo=0; S.comboClock=0; }
+  for(const f of S.fires){ f.t+=dt; } S.fires=S.fires.filter(f=>f.t<9);
+  for(const n of S.npcs){ n.nearFire=S.fires.some(f=>Math.hypot(f.x-n.x,f.y-n.y)<90); }
+  S.fireCd=Math.max(0,S.fireCd-dt);
+  S.npcs=S.npcs.filter(n=>n.state!=='gone');
+  if(!s.earth){
+    const alive=S.npcs.filter(n=>n.state!=='old'&&n.state!=='leave').length;
+    // 吸い尽くして人が減ったとき、次の犠牲者を待たせない。
+    // 特に第3章は人の入れ替わりを速くして、テンポを維持する。
+    const refillRate=S.stage===2?2.8:.9;
+    if(alive<s.count){
+      const missing=s.count-alive;
+      const add=Math.min(missing,Math.max(1,Math.floor(refillRate*dt+(S.stage===2?rnd():0))));
+      if(S.t-S.lastSpawn>=(S.stage===2?.18:0.65)){
+        for(let k=0;k<add;k++) spawnPerson(true);
+        S.lastSpawn=S.t;
+      }
+    }
+  }
+  if(S.life>S.best.max){ S.best.max=S.life; }
+  syncButtons();
+  if(S.alert>=100){ S.alert=70; S.combo=0; say('🚨 警戒MAX！ 全員がダイソンを狙っている！'); for(const n of S.npcs) if(n.state==='walk') { n.state='angry'; n.angryT=5; n.cd=.4; } }
+  if(S.life<=0){ S.life=0; return lifeOut(); }
+  if(s.earth?S.trees.every(v=>v.life<=0.5):S.life>=s.goal) stageClear();
+}
+function drained(n){ n.life=0;
+  if(n.t.kind==='tree'){ n.state='dead'; S.stats.trees++; fx({k:'txt',x:n.x,y:n.y-n.t.r-8,txt:'枯れた…',col:'#C8B890'}); for(let k=0;k<8;k++) fx({k:'leaf',x:n.x+lr(-n.t.r,n.t.r),y:n.y-n.t.r,vx:lr(-30,30),vy:lr(10,50),life:1.6}); sfx('wither'); }
+  else if(n.t.kind==='vent'){ n.state='dead'; fx({k:'txt',x:n.x,y:n.y-28,txt:'地脈が止まった',col:'#FFB080'}); S.shake=10; sfx('quake'); }
+  else { n.state='old'; n.oldT=0; S.stats.aged++; fx({k:'txt',x:n.x,y:n.y-34,txt:pick(['ほっほっほ…','よっこらしょ…','あれ、腰が…','ずいぶん年をとったのう']),col:'#E8E0C8'}); sfx('old'); } }
+function anger(n){ if(n.t.kind==='tree') return; S.alert=Math.min(100,S.alert+18); S.combo=0; S.comboT=0; S.comboClock=0; n.sus=0; n.wary=5; const p=S.p;
+  if(n.t.kind==='vent'){ n.erupt=1.2; fx({k:'txt',x:n.x,y:n.y-30,txt:'ゴゴゴゴ…',col:'#FFB080'}); fx({k:'warn',x:n.x,y:n.y,r:70,life:1.2}); return; }
+  const r=n.t.react; n.angryT=6;
+  if(r==='flee'){ n.state='flee'; fx({k:'txt',x:n.x,y:n.y-30,txt:'うわーん！ 年とったー！',col:'#FFE0A0'}); for(const m of S.npcs) if(m!==n&&m.t.react==='stone'&&Math.hypot(m.x-n.x,m.y-n.y)<130){ m.state='angry'; m.angryT=6; m.cd=.5; } sfx('cry'); }
+  else if(r==='none'){ n.state='walk'; }
+  else { n.state='angry'; n.cd=.6; fx({k:'txt',x:n.x,y:n.y-30,txt:r==='charge'?'ウオオッ！':r==='curse'?'寿命どろぼうめ…！':r==='stampede'?'パオーン！':'なにをする！',col:'#FF9A8A'}); sfx('angry'); } }
+function hurt(years,kind,x,y){ const p=S.p; if(p.inv>0||S.stopT>0) return; const s=st();
+  const loss=(s.earth?S.life*years:years)*armOf(S.lv.arm); S.life-=loss; S.stats.hits++; p.inv=1; const a=Math.atan2(p.y-y,p.x-x); p.vx=Math.cos(a)*220; p.vy=Math.sin(a)*220; S.shake=6;
+  fx({k:'txt',x:p.x,y:p.y-34,txt:`寿命 -${yrs(loss)}`,col:'#FF8A7A',big:1}); sfx('hit'); }
+function npcTick(n,dt){
+  const p=S.p; if(n.wary>0) n.wary-=dt; n.cd-=dt; if(n.angryT>0){ n.angryT-=dt; if(n.angryT<=0&&(n.state==='angry'||n.state==='flee')) n.state='walk'; }
+  const sp=n.sp*(n.age>70&&n.t.kind==='person'?.55:1);
+  if(n.state==='old'){ n.oldT+=dt; if(n.oldT>2.5) n.state='leave'; return; }
+  if(n.state==='leave'){ const tx=n.x<180?AREA.x0-30:AREA.x1+30; n.x+=Math.sign(tx-n.x)*14*dt; if(n.x<AREA.x0-20||n.x>AREA.x1+20) n.state='gone'; return; }
+  if(n.nearFire&&n.state==='walk'){ const f=S.fires.find(f=>Math.hypot(f.x-n.x,f.y-n.y)<90); if(f){ const d=Math.hypot(f.x-n.x,f.y-n.y); if(d>34){ n.x+=(f.x-n.x)/d*sp*dt; n.y+=(f.y-n.y)/d*sp*dt; } return; } }
+  if(n.state==='walk'){ const d=Math.hypot(n.tx-n.x,n.ty-n.y); if(d<4){ n.idle-=dt; if(n.idle<=0){ n.tx=lr(AREA.x0,AREA.x1); n.ty=lr(AREA.y0+10,AREA.y1-10); n.idle=1+rnd()*2; } } else { n.x+=(n.tx-n.x)/d*sp*dt; n.y+=(n.ty-n.y)/d*sp*dt; n.face=Math.sign(n.tx-n.x)||n.face; }
+    // sucking them while they watch makes them suspicious too
+    return; }
+  if(n.state==='flee'){ const a=Math.atan2(n.y-p.y,n.x-p.x); n.x+=Math.cos(a)*sp*1.4*dt; n.y+=Math.sin(a)*sp*1.4*dt; }
+  if(n.state==='angry'){ const r=n.t.react, dx=p.x-n.x, dy=p.y-n.y, d=Math.hypot(dx,dy)||1; n.face=Math.sign(dx)||n.face; const D=st().dmg;
+    if(r==='stone'){ if(d>110){ n.x+=dx/d*sp*dt; n.y+=dy/d*sp*dt; } if(n.cd<=0){ n.cd=1.4; S.shots.push({k:'stone',x:n.x,y:n.y-14,vx:dx/d*190,vy:dy/d*190,dmg:D*1,life:1.4}); sfx('throw'); } }
+    else if(r==='charge'){ n.x+=dx/d*sp*2.2*dt; n.y+=dy/d*sp*2.2*dt; if(d<16) hurt(D*2,'spear',n.x,n.y); }
+    else if(r==='stampede'){ if(!n.dir) n.dir={x:dx/d,y:dy/d}; n.x+=n.dir.x*130*dt; n.y+=n.dir.y*130*dt; if(Math.hypot(p.x-n.x,p.y-n.y)<26) hurt(D*3,'mammoth',n.x,n.y); if(n.x<AREA.x0||n.x>AREA.x1||n.y<AREA.y0||n.y>AREA.y1){ n.dir=null; n.state='walk'; n.angryT=0; } }
+    else if(r==='curse'){ if(n.cd<=0){ n.cd=2.2; S.shots.push({k:'curse',x:n.x,y:n.y-20,vx:0,vy:0,homing:1,dmg:D*2.5,life:3.2}); fx({k:'txt',x:n.x,y:n.y-36,txt:'呪…',col:'#D8A0FF'}); sfx('curse'); } } }
+  n.x=clamp(n.x,AREA.x0-24,AREA.x1+24); n.y=clamp(n.y,AREA.y0,AREA.y1);
+}
+function shotTick(s,dt){ const p=S.p; s.life-=dt; if(s.life<=0){ s.done=true; return; }
+  if(s.homing){ const dx=p.x-s.x, dy=p.y-12-s.y, d=Math.hypot(dx,dy)||1; s.vx+=(dx/d*130-s.vx)*Math.min(1,dt*2.5); s.vy+=(dy/d*130-s.vy)*Math.min(1,dt*2.5); }
+  s.x+=s.vx*dt; s.y+=s.vy*dt; if(Math.hypot(s.x-p.x,s.y-(p.y-12))<14){ s.done=true; hurt(s.dmg,s.k,s.x,s.y); } }
+/* --- the angry Earth --- */
+function eruption(v){ S.shake=12; sfx('quake'); fx({k:'lava',x:v.x,y:v.y,r:70,life:1}); if(Math.hypot(S.p.x-v.x,S.p.y-v.y)<70) hurt(.12,'lava',v.x,v.y); }
+function earthTick(dt){ S.quake-=dt; const left=S.trees.reduce((a,v)=>a+v.life,0);
+  if(S.quake<=0){ S.quake=Math.max(3,7-(1-left/1e9)*4); S.shake=8; say('🌋 地球が怒っている…！ 地震だ！'); sfx('quake'); const n=4+Math.floor((1-left/1e9)*5);
+    for(let k=0;k<n;k++){ const near=k<2; S.rocks.push({x:near?S.p.x+lr(-40,40):lr(AREA.x0,AREA.x1),y:near?S.p.y+lr(-40,40):lr(AREA.y0,AREA.y1),r:30,t:0,at:1.1+rnd()*.6,dmg:.06}); } } }
+
+/* ================= skills ================= */
+function syncButtons(){ $('skBtn').hidden=!S.lv.fire; $('skBtn').disabled=S.fireCd>0||S.scene!=='play'; $('skBtn').textContent=S.fireCd>0?`🔥 ${Math.ceil(S.fireCd)}秒`:'🔥 たき火';
+  const any=S.lv.stop||S.lv.hole; $('skbar').hidden=!any; $('sk_stop').hidden=!S.lv.stop; $('sk_hole').hidden=!S.lv.hole;
+  $('sk_stop').disabled=S.stopUsed||S.scene!=='play'; $('sk_stop').querySelector('small').textContent=S.stopT>0?`停止中 ${Math.ceil(S.stopT)}秒`:S.stopUsed?'使用ずみ':'1面に1回';
+  $('sk_hole').disabled=S.holeUsed||S.scene!=='play'; $('sk_hole').querySelector('small').textContent=S.holeUsed?'使用ずみ':'1面に1回'; }
+function useFire(){ if(S.scene!=='play'||!S.lv.fire||S.fireCd>0) return; S.fireCd=25; S.alert=Math.max(0,S.alert-35); S.combo=0; S.comboT=0; S.comboClock=0; const p=S.p; S.fires.push({x:p.x,y:p.y-4,t:0}); for(const n of S.npcs){ if(Math.hypot(n.x-p.x,n.y-p.y)<160&&n.state==='angry'){ n.state='walk'; n.angryT=0; } n.sus=Math.max(0,n.sus-.4); }
+  fx({k:'txt',x:p.x,y:p.y-40,txt:'一万円札でたき火。あったかい。',col:'#FFD080'}); say('🔥 お金は、燃やすとあったかい'); sfx('fire'); }
+function useStop(){ if(S.scene!=='play'||!S.lv.stop||S.stopUsed) return; S.stopUsed=true; S.stopT=6; say('⏸ 時間よ、止まれ'); sfx('stop'); }
+function useHole(){ if(S.scene!=='play'||!S.lv.hole||S.holeUsed) return; S.holeUsed=true; const p=S.p; let tot=0;
+  for(const n of [...S.npcs,...S.trees]){ if(!canSuck(n)||n.type==='vent') continue; tot+=n.life; S.stats.sucked+=n.life; if(n.age!=null) n.age+=n.life; fx({k:'sand',x:n.x,y:n.y,tx:p.x,ty:p.y}); drained(n); }
+  if(st().earth){ for(const v of S.trees) if(v.type==='vent'&&v.life>0){ const k=v.life*.15; v.life-=k; tot+=k; } }
+  S.life+=tot; fx({k:'txt',x:p.x,y:p.y-40,txt:`+${yrs(tot)}`,col:'#F2A0FF',big:1}); fx({k:'hole',x:p.x,y:p.y,life:2}); S.shake=12; say('🕳 禁忌…　空から石が！'); sfx('hole');
+  for(let k=0;k<10;k++) S.rocks.push({x:lr(AREA.x0,AREA.x1),y:lr(AREA.y0,AREA.y1),r:28,t:0,at:1+rnd()*4,dmg:st().earth?.05:st().dmg*2}); }
+/* --- the stone-age shop: every price is in years --- */
+function openShop(){ if(S.scene!=='play') return; S.paused=true; S.sucking=false; renderShop(); $('shopOv').hidden=false; }
+function closeShop(){ $('shopOv').hidden=true; S.paused=false; }
+function costOf(sk){ return sk.cost(S.lv[sk.id]+(sk.act?1:0)); }
+function buy(id){ const sk=SK.find(s=>s.id===id), l=S.lv[id]; if(l>=sk.max) return; const c=costOf(sk); if(S.life-c<5) return; S.life-=c; S.lv[id]++; sfx('buy'); renderShop(); syncButtons(); }
+function renderShop(){ $('skills').innerHTML=SK.map(sk=>{ const l=S.lv[sk.id], max=l>=sk.max, c=max?0:costOf(sk), can=!max&&S.life-c>=5;
+    return `<div class="sk${sk.kinki?' kinki':''}"><b>${sk.n}${sk.act?'':` Lv${l}`}</b><small>${sk.act?sk.desc:(max?sk.d(l):`${sk.d(l)} → ${sk.d(l+1)}`)}</small><button data-id="${sk.id}" ${can?'':'disabled'}>${max?(sk.act?'習得ずみ':'MAX'):'寿命 '+yrs(c)}</button></div>`; }).join('')+`<p class="sub">いまの寿命：${yrs(S.life)}（毎秒 ${yrs(st().drain)} へる）</p>`;
+  $('skills').querySelectorAll('button[data-id]').forEach(b=>b.onclick=()=>{ user(); buy(b.dataset.id); }); }
+
+/* ================= ending ================= */
+function endingStart(){ hideAll(); S.scene='ending'; S.best.clears++; saveBest(); S.ending={t:0,life:1e9,lines:['地球は、寿命をすべて吸い尽くされた。','ひび割れた大地は、静かにくだけ散り――','ダイソンは、宇宙に投げ出された。','手もとには、世界じゅうのお金と、','10億年の寿命。','使う店も、話す相手も、もうどこにもない。','ダイソンは、寿命10億年を','ひとり静かに過ごすのであった。','――完――']}; sfx('end'); }
+function endingTick(dt){ const E=S.ending; E.t+=dt; E.life=Math.max(0,1e9-Math.max(0,E.t-6)); if(S.auto&&E.t>34){ titleScreen(); } }
+
+/* ================= auto: drink the long lives, dodge the angry, spend years on power when it is safe ================= */
+function autoTick(dt){
+  const p=S.p, s=st(); S.move=null;
+  // shopping when there is a safe surplus
+  const buffer=Math.max(20,s.drain*30,s.goal*.04);
+  if(!S.autoShopT||S.t>S.autoShopT){ S.autoShopT=S.t+3;
+    for(const id of ['pow','multi','pow','rng','stl','arm','fire','spd','stop','hole']){ const sk=SK.find(x=>x.id===id); if(S.lv[id]>=sk.max) continue; const c=costOf(sk); if(S.life-c>buffer+c*.5&&S.life-c>s.goal*.05){ S.life-=c; S.lv[id]++; sfx('buy'); syncButtons(); break; } } }
+  // dodge: incoming shots, falling rocks, chargers, lava warnings
+  const threat=[...S.shots.map(x=>({x:x.x,y:x.y})),...S.rocks.filter(r=>!r.hit).map(r=>({x:r.x,y:r.y,r:r.r+10})),...S.npcs.filter(n=>n.state==='angry'&&(n.t.react==='charge'||n.t.react==='stampede')).map(n=>({x:n.x,y:n.y,r:60})),...S.fx.filter(f=>f.k==='warn').map(f=>({x:f.x,y:f.y,r:f.r+12}))]
+    .find(o=>Math.hypot(o.x-p.x,o.y-p.y)<(o.r||46));
+  if(threat){ const a=Math.atan2(p.y-threat.y,p.x-threat.x); S.move={x:clamp(p.x+Math.cos(a)*80,AREA.x0+10,AREA.x1-10),y:clamp(p.y+Math.sin(a)*80,AREA.y0+10,AREA.y1-10)}; S.sucking=false; return; }
+  if(S.lv.hole&&!S.holeUsed&&s.goal-S.life>0&&[...S.npcs,...S.trees].filter(n=>canSuck(n)&&n.type!=='vent').reduce((a,n)=>a+n.life,0)>(s.earth?0:s.goal*.25)&&!s.earth) useHole();
+  if(s.earth&&S.lv.hole&&!S.holeUsed) useHole();
+  // the best target: lots of years, not watching (sus), not angry, not too far
+  const R=rngOf(S.lv.rng);
+  let best=null,bv=-1; for(const n of [...S.npcs,...S.trees]){ if(!canSuck(n)) continue; if(n.state==='angry'||n.state==='flee') continue; if(n.sus>.8&&n.t.kind!=='tree'&&n.type!=='vent') continue;
+    const d=Math.hypot(n.x-p.x,n.y-p.y), v=Math.min(n.life,powOf(S.lv.pow)*(n.type==='vent'?380:1)*6)/(1+d/90); if(v>bv){ bv=v; best=n; } }
+  if(S.lv.fire&&S.fireCd<=0&&S.npcs.filter(n=>Math.hypot(n.x-p.x,n.y-p.y)<120&&n.life>5).length>=3) useFire();
+  if(S.lv.stop&&!S.stopUsed&&S.npcs.filter(n=>n.state==='angry').length>=2) useStop();
+  if(!best){ S.sucking=false; S.move={x:180,y:280}; return; }
+  const d=Math.hypot(best.x-p.x,best.y-p.y);
+  if(d>R*.8+(best.t.r||0)) S.move={x:best.x,y:best.y+(best.t.r||0)+10};
+  S.sucking=d<=R+(best.t.r||0);
+  // let go before a person gets angry (the vents of the Earth too)
+  if(S.targets.some(n=>n.sus>.85&&n.t.kind!=='tree')&&S.targets.length===1) S.sucking=false;
+}
+
+/* ================= drawing ================= */
+function drawBG(){ const s=st(), gr=g.createLinearGradient(0,0,0,H); gr.addColorStop(0,s.bg[0]); gr.addColorStop(1,s.bg[1]); g.fillStyle=gr; g.fillRect(0,0,W,H);
+  const i=S.stage;
+  if(i===0){ // ruins swallowed by the forest
+    for(const [x,y,w,h] of [[20,90,60,46],[250,96,80,40],[120,300,50,30],[290,380,50,40]]){ g.fillStyle='rgba(120,120,110,.55)'; g.fillRect(x,y,w,h); g.fillStyle='rgba(40,60,30,.6)'; g.fillRect(x,y,w,8); g.strokeStyle='rgba(80,120,50,.8)'; g.lineWidth=2; g.beginPath(); g.moveTo(x+4,y); g.quadraticCurveTo(x+w/2,y+h*.7,x+w-6,y+h); g.stroke();
+      g.fillStyle='rgba(20,30,20,.5)'; for(let k=0;k<3;k++) g.fillRect(x+8+k*16,y+14,8,10); }
+    g.fillStyle='rgba(90,90,80,.35)'; g.fillRect(150,AREA.y0,40,AREA.y1-AREA.y0); g.fillStyle='rgba(60,90,40,.6)'; for(let k=0;k<20;k++) g.fillRect(150+(k*7)%40,AREA.y0+(k*53)%380,6,6); }
+  if(i===1){ g.fillStyle='rgba(255,255,200,.08)'; for(let k=0;k<40;k++) g.fillRect((k*67)%W,(k*41)%H+80,14,2); }
+  if(i===2||i===3){ g.fillStyle='rgba(0,0,0,.18)'; for(let k=0;k<14;k++){ g.beginPath(); g.arc((k*97)%W,(k*61)%400+90,30,0,7); g.fill(); } }
+  if(i===3){ g.fillStyle='rgba(200,200,255,.15)'; for(let k=0;k<30;k++){ g.fillRect((k*53+S.t*6)%W,(k*37)%400+80,2,2); } }
+  if(i===4){ g.strokeStyle='rgba(255,120,40,.5)'; g.lineWidth=2; for(let k=0;k<10;k++){ g.beginPath(); let x=(k*71)%W, y=AREA.y0+(k*43)%380; g.moveTo(x,y); for(let j=0;j<5;j++){ x+=lr(-20,20); y+=12; g.lineTo(x,y); } g.stroke(); } }
+}
+function drawTree(t){ const r=t.t.r, dead=t.state==='dead'||t.life<=0.5, f=dead?0:clamp(t.life/t.max,0,1);
+  g.fillStyle='rgba(0,0,0,.2)'; g.beginPath(); g.ellipse(t.x,t.y+4,r*.9,r*.35,0,0,7); g.fill();
+  g.fillStyle='#5A3A20'; g.fillRect(t.x-r*.18,t.y-r*.9,r*.36,r*.95);
+  if(dead){ g.strokeStyle='#6A5A48'; g.lineWidth=2; for(const a of [-.8,-.3,.3,.8]){ g.beginPath(); g.moveTo(t.x,t.y-r*.8); g.lineTo(t.x+Math.sin(a)*r,t.y-r*.8-Math.cos(a)*r*.8); g.stroke(); } return; }
+  const col=`hsl(${40+f*80},${30+f*30}%,${28+f*12}%)`; g.fillStyle=col;
+  for(const [dx,dy,rr] of [[0,-r*1.25,r*.85],[-r*.55,-r,r*.6],[r*.55,-r,r*.6]]){ g.beginPath(); g.arc(t.x+dx,t.y+dy,rr*(.6+f*.4),0,7); g.fill(); }
+  if(t.type==='sacred'){ g.strokeStyle='rgba(255,255,220,.5)'; g.lineWidth=2; g.beginPath(); g.arc(t.x,t.y-r*1.2,r*1.05,0,7); g.stroke(); g.fillStyle='#F4F0E0'; g.fillRect(t.x-r*.2,t.y-r*.55,r*.4,3); }
+}
+function drawVent(v){ const dead=v.life<=0.5, f=clamp(v.life/v.max,0,1);
+  g.fillStyle=dead?'#3A2A20':'#2A1208'; g.beginPath(); g.ellipse(v.x,v.y,v.t.r,v.t.r*.55,0,0,7); g.fill();
+  if(!dead){ const gl=g.createRadialGradient(v.x,v.y,2,v.x,v.y,v.t.r); gl.addColorStop(0,`rgba(255,${180+Math.sin(S.t*4)*40},80,.95)`); gl.addColorStop(1,'rgba(255,80,20,0)'); g.fillStyle=gl; g.beginPath(); g.ellipse(v.x,v.y,v.t.r*(.5+f*.5),v.t.r*.55*(.5+f*.5),0,0,7); g.fill(); }
+  g.fillStyle='rgba(255,230,200,.8)'; g.font='800 9px sans-serif'; g.textAlign='center'; g.fillText(dead?'止まった':yrs(v.life),v.x,v.y+v.t.r*.55+11); }
+function drawPerson(n){ const age=n.age, k=n.t.kind; g.save(); g.translate(n.x,n.y); g.scale(n.face||1,1);
+  if(k==='beast'){ const old=age>40; g.fillStyle=old?'#C8C0B0':'#6A4A30'; g.beginPath(); g.ellipse(0,-14,20,13,0,0,7); g.fill(); g.beginPath(); g.arc(16,-18,9,0,7); g.fill(); g.strokeStyle='#F0E8D8'; g.lineWidth=3; g.beginPath(); g.arc(24,-12,8,-1.2,1.2); g.stroke();
+    g.fillStyle=old?'#A8A090':'#4A3420'; g.fillRect(-14,-4,6,8); g.fillRect(8,-4,6,8); g.fillStyle='#111'; g.beginPath(); g.arc(19,-20,1.6,0,7); g.fill(); g.restore(); drawTag(n); return; }
+  const kid=age<13, old=age>=65, very=age>=85||n.state==='old'||n.state==='leave', sc=kid?.72:1, bend=very?.35:old?.18:0;
+  g.scale(sc,sc);
+  g.fillStyle='rgba(0,0,0,.2)'; g.beginPath(); g.ellipse(0,1,9,3,0,0,7); g.fill();
+  const fur=n.type==='shaman'?'#5A3A7A':n.type==='hermit'?'#E8E0C8':n.type==='warrior'?'#7A4A2A':'#9A6A3A';
+  g.fillStyle='#E8C8A0'; g.fillRect(-5,-10,4,10); g.fillRect(1,-10,4,10);
+  g.save(); g.rotate(bend); g.fillStyle=fur; g.beginPath(); g.moveTo(-8,-26); g.lineTo(8,-26); g.lineTo(9,-9); g.lineTo(-9,-9); g.closePath(); g.fill(); g.fillStyle='rgba(0,0,0,.2)'; g.fillRect(-6,-20,3,3); g.fillRect(3,-15,3,3);
+  g.fillStyle='#E8C8A0'; g.beginPath(); g.arc(1,-32,7,0,7); g.fill();
+  const hair=age<45?'#2A1A10':age<65?'#7A7068':'#F0F0EA'; g.fillStyle=hair; g.beginPath(); g.arc(0,-34,7.2,Math.PI*.9,Math.PI*2.05); g.fill();
+  if(old&&n.type!=='hermit'){ g.strokeStyle='rgba(120,80,60,.6)'; g.lineWidth=1; g.beginPath(); g.moveTo(-2,-31); g.lineTo(3,-31); g.moveTo(-1,-29); g.lineTo(4,-29); g.stroke(); }
+  if(very||n.type==='hermit'||n.type==='shaman'&&age>70){ g.fillStyle='#F4F4EE'; g.beginPath(); g.moveTo(-2,-28); g.lineTo(6,-28); g.lineTo(2,-14-(n.type==='hermit'?6:0)); g.fill(); }
+  g.fillStyle='#222'; g.fillRect(3,-33,1.6,1.6);
+  if(n.type==='warrior'&&!old){ g.strokeStyle='#8A6A3A'; g.lineWidth=2; g.beginPath(); g.moveTo(10,-4); g.lineTo(10,-40); g.stroke(); g.fillStyle='#8A8A8A'; g.beginPath(); g.moveTo(10,-46); g.lineTo(7,-38); g.lineTo(13,-38); g.fill(); }
+  if(n.type==='shaman'){ g.fillStyle='#E8D8A0'; g.beginPath(); g.moveTo(-6,-40); g.lineTo(0,-50); g.lineTo(6,-40); g.fill(); }
+  g.restore();
+  if(old){ g.strokeStyle='#8A6A3A'; g.lineWidth=2; g.beginPath(); g.moveTo(12,0); g.lineTo(9,-20); g.stroke(); }
+  g.restore();
+  if(n.state==='angry'){ g.fillStyle='#FF6A5A'; g.font='800 12px sans-serif'; g.textAlign='center'; g.fillText('💢',n.x+8,n.y-40); }
+  if(n.nearFire&&n.state==='walk'){ g.fillStyle='rgba(255,220,150,.9)'; g.font='800 9px sans-serif'; g.textAlign='center'; g.fillText('ぽかぽか',n.x,n.y-42); }
+  if(S.contract&&n.type===S.contract&&n.life>0.5){ g.strokeStyle='#FFD65A'; g.lineWidth=2; g.setLineDash([4,3]); g.beginPath(); g.arc(n.x,n.y-20,18+Math.sin(S.t*5)*2,0,7); g.stroke(); g.setLineDash([]); }
+  drawTag(n); }
+function drawTag(n){ if(n.state==='old'||n.state==='leave') return; if(n.sus>0.05){ g.fillStyle='rgba(0,0,0,.5)'; g.fillRect(n.x-12,n.y-50,24,4); g.fillStyle=n.sus>.7?'#FF5A4A':'#F2C23A'; g.fillRect(n.x-12,n.y-50,24*Math.min(1,n.sus),4); } }
+function drawDyson(){ const p=S.p, L=S.life, young=L>=1000?3:L>=150?2:L>=40?1:0;
+  g.save(); g.translate(p.x,p.y); g.scale(p.face||1,1); if(p.inv>0&&Math.floor(S.t*20)%2) g.globalAlpha=.5;
+  if(young===3){ g.fillStyle=`rgba(255,240,180,${.25+Math.sin(S.t*4)*.1})`; g.beginPath(); g.arc(0,-20,26,0,7); g.fill(); }
+  g.fillStyle='rgba(0,0,0,.25)'; g.beginPath(); g.ellipse(0,1,10,3.5,0,0,7); g.fill();
+  g.fillStyle='#2A2A3A'; g.fillRect(-6,-12,5,12); g.fillRect(1,-12,5,12);
+  // the cyclone vacuum on his back
+  g.fillStyle='#A8A8B8'; g.fillRect(-15,-34,8,22); g.fillStyle='#8A5AE0'; g.beginPath(); g.arc(-11,-34,5,0,7); g.fill(); g.strokeStyle='rgba(255,255,255,.6)'; g.lineWidth=1; g.beginPath(); g.arc(-11,-24,3,S.t*10,S.t*10+4); g.stroke();
+  g.save(); g.rotate(young===0?.25:young===1?.1:0); g.fillStyle='#3A2A5A'; g.fillRect(-8,-30,16,19); g.fillStyle='#F2C23A'; g.fillRect(-1,-28,2,10);
+  g.strokeStyle='#3A2A5A'; g.lineWidth=4; g.beginPath(); g.moveTo(6,-26); g.lineTo(S.sucking?17:10,S.sucking?-27:-15); g.stroke();
+  g.fillStyle='#F0D0A8'; g.beginPath(); g.arc(1,-37,8,0,7); g.fill();
+  g.fillStyle=young===0?'#F0F0EA':young===1?'#8A8A8A':'#1A1A1A'; g.beginPath(); g.arc(0,-39,8.3,Math.PI*.95,Math.PI*2.05); g.fill();
+  if(young===0){ g.strokeStyle='rgba(120,80,60,.7)'; g.lineWidth=1; g.beginPath(); g.moveTo(-3,-35); g.lineTo(3,-35); g.moveTo(-2,-33); g.lineTo(4,-33); g.stroke(); }
+  g.fillStyle='#222'; g.fillRect(4,-38,1.8,1.8); g.restore();
+  if(young===0){ g.strokeStyle='#8A6A3A'; g.lineWidth=2; g.beginPath(); g.moveTo(-12,0); g.lineTo(-10,-18); g.stroke(); }
+  g.restore();
+  if(S.sucking){ const R=rngOf(S.lv.rng); g.strokeStyle='rgba(180,140,255,.18)'; g.lineWidth=1; g.beginPath(); g.arc(p.x,p.y-14,R,0,7); g.stroke(); }
+}
+function drawFX(){ const p=S.p;
+  for(const n of S.targets){ const gr=g.createLinearGradient(n.x,n.y-14,p.x,p.y-24); gr.addColorStop(0,'rgba(255,230,140,.0)'); gr.addColorStop(1,'rgba(255,230,140,.7)'); g.strokeStyle=gr; g.lineWidth=5; g.beginPath(); g.moveTo(n.x,n.y-14); g.lineTo(p.x+p.face*16,p.y-26); g.stroke(); }
+  for(const f of S.fires){ const a=Math.min(1,(9-f.t)); g.globalAlpha=a; g.fillStyle='#6A4A2A'; g.fillRect(f.x-10,f.y-2,20,4); g.fillStyle='#E8C870'; g.fillRect(f.x-8,f.y-6,7,4); g.fillRect(f.x+1,f.y-6,7,4);
+    for(let k=0;k<3;k++){ g.fillStyle=['#FF5A20','#FF9A30','#FFE070'][k]; g.beginPath(); g.ellipse(f.x,f.y-10-k*4,9-k*2.5,12-k*3+Math.sin(S.t*14+k)*2,0,0,7); g.fill(); } g.globalAlpha=1; }
+  for(const s of S.shots){ if(s.k==='stone'){ g.fillStyle='#8A8070'; g.beginPath(); g.arc(s.x,s.y,4,0,7); g.fill(); } else { g.fillStyle=`rgba(190,120,255,${.6+Math.sin(S.t*12)*.3})`; g.beginPath(); g.arc(s.x,s.y,7,0,7); g.fill(); g.fillStyle='#fff'; g.font='9px sans-serif'; g.textAlign='center'; g.fillText('呪',s.x,s.y+3); } }
+  for(const r of S.rocks){ if(r.hit) continue; const k=r.t/r.at; g.strokeStyle=`rgba(255,80,60,${.4+k*.5})`; g.lineWidth=2; g.beginPath(); g.arc(r.x,r.y,r.r,0,7); g.stroke(); g.fillStyle='#6A5A4A'; g.beginPath(); g.arc(r.x,r.y-(1-k)*200,6+k*6,0,7); g.fill(); }
+  for(const f of S.fx){ const a=Math.max(0,1-f.t/(f.life||1.3));
+    if(f.k==='txt'){ g.globalAlpha=a; g.font=`800 ${f.big?14:11}px "M PLUS Rounded 1c",sans-serif`; g.textAlign='center'; g.lineWidth=3; g.strokeStyle='rgba(0,0,0,.6)'; g.strokeText(f.txt,f.x,f.y-f.t*20); g.fillStyle=f.col; g.fillText(f.txt,f.x,f.y-f.t*20); }
+    else if(f.k==='sand'){ const k=Math.min(1,f.t/.6); g.globalAlpha=1-k; g.font='11px sans-serif'; g.textAlign='center'; g.fillText('⏳',f.x+(f.tx-f.x)*k,f.y+(f.ty-f.y)*k); }
+    else if(f.k==='leaf'){ g.globalAlpha=a; g.fillStyle='#A88A40'; g.fillRect(f.x+f.vx*f.t,f.y+f.vy*f.t,4,3); }
+    else if(f.k==='boom'||f.k==='lava'){ g.globalAlpha=a; g.fillStyle=f.k==='lava'?'rgba(255,90,20,.7)':'rgba(140,120,100,.7)'; g.beginPath(); g.arc(f.x,f.y,(f.r||26)*(.5+f.t),0,7); g.fill(); }
+    else if(f.k==='warn'){ g.globalAlpha=.4+Math.sin(S.t*20)*.3; g.strokeStyle='#FF5A2A'; g.lineWidth=3; g.beginPath(); g.arc(f.x,f.y,f.r,0,7); g.stroke(); }
+    else if(f.k==='hole'){ g.globalAlpha=a; const gr=g.createRadialGradient(f.x,f.y,2,f.x,f.y,160*(1-a)+20); gr.addColorStop(0,'#000'); gr.addColorStop(1,'rgba(90,20,120,0)'); g.fillStyle=gr; g.beginPath(); g.arc(f.x,f.y,160,0,7); g.fill(); }
+    g.globalAlpha=1; }
+}
+function drawHUD(){ const s=st();
+  g.fillStyle='rgba(0,0,0,.55)'; g.fillRect(0,0,W,76);
+  g.fillStyle='#F2C23A'; g.font='800 11px "M PLUS Rounded 1c",sans-serif'; g.textAlign='left'; g.fillText(`第${S.stage+1}章　${s.n}`,8,16);
+  g.textAlign='right'; g.fillStyle='#A0A890'; g.fillText('所持金：世界のすべて（使い道なし）',W-8,16);
+  g.textAlign='left'; g.fillStyle='#fff'; g.font='800 12px sans-serif'; g.fillText('ダイソンの寿命',8,36);
+  g.font='22px "Dela Gothic One","M PLUS Rounded 1c",sans-serif'; g.fillStyle=S.life<s.drain*12+5?'#FF6A5A':'#FFF4C8'; g.fillText(yrs(S.life),8,62);
+  g.font='800 10px sans-serif'; g.fillStyle='#FF9A8A'; g.fillText(`毎秒 −${yrs(s.drain)}`,140,36);
+  if(s.earth){ const left=S.trees.reduce((a,v)=>a+v.life,0); g.textAlign='right'; g.fillStyle='#fff'; g.font='800 10px sans-serif'; g.fillText('🌍 地球の寿命',W-8,36); g.fillStyle='#333'; g.fillRect(200,42,W-208,10); g.fillStyle='#4AA0E8'; g.fillRect(200,42,(W-208)*left/1e9,10); g.fillStyle='#fff'; g.fillText(yrs(left),W-8,68); }
+  else { g.textAlign='right'; g.fillStyle='#fff'; g.font='800 10px sans-serif'; g.fillText(`目標 ${yrs(s.goal)}`,W-8,36); g.fillStyle='#333'; g.fillRect(200,42,W-208,10); g.fillStyle='#F2C23A'; g.fillRect(200,42,(W-208)*clamp(S.life/s.goal,0,1),10); }
+  if(S.stopT>0){ g.fillStyle='rgba(120,140,255,.18)'; g.fillRect(0,76,W,H); g.fillStyle='#C8D8FF'; g.font='800 14px sans-serif'; g.textAlign='center'; g.fillText(`⏸ 時間停止 ${S.stopT.toFixed(1)}`,W/2,96); }
+  if(S.msg&&S.msgT<2.6){ g.globalAlpha=Math.min(1,2.6-S.msgT); g.fillStyle='rgba(0,0,0,.6)'; g.fillRect(14,H-44,W-28,28); g.fillStyle='#FFF4C8'; g.font='800 12px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.fillText(S.msg,W/2,H-25); g.globalAlpha=1; }
+  // warning / combo / contract HUD
+  g.textAlign='left'; g.font='800 10px sans-serif'; g.fillStyle='#fff'; g.fillText('🚨 警戒度',8,73); g.fillStyle='#321'; g.fillRect(62,65,110,7); g.fillStyle=S.alert>75?'#FF4D4D':S.alert>45?'#F2C23A':'#7AC85A'; g.fillRect(62,65,110*S.alert/100,7);
+  if(S.combo>=2){ g.fillStyle='#FFD65A'; g.font='800 12px sans-serif'; g.textAlign='right'; g.fillText(`🔥 ${S.combo}連続吸引 ×${(1+Math.min(1.5,Math.floor(S.combo/3)*.15)).toFixed(2)}`,W-8,73); }
+  if(S.contract){ g.textAlign='center'; g.fillStyle='#C8E8FF'; g.font='800 10px sans-serif'; g.fillText(`🎯 特別標的：${T[S.contract]?.n||S.contract}　${S.contractDone?'達成！':'完全に吸うとボーナス'}`,W/2,86); }
+  if(S.auto){ g.fillStyle='rgba(255,255,255,.8)'; g.font='800 11px sans-serif'; g.textAlign='right'; g.fillText('🤖 AUTO',W-8,H-6); }
+}
+function drawEnding(){ const E=S.ending, t=E.t;
+  g.fillStyle='#02030A'; g.fillRect(0,0,W,H); for(let k=0;k<120;k++){ g.fillStyle=`rgba(255,255,255,${.3+((k*37)%10)/14})`; g.fillRect((k*97)%W,(k*53)%H,1.5,1.5); }
+  // the Earth breaking apart
+  const br=Math.min(1,t/5); for(let k=0;k<8;k++){ const a=k/8*Math.PI*2, d=br*120*(1+k%3*.3); g.save(); g.translate(180+Math.cos(a)*d,190+Math.sin(a)*d); g.rotate(br*a); g.fillStyle=k%2?'#5A3A2A':'#3A5A3A'; g.beginPath(); g.moveTo(0,-26+br*8); g.lineTo(22-br*6,10); g.lineTo(-20+br*6,14); g.closePath(); g.fill(); g.restore(); }
+  // Dyson, floating
+  g.save(); g.translate(180+Math.sin(t*.4)*30,300+Math.cos(t*.3)*12); g.rotate(Math.sin(t*.25)*.6); g.fillStyle='#3A2A5A'; g.fillRect(-7,-14,14,18); g.fillStyle='#F0D0A8'; g.beginPath(); g.arc(0,-20,7,0,7); g.fill(); g.fillStyle='#1A1A1A'; g.beginPath(); g.arc(0,-22,7.3,Math.PI*.95,Math.PI*2.05); g.fill(); g.fillStyle='#A8A8B8'; g.fillRect(-12,-14,6,16); g.restore();
+  const shown=Math.min(E.lines.length,Math.floor((t-1.5)/2.6)+1);
+  g.textAlign='center'; for(let k=0;k<shown;k++){ const a=Math.min(1,(t-1.5-k*2.6)/1.2); g.globalAlpha=Math.max(0,a); g.fillStyle=k===E.lines.length-1?'#F2C23A':'#E8E4F0'; g.font=`800 ${k===E.lines.length-1?18:13}px "M PLUS Rounded 1c",sans-serif`; g.fillText(E.lines[k],W/2,48+k*22); } g.globalAlpha=1;
+  g.fillStyle='rgba(200,200,255,.8)'; g.font='800 12px sans-serif'; g.fillText(`残り寿命　${Math.floor(E.life).toLocaleString()}年`,W/2,H-34);
+  if(t>26){ g.fillStyle='rgba(255,255,255,.7)'; g.font='800 11px sans-serif'; g.fillText('画面をタップでタイトルへ',W/2,H-14); }
+}
+function draw(){ g.setTransform(1,0,0,1,0,0);
+  if(S.scene==='ending'){ drawEnding(); syncSuck(); return; }
+  const sx=S.shake?(Math.random()-.5)*S.shake:0, sy=S.shake?(Math.random()-.5)*S.shake:0; g.setTransform(1,0,0,1,sx,sy);
+  drawBG(); if(!S.p){ g.setTransform(1,0,0,1,0,0); return; }
+  const items=[...S.trees.map(t=>({y:t.y,f:()=>t.type==='vent'?drawVent(t):drawTree(t)})),...S.npcs.map(n=>({y:n.y,f:()=>drawPerson(n)})),{y:S.p.y,f:drawDyson}].sort((a,b)=>a.y-b.y);
+  for(const it of items) it.f(); drawFX(); g.setTransform(1,0,0,1,0,0); drawHUD(); syncSuck(); }
+function syncSuck(){ $('suckBtn').classList.toggle('on',!!S.sucking); }
+
+/* ================= UI ================= */
+function user(){ if(S.auto) setAuto(false); }
+function setAuto(v){ S.auto=!!v; $('autoBtn').setAttribute('aria-pressed',S.auto); S.endT=0; if(!S.auto){ S.move=null; S.sucking=false; } else if(S.scene==='story'&&storyFn&&!$('storyOv').hidden){ const f=storyFn; f(); } }
+const toW=e=>{ const r=cv.getBoundingClientRect(); return {x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H}; };
+let drag=false;
+cv.addEventListener('pointerdown',e=>{ ac(); if(S.scene==='ending'){ if(S.ending.t>26){ user(); titleScreen(); } return; } if(S.scene!=='play') return; e.preventDefault(); user(); drag=true; try{ cv.setPointerCapture(e.pointerId); }catch(_){} S.move=toW(e); });
+cv.addEventListener('pointermove',e=>{ if(drag) S.move=toW(e); });
+for(const ev of ['pointerup','pointercancel']) cv.addEventListener(ev,()=>{ drag=false; S.move=null; });
+const sb=$('suckBtn');
+sb.addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); user(); if(S.scene==='play'&&!S.paused) S.sucking=true; try{ sb.setPointerCapture(e.pointerId); }catch(_){} sfx('suck'); });
+for(const ev of ['pointerup','pointercancel','lostpointercapture']) sb.addEventListener(ev,()=>{ if(!S.auto) S.sucking=false; });
+$('shopBtn').onclick=()=>{ ac(); user(); openShop(); };
+$('closeShop').onclick=()=>{ user(); closeShop(); };
+$('skBtn').onclick=()=>{ ac(); user(); useFire(); };
+$('sk_stop').onclick=()=>{ ac(); user(); useStop(); };
+$('sk_hole').onclick=()=>{ ac(); user(); useHole(); };
+$('storyBtn').onclick=()=>{ ac(); user(); if(storyFn){ const f=storyFn; f(); } };
+$('autoStartBtn').onclick=()=>{ ac(); setAuto(true); };
+$('autoBtn').onclick=()=>{ ac(); setAuto(!S.auto); };
+$('muteBtn').onclick=()=>{ ac(); setMute(!muted); };
+const KM={arrowleft:'l',a:'l',arrowright:'r',d:'r',arrowup:'u',w:'u',arrowdown:'d'};
+addEventListener('keydown',e=>{ const k=e.key.toLowerCase();
+  if(k==='o'){ ac(); setAuto(!S.auto); return; } if(k==='m'){ ac(); setMute(!muted); return; }
+  if(KM[k]){ e.preventDefault(); user(); S.keys[KM[k]]=true; return; }
+  if(k===' '){ e.preventDefault(); ac(); user(); if(S.scene==='play'&&!S.paused) S.sucking=true; else if(S.scene==='story'&&!e.repeat) $('storyBtn').click(); else if(S.scene==='ending'&&S.ending.t>26) titleScreen(); return; }
+  if(e.repeat) return;
+  if(k==='s'){ user(); if(S.paused) closeShop(); else openShop(); } else if(k==='f'){ ac(); user(); useFire(); } });
+addEventListener('keyup',e=>{ const k=e.key.toLowerCase(); if(KM[k]) S.keys[KM[k]]=false; if(k===' '&&!S.auto) S.sucking=false; });
+addEventListener('blur',()=>{ S.keys={}; if(!S.auto) S.sucking=false; });
+
+/* ================= sound ================= */
+let AC=null, muted=false; try{ muted=localStorage.getItem('dyson2Mute')==='1'; }catch(e){}
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==='suspended') AC.resume(); }
+function tone(f,d,type='sine',v=.07,delay=0,f2){ if(muted||!AC) return; const t=AC.currentTime+delay, o=AC.createOscillator(), gn=AC.createGain(); o.type=type; o.frequency.setValueAtTime(f,t); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+d); gn.gain.setValueAtTime(v,t); gn.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(gn).connect(AC.destination); o.start(t); o.stop(t+d+.02); }
+function noise(d,v=.1,f=800,delay=0){ if(muted||!AC) return; const t=AC.currentTime+delay, n=Math.floor(AC.sampleRate*d), buf=AC.createBuffer(1,n,AC.sampleRate), ch=buf.getChannelData(0); for(let i=0;i<n;i++) ch[i]=(Math.random()*2-1)*(1-i/n);
+  const s=AC.createBufferSource(), fl=AC.createBiquadFilter(), gn=AC.createGain(); s.buffer=buf; fl.type='lowpass'; fl.frequency.value=f; gn.gain.value=v; s.connect(fl).connect(gn).connect(AC.destination); s.start(t); }
+function sfx(k){
+  if(k==='suck') tone(300,.3,'sine',.04,0,700);
+  else if(k==='old') [523,494,440].forEach((q,i)=>tone(q,.2,'triangle',.04,i*.15));
+  else if(k==='wither') noise(.5,.06,700);
+  else if(k==='angry') tone(200,.2,'square',.05,0,140);
+  else if(k==='cry') tone(900,.4,'triangle',.04,0,600);
+  else if(k==='throw') noise(.08,.05,1200);
+  else if(k==='curse') tone(180,.6,'sine',.05,0,90);
+  else if(k==='hit'){ tone(160,.2,'square',.06,0,90); }
+  else if(k==='quake'){ noise(.9,.18,200); }
+  else if(k==='fire') noise(.6,.07,900);
+  else if(k==='stop') tone(1200,.6,'sine',.05,0,300);
+  else if(k==='hole'){ tone(80,1.4,'sawtooth',.08,0,30); noise(1.2,.15,400); }
+  else if(k==='buy') tone(880,.12,'triangle',.05,0,1320);
+  else if(k==='start') [330,392,494].forEach((q,i)=>tone(q,.14,'triangle',.05,i*.1));
+  else if(k==='clear') [523,659,784,1046].forEach((q,i)=>tone(q,.18,'square',.05,i*.1));
+  else if(k==='lose') [392,330,262,196].forEach((q,i)=>tone(q,.3,'triangle',.06,i*.2));
+  else if(k==='end') [262,330,392,523,392,330,262].forEach((q,i)=>tone(q,.8,'sine',.04,i*.7));
+}
+function setMute(m){ muted=m; $('muteBtn').textContent=m?'音 OFF':'音 ON'; try{ localStorage.setItem('dyson2Mute',m?'1':'0'); }catch(e){} }
+
+setMute(muted); titleScreen();
+let last=performance.now();
+function loop(now){ const dt=Math.min(.05,(now-last)/1000); last=now; if(!S.manual) update(dt); draw(); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+window.__dyson2={ get S(){ return S; }, setAuto, manual(v=true){ S.manual=v; }, step(dt=1/60){ update(dt); }, seed(v){ seed=(Math.abs(v|0)%2147483646)+1; }, startStage, stageIntro, titleScreen, buy, STAGES };
+})();
+</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>

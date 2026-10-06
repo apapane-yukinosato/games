@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="思い浮かべたものを当てる…はずの雪の占い師ユキネーター。ちょっとトゲのある彼女に質問されて、最後は必ずあの人物にたどりつく">
+<title>ユキネーター</title>
+<style>
+:root{
+  --bg:#0E1630; --bg2:#1B2850; --bg3:#26386B; --ink:#2A2440; --soft:#C9D6F2; --mute:#8E9CC4;
+  --snow:#EEF4FF; --ice:#9FD3FF; --gold:#F6C343; --rose:#FF8FA3;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:radial-gradient(120% 80% at 50% 0%,#24386E 0%,var(--bg) 60%);color:#fff;
+  font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;overflow:hidden}
+#snow{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+#app{position:relative;z-index:1;height:100%;max-width:520px;margin:0 auto;padding:8px 16px calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column}
+#top{display:flex;align-items:center;gap:8px;padding:2px 0 4px}
+#top a{color:var(--soft);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:17px;font-weight:800;letter-spacing:.06em;white-space:nowrap}
+.mini{font:inherit;font-size:12px;font-weight:800;border:0;border-radius:999px;padding:6px 10px;background:var(--bg2);color:#fff;cursor:pointer}
+.mini[aria-pressed=true]{background:#E0A83A;color:#2A2440}
+button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;overflow-y:auto;overscroll-behavior:contain}
+#meta{width:100%;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:800;color:var(--mute);min-height:20px}
+#conf{flex:0 0 46%;height:8px;border-radius:99px;background:#0A1024;overflow:hidden}
+#conf i{display:block;height:100%;width:0;background:linear-gradient(90deg,#9FD3FF,#FF8FA3);transition:width .6s}
+#yuki{width:min(62vw,250px);flex:0 1 auto;min-height:120px;max-height:36vh;aspect-ratio:200/230;animation:float 4s ease-in-out infinite}
+#yuki svg{width:100%;height:100%;display:block}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+#yuki.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.ball{transition:opacity .4s}
+#yuki.think .ballglow{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+#bubble{position:relative;width:100%;background:var(--snow);color:var(--ink);border-radius:18px;padding:12px 16px;min-height:74px;font-size:17px;font-weight:800;line-height:1.55;margin-top:6px;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+#bubble:before{content:"";position:absolute;left:50%;top:-10px;transform:translateX(-50%);border:10px solid transparent;border-top:0;border-bottom-color:var(--snow)}
+#bubble .nm{display:block;font-size:11px;color:#5C6FA3;margin-bottom:2px}
+#qno{color:var(--ice)}
+#ans{width:100%;display:grid;gap:8px;margin-top:10px}
+#ans button{font:inherit;font-size:16px;font-weight:800;border:0;border-radius:14px;padding:12px 10px;background:var(--bg3);color:#fff;cursor:pointer;box-shadow:0 3px 0 #0A1024;transition:transform .08s}
+#ans button:active{transform:translateY(2px);box-shadow:0 1px 0 #0A1024}
+#ans button.main{background:var(--ice);color:#14204A}
+#ans.two{grid-template-columns:1fr 1fr}
+#card{width:100%;margin-top:8px;border-radius:18px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.5);animation:pop .7s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{0%{transform:scale(.3) rotate(-8deg);opacity:0}100%{transform:none;opacity:1}}
+#card .pat{height:64px;background-color:#111;background-image:conic-gradient(#1E7A52 25%,#111 0 50%,#1E7A52 0 75%,#111 0);background-size:24px 24px;position:relative}
+#card .ear{position:absolute;right:16px;top:10px;width:24px;height:40px;background:#F4EEDC;border:2px solid #333;border-radius:3px;overflow:hidden}
+#card .ear:before{content:"";position:absolute;left:50%;top:6px;transform:translateX(-50%);width:16px;height:16px;border-radius:50%;background:#D8352A}
+#card .ear:after{content:"";position:absolute;left:0;right:0;bottom:0;height:14px;background:repeating-linear-gradient(90deg,#333 0 3px,#F4EEDC 3px 6px)}
+#card .bd{background:#FFF8EC;color:var(--ink);padding:10px 14px 12px;text-align:center}
+#card ruby{font-size:30px;font-weight:800;letter-spacing:.08em}
+#card rt{font-size:11px;color:#6B6585;letter-spacing:.2em}
+#card p{margin:4px 0 0;font-size:12px;color:#5C5675}
+#res{width:100%;margin-top:8px;background:var(--bg2);border-radius:16px;padding:12px 14px;text-align:center}
+#res h2{margin:0 0 4px;font-size:20px}
+#res .st{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+#res .st div{background:#0E1630;border-radius:12px;padding:6px}
+#res .st b{display:block;font-size:22px;color:var(--gold)}
+#res .st span{font-size:11px;color:var(--mute)}
+#res .row{display:grid;gap:8px}
+.btn{font:inherit;font-weight:800;font-size:16px;border:0;border-radius:14px;padding:12px 18px;background:var(--ice);color:#14204A;cursor:pointer;text-decoration:none;display:block;text-align:center}
+.btn.sub{background:var(--bg3);color:#fff}
+#title{text-align:center;margin-top:6px;width:100%}
+#title h2{font-size:34px;margin:2px 0;letter-spacing:.1em;background:linear-gradient(180deg,#fff,#9FD3FF);-webkit-background-clip:text;background-clip:text;color:transparent}
+#title p{margin:4px 0;color:var(--soft);font-size:14px}
+#title .btn{margin:14px auto 0;max-width:300px}
+#title small{display:block;margin-top:10px;color:var(--mute);font-size:11px}
+@media (max-height:640px){ #yuki{max-height:30vh} #bubble{font-size:15px;min-height:60px} #ans button{padding:10px} }
+</style>
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-180.png">
+</head>
+<body>
+<canvas id="snow"></canvas>
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>❄ ユキネーター</h1>
+    <button class="mini" id="bSnd" aria-pressed="true">🔊</button>
+    <button class="mini" id="bAuto" aria-pressed="false" title="オートモード（Oキー）">🤖 オート</button>
+  </div>
+  <div id="stage">
+    <div id="meta"><span id="qno"></span><span id="confw" hidden style="display:flex;align-items:center;gap:6px;flex:0 0 58%">確信度<span id="conf"><i></i></span></span></div>
+    <div id="yuki" aria-hidden="true"></div>
+    <div id="title">
+      <h2>ユキネーター</h2>
+      <p>雪の占い師ユキネーターが、あなたの思い浮かべたものを当てる…らしい。</p>
+      <p>ちょっと口が悪いけど、腕は確か（本人談）。</p>
+      <button class="btn" id="bStart">はじめる</button>
+      <small id="wins"></small>
+    </div>
+    <div id="bubble" hidden aria-live="polite"><span class="nm">ユキネーター</span><span id="say"></span></div>
+    <div id="card" hidden>
+      <div class="pat"><span class="ear"></span></div>
+      <div class="bd"><ruby>竈門炭治郎<rt>かまど たんじろう</rt></ruby><p>『鬼滅の刃』の主人公。鼻がよく利く、心やさしい長男。</p></div>
+    </div>
+    <div id="ans"></div>
+    <div id="res" hidden></div>
+  </div>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+
+/* ---------- the character (SVG, face swaps by mood) ---------- */
+const EYE={
+  normal:`<ellipse cx="84" cy="99" rx="6" ry="8" fill="#3A5F9E"/><ellipse cx="116" cy="99" rx="6" ry="8" fill="#3A5F9E"/><circle cx="86" cy="96" r="2" fill="#fff"/><circle cx="118" cy="96" r="2" fill="#fff"/><path d="M76 92 Q84 87 92 92 M108 92 Q116 87 124 92" stroke="#2A3550" stroke-width="2.2" fill="none" stroke-linecap="round"/>`,
+  smug:`<ellipse cx="84" cy="101" rx="6" ry="5" fill="#3A5F9E"/><ellipse cx="116" cy="101" rx="6" ry="5" fill="#3A5F9E"/><circle cx="86" cy="100" r="1.6" fill="#fff"/><circle cx="118" cy="100" r="1.6" fill="#fff"/><path d="M76 97 L92 97 M108 97 L124 97" stroke="#2A3550" stroke-width="3" stroke-linecap="round"/>`,
+  annoyed:`<ellipse cx="84" cy="101" rx="6" ry="4.2" fill="#3A5F9E"/><ellipse cx="116" cy="101" rx="6" ry="4.2" fill="#3A5F9E"/><path d="M76 97 L92 98 M108 98 L124 97" stroke="#2A3550" stroke-width="3" stroke-linecap="round"/>`,
+  think:`<path d="M77 99 Q84 105 91 99 M109 99 Q116 105 123 99" stroke="#2A3550" stroke-width="2.6" fill="none" stroke-linecap="round"/>`,
+  surprise:`<ellipse cx="84" cy="99" rx="7" ry="9" fill="#fff" stroke="#2A3550" stroke-width="1.5"/><ellipse cx="116" cy="99" rx="7" ry="9" fill="#fff" stroke="#2A3550" stroke-width="1.5"/><circle cx="84" cy="100" r="3" fill="#3A5F9E"/><circle cx="116" cy="100" r="3" fill="#3A5F9E"/>`,
+  win:`<path d="M77 100 Q84 94 91 100" stroke="#2A3550" stroke-width="2.6" fill="none" stroke-linecap="round"/><ellipse cx="116" cy="99" rx="6" ry="8" fill="#3A5F9E"/><circle cx="118" cy="96" r="2" fill="#fff"/><path d="M108 92 Q116 87 124 92" stroke="#2A3550" stroke-width="2.2" fill="none" stroke-linecap="round"/>`
+};
+const BROW={
+  normal:`<path d="M76 84 Q84 80 92 83 M108 83 Q116 80 124 84" stroke="#B9C6DD" stroke-width="2.4" fill="none" stroke-linecap="round"/>`,
+  smug:`<path d="M76 86 Q84 84 92 86 M108 82 Q116 77 124 81" stroke="#B9C6DD" stroke-width="2.4" fill="none" stroke-linecap="round"/>`,
+  annoyed:`<path d="M76 82 L92 88 M108 88 L124 82" stroke="#9AA8C4" stroke-width="2.8" fill="none" stroke-linecap="round"/>`,
+  think:`<path d="M76 85 Q84 82 92 85 M108 85 Q116 82 124 85" stroke="#B9C6DD" stroke-width="2.4" fill="none" stroke-linecap="round"/>`,
+  surprise:`<path d="M76 80 Q84 74 92 79 M108 79 Q116 74 124 80" stroke="#B9C6DD" stroke-width="2.4" fill="none" stroke-linecap="round"/>`,
+  win:`<path d="M76 84 Q84 80 92 83 M108 82 Q116 78 124 82" stroke="#B9C6DD" stroke-width="2.4" fill="none" stroke-linecap="round"/>`
+};
+const MOUTH={
+  normal:`<path d="M94 121 Q100 125 106 121" stroke="#C0505A" stroke-width="2.2" fill="none" stroke-linecap="round"/>`,
+  smug:`<path d="M93 122 Q102 125 109 118" stroke="#C0505A" stroke-width="2.2" fill="none" stroke-linecap="round"/>`,
+  annoyed:`<path d="M94 124 Q100 119 106 124" stroke="#C0505A" stroke-width="2.2" fill="none" stroke-linecap="round"/>`,
+  think:`<path d="M96 122 L104 122" stroke="#C0505A" stroke-width="2.2" stroke-linecap="round"/>`,
+  surprise:`<ellipse cx="100" cy="123" rx="3.2" ry="4.2" fill="#C0505A"/>`,
+  win:`<path d="M92 119 Q100 129 108 119 Z" fill="#C0505A"/>`
+};
+const EXTRA={
+  annoyed:`<g transform="translate(146 66)" fill="none" stroke="#FF5A6E" stroke-width="3" stroke-linecap="round"><path d="M-7 -2 Q-2 -2 -2 -7 M2 -7 Q2 -2 7 -2 M7 2 Q2 2 2 7 M-2 7 Q-2 2 -7 2"/></g>`,
+  surprise:`<path d="M150 70 q4 8 0 12 q-4 -4 0 -12z" fill="#9FD3FF"/>`,
+  win:`<text x="150" y="70" font-size="18" fill="#FFE07A">✦</text><text x="40" y="80" font-size="12" fill="#FFE07A">✦</text>`,
+  think:`<text x="146" y="66" font-size="14" fill="#C9D6F2">…</text>`
+};
+function yukiSVG(m){
+  return `<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg">
+<defs><radialGradient id="aura"><stop offset="0" stop-color="#9FD3FF" stop-opacity=".45"/><stop offset="1" stop-color="#9FD3FF" stop-opacity="0"/></radialGradient>
+<radialGradient id="ball" cx=".35" cy=".35"><stop offset="0" stop-color="#ffffff"/><stop offset=".45" stop-color="#BFE4FF"/><stop offset="1" stop-color="#4C7FD0"/></radialGradient></defs>
+<circle cx="100" cy="112" r="98" fill="url(#aura)"/>
+<path d="M42 92 Q38 26 100 24 Q162 26 158 92 L170 205 Q100 222 30 205 Z" fill="#DCE6F6"/>
+<path d="M44 230 Q48 162 100 150 Q152 162 156 230 Z" fill="#2B4F8A"/>
+<path d="M58 230 Q62 186 74 170 M142 230 Q138 186 126 170" stroke="#3E68AE" stroke-width="3" fill="none"/>
+<text x="62" y="214" font-size="12" fill="#fff" opacity=".7">❄</text><text x="128" y="200" font-size="10" fill="#fff" opacity=".7">❄</text><text x="140" y="226" font-size="9" fill="#fff" opacity=".6">❄</text>
+<path d="M78 151 L100 186 L122 151" stroke="#fff" stroke-width="7" fill="none" stroke-linejoin="round"/>
+<path d="M84 152 L100 177 L116 152" stroke="#C94C66" stroke-width="3" fill="none"/>
+<rect x="92" y="128" width="16" height="24" rx="6" fill="#F7DCCD"/>
+<ellipse cx="100" cy="98" rx="38" ry="43" fill="#FDE7DA"/>
+<path d="M58 92 Q58 42 100 40 Q142 42 142 92 Q134 70 120 74 Q114 58 100 64 Q88 56 80 74 Q66 70 58 92 Z" fill="#F1F5FC"/>
+<path d="M60 88 Q52 120 58 150 Q66 128 66 96 Z M140 88 Q148 120 142 150 Q134 128 134 96 Z" fill="#E6EDF9"/>
+<g transform="translate(138 50)"><circle r="9" fill="#BFE4FF" opacity=".5"/><text x="-8" y="7" font-size="20" fill="#7FBFFF">❄</text></g>
+<ellipse cx="78" cy="113" rx="7" ry="3.6" fill="#F7A9A8" opacity="${m==='annoyed'?.85:.5}"/><ellipse cx="122" cy="113" rx="7" ry="3.6" fill="#F7A9A8" opacity="${m==='annoyed'?.85:.5}"/>
+${BROW[m]}${EYE[m]}${MOUTH[m]}${EXTRA[m]||''}
+<circle class="ballglow" cx="100" cy="196" r="34" fill="#9FD3FF" opacity=".35"/>
+<circle cx="100" cy="196" r="24" fill="url(#ball)" stroke="#E8F4FF" stroke-width="1.5"/>
+<path d="M88 186 Q94 180 102 182" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"/>
+<ellipse cx="76" cy="208" rx="9" ry="7" fill="#FDE7DA"/><ellipse cx="124" cy="208" rx="9" ry="7" fill="#FDE7DA"/>
+<path d="M66 196 Q70 186 80 190 L84 212 Q72 216 66 206 Z M134 196 Q130 186 120 190 L116 212 Q128 216 134 206 Z" fill="#2B4F8A"/>
+</svg>`;
+}
+let mood='';
+function face(m){ if(m===mood) return; mood=m; const y=$('#yuki'); y.innerHTML=yukiSVG(m); y.classList.toggle('think',m==='think'); if(m==='annoyed'){ y.classList.remove('shake'); void y.offsetWidth; y.classList.add('shake'); } }
+
+/* ---------- lines ---------- */
+// truth: what is true for 竈門炭治郎 ('y' or 'n'); ok: line when the answer agrees
+const QS={
+ easy:[
+  {q:'それは実在する人物かしら？',t:'n',ok:'でしょうね。あなたの周りにいそうにないもの。'},
+  {q:'それは人間？',t:'y'},
+  {q:'それは男性？',t:'y',ok:'男の子ね。…なるほど。'},
+  {q:'アニメや漫画のキャラクター？',t:'y',ok:'やっぱり。顔に書いてあるわ。'},
+  {q:'日本の作品に出てくる？',t:'y'},
+  {q:'それは食べ物？',t:'n',ok:'食べ物だったら、もう当ててるわよ。'},
+  {q:'その人物は、子どもかしら？（20歳より下）',t:'y'},
+ ],
+ mid:[
+  {q:'その人物は、刀を持っている？',t:'y',ok:'物騒ね。…でも、わかってきたわ。'},
+  {q:'家族をとても大切にしている？',t:'y',ok:'そう。いい子なのね。あなたと違って。'},
+  {q:'その作品の主人公？',t:'y'},
+  {q:'髪は、赤っぽい色？',t:'y'},
+  {q:'鬼と戦っている？',t:'y',ok:'ええ。…私も、鬼みたいだってよく言われるけど。'},
+  {q:'「〇〇の呼吸」を使う？',t:'y'},
+  {q:'山の中で暮らしていた？',t:'y'},
+ ],
+ hard:[
+  {q:'おでこに、傷のようなあざがある？',t:'y',ok:'……見えてきたわ。'},
+  {q:'花札みたいな耳飾りをつけている？',t:'y',ok:'ふふ。かなりしぼれてきた。'},
+  {q:'緑と黒の市松模様の羽織を着ている？',t:'y'},
+  {q:'妹を箱に入れて背負っている？',t:'y',ok:'……あなた、ほとんど答えを言ってるようなものよ。'},
+  {q:'炭を売っていた？',t:'y',ok:'炭、ね。…はい、だいたいわかった。'},
+  {q:'ものすごく鼻がいい？',t:'y',ok:'においで嘘がわかる人よね。あなたの嘘もバレてるわよ。'},
+  {q:'長男？',t:'y',ok:'長男だものね。我慢強いのよ。'},
+  {q:'「長男だから我慢できた」と言いそう？',t:'y',ok:'……もう、言わせないでよ。'},
+ ]
+};
+const L={
+  wait:['早くしてくれる？ 私、待つのは嫌いなの。','まだ？ 思い浮かべるだけよ。簡単でしょ。','……ため息が出るわ。いいから、何か思い浮かべて。','あと3秒で思い浮かべて。3、2、1……。'],
+  ok:['でしょうね。','知ってた。','ふん、やっぱり。','ええ、見えてるわ。','予想通りね。','そう。続けるわよ。'],
+  maybe:['「たぶん」って何よ。はっきりしなさい。','曖昧ね。……でも、合ってるわ。','あなたの「たぶん」は「はい」でしょ。わかってるの。'],
+  ng:['……ふーん。そういうことにしておいてあげる。','嘘ね。顔に出てるわよ。','あら、強がっちゃって。','私に隠しごとは無駄よ。','はいはい。メモしておくわね（しないけど）。','その答え、聞かなかったことにするわ。'],
+  dunno:['わからない？ 自分で思い浮かべたものでしょ。','……しっかりしてよね。','いいわ、私がわかってるから。','あなたが知らなくても、私は知ってるの。']
+};
+const ANS=[['はい','y'],['いいえ','n'],['わからない','u'],['たぶんそう','py'],['たぶん違う','pn']];
+
+/* ---------- state ---------- */
+const S={phase:'title',auto:false,snd:true,q:0,conf:0,no:0,wins:0,maxNo:0,runs:0,ended:false};
+try{ S.wins=+localStorage.getItem('yukiWins')||0; S.maxNo=+localStorage.getItem('yukiMaxNo')||0; if(localStorage.getItem('yukiSnd')==='0') S.snd=false; }catch(_){}
+const saveRec=()=>{ try{ localStorage.setItem('yukiWins',String(S.wins)); localStorage.setItem('yukiMaxNo',String(S.maxNo)); }catch(_){} };
+
+/* ---------- sound ---------- */
+let AC=null;
+function tone(f,d,type,vol,slide,delay){ if(!S.snd) return; try{
+  AC=AC||new (window.AudioContext||window.webkitAudioContext)(); const t=AC.currentTime+(delay||0), o=AC.createOscillator(), g=AC.createGain();
+  o.type=type||'sine'; o.frequency.setValueAtTime(f,t); if(slide) o.frequency.exponentialRampToValueAtTime(slide,t+d);
+  g.gain.setValueAtTime(vol||.07,t); g.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+d+.02); }catch(_){} }
+const sTap=()=>tone(660,.07,'triangle',.05);
+const sHmph=()=>tone(300,.18,'square',.03,180);
+const sChime=()=>[880,1175,1568,2093].forEach((f,i)=>tone(f,.5,'sine',.06,null,i*.09));
+const sReveal=()=>{ [392,523,659,784,1047].forEach((f,i)=>tone(f,.35,'triangle',.07,null,i*.1)); tone(1568,.9,'sine',.05,null,.55); };
+function setSnd(b){ S.snd=b; $('#bSnd').setAttribute('aria-pressed',b); $('#bSnd').textContent=b?'🔊':'🔇'; try{localStorage.setItem('yukiSnd',b?'1':'0');}catch(_){} }
+
+/* ---------- virtual clock: waits, typing, auto ---------- */
+let timers=[], typ=null, asking=null, autoT=0;
+const wait=ms=>new Promise(r=>timers.push({t:ms,r}));
+function say(text,m){ if(m) face(m); $('#bubble').hidden=false; $('#say').textContent='';
+  return new Promise(r=>{ typ={text,n:0,r}; }); }
+function finishTyping(){ if(!typ) return; $('#say').textContent=typ.text; const r=typ.r; typ=null; r(); }
+function ask(opts,cls){ const box=$('#ans'); box.className=cls||''; box.innerHTML='';
+  return new Promise(r=>{ asking={opts,r}; autoT=900+Math.random()*700;
+    opts.forEach((o,i)=>{ const b=document.createElement('button'); b.textContent=o; if(i===0&&cls==='two') b.className='main'; b.onclick=()=>{ humanTouch(); choose(i); }; box.appendChild(b); }); }); }
+function choose(i){ if(!asking||typ) return; const a=asking; asking=null; $('#ans').innerHTML=''; sTap(); a.r(i); }
+function tick(dt){
+  if(typ){ typ.n+=dt*.035; const k=Math.min(typ.text.length,Math.floor(typ.n)); $('#say').textContent=typ.text.slice(0,k); if(k>=typ.text.length) finishTyping(); }
+  for(const tm of timers.slice()){ tm.t-=dt; if(tm.t<=0){ timers.splice(timers.indexOf(tm),1); tm.r(); } }
+  if(S.auto){
+    if(S.phase==='title'){ autoT-=dt; if(autoT<=0) start(); }
+    else if(asking&&!typ){ autoT-=dt; if(autoT<=0) choose(autoPick(asking.opts)); }
+    else if(S.phase==='result'){ autoT-=dt; if(autoT<=0) start(); }
+  }
+}
+// the auto player plays like a stubborn human: answers vary, and sometimes refuses to admit it was 炭治郎
+function autoPick(opts){
+  if(opts.length===5) return pick([0,0,0,1,1,2,3,4]);
+  if(opts[0]==='はい'&&opts.length===2&&S.phase==='intro') return Math.random()<.3?1:0;
+  if(S.phase==='verdict') return S.no<2&&Math.random()<.55?opts.length-1:0;
+  return 0;
+}
+let last=0; function loop(ts){ const dt=last?Math.min(100,ts-last):0; last=ts; tick(dt); snowStep(dt); requestAnimationFrame(loop); } requestAnimationFrame(loop);
+
+/* ---------- game flow ---------- */
+let gen=0;
+function setConf(v){ S.conf=Math.max(0,Math.min(100,v)); $('#conf i').style.width=S.conf+'%'; }
+function meta(){ $('#qno').textContent=S.q?`質問 ${S.q}`:''; $('#confw').hidden=!S.q; }
+async function start(){
+  const my=++gen; S.phase='intro'; S.q=0; S.no=0; S.ended=false; setConf(0); meta(); S.runs++;
+  $('#title').hidden=true; $('#res').hidden=true; $('#card').hidden=true; $('#ans').innerHTML=''; timers=[]; typ=null; asking=null;
+  const alive=()=>my===gen;
+  await say('答えて欲しいものを思い浮かべて。','smug'); await wait(1500); if(!alive()) return;
+  for(;;){ await say('思い浮かべた？','normal'); const r=await ask(['はい','いいえ'],'two'); if(!alive()) return; if(r===0) break; sHmph(); await say(pick(L.wait),'annoyed'); await wait(1300); if(!alive()) return; }
+  await say('ふうん。……じゃあ、質問に答えなさい。さっさとね。','smug'); await wait(1300); if(!alive()) return;
+  S.phase='q';
+  const qs=[...shuffle(QS.easy).slice(0,3),...shuffle(QS.mid).slice(0,4),...shuffle(QS.hard).slice(0,4)];
+  if(!await questions(qs,alive)) return;
+  await verdict(alive);
+}
+async function questions(qs,alive){
+  for(const q of qs){
+    S.q++; meta(); face(S.q>7?'smug':'normal');
+    await say(q.q); const a=ANS[await ask(ANS.map(x=>x[0]))][1]; if(!alive()) return false;
+    const agree=(q.t==='y'&&(a==='y'||a==='py'))||(q.t==='n'&&(a==='n'||a==='pn'));
+    let line, m;
+    if(a==='u'){ line=pick(L.dunno); m='annoyed'; setConf(S.conf+5); }
+    else if(agree){ line=(a==='py'||a==='pn')?pick(L.maybe):(q.ok||pick(L.ok)); m=a.length>1?'annoyed':'smug'; setConf(S.conf+11); }
+    else { line=pick(L.ng); m='annoyed'; setConf(S.conf+6); }
+    if(m==='annoyed') sHmph(); else tone(880,.08,'sine',.04);
+    await say(line,m); await wait(900); if(!alive()) return false;
+  }
+  return true;
+}
+async function verdict(alive){
+  S.phase='think'; face('think'); await say('うーん……'); await wait(1300); if(!alive()) return;
+  await say('見えてきたわ……水晶玉に……。','think'); await wait(1200); if(!alive()) return;
+  setConf(100); await say('わかったわ。あなたが思い浮かべたのは……','smug'); await wait(900); if(!alive()) return;
+  sHmph(); await say('……え？ そんなものを私の口から言わすの？','annoyed'); await wait(1600); if(!alive()) return;
+  S.phase='verdict'; $('#card').hidden=false; sReveal(); face('surprise');
+  await say('……竈門炭治郎、でしょ。ほら、言わせないでよ。こんなの。','annoyed'); await wait(600); if(!alive()) return;
+  for(;;){
+    await say(S.no===0?'正解でしょ？':S.no===1?'…で、正解でしょ？':'今度こそ、正解よね？', S.no?'annoyed':'smug');
+    const opts=S.no>=2?['はい、炭治郎でした','もう一度質問して','いいえ（ぜったい違う）']:['はい','いいえ'];
+    const r=await ask(opts,S.no>=2?'':'two'); if(!alive()) return;
+    if(r===0) break;
+    if(S.no>=2&&r===1){ $('#card').hidden=true; S.no++; S.phase='q';
+      await say('……いいわよ。でも、答えは同じだから。','annoyed'); await wait(1000); if(!alive()) return;
+      const qs=shuffle(QS.hard).slice(0,3); if(!await questions(qs,alive)) return;
+      S.phase='verdict'; face('smug'); await say('ほらね。やっぱり……','smug'); await wait(800); if(!alive()) return; $('#card').hidden=false; sReveal(); continue; }
+    S.no++; sHmph();
+    if(S.no===1){ await say('は？ もう一度よく思い出して。あなたが思い浮かべたのは竈門炭治郎よ。','annoyed'); await wait(1300); if(!alive()) return; continue; }
+    if(S.no===2){ await say('……記憶違いね。よくあることよ。人間だもの。','annoyed'); await wait(1300); if(!alive()) return; continue; }
+    // stubborn to the end: she makes you think of him
+    await say('じゃあ今から、竈門炭治郎を思い浮かべて。','annoyed'); await wait(1300); if(!alive()) return;
+    await say('……思い浮かべた？ ほら、当たり。','win'); await wait(1300); if(!alive()) return;
+    return finish(alive,true);
+  }
+  return finish(alive,false);
+}
+async function finish(alive,forced){
+  S.wins++; if(S.no>S.maxNo) S.maxNo=S.no; saveRec(); sChime(); face('win');
+  await say(forced?'私の勝ちね。……べつに、ズルなんてしてないわよ？':S.no?'最初からそう言えばいいのよ。……ふふ。':'当然よ。……べつに、嬉しくなんかないけど。','win'); if(!alive()) return;
+  S.phase='result'; S.ended=true; autoT=3200; S.q=0; meta();
+  const r=$('#res'); r.hidden=false;
+  r.innerHTML=`<h2>${forced?'ユキネーターの勝ち（強引）':'ユキネーターの勝ち'}</h2>
+    <div class="st"><div><b>${S.wins}</b><span>ユキネーターが当てた回数</span></div><div><b>${S.no}</b><span>今回「いいえ」と言い張った回数（最高 ${S.maxNo}）</span></div></div>
+    <div class="row"><button class="btn" id="bAgain">もう一度あそぶ</button><a class="btn sub" href="../">← ゲーム一覧にもどる</a></div>`;
+  $('#bAgain').onclick=()=>{ humanTouch(); start(); };
+}
+function showTitle(){ S.phase='title'; face('smug'); $('#bubble').hidden=true; $('#wins').textContent=S.wins?`これまでに ${S.wins} 回 当てられました`:''; }
+
+/* ---------- snow ---------- */
+const cv=$('#snow'), cx=cv.getContext('2d'); let flakes=[];
+function fit(){ const d=Math.min(2,devicePixelRatio||1); cv.width=innerWidth*d; cv.height=innerHeight*d; cx.setTransform(d,0,0,d,0,0);
+  flakes=Array.from({length:Math.round(innerWidth/9)},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:.8+Math.random()*2.2,v:12+Math.random()*28,w:Math.random()*6})); }
+addEventListener('resize',fit); fit();
+function snowStep(dt){ const s=dt/1000; cx.clearRect(0,0,innerWidth,innerHeight); cx.fillStyle='rgba(255,255,255,.75)';
+  for(const f of flakes){ f.y+=f.v*s; f.w+=s; f.x+=Math.sin(f.w)*10*s; if(f.y>innerHeight+4){ f.y=-4; f.x=Math.random()*innerWidth; } cx.beginPath(); cx.arc(f.x,f.y,f.r,0,7); cx.fill(); } }
+
+/* ---------- input ---------- */
+function setAuto(b){ S.auto=!!b; $('#bAuto').setAttribute('aria-pressed',S.auto); autoT=S.phase==='title'?500:700; }
+function humanTouch(){ if(S.auto) setAuto(false); }
+$('#bStart').onclick=()=>{ humanTouch(); start(); };
+$('#bSnd').onclick=()=>setSnd(!S.snd);
+$('#bAuto').onclick=()=>setAuto(!S.auto);
+$('#bubble').addEventListener('click',()=>finishTyping());
+addEventListener('keydown',e=>{
+  if(e.key==='o'||e.key==='O'){ setAuto(!S.auto); return; }
+  if(e.key===' '||e.key==='Enter'){ if(typ){ finishTyping(); e.preventDefault(); } return; }
+  const n=+e.key; if(n>=1&&n<=5&&asking&&asking.opts[n-1]){ humanTouch(); choose(n-1); }
+});
+setSnd(S.snd); showTitle();
+
+window.__yuki={S,step:dt=>tick(dt),setAuto,start,choose,
+  get typing(){return !!typ;},get opts(){return asking?asking.opts:null;},get text(){return $('#say').textContent;},get mood(){return mood;}};
+})();
+</script>
+
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>

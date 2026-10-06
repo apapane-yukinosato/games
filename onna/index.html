@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="まったくモテない男子が中3から高校卒業までをすごす、パワプロ式の育成恋愛シミュレーション。勉強しないと男子校行き！">
+<title>女゛ぁ！</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&family=Dela+Gothic+One&display=swap">
+<style>
+:root{--bg:#FFF4F6;--ink:#3A2430;--card:#FFFFFF;--line:#F2C8D4;--mute:#9A7A88;--pink:#FF5A8A;--pink2:#FFD0DE;--blue:#4A8AE0;--gold:#E8A820;--green:#3AB070}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button,input{font:inherit;color:inherit}
+button:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
+#app{max-width:520px;margin:0 auto;padding:8px 10px 14px;padding-top:calc(8px + env(safe-area-inset-top,0px));position:relative}
+#top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:18px;font-family:"Dela Gothic One",sans-serif;color:var(--pink);letter-spacing:.06em}
+.mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--card);cursor:pointer;white-space:nowrap}
+.mini[aria-pressed=true]{background:var(--pink);border-color:var(--pink);color:#fff}
+#status{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:7px 9px;font-size:12px}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#date{font-weight:800;font-size:14px}
+#mood{font-weight:800}
+.hpbar{flex:1;min-width:90px;height:10px;border-radius:6px;background:#F4E4EA;overflow:hidden;position:relative}
+.hpbar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#FF8AA8,#FF5A8A)}
+#abil{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:6px}
+.ab{background:#FFF6F8;border-radius:8px;padding:3px 4px;text-align:center;line-height:1.15}
+.ab small{display:block;font-size:10px;color:var(--mute)}
+.rk{font-family:"Dela Gothic One",sans-serif;font-size:16px;margin-right:2px}
+#pts{display:flex;gap:6px;margin-top:6px;align-items:center;font-weight:800;font-size:12px;flex-wrap:wrap}
+#pts span{white-space:nowrap}
+#upBtn,#girlsBtn{margin-left:auto}
+#girlsBtn{margin-left:0}
+#scene{display:block;width:100%;aspect-ratio:360/190;border-radius:14px;margin-top:6px;background:#F8E0E8}
+#msg{position:relative;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:8px 10px 8px;margin-top:6px;min-height:78px;font-size:14px;line-height:1.6;white-space:pre-line;cursor:pointer}
+#msg b{display:inline-block;background:var(--pink);color:#fff;border-radius:8px;padding:0 8px;font-size:12px;margin-bottom:2px}
+#msg .nx{position:absolute;right:10px;bottom:4px;font-size:12px;color:var(--pink);font-weight:800;animation:bl 1s infinite}
+@keyframes bl{50%{opacity:.3}}
+#acts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.act{position:relative;min-height:54px;border:0;border-radius:12px;background:var(--card);box-shadow:0 3px 0 var(--line);border:1px solid var(--line);text-align:left;padding:6px 8px;cursor:pointer;font-weight:800;font-size:14px;line-height:1.2}
+.act small{display:block;font-size:10px;color:var(--mute);font-weight:500}
+.act small.risk{color:#E0433D;font-weight:800}
+.act:disabled{opacity:.45;cursor:default}
+.act .tags{position:absolute;right:6px;top:6px;display:flex;gap:2px}
+.tg{width:22px;height:22px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line);font-size:11px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800}
+.tg.sp{box-shadow:0 0 0 2px var(--pink),0 0 8px var(--pink)}
+.ov{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;background:rgba(60,20,40,.45);padding:60px 12px 12px;z-index:5}
+.card{background:var(--card);border-radius:16px;padding:14px;width:100%;max-width:420px;max-height:calc(100vh - 80px);overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+.card h2{margin:0 0 6px;font-family:"Dela Gothic One",sans-serif;font-size:20px;color:var(--pink);text-align:center}
+.sub{font-size:12px;color:var(--mute);text-align:center;margin:0 0 8px;white-space:pre-line}
+.opt{display:block;width:100%;text-align:left;border:1px solid var(--line);border-radius:12px;background:#FFF8FA;padding:9px 12px;margin-top:6px;cursor:pointer;font-weight:800;font-size:14px}
+.opt small{display:block;font-weight:500;font-size:11px;color:var(--mute)}
+.opt:disabled{opacity:.45;cursor:default}
+.go{display:block;width:100%;min-height:46px;border:0;border-radius:14px;font-weight:800;font-size:16px;cursor:pointer;margin-top:10px;background:var(--pink);color:#fff;box-shadow:0 4px 0 #C8306A}
+.go.alt{background:#F4E4EA;color:var(--ink);box-shadow:0 4px 0 #E0C0CC}
+.back{display:block;margin-top:10px;font-size:13px;font-weight:800;color:var(--mute);text-decoration:none;text-align:center}
+.upr{display:grid;grid-template-columns:1fr auto auto;gap:4px 6px;align-items:center;border-bottom:1px dashed var(--line);padding:6px 0;font-size:13px}
+.upr small{display:block;font-size:10px;color:var(--mute)}
+.upr button{border:0;border-radius:8px;background:var(--pink);color:#fff;font-weight:800;padding:6px 9px;cursor:pointer;font-size:12px}
+.upr button:disabled{background:#E8D8DE;color:#A898A0;cursor:default}
+.gl{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center;border-bottom:1px dashed var(--line);padding:6px 0;font-size:12px}
+.gl canvas{width:48px;height:48px;border-radius:10px;background:#FFE8EE}
+.meter{height:8px;border-radius:5px;background:#F4E4EA;overflow:hidden;margin-top:3px}.meter i{display:block;height:100%;background:var(--pink)}
+#title .big{font-family:"Dela Gothic One",sans-serif;font-size:56px;color:var(--pink);text-align:center;line-height:1.1;margin:6px 0;text-shadow:3px 3px 0 #FFD0DE}
+#nameIn{width:100%;font-size:18px;padding:10px;border-radius:10px;border:2px solid var(--pink);background:#FFF8FA;text-align:center}
+.story{font-size:14px;line-height:1.8;white-space:pre-line;margin:8px 0}
+.shout{font-family:"Dela Gothic One",sans-serif;font-size:44px;color:#E0433D;text-align:center;animation:sh .12s infinite;margin:10px 0}
+@keyframes sh{0%{transform:translate(1px,0)}50%{transform:translate(-2px,1px)}100%{transform:translate(1px,-1px)}}
+.keys{font-size:11px;color:var(--mute);text-align:center;margin-top:8px}
+@media (pointer:coarse){.keys{display:none}}
+</style>
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-180.png">
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>女゛ぁ！</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false" title="Oキー">🤖 オート</button>
+    <button class="mini" id="voiceBtn" aria-pressed="true" title="Vキー">🗣 声</button>
+    <button class="mini" id="muteBtn">音 ON</button>
+  </div>
+  <div id="status">
+    <div class="row"><span id="date">中3 4月 前半</span><span id="mood">😐 普通</span><span style="font-size:11px">体力</span><div class="hpbar"><i id="hpI"></i></div></div>
+    <div id="abil"></div>
+    <div id="pts"></div>
+  </div>
+  <canvas id="scene" width="360" height="190"></canvas>
+  <div id="msg"></div>
+  <div id="acts"></div>
+  <p class="keys">数字キー 1〜8：行動　Enter / スペース：つぎへ　U：能力アップ　G：女の子　O：オート　M：音　V：読み上げ</p>
+
+  <div class="ov" id="titleOv">
+    <div class="card" id="title">
+      <div class="big">女゛ぁ！</div>
+      <p class="sub">まったくモテない男子の、中3の1年と高校の3年間。
+勉強しないと男子校、もっとしないと不良高校。
+声をかけても、最初は無視される。</p>
+      <label class="sub" for="nameIn" style="display:block">主人公の名前</label>
+      <input id="nameIn" maxlength="10" placeholder="前田ダイソン">
+      <button class="go" id="startBtn">スタート</button>
+      <button class="go" id="contBtn" hidden></button>
+      <button class="go alt" id="autoStartBtn">🤖 オートで見る</button>
+      <p class="sub" id="bestTxt" style="margin-top:8px"></p>
+      <a class="back" href="../">← ゲーム一覧にもどる</a>
+    </div>
+  </div>
+  <div class="ov" id="chooseOv" hidden><div class="card"><h2 id="chTitle"></h2><p class="sub" id="chSub"></p><div id="chOpts"></div><button class="go alt" id="chCancel">やめる</button></div></div>
+  <div class="ov" id="upOv" hidden><div class="card"><h2>能力アップ</h2><p class="sub" id="upPts"></p><div id="upList"></div><button class="go" id="upClose">とじる</button></div></div>
+  <div class="ov" id="girlsOv" hidden><div class="card"><h2>女の子</h2><p class="sub">好感度　他人 → 知り合い → 友だち → 気になる → 好き</p><div id="girlsList"></div><button class="go" id="girlsClose">とじる</button></div></div>
+  <div class="ov" id="endOv" hidden><div class="card"><h2 id="endTitle"></h2><div id="endShout" class="shout" hidden></div><canvas id="endCv" width="320" height="170" style="width:100%;border-radius:12px;background:#FFE8EE"></canvas><div class="story" id="endText"></div><button class="go" id="endBtn">タイトルへ</button><a class="back" href="../">← ゲーム一覧にもどる</a></div></div>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+let seed=(Date.now()%2147483646)+1; const rnd=()=>{ seed=seed*16807%2147483647; return (seed-1)/2147483646; };
+const clamp=(v,a,b)=>v<a?a:v>b?b:v, pick=a=>a[Math.floor(rnd()*a.length)];
+
+/* ================= data ================= */
+const PT={tai:{n:'体力点',ic:'🏃'},nori:{n:'ノリ点',ic:'⚡'},chi:{n:'知力点',ic:'📘'},sense:{n:'センス点',ic:'✨'},heart:{n:'ハート点',ic:'💗'}};
+const AB={gaku:{n:'学力',main:'chi',sub:'heart'},undo:{n:'運動',main:'tai',sub:'nori'},mitame:{n:'見た目',main:'sense',sub:'tai'},talk:{n:'トーク',main:'nori',sub:'heart'}};
+// cost of raising an ability from v to v+1 (main points; the sub points are 15% of it)
+const abCost=v=>Math.round(2+v*.06);
+const RANKS=[[90,'S','#E8A820'],[80,'A','#FF5A8A'],[70,'B','#E0433D'],[60,'C','#F08A30'],[50,'D','#D8B020'],[40,'E','#3AB070'],[20,'F','#4A8AE0'],[0,'G','#9A9AA8']];
+const rankOf=v=>RANKS.find(r=>v>=r[0]);
+const SPC=[
+  {id:'honban',n:'本番に強い',d:'模試・入試で学力+6',cost:{chi:40,heart:25}},
+  {id:'hayane',n:'早寝早起き',d:'体調をくずす確率が半分',cost:{tai:35,heart:15}},
+  {id:'kiki',n:'聞き上手',d:'好感度の上がり方 ×1.3',cost:{heart:50,nori:20}},
+  {id:'benkyo',n:'勉強家',d:'知力点 ×1.2',cost:{chi:60}},
+  {id:'ichizu',n:'一途',d:'爆弾がつきにくい',cost:{heart:45}},
+  {id:'fashion',n:'ファッションリーダー',d:'見た目が魅力に1.3倍効く',cost:{sense:55,nori:15}},
+  {id:'agari',n:'あがり症（克服する）',d:'今は模試・入試で学力-6。ポイントで克服できる',cost:{heart:30,nori:30},neg:1},
+];
+const ACT=[
+  {id:'study',n:'勉強',ic:'📘',pts:{chi:13,heart:3},hp:-13},
+  {id:'juku',n:'塾',hs:'予備校',ic:'🏫',pts:{chi:19,heart:2,nori:1},hp:-20},
+  {id:'sport',n:'運動',hs:'野球部',ic:'🏃',pts:{tai:14,nori:3},hp:-15},
+  {id:'style',n:'おしゃれ',ic:'✨',pts:{sense:11,tai:2},hp:-8},
+  {id:'play',n:'遊ぶ',ic:'🎮',pts:{nori:9,heart:3},hp:-5,mood:1},
+  {id:'talk',n:'話しかける',ic:'💬',pts:{heart:6,nori:3},hp:-6},
+  {id:'date',n:'デートに誘う',jh:'一緒に帰ろうと誘う',ic:'📱',hp:-8},
+  {id:'rest',n:'休む',ic:'🛏',hp:45},
+];
+const MOODS=[['😫','絶不調',.5],['😞','不調',.75],['😐','普通',1],['🙂','好調',1.25],['😆','絶好調',1.5]];
+const SCHOOLS={seiryo:{n:'県立 星陵高校',k:'進学校・共学',line:68},sakura:{n:'市立 桜川高校',k:'ふつうの共学',line:50},danshi:{n:'私立 剛健男子高校',k:'すべり止め・男子校',line:40},ihara:{n:'私立 井原髑髏学園',k:'不良高校・共学（だれでも入れる）',line:0}};
+const PLACES=[{id:'amuse',n:'🎡 遊園地'},{id:'movie',n:'🎬 映画館'},{id:'lib',n:'📚 図書館'},{id:'karaoke',n:'🎤 カラオケ'},{id:'shop',n:'🛍 買い物'}];
+// heroines: like = the ability she looks at, tag = the action she shows up at
+const H={
+  hinata:{n:'朝比奈ひなた',s:'ひなた',from:'jh',school:'sakura',gaku:50,like:'undo',need:65,tag:'sport',fav:'amuse',hate:'lib',col:'#E07A3A',hair:'pony',skin:'#F6D2B4',
+    desc:'となりの家の幼なじみ。陸上部。小学生のころは毎日遊んでいた（はず）',
+    ignore:['（ひなたは友だちとの話に夢中で、こっちを見もしなかった）','「……あ、うん」（スマホから目を離さない）'],flee:['「ごめん部活！」（全力で走り去った。さすが陸上部）'],
+    cold:['「なに？ 用ないなら行くね」','「あー、えっと…うん」'],warm:['「おっ、今日も来てるじゃん！」','「いっしょに走る？ おいてくけど！」'],love:['「…最近、なんかカッコよくなった？」','「ねえ、また明日もここ来る？」'],
+    end:'「小さいころからずっと…となりにいるのが当たり前だと思ってた。\nでも、当たり前じゃイヤなの。\n――好きです」\n\n幼なじみは、いちばん近くて、いちばん遠かった。'},
+  rin:{n:'月島りん',s:'りん',from:'jh',school:'seiryo',gaku:76,like:'gaku',need:70,tag:'study',fav:'lib',hate:'karaoke',col:'#2A2A3A',hair:'long',glasses:1,skin:'#F8DCC4',
+    desc:'クラスの優等生で図書委員。いつも窓ぎわで本を読んでいる',
+    ignore:['（りんは本から顔を上げなかった）','（イヤホンをしていて、気づいてもらえなかった）'],flee:['（目が合った瞬間、本で顔をかくして去っていった）'],
+    cold:['「…何か用？」','「静かにしてもらえる？」'],warm:['「この問題、こう考えるといいよ」','「…となり、空いてるけど」'],love:['「あなたと勉強すると、時間がはやいね」','「…今日、来ないのかと思った」'],
+    end:'「中学のとき、図書室であなたが毎日勉強してたの、知ってたよ。\n…ずっと見てた。\nわたしと、つきあってください」\n\n本の続きは、ふたりで読むことになった。'},
+  reika:{n:'九条れいか',s:'れいか',from:'seiryo',like:'gaku',need:75,tag:'study',fav:'movie',hate:'karaoke',col:'#6A3A2A',hair:'long',ribbon:'#3A4AA0',skin:'#FBE2D0',
+    desc:'星陵高校の生徒会長。成績トップでお嬢様',
+    ignore:['（れいかは書類に目を通していて、こちらに気づかない）','「生徒会に用件なら、目安箱へどうぞ」'],flee:['（取り巻きに囲まれて、近づけなかった）'],
+    cold:['「あなた、どなた？」','「時間は有限よ。手短にね」'],warm:['「あら、意外とやるのね」','「次の模試、勝負しましょう」'],love:['「…あなたには、本当の私を見せてもいい気がする」','「生徒会室、今日は私ひとりなの」'],
+    end:'「完璧でいなきゃって、ずっと思ってた。\nでもあなたの前では、ただの女の子でいたいの。\n…好きよ。返事は『はい』しか受けつけないわ」\n\n生徒会長の、いちばん正直な命令だった。'},
+  yume:{n:'宇佐美ゆめ',s:'ゆめ',from:'seiryo',like:'talk',need:70,tag:'play',fav:'karaoke',hate:'lib',col:'#B07AE0',hair:'bob',skin:'#FBE6D8',
+    desc:'星陵高校の天才肌。テストは寝ていても満点。おもしろい人が好き',
+    ignore:['（ゆめは机でぐっすり寝ていた）','「……zzz」'],flee:['（「つまんなそう」と言って、ふらっといなくなった）'],
+    cold:['「ふーん。で？」','「今の、おもしろいと思って言った？」'],warm:['「あはは！ きみ、変だね！」','「次はどこ連れてってくれるの？」'],love:['「きみといると、退屈しないんだ」','「…ねえ、ずっと一緒にいたら、もっとおもしろい？」'],
+    end:'「世界ってぜんぶ予想どおりで、つまんなかったんだ。\nでもきみだけは、ぜんぜん読めない。\n…好き。これは計算じゃないよ」\n\n天才にも、解けない問題があった。'},
+  ageha:{n:'姫川あげは',s:'あげは',from:'sakura',like:'mitame',need:72,tag:'style',fav:'shop',hate:'lib',col:'#F0C860',hair:'wave',skin:'#F6D0B0',
+    desc:'桜川高校のギャル。おしゃれにきびしい',
+    ignore:['（あげはは鏡を見ていて、こっちに気づかない）','「え、だれ？」（素で知らない顔）'],flee:['「あ、ムリ」（光の速さで去っていった）'],
+    cold:['「その服、どこで買ったの？ 逆に気になる」','「…ウケる」'],warm:['「今日の髪型、アリじゃん」','「今度、服えらんであげよっか？」'],love:['「アンタさ、マジで変わったよね。…いい意味で」','「写真とろ。…2人で」'],
+    end:'「最初はマジでナシだと思ってた。\nでもさ、がんばってるアンタ、ずっと見てたんだよね。\n…好き。てか、気づけし」\n\nいちばん高いハードルは、いちばんまっすぐだった。'},
+  koharu:{n:'小森こはる',s:'こはる',from:'sakura',year:2,like:'undo',need:65,tag:'sport',fav:'movie',hate:'karaoke',col:'#8A5A3A',hair:'twin',skin:'#FBE0CC',
+    desc:'桜川高校の1つ下。運動部のマネージャー',
+    ignore:['（こはるは部員にタオルを配っていて、いそがしそうだ）','「先輩、じゃまです！」'],flee:['（「失礼します！」とボールを追って行ってしまった）'],
+    cold:['「えっと…どちらさまの先輩でしたっけ」','「ドリンク、セルフでお願いします」'],warm:['「先輩、今日もがんばってますね！」','「はい、先輩のぶんのタオルです」'],love:['「先輩が卒業したら…さみしいです」','「先輩、ちゃんと見てますからね」'],
+    end:'「先輩が走ってるの、ずっと見てました。\nマネージャーだから…じゃないです。\n先輩のことが、好きだからです！」\n\n最後のホイッスルは、恋の始まりの合図だった。'},
+  akane:{n:'鬼塚あかね',s:'あかね',from:'ihara',like:'undo',need:70,tag:'sport',fav:'karaoke',hate:'lib',col:'#C8302A',hair:'long',ribbon:'#1A1A1A',skin:'#F6D2B4',
+    desc:'井原髑髏学園の番長。ケンカ無敗。強い男にしか興味がない',
+    ignore:['（あかねは子分たちと話していて、こっちを見もしない）','「…あ？」（にらまれた）'],flee:['（「ジャマ」とだけ言って、肩でおしのけられた）'],
+    cold:['「なんだテメェ。用があるならハッキリ言いな」','「…弱そうなツラだな」'],warm:['「へえ、根性あんじゃん」','「次の朝練、アタイも付き合ってやるよ」'],love:['「…アンタのとなり、けっこう落ちつくんだよ」','「ほかの女と話してたら、承知しねえからな」'],
+    end:'「アタイ、ケンカしか知らねえからさ。\nこういうの、どう言えばいいかわかんねえけど…\n――アンタに、ついてく。文句ある？」\n\n番長のこぶしは、ふるえていた。'},
+  nene:{n:'黒木ねね',s:'ねね',from:'ihara',like:'talk',need:65,tag:'play',fav:'amuse',hate:'movie',col:'#5A3A7A',hair:'bob',skin:'#FBE2D0',
+    desc:'井原髑髏学園の不良少女。じつは捨て猫を放っておけない',
+    ignore:['（ねねはヘッドホンをして、窓の外を見ている）','「……」（ガムをふくらませた）'],flee:['（「チッ」と舌打ちして、どこかへ行ってしまった）'],
+    cold:['「なに見てんの」','「アタシに話しかけるとか、度胸あるね」'],warm:['「…今日、ネコにエサあげに行くけど。来る？」','「アンタ、話してるとちょっと笑える」'],love:['「アタシのこと、こわくないの？ …変なやつ」','「アンタといると、まともな人になれる気がする」'],
+    end:'「みんなアタシのこと、不良って言うけど。\nアンタだけは、ふつうに話しかけてくれた。\n…すき。ネコと同じくらい。いや、それ以上」\n\n捨て猫の名前は、ふたりで決めた。'},
+};
+const GONTA={n:'熊谷ゴンタ',s:'ゴンタ',col:'#6A5A4A'};
+// reading voices: pitch / speed for each character (the device's own Japanese voice reads the lines)
+const VOICE={hinata:[1.6,1.15],rin:[1.3,.95],reika:[1.15,.95],yume:[1.7,1.05],ageha:[1.5,1.2],koharu:[1.8,1.1],akane:[.95,1.1],nene:[1.2,.9],gonta:[.55,1],narr:[1,1.05],shout:[.8,1.25]};
+const ENDS=['hinata','rin','reika','yume','ageha','koharu','akane','nene','todai','major','bunbu','pro','alone','danshi'];
+const END_N={todai:'東大合格',major:'メジャーリーガー',bunbu:'文武両道',pro:'プロ野球選手',alone:'ひとりぼっち',danshi:'男子校3年間'};
+
+/* ================= state ================= */
+const S={mode:'title',phase:'jh',t:0,name:'前田ダイソン',hp:100,mood:2,sick:0,pts:{tai:0,nori:0,chi:0,sense:0,heart:0},ab:{gaku:30,undo:22,mitame:8,talk:5},spc:{agari:1},
+  alv:{},girls:{},school:null,want:null,tags:{},gonta:null,q:[],after:null,auto:false,manual:false,autoT:0,time:0,lastDate:-9,
+  best:(()=>{ try{ return JSON.parse(localStorage.getItem('onnaBest')||'null')||{seen:{},plays:0}; }catch(e){ return {seen:{},plays:0}; } })(),
+  log:{}};
+const SAVE_KEYS=['phase','t','name','hp','mood','sick','pts','ab','spc','alv','girls','school','want','tags','gonta','lastDate','log','draft','koshien','path'];
+function autoSave(){ if(S.auto) return; try{ const o={}; for(const k of SAVE_KEYS) o[k]=S[k]; localStorage.setItem('onnaSave',JSON.stringify(o)); }catch(e){} }
+function loadSave(){ try{ return JSON.parse(localStorage.getItem('onnaSave')||'null'); }catch(e){ return null; } }
+function clearSave(){ try{ localStorage.removeItem('onnaSave'); }catch(e){} }
+function resume(){ const o=loadSave(); if(!o) return; Object.assign(S,o); $('titleOv').hidden=true; S.mode='turn'; render(); }
+function saveBest(){ try{ localStorage.setItem('onnaBest',JSON.stringify(S.best)); }catch(e){} }
+const nm=()=>S.name;
+function girl(id){ return S.girls[id]; }
+function newGame(name){
+  Object.assign(S,{phase:'birth',t:0,name:name||'前田ダイソン',hp:100,mood:2,sick:0,pts:{tai:0,nori:0,chi:0,sense:0,heart:0},ab:{gaku:30,undo:22,mitame:8,talk:5},spc:{agari:1},
+    alv:{},girls:{},school:null,want:null,tags:{},gonta:null,lastDate:-9,log:{},draft:0,koshien:0,path:null});
+  for(const id in H) S.girls[id]={id,like:0,met:H[id].from==='jh',here:H[id].from==='jh',last:0,bomb:0,school:H[id].from==='jh'?null:H[id].from};
+  S.best.plays++; saveBest();
+  $('titleOv').hidden=true; S.mode='msg'; S.rolls=0; S.ab={gaku:0,undo:0,mitame:0,talk:0}; S.spc={};
+  const mo=1+Math.floor(rnd()*12), da=1+Math.floor(rnd()*28); S.birthday=`2011年${mo}月${da}日`;
+  say([{t:`${S.birthday}。\nとある町の病院で、元気な男の子が生まれた。`,baby:1},{t:`「おめでとうございます！ 男の子ですよ！」\n\n名前は――${nm()}。`,baby:1},
+       {t:'🎰 どんな子に育つかは、神さまのガチャしだい。\n（やり直しは3回まで）',baby:1}],()=>gacha());
+}
+// birth gacha: decides the starting abilities and a talent; up to 3 re-rolls
+const TALENT=[{id:null,n:'なし',w:5},{id:'honban',n:'本番に強い',w:1.2},{id:'hayane',n:'早寝早起き',w:1.2},{id:'benkyo',n:'勉強家',w:1},{id:'kiki',n:'聞き上手',w:1},{id:'fashion',n:'ファッションリーダー',w:.6}];
+function rollBirth(){
+  const r=(a,b)=>Math.round(a+(b-a)*Math.pow(rnd(),1.6));       // low values are more common
+  const ab={gaku:r(12,48),undo:r(8,46),mitame:r(2,24),talk:r(2,20)};
+  let w=rnd()*TALENT.reduce((s,t)=>s+t.w,0), tal=TALENT[0]; for(const t of TALENT){ w-=t.w; if(w<0){ tal=t; break; } }
+  const agari=tal.id!=='honban'&&rnd()<.7, tot=ab.gaku+ab.undo+ab.mitame+ab.talk+(tal.id?15:0)-(agari?6:0);
+  const rare=tot>=100?['SSR','★★★★★']:tot>=80?['SR','★★★★']:tot>=62?['R','★★★']:tot>=46?['N','★★']:['N','★'];
+  const sc=k=>ab[k]*(k==='mitame'||k==='talk'?2:1), best=Object.keys(ab).sort((a,b)=>sc(b)-sc(a))[0];
+  const flavor={gaku:'生まれてすぐ、母子手帳を読もうとしていた（気がする）。',undo:'産声と同時に、看護師さんをけり飛ばした。',mitame:'看護師さんたちが「かわいい…」とざわついた。',talk:'産声がやたらと長く、話しているようだった。'}[best];
+  return {ab,tal,agari,tot,rare,flavor};
+}
+function gacha(){
+  const R=rollBirth(); S.gachaRes=R; S.ab={...R.ab}; render(); sfx('up');
+  const rk=k=>{ const v=R.ab[k], r=rankOf(v); return `${AB[k].n} ${r[1]}${v}`; };
+  const left=3-S.rolls;
+  chooseOpts(`誕生ガチャ　${R.rare[1]} ${R.rare[0]}`,`${R.flavor}\n\n${rk('gaku')}　${rk('undo')}\n${rk('mitame')}　${rk('talk')}\n才能：${R.tal.n}${R.agari?'　／　あがり症':''}`,
+    [{label:'👶 この子でいく！',val:'ok'},{label:`🎰 もう一回まわす（あと${left}回）`,val:'re',disabled:left<=0}],v=>{
+      if(v==='re'){ S.rolls++; say([{t:'🎰 ガラガラガラ……',baby:1}],()=>gacha()); return; }
+      S.ab={...R.ab}; S.spc=R.agari?{agari:1}:{}; if(R.tal.id) S.spc[R.tal.id]=1;
+      S.phase='jh'; S.t=0; sfx('clear');
+      say([{t:`${nm()}は、すくすくと育った。\n\nそして――時は経ち。`},{t:`${nm()}、中学3年生。\n${S.ab.gaku<40?'成績はふつう以下。':'成績はまあまあ。'}${S.ab.undo<40?'運動もふつう以下。':'運動はそこそこ。'}\nそして、生まれてこのかた、まったくモテない。`},
+       {t:'クラスには、幼なじみの朝比奈ひなた。\nそして、優等生の月島りん。\n…どちらとも、最近まともに話した記憶はない。',g:'hinata'},
+       {t:'来年の春には高校受験。\n共学に受からなければ、すべり止めの「私立 剛健男子高校」行きだ。\n\n――女子のいない3年間なんて、ぜったいイヤだ！'},
+       {t:'💡 行動すると「経験点」がもらえる。たまったら「能力アップ」で能力を上げよう。\n女の子は、行動のボタンに顔を出すことがある。いっしょに行動すると仲良くなれる…かも。'}],startTurn); },'gacha',true);
+}
+
+/* ================= calendar ================= */
+const jhMonth=t=>{ const m=4+Math.floor(t/2); return m>12?m-12:m; };
+function dateStr(){ if(S.phase==='birth') return `${S.birthday||''} 誕生`; if(S.phase==='jh') return `中3 ${jhMonth(S.t)}月 ${S.t%2?'後半':'前半'}`; const y=Math.floor(S.t/12)+1, m=(S.t%12)+4; return `高${y} ${m>12?m-12:m}月`; }
+const JH_TURNS=22, HS_TURNS=36;
+
+/* ================= helpers ================= */
+function charm(id){ const h=H[id], a=S.ab; return .3*a.mitame*(S.spc.fashion?1.3:1)+.2*a.talk+.5*a[h.like]; }
+function tier(l){ return l>=80?4:l>=60?3:l>=35?2:l>=15?1:0; }
+const TIER=['他人','知り合い','友だち','気になる','好き'];
+function examBonus(){ return (S.spc.honban?6:0)-(S.spc.agari?6:0); }
+function judge(score,line){ const d=score-line; return d>=10?'A':d>=3?'B':d>=-3?'C':d>=-10?'D':'E'; }
+function avail(){ return Object.keys(H).filter(id=>girl(id).here&&(!H[id].year||Math.floor(S.t/12)+1>=H[id].year||S.phase==='jh')); }
+function sickRate(){ if(S.hp>=55) return 0; return Math.round(Math.min(60,(55-S.hp)*1.4)*(S.spc.hayane?.5:1)); }
+function addLike(id,v){ const g=girl(id); const m=v>0&&S.spc.kiki?1.3:1; g.like=clamp(g.like+v*m,0,100); g.last=S.t; g.bomb=0; g.met=true; }
+function gain(p,mult){ const out={}; for(const k in p){ let v=p[k]*mult; if(k==='chi'&&S.spc.benkyo) v*=1.2; v=Math.round(v); S.pts[k]+=v; out[k]=v; } return out; }
+const ptsStr=o=>Object.keys(o).filter(k=>o[k]).map(k=>`${PT[k].ic}+${o[k]}`).join(' ');
+
+/* ================= turns ================= */
+function startTurn(){
+  if(S.phase==='jh'&&S.t>=JH_TURNS) return;
+  if(S.phase==='hs'&&S.t>=HS_TURNS-1) return graduation();
+  const ev=eventFor(); if(ev){ ev(()=>actionPhase()); return; }
+  actionPhase();
+}
+function actionPhase(){
+  if(S.sick>0){ S.sick--; S.hp=clamp(S.hp+25,0,100); say([{t:'風邪で寝こんでいる…（このターンは休み）'}],endTurn); return; }
+  rollTags(); S.mode='turn'; autoSave(); render();
+}
+function rollTags(){
+  S.tags={}; S.gonta=null;
+  const add=(act,who)=>{ (S.tags[act]=S.tags[act]||[]); if(S.tags[act].length<3&&!S.tags[act].includes(who)) S.tags[act].push(who); };
+  for(const id of avail()){ const h=H[id]; if(rnd()<.55) add(h.tag,id); else if(rnd()<.2) add(pick(['study','sport','style','play']),id); }
+  if(rnd()<.45) S.gonta=pick(['sport','play','study']);
+}
+function doAction(id,target){
+  const a=ACT.find(x=>x.id===id); if(S.mode!=='turn') return;
+  if((id==='talk'||id==='date')&&!target){ chooseGirl(id); return; }
+  S.mode='msg'; S.log[id]=(S.log[id]||0)+1; sfx('tap');
+  const lines=[];
+  // getting sick when tired
+  const sr=a.hp<0?sickRate():0;
+  if(sr&&rnd()*100<sr){ S.sick=1; S.hp=clamp(S.hp+15,0,100); S.mood=clamp(S.mood-1,0,4); sfx('bad'); say([{t:'がんばりすぎて、風邪をひいてしまった…\n（このターンと次のターンは休み。やる気ダウン）'}],endTurn); return; }
+  S.hp=clamp(S.hp+a.hp,0,100);
+  if(id==='rest'){ const t=pick(['ぐっすり眠った。','一日ゴロゴロした。','昼まで寝た。母に怒られた。']); if(rnd()<.3) S.mood=clamp(S.mood+1,0,4); say([{t:t+'\n体力が回復した。'}],endTurn); return; }
+  if(id==='talk') return talkTo(target);
+  if(id==='date') return dateWith(target);
+  // training: level, mood, tag bonus
+  const lv=Math.min(5,1+Math.floor(((S.alv[id]=(S.alv[id]||0)+1)-1)/4));
+  let mult=MOODS[S.mood][2]*(1+.15*(lv-1));
+  const here=S.tags[id]||[];
+  for(const g of here) mult+=girl(g).like>=60?.6:.25;
+  if(S.gonta===id) mult+=.3;
+  if(a.mood) S.mood=clamp(S.mood+a.mood,0,4);
+  if(id==='juku'&&rnd()<.3) S.mood=clamp(S.mood-1,0,4);
+  const got=gain(a.pts,mult);
+  const name=S.phase==='hs'&&a.hs?a.hs:a.n;
+  lines.push({t:`${a.ic} ${name}（Lv${lv}）\n${ptsStr(got)}`});
+  if(S.gonta===id) lines.push({t:pick(['ゴンタ「おう！ 今日もいっしょだな、相棒！」','ゴンタ「女子？ 知らん。筋肉はうらぎらない」','ゴンタ「お前、またフラれたんだって？ 気にすんな！」']),who:'gonta'});
+  for(const g of here) lines.push(tagLine(g));
+  say(lines,endTurn);
+}
+function tagLine(id){
+  const h=H[id], g=girl(id), c=charm(id); let txt, gain=0, face='n';
+  if(!g.met){ g.met=true; txt=`はじめて見る女の子がいる。\n${h.n}――${h.desc}。`; }
+  if(g.like<15){ const p=clamp(.95-c/70,.05,.95); if(rnd()<p){ txt=(txt?txt+'\n\n':'')+pick(rnd()<.6?h.ignore:h.flee); gain=1; face='a'; } else { txt=(txt?txt+'\n\n':'')+pick(h.cold); gain=3+c/12; } }
+  else { txt=pick(g.like>=80?h.love:g.like>=35?h.warm:h.cold); gain=(3+c/12)*(g.like>=60?1.4:1); face=g.like>=60?'l':'h'; }
+  addLike(id,gain); return {t:txt,g:id,face};
+}
+function talkTo(id){
+  const h=H[id], g=girl(id), c=charm(id), got=gain({heart:6,nori:3},MOODS[S.mood][2]); const L=[];
+  if(g.like<15){ const p=clamp(1.05-c/60,.05,.95);
+    if(rnd()<p){ const r=rnd(); L.push({t:`「あ、あの、${h.s}さん…」\n\n`+(r<.5?pick(h.ignore):pick(h.flee)),g:id,face:'a'}); addLike(id,1); if(rnd()<.4) S.mood=clamp(S.mood-1,0,4); L.push({t:`（…心が少しけずれた）\n${ptsStr(got)}`}); sfx('bad'); }
+    else { L.push({t:pick(h.cold),g:id,face:'n'}); addLike(id,5+c/10); L.push({t:`会話が成立した！（快挙）\n${ptsStr(got)}`}); } }
+  else { L.push({t:pick(g.like>=80?h.love:g.like>=35?h.warm:h.cold),g:id,face:g.like>=60?'l':'h'}); addLike(id,5+c/10); L.push({t:ptsStr(got)}); sfx('good'); }
+  say(L,endTurn);
+}
+function dateWith(id){
+  const h=H[id], g=girl(id), c=charm(id); S.lastDate=S.t; S.dateGirl=id;
+  const ok=g.like>=30&&rnd()<.35+(g.like-30)/45;
+  if(!ok){ sfx('bad'); S.mood=clamp(S.mood-1,0,4);
+    say([{t:g.like<15?pick(['「え、ムリ」','「…なんで？」（本気で困惑している）','（既読スルーされた）']):pick(['「ごめん、その日は用事があって…」','「また今度ね」（今度は来ない気がする）']),g:id,face:'a'},{t:'断られた…（やる気ダウン）'}],endTurn); return; }
+  chooseOpts(S.phase==='jh'?'どこに寄り道する？':'デートの行き先',`${h.s}とおでかけ`,PLACES.map(p=>({label:p.n,val:p.id})),place=>{
+    const m=place===h.fav?2:place===h.hate?-.5:1; const v=(6+c/10)*m; addLike(id,v); S.mood=clamp(S.mood+1,0,4);
+    const got=gain({heart:8,nori:4},1);
+    say([{t:place===h.fav?pick(['「ここ、来たかったんだ！」','「…わかってるじゃん」']):place===h.hate?pick(['「…ここ？」（明らかにテンションが低い）','「えっと…うん、いいけど」']):pick(['「楽しかったね」','「まあまあ、かな」']),g:id,face:place===h.hate?'a':'h'},{t:`${place===h.fav?'大成功！':place===h.hate?'気まずかった…':'ふつうに楽しかった。'}\n${ptsStr(got)}`}],endTurn); sfx(place===h.hate?'bad':'good'); },'date');
+}
+function endTurn(){
+  // bombs: a girl you got close to and then ignored spreads rumors
+  if(S.phase==='hs'){ const lim=S.spc.ichizu?10:6; const L=[];
+    for(const id of avail()){ const g=girl(id); if(g.like<30) continue;
+      if(!g.bomb&&S.t-g.last>=lim){ g.bomb=1; L.push({t:`💣 ${H[id].s}の様子がおかしい…（しばらく会っていない）`,g:id,face:'a'}); }
+      else if(g.bomb&&S.t-g.last>=lim+3){ g.bomb=0; g.last=S.t; g.like=Math.max(0,g.like-12); for(const o of avail()) if(o!==id) girl(o).like=Math.max(0,girl(o).like-8);
+        L.push({t:`💥 爆弾が爆発した！\n「${nm()}って、ほったらかしにする人なんだって」\nうわさが広まって、みんなの好感度が下がった…`,g:id,face:'a'}); sfx('boom'); } }
+    if(L.length){ S.t++; say(L,startTurn); return; } }
+  S.t++;
+  if(S.phase==='jh'&&S.t>=JH_TURNS){ exam(); return; }
+  startTurn();
+}
+
+/* ================= events ================= */
+function topGirl(min){ let b=null; for(const id of avail()) if(girl(id).like>=min&&(!b||girl(id).like>girl(b).like)) b=id; return b; }
+function eventFor(){
+  if(S.phase==='jh'){
+    if(S.t===2) return done=>{ const g=topGirl(35); if(g){ addLike(g,8); say([{t:'🗾 修学旅行！',},{t:`自由行動で${H[g].s}と同じ班になった。\n「…班、いっしょだね」`,g,face:'h'}],done); } else { gain({nori:15},1); say([{t:'🗾 修学旅行！'},{t:'夜はゴンタと枕投げ。女子の部屋には近づくことすらできなかった。\n⚡+15',who:'gonta'}],done); } };
+    if(S.t===6||S.t===12||S.t===16) return done=>mock(done);
+    if(S.t===8) return done=>seasonal('🎆 夏祭り',35,8,'家でアイスを食べながら、花火の音だけ聞いた。',done);
+    if(S.t===17) return done=>seasonal('🎄 クリスマス',50,10,'ゴンタとフライドチキンを食べた。「来年こそはな！」',done);
+    if(S.t===20) return done=>valentine(done);
+    return null; }
+  const y=Math.floor(S.t/12)+1, m=S.t%12;
+  if(S.t===0) return done=>enterHigh(done);
+  if(S.t===12&&girl('koharu').here) return done=>{ say([{t:'🌸 新学期。部活に新しいマネージャーが入ったらしい。'}],done); };
+  if(m===3) return done=>koshien(y,done);
+  if(y===3&&m===6) return done=>draft(done);
+  if(m===4) return done=>seasonal('🎆 夏祭り',40,8,'クーラーの部屋で、夏が終わっていった。',done);
+  if(m===5) return done=>seasonal('🎪 文化祭',50,10,'ゴンタとお化け屋敷の受付をした。客の女子は全員ゴンタの顔で逃げた。',done);
+  if(m===8) return done=>seasonal('🎄 クリスマス',55,12,'ひとりでケーキを1ホール食べた。体重が増えた。',done);
+  if(m===10) return done=>valentine(done);
+  return null;
+}
+function koshien(y,done){
+  const u=S.ab.undo+(y-1)*3, r=u>=85+(y===3?0:5)?3:u>=72?2:u>=55?1:0; S.koshien=Math.max(S.koshien||0,r);
+  const txt=['1回戦でコールド負け。スタンドの応援は、ゴンタの母だけだった。','ベスト8まで勝ち進んだ！ 地元の新聞に、名前が1行だけのった。','決勝まで進んだが、あと一歩で負けた。…来年こそ甲子園だ。',y===3?'⚾ ついに甲子園出場！ しかも優勝！！\nスカウトの目が、いっせいにこっちを向いた。':'⚾ 甲子園出場！ 全国にその名がとどろいた。'][r];
+  if(r>=2) S.mood=clamp(S.mood+1,0,4); sfx(r>=2?'good':'tap'); say([{t:`⚾ 高${y}の夏、甲子園予選（運動 ${S.ab.undo}）`},{t:txt}],done);
+}
+function draft(done){
+  const u=S.ab.undo+(S.koshien>=3?5:0); S.draft=u>=84?1:u>=70?2:0;
+  sfx(S.draft?'clear':'bad');
+  say([{t:'📺 プロ野球ドラフト会議の日。テレビの前で、ひざがふるえる。'},{t:S.draft===1?`「第1回選択希望選手――${nm()}」\n\nドラフト1位で指名された！！`:S.draft===2?`6位指名で、${nm()}の名前が呼ばれた！\nプロへの道がひらけた。`:'最後まで、名前は呼ばれなかった。\n…大学で野球を続けるか、勉強にかけるか。'}],done);
+}
+function seasonal(title,min,v,alone,done){
+  const g=topGirl(min);
+  if(g){ addLike(g,v); S.mood=clamp(S.mood+1,0,4); sfx('good'); say([{t:title},{t:pick([`${H[g].s}「…いっしょに行かない？」\n\nなんと、${H[g].s}からさそわれた！`,`${H[g].s}と過ごすことになった。\n「来年も、こうしていられたらいいね」`]),g,face:'l'}],done); }
+  else { S.mood=clamp(S.mood-1,0,4); say([{t:title},{t:alone+'\n（やる気ダウン）',who:'gonta'}],done); }
+}
+function valentine(done){
+  const gs=avail().filter(id=>girl(id).like>=40);
+  if(gs.length){ for(const id of gs) addLike(id,4); S.mood=clamp(S.mood+1,0,4); sfx('good'); say([{t:'🍫 バレンタイン'},...gs.map(id=>({t:girl(id).like>=70?`${H[id].s}「これ…手作り、だから」`:`${H[id].s}「はい、義理だよ。…たぶん」`,g:id,face:'h'}))],done); }
+  else { say([{t:'🍫 バレンタイン'},{t:'下駄箱をあけた。上ばきしかなかった。\n帰ったら、母がチロルチョコをくれた。'}],done); }
+}
+function mock(done){
+  const sc=S.ab.gaku+examBonus(), j1=judge(sc,SCHOOLS.seiryo.line), j2=judge(sc,SCHOOLS.sakura.line);
+  const j3=judge(sc,SCHOOLS.danshi.line);
+  const lines=[{t:`📝 模試の結果\n\n${SCHOOLS.seiryo.n}（進学校）…… ${j1}判定\n${SCHOOLS.sakura.n}（ふつう）…… ${j2}判定\n${SCHOOLS.danshi.n}（男子校）…… ${j3}判定`}];
+  if(j3>='D'){ S.mood=clamp(S.mood-1,0,4); lines.push({t:'このままだと…男子校にも落ちて、不良高校「井原髑髏学園」。\n先生「お前、ケンカは強いのか？」\n（やる気ダウン）'}); sfx('bad'); }
+  else if(j2>='D'){ S.mood=clamp(S.mood-1,0,4); lines.push({t:'このままだと…男子校。\n先生「お前、剛健男子高校のパンフレット、いるか？」\n（やる気ダウン）'}); sfx('bad'); }
+  if(S.t===16){ say(lines,()=>chooseOpts('志望校を決める','第一志望に落ちたら、すべり止めの男子校。\nそれにも落ちたら、不良高校「井原髑髏学園」。',[
+      {label:`${SCHOOLS.seiryo.n}`,sub:`${SCHOOLS.seiryo.k}・今の判定 ${j1}`,val:'seiryo'},{label:`${SCHOOLS.sakura.n}`,sub:`${SCHOOLS.sakura.k}・今の判定 ${j2}`,val:'sakura'},
+      {label:`${SCHOOLS.danshi.n}`,sub:`${SCHOOLS.danshi.k}・今の判定 ${j3}`,val:'danshi'},{label:`${SCHOOLS.ihara.n}`,sub:SCHOOLS.ihara.k,val:'ihara'}],v=>{ S.want=v; say([{t:`第一志望は ${SCHOOLS[v].n} に決めた。\nあと2か月。`}],done); },'school',true)); return; }
+  say(lines,done);
+}
+function exam(){
+  S.mode='msg'; const w=S.want||'sakura', line=SCHOOLS[w].line;
+  const score=S.ab.gaku+examBonus()+Math.round((rnd()-.5)*12)-(S.hp<30?8:0); const pass=score>=line;
+  // where the two classmates go
+  const res={};
+  for(const id of ['hinata','rin']){ const h=H[id], g=girl(id);
+    if(g.like>=60&&pass){ if(w===h.school) res[id]=w; else if(w==='sakura') res[id]='sakura'; else res[id]=g.like>=80?'seiryo':h.school; }
+    else res[id]=h.school; }
+  sfx('tap');
+  say([{t:`🌸 入試当日。\n${SCHOOLS[w].n}。\n\n${S.spc.agari?'手がふるえる…（あがり症）':S.spc.honban?'不思議と落ちついている。（本番に強い）':'深呼吸して、問題用紙をめくった。'}`},
+       {t:'――そして、合格発表の日。'},{t:pass?`あった……！\n\n${SCHOOLS[w].n}、合格！！`:`ない……。\n何度見ても、番号がない。`}],()=>{
+    const to=pass?w:score>=SCHOOLS.danshi.line?'danshi':'ihara';
+    if(!pass){ sfx('boom'); say([{t:to==='danshi'?`第一志望はダメだった。\nすべり止めの ${SCHOOLS.danshi.n} に行くことになった…`:`すべり止めの男子校にも落ちた。\n残っていたのは、二次募集の ${SCHOOLS.ihara.n} だけだった…`}],()=>goHigh(to,res,false)); return; }
+    sfx('clear'); goHigh(w,res,true); });
+}
+function goHigh(w,res,pass){
+    S.school=w; S.tags={}; S.gonta=null;
+    for(const id of ['hinata','rin']){ girl(id).here=pass&&res[id]===w; girl(id).school=res[id]; }
+    for(const id in H) if(H[id].from!=='jh') girl(id).here=H[id].from===w;
+    S.phase='hs'; S.t=0; startTurn();
+}
+function enterHigh(done){
+  if(S.school==='danshi'){ sfx('boom');
+    say([{t:`🌸 ${SCHOOLS.danshi.n}、入学式。\n見わたすかぎり、男。男。男。\n担任も男。購買のおばちゃんも、なぜかおじちゃん。`},{t:'女゛ぁぁぁぁ！！',shout:1},
+      {t:'ゴンタ「よう相棒！ 3年間よろしくな！」\n…ゴンタも同じ高校だった。',who:'gonta'},
+      {t:'女子との出会いは、もうない。\nならば――勉強で東京大学をめざすか。野球部でプロをめざすか。\n\n💡 学力を上げれば東大合格、運動を上げれば甲子園とドラフトへ。'}],done); return; }
+  const L=[{t:S.school==='ihara'?`🌸 ${SCHOOLS.ihara.n}、入学式。\n体育館の窓ガラスが、開始5分で2枚われた。\n…でも、女子はいる。`:`🌸 ${SCHOOLS[S.school].n}、入学式。\n女子がいる。それだけで、世界がかがやいて見える。`}];
+  for(const id of ['hinata','rin']){ const g=girl(id), h=H[id];
+    if(g.here) L.push({t:g.like>=60?`${h.s}「…同じ高校、来ちゃった。${S.school!==h.school?'がんばったんだから':'よろしくね'}」`:`${h.s}も同じ高校だった。\n…目は合わなかった。`,g:id,face:g.like>=60?'l':'n'});
+    else L.push({t:`${h.s}は ${SCHOOLS[g.school].n} に行った。\n${g.like>=60?'「…いっしょの高校、行きたかったな」と、最後に言っていた。':'たぶん、もう会うこともない。'}`}); }
+  L.push({t:'ゴンタも同じ高校だった。「よう相棒！ 高校でもよろしくな！」',who:'gonta'});
+  say(L,done);
+}
+function graduation(){
+  S.mode='msg';
+  const c=avail().filter(id=>girl(id).like>=80&&S.ab[H[id].like]>=H[id].need).sort((a,b)=>girl(b).like-girl(a).like);
+  if(c.length){ const id=c[0], h=H[id]; S.best.seen[id]=1; saveBest(); sfx('clear');
+    say([{t:'🌸 卒業式。\n「校庭のはずれの、伝説の桜の下で告白されたふたりは、永遠に幸せになれる」\n…そんな言い伝えがある。'},{t:`下駄箱に手紙が入っていた。\n『伝説の桜の下で待っています』`},{t:'桜の下に、だれかが立っている――',g:id,face:'l'}],()=>showEnd(`${h.s} エンド`,'',h.end+`\n\n💗 ${h.n}と結ばれた！`,id));
+    return; }
+  const todai=S.ab.gaku+examBonus()+Math.round((rnd()-.5)*8)>=90, dr=S.draft||0;
+  const bad=(k,title,text)=>{ S.best.seen[k]=1; saveBest(); sfx('clear'); showEnd(title,'',text,k); };
+  if(todai&&dr===1) return say([{t:'🌸 卒業式。'},{t:'東京大学、合格。\nそして、プロ野球ドラフト1位。'}],()=>bad('bunbu','文武両道エンド',`${nm()}は東大に通いながらプロのマウンドに立ち、\n「赤門のエース」と呼ばれた。\n卒業後はメジャーリーグへ。\n\nゴンタ「お前、すげえな…。女子とは一言も話してないのにな」\n\n${S.school==='danshi'?'女子のいない3年間が、伝説を生んだ。':'恋はなくとも、伝説はあった。'}`));
+  if(dr===1) return say([{t:'🌸 卒業式。\n校門には、球団の車が待っていた。'}],()=>bad('major','メジャーリーガーエンド',`ドラフト1位で入団した${nm()}は、1年目から大活躍。\n3年後、ポスティングでメジャーリーグへ。\n\n満員のスタジアムに、日本語の応援ボードがゆれる。\n「${nm()}、ホームラン！」\n\n記者「好きなタイプは？」\n${nm()}「…女゛ぁ、いえ、野球が恋人です」`));
+  if(todai) return say([{t:'🌸 3月10日、東京大学 合格発表。'},{t:'あった……！\n\n東京大学、合格！！'}],()=>bad('todai','東大合格エンド',`3年間、ひたすら机に向かった${nm()}は、東京大学に合格した。\n${S.school==='danshi'?'男子校から東大へ。担任（男）が泣いていた。':S.school==='ihara'?'井原髑髏学園、創立以来はじめての東大合格者。番長たちが胴上げしてくれた。':'学年のみんなが、拍手で送り出してくれた。'}\n\nゴンタ「大学には女子、いるらしいぜ！」\n…春から、新しい物語が始まる。`));
+  if(dr===2) return say([{t:'🌸 卒業式。'}],()=>bad('pro','プロ野球選手エンド',`ドラフト6位で入団。\n2軍でひたすらバットをふる日々。\n…でも、夢の続きはここにある。\n\nゴンタ「1軍に上がったら、サインくれよな！」`));
+  if(S.school==='danshi') return bad('danshi','男子校3年間エンド',`卒業式。体育館には、男しかいない。\n3年間、女子と話したのは、コンビニのレジだけだった。\n\nゴンタ「3年間、楽しかったな！ 相棒！」\n\n${nm()}は、空に向かって叫んだ。\n「女゛ぁぁぁぁ！！」`);
+  S.best.seen.alone=1; saveBest(); sfx('bad');
+  const fr=avail().filter(id=>girl(id).like>=60);
+  showEnd('ひとりぼっちエンド','女゛ぁ……',`卒業式。伝説の桜の下には、だれもいなかった。\n${fr.length?`${fr.map(id=>H[id].s).join('、')}とは、いい友だちのまま卒業した。\n（${fr.map(id=>`${H[id].s}は${AB[H[id].like].n}${H[id].need}以上が好み`).join('、')}）\n`:''}\nゴンタ「お前のこと、一生の親友だと思ってるぜ！」\n\n…うれしいけど、そうじゃない。`,'alone');
+}
+
+/* ================= UI: messages & choices ================= */
+function say(lines,then){ S.q=lines.slice(); S.after=then; S.mode='msg'; showNext(); }
+function showNext(){
+  const m=S.q.shift(); if(!m){ const f=S.after; S.after=null; if(f) f(); render(); return; }
+  S.cur=m; render(); drawScene(); speakLine(m);
+}
+/* ================= reading lines aloud (Web Speech API) ================= */
+let voiceOn=true; try{ voiceOn=localStorage.getItem('onnaVoice')!=='0'; }catch(e){}
+function speechText(t){ return String(t).replace(/女゛(ぁ*)/g,(_,a)=>'おんな'+a).replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu,'').replace(/[▼★⚠…]+/g,'、').replace(/\n+/g,'。').replace(/[。、]{2,}/g,'。').trim(); }
+let jaVoices=null;
+function pickVoice(female){ try{ if(!jaVoices||!jaVoices.length) jaVoices=speechSynthesis.getVoices().filter(v=>/^ja/i.test(v.lang)); }catch(e){ return null; }
+  if(!jaVoices.length) return null; const male=/Otoya|Hattori|Ichiro|Keita|Daichi|Male|男/i;
+  return jaVoices.find(v=>female?!male.test(v.name):male.test(v.name))||jaVoices[0]; }
+function speak(text,kind){
+  if(muted||!voiceOn) return; let sy; try{ sy=window.speechSynthesis; }catch(e){} if(!sy) return;
+  const t=speechText(text); if(!t) return;
+  try{ sy.cancel(); const u=new SpeechSynthesisUtterance(t), v=VOICE[kind]||VOICE.narr; u.lang='ja-JP'; u.pitch=v[0]; u.rate=v[1];
+    const vc=pickVoice(H[kind]?true:kind!=='gonta'&&kind!=='shout'?null:false); if(vc&&kind!=='narr') try{ u.voice=vc; }catch(e){}
+    S.speaking=true; S.speakEst=Math.min(9,t.length/(7.5*v[1])+.8); u.onend=u.onerror=()=>{ S.speaking=false; }; sy.speak(u); }catch(e){ S.speaking=false; }
+}
+function speakLine(m){ if(!m) return; speak(m.t,m.shout?'shout':m.g?m.g:m.who==='gonta'?'gonta':'narr'); }
+function stopSpeak(){ S.speaking=false; try{ speechSynthesis.cancel(); }catch(e){} }
+function setVoice(v){ voiceOn=!!v; $('voiceBtn').setAttribute('aria-pressed',voiceOn); $('voiceBtn').textContent=voiceOn?'🗣 声':'🤐 声'; try{ localStorage.setItem('onnaVoice',voiceOn?'1':'0'); }catch(e){} if(!voiceOn) stopSpeak(); }
+function renderMsg(){
+  const m=S.cur; const who=m&&m.g?H[m.g].n:m&&m.who==='gonta'?GONTA.n:'';
+  $('msg').innerHTML=(who?`<b>${who}</b><br>`:'')+(m&&m.shout?`<div class="shout" style="font-size:34px;margin:4px 0">${esc(m.t)}</div>`:esc(m?m.t:''))+(S.mode==='msg'?'<span class="nx">▼ タップ</span>':'');
+}
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+let chCb=null;
+function chooseOpts(title,sub,opts,cb,kind,noCancel){ S.mode='choose'; S.chKind=kind; S.chOpts=opts; chCb=cb; $('chTitle').textContent=title; $('chSub').textContent=sub||'';
+  $('chOpts').innerHTML=opts.map((o,i)=>`<button class="opt" data-i="${i}" ${o.disabled?'disabled':''}>${esc(o.label)}${o.sub?`<small>${esc(o.sub)}</small>`:''}</button>`).join('');
+  $('chOpts').querySelectorAll('button').forEach(b=>b.onclick=()=>{ ac(); user(); pickOpt(+b.dataset.i); });
+  $('chCancel').hidden=!!noCancel; $('chooseOv').hidden=false; }
+function pickOpt(i){ const o=S.chOpts[i]; if(!o||o.disabled) return; $('chooseOv').hidden=true; S.mode='msg'; const f=chCb; chCb=null; f(o.val); }
+function cancelChoose(){ $('chooseOv').hidden=true; chCb=null; S.mode='turn'; render(); }
+function chooseGirl(kind){
+  const list=avail().filter(id=>girl(id).met);
+  if(!list.length){ say([{t:'声をかけられる女の子が、まだいない…'}],()=>{ S.mode='turn'; render(); }); return; }
+  chooseOpts(kind==='talk'?'だれに話しかける？':'だれを誘う？','',list.map(id=>({label:H[id].n+(girl(id).bomb?' 💣':''),sub:`${TIER[tier(girl(id).like)]}（好感度 ${Math.round(girl(id).like)}）`,val:id})),v=>{ S.mode='turn'; doAction(kind,v); },kind);
+}
+
+/* ================= UI: render ================= */
+function render(){
+  $('date').textContent=S.mode==='title'?'':dateStr(); const md=MOODS[S.mood]; $('mood').textContent=`${md[0]} ${md[1]}`;
+  $('hpI').style.width=S.hp+'%';
+  $('abil').innerHTML=Object.keys(AB).map(k=>{ const v=Math.floor(S.ab[k]), r=rankOf(v); return `<div class="ab"><small>${AB[k].n}</small><span class="rk" style="color:${r[2]}">${r[1]}</span>${v}</div>`; }).join('');
+  $('pts').innerHTML=Object.keys(PT).map(k=>`<span>${PT[k].ic}${S.pts[k]}</span>`).join('')+`<button class="mini" id="girlsBtn">👧 女の子</button><button class="mini" id="upBtn">⬆ 能力アップ</button>`;
+  $('upBtn').onclick=()=>{ ac(); user(); openUp(); }; $('girlsBtn').onclick=()=>{ ac(); user(); openGirls(); };
+  const turn=S.mode==='turn', sr=sickRate();
+  $('acts').innerHTML=ACT.map((a,i)=>{ const lv=Math.min(5,1+Math.floor((S.alv[a.id]||0)/4)), tags=(S.tags[a.id]||[]);
+    const name=S.phase!=='hs'&&a.jh?a.jh:S.phase==='hs'&&a.hs?a.hs:a.n;
+    const info=a.id==='rest'?'体力回復':a.id==='talk'||a.id==='date'?(S.phase==='hs'&&S.school==='danshi'?'女子がいない':'女の子をえらぶ'):`Lv${lv}`;
+    const risk=a.hp<0&&sr?`<small class="risk">${info.startsWith('Lv')?info+'・':''}体調不良率 ${sr}%</small>`:`<small>${info}</small>`;
+    const faces=tags.map(id=>`<span class="tg${girl(id).like>=60?' sp':''}" style="background:${H[id].col}" title="${H[id].n}">${H[id].s[0]}</span>`).join('')+(S.gonta===a.id?`<span class="tg" style="background:${GONTA.col}" title="ゴンタ">ゴ</span>`:'');
+    const noGirl=S.phase==='hs'&&S.school==='danshi'&&(a.id==='talk'||a.id==='date');
+    return `<button class="act" data-id="${a.id}" ${turn&&!noGirl?'':'disabled'}>${a.ic} ${name}${risk}<span class="tags">${faces}</span></button>`; }).join('');
+  $('acts').querySelectorAll('.act').forEach(b=>b.onclick=()=>{ ac(); user(); doAction(b.dataset.id); });
+  if(S.mode==='turn'){ S.cur={t:`${dateStr()}。今週はどうする？${S.tags&&Object.keys(S.tags).length?'\n（女の子が来ている行動があるみたいだ）':''}`}; renderMsg(); drawScene(); }
+  else renderMsg();
+}
+function openUp(){ if(S.mode==='title') return; renderUp(); $('upOv').hidden=false; }
+function canPay(c){ return Object.keys(c).every(k=>S.pts[k]>=c[k]); }
+function abCostObj(k,n){ const A=AB[k]; let m=0; for(let i=0;i<n;i++) m+=abCost(S.ab[k]+i); return {[A.main]:m,[A.sub]:Math.round(m*.15)}; }
+const costStr=c=>Object.keys(c).map(k=>`${PT[k].ic}${c[k]}`).join(' ');
+function raise(k,n){ if(S.ab[k]+n>100) n=100-S.ab[k]; if(n<=0) return false; const c=abCostObj(k,n); if(!canPay(c)) return false; for(const p in c) S.pts[p]-=c[p]; S.ab[k]+=n; sfx('up'); return true; }
+function learn(id){ const s=SPC.find(x=>x.id===id); if(s.neg?!S.spc[id]:S.spc[id]) return false; if(!canPay(s.cost)) return false; for(const p in s.cost) S.pts[p]-=s.cost[p]; if(s.neg) delete S.spc[id]; else S.spc[id]=1; sfx('up'); return true; }
+function renderUp(){
+  $('upPts').textContent=Object.keys(PT).map(k=>`${PT[k].ic}${PT[k].n} ${S.pts[k]}`).join('　');
+  let h=Object.keys(AB).map(k=>{ const v=S.ab[k], r=rankOf(v), c1=abCostObj(k,1), c5=abCostObj(k,Math.min(5,100-v));
+    return `<div class="upr"><div><b>${AB[k].n}</b> <span class="rk" style="color:${r[2]}">${r[1]}</span>${v}<small>+1：${costStr(c1)}</small></div><button data-k="${k}" data-n="1" ${v>=100||!canPay(c1)?'disabled':''}>+1</button><button data-k="${k}" data-n="5" ${v>=100||!canPay(c5)?'disabled':''}>+5</button></div>`; }).join('');
+  h+='<p class="sub" style="margin-top:10px">特殊能力</p>'+SPC.map(s=>{ const has=s.neg?!S.spc[s.id]:S.spc[s.id];
+    return `<div class="upr"><div><b>${s.neg?'⚠ ':'★ '}${s.n}</b><small>${s.d}　${has?'':costStr(s.cost)}</small></div><span></span><button data-s="${s.id}" ${has||!canPay(s.cost)?'disabled':''}>${has?(s.neg?'克服ずみ':'習得ずみ'):(s.neg?'克服':'習得')}</button></div>`; }).join('');
+  $('upList').innerHTML=h;
+  $('upList').querySelectorAll('button').forEach(b=>b.onclick=()=>{ ac(); user(); if(b.dataset.s) learn(b.dataset.s); else raise(b.dataset.k,+b.dataset.n); renderUp(); render(); });
+}
+function openGirls(){ if(S.mode==='title') return;
+  const ids=Object.keys(H).filter(id=>girl(id).met||girl(id).here);
+  $('girlsList').innerHTML=ids.map(id=>{ const h=H[id], g=girl(id), here=avail().includes(id);
+    return `<div class="gl"><canvas width="96" height="96" data-g="${id}"></canvas><div><b>${h.n}</b>${g.bomb?' 💣':''} <small style="color:var(--mute)">${here?'':`（${SCHOOLS[g.school]?SCHOOLS[g.school].n:'別の学校'}）`}</small><br>${TIER[tier(g.like)]}　<small>${h.desc}。${AB[h.like].n}の高い人が好き。行きたい場所：${PLACES.find(p=>p.id===h.fav).n}</small><div class="meter"><i style="width:${g.like}%"></i></div></div></div>`; }).join('')||'<p class="sub">まだだれとも知り合っていない。</p>';
+  $('girlsList').querySelectorAll('canvas').forEach(c=>{ const x=c.getContext('2d'); drawGirl(x,c.dataset.g,48,100,.7,girl(c.dataset.g).like>=60?'l':'n'); });
+  $('girlsOv').hidden=false; }
+function showEnd(title,shout,text,key){
+  S.mode='end'; if(!S.auto) clearSave(); speak((shout?shout+'。':'')+text,key==='danshi'||key==='alone'?'shout':H[key]?key:'narr'); $('endTitle').textContent=title; $('endShout').hidden=!shout; $('endShout').textContent=shout; $('endText').textContent=text+`\n\n📖 エンディング ${Object.keys(S.best.seen).length}/${ENDS.length}`;
+  const x=$('endCv').getContext('2d'); x.clearRect(0,0,320,170);
+  if(H[key]){ const gr=x.createLinearGradient(0,0,0,170); gr.addColorStop(0,'#FFD8E4'); gr.addColorStop(1,'#FFF4F6'); x.fillStyle=gr; x.fillRect(0,0,320,170); petals(x,320,170,40); drawGirl(x,key,160,180,1.25,'l'); }
+  else if(key==='todai'||key==='major'||key==='bunbu'||key==='pro'){ x.fillStyle=key==='todai'?'#F4E8D8':'#5AA05A'; x.fillRect(0,0,320,170);
+    if(key!=='todai'){ x.fillStyle='#C8A070'; x.beginPath(); x.moveTo(160,170); x.lineTo(60,110); x.lineTo(160,70); x.lineTo(260,110); x.fill(); }
+    else { x.fillStyle='#C03028'; x.fillRect(110,30,100,80); x.fillStyle='#F4E8D8'; x.fillRect(130,60,60,50); x.fillStyle='#1A1A1A'; x.font='800 14px sans-serif'; x.textAlign='center'; x.fillText('合格',160,52); }
+    x.font='40px sans-serif'; x.textAlign='center'; x.fillText(key==='todai'?'🌸':key==='pro'?'⚾':'🏆',60,70); x.fillText(key==='todai'?'🎓':'⚾',260,70); drawBoy(x,160,150,1.3,key==='todai'?'#2A2A3A':'#F4F4F4',true); }
+  else { x.fillStyle=key==='danshi'?'#5A5A6A':'#B8C0D8'; x.fillRect(0,0,320,170); for(let i=0;i<(key==='danshi'?9:1);i++) drawBoy(x,30+i*33+(key==='danshi'?0:130),key==='danshi'?110+(i%2)*14:105,key==='danshi'?.8:1.1,i===4||key!=='danshi'?'#2A2A3A':'#3A3A3A',i===4); if(key==='alone') petals(x,320,170,12); }
+  $('endOv').hidden=false; S.endT=0;
+}
+
+/* ================= drawing ================= */
+const cv=$('scene'), g=cv.getContext('2d');
+function petals(x,w,h,n){ for(let i=0;i<n;i++){ const px=(i*73.3)%w, py=(i*41.7+S.time*20*(1+i%3))%h; x.fillStyle=i%2?'#FFB8CC':'#FFD8E4'; x.beginPath(); x.ellipse(px,py,3,2,i,0,7); x.fill(); } }
+function drawGirl(x,id,cx,by,s,face){
+  const h=H[id]; x.save(); x.translate(cx,by); x.scale(s,s);
+  // back hair
+  x.fillStyle=h.col;
+  if(h.hair==='long'){ x.beginPath(); x.roundRect?x.roundRect(-36,-118,72,100,26):x.rect(-36,-118,72,100); x.fill(); }
+  if(h.hair==='wave'){ for(let i=-1;i<=1;i+=2){ x.beginPath(); x.ellipse(i*30,-62,16,46,i*.1,0,7); x.fill(); } }
+  if(h.hair==='pony'){ x.beginPath(); x.ellipse(30,-104,12,30,.6,0,7); x.fill(); }
+  if(h.hair==='twin'){ for(let i=-1;i<=1;i+=2){ x.beginPath(); x.ellipse(i*40,-80,11,28,i*-.3,0,7); x.fill(); } }
+  // body (uniform)
+  x.fillStyle='#2A3A6A'; x.beginPath(); x.moveTo(-40,0); x.quadraticCurveTo(-36,-36,0,-38); x.quadraticCurveTo(36,-36,40,0); x.fill();
+  x.fillStyle='#fff'; x.beginPath(); x.moveTo(-14,-37); x.lineTo(0,-20); x.lineTo(14,-37); x.fill();
+  x.fillStyle=h.ribbon||'#E0433D'; x.beginPath(); x.moveTo(0,-24); x.lineTo(-9,-30); x.lineTo(-9,-18); x.fill(); x.beginPath(); x.moveTo(0,-24); x.lineTo(9,-30); x.lineTo(9,-18); x.fill();
+  // face
+  x.fillStyle=h.skin; x.beginPath(); x.ellipse(0,-74,27,31,0,0,7); x.fill();
+  // eyes
+  const ey=-72; x.fillStyle='#2A1A2A';
+  if(face==='a'){ x.lineWidth=2.5; x.strokeStyle='#2A1A2A'; x.beginPath(); x.moveTo(-15,ey); x.lineTo(-6,ey+1); x.moveTo(6,ey+1); x.lineTo(15,ey); x.stroke(); }
+  else if(face==='l'){ x.lineWidth=2.5; x.strokeStyle='#2A1A2A'; x.beginPath(); x.arc(-10,ey+2,5,Math.PI*1.1,Math.PI*1.9); x.stroke(); x.beginPath(); x.arc(10,ey+2,5,Math.PI*1.1,Math.PI*1.9); x.stroke(); }
+  else { for(const ex of [-10,10]){ x.beginPath(); x.ellipse(ex,ey,4.2,6,0,0,7); x.fill(); x.fillStyle='#fff'; x.beginPath(); x.arc(ex+1.5,ey-2.5,1.6,0,7); x.fill(); x.fillStyle='#2A1A2A'; } }
+  if(face==='l'||face==='h'){ x.fillStyle='rgba(255,110,140,.45)'; x.beginPath(); x.ellipse(-16,-62,6,3.5,0,0,7); x.ellipse(16,-62,6,3.5,0,0,7); x.fill(); }
+  // mouth
+  x.strokeStyle='#A0405A'; x.lineWidth=2; x.beginPath();
+  if(face==='a'){ x.moveTo(-5,-56); x.lineTo(5,-57); } else if(face==='h'||face==='l'){ x.arc(0,-59,5,.2,Math.PI-.2); } else { x.moveTo(-4,-56); x.quadraticCurveTo(0,-54,4,-56); }
+  x.stroke();
+  if(h.glasses){ x.strokeStyle='#4A4A5A'; x.lineWidth=1.8; x.strokeRect(-18,ey-6,15,11); x.strokeRect(3,ey-6,15,11); x.beginPath(); x.moveTo(-3,ey-1); x.lineTo(3,ey-1); x.stroke(); }
+  // bangs
+  x.fillStyle=h.col; x.beginPath(); x.ellipse(0,-96,30,16,0,Math.PI,0); x.fill();
+  if(h.hair==='bob'){ x.beginPath(); x.ellipse(-24,-78,9,22,.15,0,7); x.ellipse(24,-78,9,22,-.15,0,7); x.fill(); }
+  else { x.beginPath(); x.moveTo(-28,-96); x.quadraticCurveTo(-30,-74,-24,-62); x.lineTo(-20,-90); x.fill(); x.beginPath(); x.moveTo(28,-96); x.quadraticCurveTo(30,-74,24,-62); x.lineTo(20,-90); x.fill(); }
+  x.beginPath(); x.moveTo(-22,-98); x.lineTo(-14,-84); x.lineTo(-6,-98); x.lineTo(2,-84); x.lineTo(10,-98); x.lineTo(18,-86); x.lineTo(24,-98); x.fill();
+  if(h.hair==='twin'||h.hair==='pony'){ x.fillStyle='#FF6A8A'; x.beginPath(); x.arc(h.hair==='pony'?22:-26,-98,4,0,7); x.fill(); if(h.hair==='twin'){ x.beginPath(); x.arc(26,-98,4,0,7); x.fill(); } }
+  if(h.ribbon){ x.fillStyle=h.ribbon; x.beginPath(); x.ellipse(-16,-104,8,4,-.5,0,7); x.ellipse(-4,-106,8,4,.5,0,7); x.fill(); }
+  x.restore();
+}
+function drawBoy(x,cx,by,s,col,me){
+  x.save(); x.translate(cx,by); x.scale(s,s);
+  // school uniform (gakuran): rounded shoulders, sleeves, stand collar and buttons
+  const light=col==='#F4F4F4';
+  x.fillStyle='#F2D2B4'; x.fillRect(-4.5,-35,9,6);                                             // neck
+  x.fillStyle=col; x.beginPath(); x.moveTo(-6,-31); x.quadraticCurveTo(-15,-31,-19,-23); x.lineTo(-17,6); x.lineTo(17,6); x.lineTo(19,-23); x.quadraticCurveTo(15,-31,6,-31); x.closePath(); x.fill();
+  for(const sd of [-1,1]){ x.fillStyle=col; x.beginPath(); x.moveTo(sd*18,-25); x.quadraticCurveTo(sd*25,-18,sd*24,-1); x.lineTo(sd*18.5,-1); x.lineTo(sd*16.5,-19); x.closePath(); x.fill();
+    x.strokeStyle=light?'rgba(0,0,0,.18)':'rgba(255,255,255,.12)'; x.lineWidth=1; x.beginPath(); x.moveTo(sd*16.5,-19); x.lineTo(sd*18.5,-1); x.stroke();
+    x.fillStyle='#F2D2B4'; x.beginPath(); x.arc(sd*21.3,1.5,3.4,0,7); x.fill(); }
+  x.fillStyle=light?'#D8D8DC':'#14141C'; x.beginPath(); x.roundRect?x.roundRect(-6.5,-33,13,5,2):x.rect(-6.5,-33,13,5); x.fill();   // stand collar
+  x.fillStyle=light?'#2A3A6A':'#E8C050'; for(const by2 of [-24,-16,-8,0]){ x.beginPath(); x.arc(0,by2,1.6,0,7); x.fill(); }
+  x.fillStyle='#F2D2B4'; x.beginPath(); x.arc(0,-44,15,0,7); x.fill();
+  x.fillStyle='#1A1A1A'; x.beginPath(); x.ellipse(0,-54,15,8,0,Math.PI,0); x.fill();
+  x.fillStyle='#1A1A1A'; x.fillRect(-7,-46,3,3); x.fillRect(4,-46,3,3);
+  x.strokeStyle='#8A4A4A'; x.lineWidth=1.5; x.beginPath(); x.arc(0,-36,4,Math.PI+.4,-.4); x.stroke();
+  if(me){ x.fillStyle='#fff'; x.font='800 10px sans-serif'; x.textAlign='center'; x.fillText('ぼく',0,-64); }
+  x.restore();
+}
+function drawScene(){
+  g.setTransform(1,0,0,1,0,0);
+  const m=S.cur||{};
+  const hs=S.phase==='hs', bg=g.createLinearGradient(0,0,0,190);
+  bg.addColorStop(0,hs?'#FFE0EA':'#E0EEFF'); bg.addColorStop(1,hs?'#FFF4F6':'#F6FAFF'); g.fillStyle=bg; g.fillRect(0,0,360,190);
+  // classroom window + blackboard
+  g.fillStyle='#3A6A4A'; g.fillRect(20,20,150,70); g.strokeStyle='#8A6A4A'; g.lineWidth=4; g.strokeRect(20,20,150,70);
+  g.fillStyle='rgba(255,255,255,.75)'; g.font='800 13px "M PLUS Rounded 1c",sans-serif'; g.textAlign='left'; g.fillText(S.mode==='title'?'':dateStr(),30,44);
+  if(S.phase==='jh'&&S.want){ g.font='800 10px sans-serif'; g.fillText('志望：'+SCHOOLS[S.want].n,30,62); }
+  if(hs){ g.font='800 10px sans-serif'; g.fillText(SCHOOLS[S.school].n,30,62); }
+  g.fillStyle='#BFE0FF'; g.fillRect(220,14,120,90); g.strokeStyle='#fff'; g.lineWidth=5; g.strokeRect(220,14,120,90); g.beginPath(); g.moveTo(280,14); g.lineTo(280,104); g.stroke();
+  petals(g,360,190,hs?10:4);
+  g.fillStyle='rgba(160,120,90,.25)'; g.fillRect(0,150,360,40);
+  if(S.phase==='birth'){ g.fillStyle='#EAF6F0'; g.fillRect(0,0,360,190); g.fillStyle='#FFFFFF'; g.fillRect(0,130,360,60);
+    g.fillStyle='#BFE0FF'; g.fillRect(230,16,110,80); g.strokeStyle='#fff'; g.lineWidth=5; g.strokeRect(230,16,110,80);
+    g.fillStyle='#7AC0A0'; g.font='800 13px "M PLUS Rounded 1c",sans-serif'; g.textAlign='left'; g.fillText('🏥 '+(S.birthday||''),20,30);
+    const bx=180, byy=118+Math.sin(S.time*3)*1.5;
+    g.fillStyle='#FFF6E0'; g.beginPath(); g.ellipse(bx,byy+10,46,30,0,0,7); g.fill(); g.strokeStyle='#F2D8A8'; g.lineWidth=2; g.stroke();
+    g.fillStyle='#F8DCC8'; g.beginPath(); g.arc(bx,byy-12,24,0,7); g.fill();
+    g.strokeStyle='#5A3A3A'; g.lineWidth=2; g.beginPath(); g.arc(bx-9,byy-12,4,.2,Math.PI-.2); g.stroke(); g.beginPath(); g.arc(bx+9,byy-12,4,.2,Math.PI-.2); g.stroke();
+    g.fillStyle='rgba(255,120,140,.4)'; g.beginPath(); g.ellipse(bx-15,byy-4,5,3,0,0,7); g.ellipse(bx+15,byy-4,5,3,0,0,7); g.fill();
+    g.fillStyle='#C86A6A'; g.beginPath(); g.ellipse(bx,byy-1,4,3,0,0,7); g.fill();
+    g.strokeStyle='#5A3A3A'; g.lineWidth=1.5; g.beginPath(); g.moveTo(bx-2,byy-36); g.quadraticCurveTo(bx+6,byy-44,bx+3,byy-34); g.stroke();
+    if(S.mode==='choose'){ g.font='34px sans-serif'; g.textAlign='center'; g.fillText('🎰',70,120); g.fillText('✨',290,130); }
+    return; }
+  if(m.g){ drawGirl(g,m.g,250,200,1.35,m.face||'n'); drawBoy(g,70,186,1.1,'#2A2A3A',true); }
+  else if(m.who==='gonta'){ drawBoy(g,250,190,1.5,GONTA.col,false); g.fillStyle='#fff'; g.font='800 12px sans-serif'; g.textAlign='center'; g.fillText('ゴンタ',250,92); drawBoy(g,70,186,1.1,'#2A2A3A',true); }
+  else drawBoy(g,180,186,1.2,'#2A2A3A',true);
+}
+
+/* ================= auto: study first, then win one girl ================= */
+function autoTarget(){
+  if(S.phase==='jh') return 'rin';
+  if(S.school==='danshi') return null;
+  const cands=avail().filter(id=>girl(id).met||H[id].from===S.school);
+  cands.sort((a,b)=>(girl(b).like+(H[b].like==='gaku'?10:0))-(girl(a).like+(H[a].like==='gaku'?10:0)));
+  return cands[0]||null;
+}
+function autoSpend(){
+  const tg=autoTarget(), need=tg?H[tg]:null;
+  for(const id of (S.phase==='jh'?['agari','benkyo','honban','hayane']:S.school==='danshi'?['agari','hayane','honban','benkyo']:['hayane','kiki','ichizu','fashion'])) learn(id);
+  let guard=0;
+  while(guard++<200){
+    const want=[];
+    if(S.phase==='jh') want.push(['gaku',90]);
+    if(need) want.push([need.like,need.need+8]);
+    if(S.phase==='hs'&&S.school==='danshi') want.push([S.path==='base'?'undo':'gaku',100]);
+    want.push(['mitame',60],['talk',55],['gaku',80],['undo',60],['mitame',90],['talk',85]);
+    let did=false; for(const [k,lim] of want){ if(S.ab[k]<lim&&raise(k,1)){ did=true; break; } }
+    if(!did) break; }
+}
+function autoAct(){
+  autoSpend();
+  const tg=autoTarget(), sr=sickRate();
+  if(S.hp<38||sr>12) return doAction('rest');
+  if(S.mood<=1) return doAction('play');
+  const short=S.phase==='jh'&&S.ab.gaku<SCHOOLS.seiryo.line+8;
+  if(S.phase==='hs'&&S.school==='danshi'){ if(!S.path) S.path=rnd()<.5?'base':'study'; return doAction(S.path==='study'?(S.hp>=60?'juku':'study'):'sport'); }
+  if(tg){ const g=girl(tg);
+    if(S.phase==='hs'){ const b=avail().find(id=>girl(id).bomb); if(b===tg) return doAction('talk',tg); }
+    for(const a in S.tags) if(S.tags[a].includes(tg)&&a!=='play'||S.tags[a].includes(tg)&&!short) return doAction(a);
+    if(!short&&g.like>=30&&S.t-S.lastDate>=3) return doAction('date',tg);
+    if(!short&&g.like<60&&rnd()<.5) return doAction('talk',tg); }
+  if(short) return doAction(S.hp>=60?'juku':'study');
+  const lk=tg?H[tg].like:'mitame', map={gaku:'study',undo:'sport',mitame:'style',talk:'play'};
+  if(tg&&S.ab[lk]<H[tg].need+8) return doAction(map[lk]);
+  if(tg&&girl(tg).like<80) return doAction('talk',tg);
+  return doAction(pick(['style','play','study']));
+}
+function autoChoose(){
+  const k=S.chKind;
+  if(k==='gacha'){ const R=S.gachaRes; return pickOpt(R.tot<70&&S.rolls<3?1:0); }
+  if(k==='school'){ const sc=S.ab.gaku+examBonus(); return pickOpt(judge(sc,SCHOOLS.seiryo.line)<='B'?0:1); }
+  if(k==='date'){ const h=H[S.dateGirl]; const i=S.chOpts.findIndex(o=>h&&o.val===h.fav); return pickOpt(i>=0?i:0); }
+  return pickOpt(0);
+}
+function tick(dt){
+  S.time=(S.time||0)+dt;
+  if(!S.auto) return;
+  S.autoT+=dt;
+  if(S.mode==='title'){ if(S.autoT>.6){ S.autoT=0; newGame($('nameIn').value.trim()||'前田ダイソン'); } return; }
+  if(S.speaking&&S.autoT<(S.speakEst||3)&&(S.mode==='msg'||S.mode==='end')) return;
+  if(S.mode==='end'){ if(S.autoT>4){ S.autoT=0; toTitle(); } return; }
+  if(S.autoT<.55) return; S.autoT=0;
+  if(S.mode==='msg') return showNext();
+  if(S.mode==='choose') return autoChoose();
+  if(S.mode==='turn') return autoAct();
+}
+
+/* ================= input ================= */
+function setAuto(v){ S.auto=!!v; $('autoBtn').setAttribute('aria-pressed',S.auto); S.autoT=0; }
+function user(){ if(S.auto) setAuto(false); }
+function toTitle(){ ['chooseOv','upOv','girlsOv','endOv'].forEach(i=>$(i).hidden=true); S.mode='title'; $('titleOv').hidden=false;
+  const sv=loadSave(); $('contBtn').hidden=!sv; if(sv){ const keep={phase:S.phase,t:S.t}; S.phase=sv.phase; S.t=sv.t; $('contBtn').textContent=`▶ つづきから（${sv.name}・${dateStr()}）`; S.phase=keep.phase; S.t=keep.t; }
+  const n=Object.keys(S.best.seen).length; $('bestTxt').textContent=`📖 見たエンディング ${n}/${ENDS.length}　｜　プレイ ${S.best.plays}回`; render(); drawScene(); }
+$('msg').onclick=()=>{ ac(); if(S.mode==='msg'){ user(); showNext(); } };
+$('contBtn').onclick=()=>{ ac(); user(); resume(); };
+$('startBtn').onclick=()=>{ ac(); user(); newGame($('nameIn').value.trim()||'前田ダイソン'); };
+$('autoStartBtn').onclick=()=>{ ac(); setAuto(true); newGame($('nameIn').value.trim()||'前田ダイソン'); };
+$('autoBtn').onclick=()=>{ ac(); setAuto(!S.auto); };
+$('muteBtn').onclick=()=>{ ac(); setMute(!muted); };
+$('voiceBtn').onclick=()=>{ ac(); setVoice(!voiceOn); if(voiceOn&&S.cur&&S.mode==='msg') speakLine(S.cur); };
+$('chCancel').onclick=()=>{ ac(); user(); cancelChoose(); };
+$('upClose').onclick=()=>{ ac(); $('upOv').hidden=true; };
+$('girlsClose').onclick=()=>{ ac(); $('girlsOv').hidden=true; };
+$('endBtn').onclick=()=>{ ac(); user(); toTitle(); };
+addEventListener('keydown',e=>{
+  if(document.activeElement===$('nameIn')){ if(e.key==='Enter') $('startBtn').click(); return; }
+  const k=e.key.toLowerCase();
+  if(k==='o'){ ac(); setAuto(!S.auto); return; }
+  if(k==='m'){ ac(); setMute(!muted); return; }
+  if(k==='v'){ ac(); setVoice(!voiceOn); return; }
+  if(k==='u'){ ac(); user(); if($('upOv').hidden) openUp(); else $('upOv').hidden=true; return; }
+  if(k==='g'){ ac(); user(); if($('girlsOv').hidden) openGirls(); else $('girlsOv').hidden=true; return; }
+  if(k==='escape'){ $('upOv').hidden=true; $('girlsOv').hidden=true; if(S.mode==='choose'&&!$('chCancel').hidden) cancelChoose(); return; }
+  if(k==='enter'||k===' '){ e.preventDefault(); ac(); if(S.mode==='msg'){ user(); showNext(); } else if(S.mode==='end') $('endBtn').click(); return; }
+  if(/^[1-9]$/.test(k)){ ac(); user(); if(S.mode==='choose'){ pickOpt(+k-1); return; } const a=ACT[+k-1]; if(a&&S.mode==='turn') doAction(a.id); }
+});
+
+/* ================= sound ================= */
+let AC=null, muted=false; try{ muted=localStorage.getItem('onnaMute')==='1'; }catch(e){}
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==='suspended') AC.resume(); }
+function tone(f,d,type='sine',v=.06,delay=0,f2){ if(muted||!AC) return; const t=AC.currentTime+delay, o=AC.createOscillator(), gn=AC.createGain(); o.type=type; o.frequency.setValueAtTime(f,t); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+d); gn.gain.setValueAtTime(v,t); gn.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(gn).connect(AC.destination); o.start(t); o.stop(t+d+.02); }
+function sfx(k){
+  if(k==='tap') tone(880,.06,'triangle',.05);
+  else if(k==='good'){ tone(784,.1,'triangle',.06); tone(1046,.14,'triangle',.06,.08); }
+  else if(k==='bad') tone(330,.3,'sawtooth',.05,0,180);
+  else if(k==='up') tone(988,.1,'square',.04,0,1480);
+  else if(k==='boom'){ tone(90,.6,'sawtooth',.1,0,40); }
+  else if(k==='clear') [523,659,784,1046].forEach((f,i)=>tone(f,.2,'triangle',.07,i*.12));
+}
+function setMute(m){ muted=m; if(m) stopSpeak(); $('muteBtn').textContent=m?'音 OFF':'音 ON'; try{ localStorage.setItem('onnaMute',m?'1':'0'); }catch(e){} }
+
+setMute(muted); setVoice(voiceOn); toTitle();
+try{ speechSynthesis.onvoiceschanged=()=>{ jaVoices=null; }; }catch(e){}
+let last=performance.now();
+function loop(now){ const dt=Math.min(.1,(now-last)/1000); last=now; if(!S.manual) tick(dt); if(S.mode==='title'||S.mode==='end') drawScene(); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+
+window.__onna={ get S(){ return S; }, setAuto, manual(v=true){ S.manual=v; }, step(dt=1/60){ tick(dt); }, seed(v){ seed=(Math.abs(v|0)%2147483646)+1; },
+  newGame, doAction, showNext, pickOpt, raise, learn, openUp, openGirls, toTitle, charm, H, SCHOOLS };
+})();
+</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>

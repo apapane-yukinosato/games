@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="牧羊犬コーギーになって、ひつじを柵に追いこもう。ほえて散らして、オオカミも追いはらえ。全5ステージ。">
+<title>コーギーのひつじ追い</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&family=Dela+Gothic+One&display=swap">
+<style>
+:root{--bg:#F2F8E8;--ink:#2A3A1A;--card:#FFFFFF;--line:#D8E8C0;--mute:#7A8A68;--red:#E07A2A;--green:#4A9A3A}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+#app{max-width:520px;margin:0 auto;padding:8px 10px 16px;padding-top:calc(8px + env(safe-area-inset-top,0px))}
+#top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:16px;font-weight:800;white-space:nowrap}
+.mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--card);cursor:pointer;white-space:nowrap}
+.mini[aria-pressed=true]{background:var(--red);border-color:var(--red);color:#fff}
+#wrap{position:relative}
+#cv{display:block;width:100%;aspect-ratio:3/4;border-radius:16px;background:#8AC85A;touch-action:none}
+#pad{display:flex;gap:8px;margin-top:8px}
+#barkBtn{flex:1;min-height:64px;border:0;border-radius:18px;background:radial-gradient(circle at 40% 30%,#FFC870,#E07A2A);color:#fff;font-weight:800;font-size:22px;box-shadow:0 5px 0 #A0501A;cursor:pointer;touch-action:manipulation}
+#barkBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #A0501A}
+#barkBtn:disabled{filter:grayscale(.6) brightness(.9)}
+.ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(30,40,20,.5);border-radius:16px;padding:14px;z-index:3}
+.card{background:var(--card);border-radius:18px;padding:16px;width:100%;max-width:380px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.card h2{margin:0;font-family:"Dela Gothic One","M PLUS Rounded 1c",sans-serif;font-size:24px;line-height:1.3;color:#C8601A}
+.sub{font-size:13px;color:var(--mute);margin:8px 0 10px;line-height:1.7}
+.how{text-align:left;font-size:13px;line-height:1.7;background:#F4FAEA;border-radius:12px;padding:8px 12px;margin:0 0 10px}
+.go{display:block;width:100%;min-height:48px;border:0;border-radius:14px;font-weight:800;font-size:17px;cursor:pointer;margin-top:8px;background:var(--red);color:#fff;box-shadow:0 4px 0 #A0501A}
+.go.alt{background:#E8F2DA;color:var(--ink);box-shadow:0 4px 0 #C8D8B0}
+.back{display:block;margin-top:10px;font-size:13px;font-weight:800;color:var(--mute);text-decoration:none}
+.stars{font-size:34px;margin:4px 0}
+.stg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:6px 0}
+.stg button{min-height:52px;border:2px solid var(--line);border-radius:12px;background:#fff;font-weight:800;cursor:pointer;font-size:13px;line-height:1.2}
+.stg button small{display:block;font-size:11px}
+.stg button:disabled{opacity:.4;cursor:default}
+.help{font-size:12px;color:var(--mute);text-align:center;margin:8px 0 0;line-height:1.6}
+@media (pointer:coarse){.pc{display:none}}
+</style>
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-180.png">
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>🐕 コーギーのひつじ追い</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false" title="Oキー">🤖 オート</button>
+    <button class="mini" id="muteBtn">音 ON</button>
+  </div>
+  <div id="wrap">
+    <canvas id="cv" width="360" height="480" aria-label="牧場。コーギーでひつじを柵に追いこむ"></canvas>
+    <div class="ov" id="titleOv">
+      <div class="card">
+        <h2>コーギーの<br>ひつじ追い</h2>
+        <p class="sub">コーギーはもともと牧羊犬。<br>ひつじを上の柵の入口から、ぜんぶ入れよう！</p>
+        <div class="how">🐾 牧場をさわった所へコーギーが走る（PCは矢印キーも）<br>🐑 ひつじはコーギーから逃げる。うしろから回りこんで押そう<br>📣「ワン！」でまわりのひつじが大きく逃げる。ねてるひつじも起きる<br>🐺 オオカミはひつじをさらう。近づくかワン！で追いはらえ</div>
+        <div class="stg" id="stgList"></div>
+        <button class="go alt" id="autoStartBtn">🤖 オートで見る</button>
+        <a class="back" href="../">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+    <div class="ov" id="resultOv" hidden>
+      <div class="card">
+        <h2 id="resTitle"></h2>
+        <div class="stars" id="resStars"></div>
+        <p class="sub" id="resText"></p>
+        <button class="go" id="nextBtn">つぎのステージ</button>
+        <button class="go alt" id="retryBtn">もう一度</button>
+        <button class="go alt" id="menuBtn">ステージをえらぶ</button>
+        <a class="back" href="../">← ゲーム一覧にもどる</a>
+      </div>
+    </div>
+  </div>
+  <div id="pad"><button id="barkBtn">📣 ワン！</button></div>
+  <p class="help">牧場をさわってコーギーを動かす。<span class="pc">PC：矢印/WASDで移動　スペースでワン！　O オート　M 音</span></p>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+let seed=(Date.now()%2147483646)+1; const rnd=()=>{ seed=seed*16807%2147483647; return (seed-1)/2147483646; };
+const clamp=(v,a,b)=>v<a?a:v>b?b:v, pick=a=>a[Math.floor(rnd()*a.length)];
+const W=360,H=480;
+const cv=$('cv'), g=cv.getContext('2d');
+
+/* ================= field ================= */
+const PEN={x0:110,x1:250,y0:16,y1:96,g0:156,g1:204};   // pen with a gate in the bottom fence
+const GATE={x:180,y:PEN.y1+16};
+const STAGES=[
+  {n:'はじめての牧場',sheep:5,time:70,trees:[],pond:null,black:0,lamb:0,sleep:0,wolf:false},
+  {n:'木のある牧場',sheep:8,time:80,trees:[[80,250],[280,300],[190,380]],pond:null,black:0,lamb:0,sleep:0,wolf:false},
+  {n:'池と黒ひつじ',sheep:10,time:90,trees:[[60,180],[300,200]],pond:{x:180,y:300,rx:56,ry:32},black:2,lamb:0,sleep:0,wolf:false},
+  {n:'ねぼすけと子ひつじ',sheep:12,time:100,trees:[[90,330],[270,250]],pond:null,black:2,lamb:3,sleep:2,wolf:false},
+  {n:'オオカミの夜',sheep:14,time:110,trees:[[70,240],[290,330]],pond:{x:200,y:400,rx:48,ry:26},black:2,lamb:2,sleep:1,wolf:true},
+];
+const S={scene:'title',si:0,sheep:[],dog:null,wolf:null,t:0,timeLeft:0,parts:[],target:null,keys:{},barkCd:0,auto:false,manual:false,autoT:0,msg:'',msgT:0,taken:0,resT:0,
+  best:(()=>{ try{ return JSON.parse(localStorage.getItem('hitsujiBest')||'null')||{stars:[0,0,0,0,0]}; }catch(e){ return {stars:[0,0,0,0,0]}; } })()};
+function saveBest(){ if(S.auto) return; try{ localStorage.setItem('hitsujiBest',JSON.stringify(S.best)); }catch(e){} }
+const st=()=>STAGES[S.si];
+
+function startStage(i){
+  S.si=i; const s=st(); S.sheep=[]; S.parts=[]; S.taken=0; S.timeLeft=s.time; S.t=0; S.barkCd=0; S.target=null; S.autoT=0; S.scene='play';
+  S.dog={x:180,y:440,vx:0,vy:0,face:1,run:0};
+  const kinds=[]; for(let k=0;k<s.black;k++) kinds.push('black'); for(let k=0;k<s.lamb;k++) kinds.push('lamb'); for(let k=0;k<s.sleep;k++) kinds.push('sleep'); while(kinds.length<s.sheep) kinds.push('white');
+  for(const kind of kinds){ let x,y,ok=false,tries=0; while(!ok&&tries++<60){ x=30+rnd()*300; y=170+rnd()*230; ok=!blocked(x,y,14); }
+    S.sheep.push({x,y,vx:0,vy:0,kind,penned:false,asleep:kind==='sleep',ph:rnd()*6,face:rnd()<.5?1:-1,gone:false,baa:0}); }
+  S.wolf=s.wolf?{x:-30,y:300,st:'wait',t:6,carry:null,face:1}:null;
+  ['titleOv','resultOv'].forEach(id=>$(id).hidden=true); say(`ステージ${i+1}「${s.n}」`); sfx('start');
+}
+function say(m){ S.msg=m; S.msgT=0; }
+// trees, the pond and the pen fences block movement
+function blocked(x,y,r){ const s=st(); for(const [tx,ty] of s.trees) if(Math.hypot(x-tx,y-ty)<22+r) return true;
+  if(s.pond){ const p=s.pond, dx=(x-p.x)/(p.rx+r), dy=(y-p.y)/(p.ry+r); if(dx*dx+dy*dy<1) return true; }
+  if(y-r<PEN.y1+2&&x+r>PEN.x0&&x-r<PEN.x1) return true;
+  return false; }
+function inPen(x,y){ return x>PEN.x0+6&&x<PEN.x1-6&&y>PEN.y0+6&&y<PEN.y1-4; }
+function pushOut(o,r){ // keep things out of obstacles and inside the field
+  const s=st(); o.x=clamp(o.x,10,W-10); o.y=clamp(o.y,10,H-10);
+  for(const [tx,ty] of s.trees){ const d=Math.hypot(o.x-tx,o.y-ty)||1, m=22+r; if(d<m){ o.x=tx+(o.x-tx)/d*m; o.y=ty+(o.y-ty)/d*m; } }
+  if(s.pond){ const p=s.pond, dx=(o.x-p.x)/(p.rx+r), dy=(o.y-p.y)/(p.ry+r), d=Math.hypot(dx,dy); if(d<1&&d>0){ o.x=p.x+dx/d*(p.rx+r); o.y=p.y+dy/d*(p.ry+r); } }
+  // the pen: only the gate lets sheep in; the dog never goes in
+  if(o.y-r<PEN.y1+2&&o.x+r>PEN.x0-2&&o.x-r<PEN.x1+2){
+    const throughGate=o.sheep&&o.x>PEN.g0+r*.4&&o.x<PEN.g1-r*.4;
+    if(!throughGate){ const fromSide=o.y<PEN.y1-4; if(fromSide){ o.x=o.x<180?PEN.x0-2-r:PEN.x1+2+r; } else o.y=PEN.y1+2+r; } } }
+
+/* ================= update ================= */
+function update(dt){
+  S.t+=dt; S.msgT+=dt;
+  for(const p of S.parts){ p.t+=dt; if(p.vx!=null){ p.x+=p.vx*dt; p.y+=p.vy*dt; } } S.parts=S.parts.filter(p=>p.t<(p.k==='ring'?.6:1.2));
+  if(S.scene==='result'||S.scene==='title'){ if(S.auto){ S.resT+=dt; if(S.resT>(S.scene==='title'?.6:3)){ S.resT=0; startStage(S.scene==='title'?0:S.lastClear&&S.si<4?S.si+1:S.lastClear?0:S.si); } } return; }
+  if(S.scene!=='play') return;
+  S.timeLeft-=dt; S.barkCd=Math.max(0,S.barkCd-dt);
+  if(S.auto) autoTick(dt);
+  // dog movement: toward the finger, or keys
+  const D=S.dog; let mx=0,my=0;
+  if(S.target){ const dx=S.target.x-D.x, dy=S.target.y-D.y, d=Math.hypot(dx,dy); if(d>4){ mx=dx/d*Math.min(1,d/30); my=dy/d*Math.min(1,d/30); } }
+  if(S.keys.left) mx-=1; if(S.keys.right) mx+=1; if(S.keys.up) my-=1; if(S.keys.down) my+=1;
+  const ml=Math.hypot(mx,my); if(ml>1){ mx/=ml; my/=ml; }
+  const SP=135; D.vx+=(mx*SP-D.vx)*Math.min(1,dt*10); D.vy+=(my*SP-D.vy)*Math.min(1,dt*10); D.x+=D.vx*dt; D.y+=D.vy*dt; pushOut(D,10);
+  if(Math.abs(D.vx)>5) D.face=D.vx>0?1:-1; D.run+=Math.hypot(D.vx,D.vy)*dt*.15;
+  updateSheep(dt); if(S.wolf) updateWolf(dt);
+  const left=S.sheep.filter(s=>!s.gone&&!s.penned).length;
+  if(left===0) return finish(true);
+  if(S.timeLeft<=0) return finish(false);
+}
+function updateSheep(dt){
+  const D=S.dog, list=S.sheep.filter(s=>!s.gone);
+  for(const s of list){
+    if(s.penned){ s.ph+=dt; s.vx*=.9; s.vy*=.9; s.vx+=Math.cos(s.ph*.7+s.x)*6*dt; s.vy+=Math.sin(s.ph*.5+s.y)*6*dt; s.x=clamp(s.x+s.vx*dt,PEN.x0+10,PEN.x1-10); s.y=clamp(s.y+s.vy*dt,PEN.y0+10,PEN.y1-8); continue; }
+    if(s.carried) continue;
+    let fx=0,fy=0; const dd=Math.hypot(s.x-D.x,s.y-D.y)||1;
+    const R=s.kind==='black'?55:s.kind==='lamb'?95:80, power=s.kind==='black'?.55:s.kind==='lamb'?1.3:1;
+    if(s.asleep){ s.vx*=.8; s.vy*=.8; if(dd<26&&rnd()<dt*.6){ s.asleep=false; s.baa=1; } continue; }
+    if(dd<R){ const k=(1-dd/R)*power*240; fx+=(s.x-D.x)/dd*k; fy+=(s.y-D.y)/dd*k; }
+    if(S.wolf&&S.wolf.st==='hunt'){ const w=S.wolf, dw=Math.hypot(s.x-w.x,s.y-w.y)||1; if(dw<90){ const k=(1-dw/90)*200; fx+=(s.x-w.x)/dw*k; fy+=(s.y-w.y)/dw*k; } }
+    // flocking: stay together, but not on top of each other
+    let cx=0,cy=0,n=0;
+    for(const o of list){ if(o===s||o.penned) continue; const dx=s.x-o.x, dy=s.y-o.y, d=Math.hypot(dx,dy)||1;
+      if(d<15){ fx+=dx/d*(15-d)*12; fy+=dy/d*(15-d)*12; }
+      if(d<70){ cx+=o.x; cy+=o.y; n++; } }
+    if(n){ fx+=(cx/n-s.x)*.6; fy+=(cy/n-s.y)*.6; }
+    // walls feel scary too, so sheep do not get stuck in the corners
+    const WM=28; if(s.x<WM) fx+=(1-s.x/WM)*140; if(s.x>W-WM) fx-=(1-(W-s.x)/WM)*140; if(s.y<WM) fy+=(1-s.y/WM)*140; if(s.y>H-WM) fy-=(1-(H-s.y)/WM)*140;
+    // grazing wander
+    s.ph+=dt*(.6+rnd()*.6); fx+=Math.cos(s.ph)*10; fy+=Math.sin(s.ph*1.3)*10;
+    // the gate pulls a little when they are close (sheep like company inside)
+    const dg=Math.hypot(s.x-GATE.x,s.y-GATE.y); if(dg<46) { fx+=(GATE.x-s.x)*2.2; fy+=(PEN.y1-20-s.y)*2.2; }
+    s.vx+=fx*dt; s.vy+=fy*dt; const sp=Math.hypot(s.vx,s.vy), max=(s.kind==='lamb'?85:s.kind==='black'?55:68);
+    if(sp>max){ s.vx*=max/sp; s.vy*=max/sp; } s.vx*=Math.pow(.25,dt); s.vy*=Math.pow(.25,dt);
+    const px=s.x, py=s.y; s.x+=s.vx*dt; s.y+=s.vy*dt; s.sheep=true; pushOut(s,9);
+    if(Math.abs(s.vx)>4) s.face=s.vx>0?1:-1;
+    if(inPen(s.x,s.y)&&py>=PEN.y1-6){ s.penned=true; s.baa=1; S.parts.push({k:'txt',x:s.x,y:s.y-14,t:0,txt:'メェ〜♪'}); sfx('pen'); }
+    if(s.baa>0) s.baa-=dt;
+  }
+}
+function updateWolf(dt){
+  const w=S.wolf, D=S.dog;
+  if(w.st==='wait'){ w.t-=dt; if(w.t<=0){ w.st='hunt'; w.x=rnd()<.5?-20:W+20; w.y=200+rnd()*200; say('🐺 オオカミが来た！'); sfx('howl'); } return; }
+  if(w.st==='flee'){ w.x+=(w.x<180?-1:1)*160*dt; if(w.carry){ w.carry.x=w.x; w.carry.y=w.y-6; } if(w.x<-40||w.x>W+40){ if(w.carry){ w.carry.gone=true; w.carry=null; } w.st='wait'; w.t=9+rnd()*5; } return; }
+  // hunting: go for the nearest free sheep, but the corgi scares it away
+  const free=S.sheep.filter(s=>!s.gone&&!s.penned&&!s.carried); if(!free.length){ w.st='flee'; return; }
+  const tgt=free.reduce((a,b)=>Math.hypot(a.x-w.x,a.y-w.y)<Math.hypot(b.x-w.x,b.y-w.y)?a:b);
+  const dx=tgt.x-w.x, dy=tgt.y-w.y, d=Math.hypot(dx,dy)||1; w.x+=dx/d*62*dt; w.y+=dy/d*62*dt; w.face=dx>0?1:-1;
+  if(Math.hypot(D.x-w.x,D.y-w.y)<55){ w.st='flee'; S.parts.push({k:'txt',x:w.x,y:w.y-20,t:0,txt:'キャイン！'}); sfx('yelp'); return; }
+  if(d<12){ tgt.carried=true; w.carry=tgt; w.st='flee'; S.taken++; say('ひつじがさらわれた…'); sfx('bad'); }
+}
+function bark(){
+  if(S.scene!=='play'||S.barkCd>0) return; S.barkCd=1.4; const D=S.dog; sfx('bark');
+  S.parts.push({k:'ring',x:D.x,y:D.y,t:0}); S.parts.push({k:'txt',x:D.x,y:D.y-22,t:0,txt:'ワン！'});
+  for(const s of S.sheep){ if(s.gone||s.penned||s.carried) continue; const d=Math.hypot(s.x-D.x,s.y-D.y)||1; if(d<120){ s.asleep=false; const k=(1-d/120)*(s.kind==='black'?110:190); s.vx+=(s.x-D.x)/d*k; s.vy+=(s.y-D.y)/d*k; s.baa=.8; } }
+  const w=S.wolf; if(w&&w.st==='hunt'&&Math.hypot(w.x-D.x,w.y-D.y)<150){ w.st='flee'; S.parts.push({k:'txt',x:w.x,y:w.y-20,t:0,txt:'キャイン！'}); sfx('yelp'); if(w.carry){ w.carry.carried=false; w.carry=null; } }
+}
+function finish(ok){
+  S.scene='result'; S.resT=0; S.lastClear=ok; const s=st(), total=s.sheep, pen=S.sheep.filter(x=>x.penned).length;
+  const frac=S.timeLeft/s.time, stars=ok?(frac>=.4&&!S.taken?3:frac>=.15?2:1):0;
+  if(stars>S.best.stars[S.si]){ S.best.stars[S.si]=stars; saveBest(); }
+  $('resTitle').textContent=ok?'ぜんぶ入った！':'時間切れ…';
+  $('resStars').textContent=ok?'⭐'.repeat(stars)+'☆'.repeat(3-stars):'🐑💤';
+  $('resText').textContent=`ステージ${S.si+1}「${s.name||s.n}」\n柵に入れたひつじ ${pen}/${total}${S.taken?`（オオカミにさらわれた ${S.taken}）`:''}\n${ok?`のこり時間 ${Math.ceil(S.timeLeft)}秒`:'もう少し！ 回りこんでから押そう'}`;
+  $('nextBtn').hidden=!ok||S.si>=STAGES.length-1; $('resultOv').hidden=false; sfx(ok?'clear':'bad');
+}
+
+/* ================= auto: the classic shepherding move (collect strays, then drive the flock) ================= */
+function autoTick(dt){
+  if(S.barkCdAuto>0) S.barkCdAuto-=dt;
+  const D=S.dog, free=S.sheep.filter(s=>!s.gone&&!s.penned&&!s.carried); if(!free.length) return;
+  const w=S.wolf;
+  if(w&&w.st==='hunt'){ S.target={x:w.x,y:w.y}; if(Math.hypot(w.x-D.x,w.y-D.y)<140) bark(); return; }
+  const sl=free.find(s=>s.asleep); if(sl&&free.length<=3||sl&&Math.hypot(sl.x-D.x,sl.y-D.y)<120){ S.target={x:sl.x+8,y:sl.y+18}; if(Math.hypot(sl.x-D.x,sl.y-D.y)<70) bark(); return; }
+  const act=free.filter(s=>!s.asleep), list=act.length?act:free;
+  const cx=list.reduce((a,s)=>a+s.x,0)/list.length, cy=list.reduce((a,s)=>a+s.y,0)/list.length;
+  const far=list.reduce((a,b)=>Math.hypot(a.x-cx,a.y-cy)>Math.hypot(b.x-cx,b.y-cy)?a:b), fd=Math.hypot(far.x-cx,far.y-cy);
+  const R=18*Math.sqrt(list.length)+14; let tx,ty;
+  if(fd>R+20){ // collect: get behind the stray, on the far side from the flock
+    const ux=(far.x-cx)/(fd||1), uy=(far.y-cy)/(fd||1); tx=far.x+ux*26; ty=far.y+uy*26; }
+  else { // drive: aim at the gate mouth first, then straight up into the pen
+    const ax=180, ay=(Math.abs(cx-180)<34||cy>190)?60:150;
+    const dx=cx-ax, dy=cy-ay, d=Math.hypot(dx,dy)||1, ux=dx/d, uy=dy/d;
+    let ext=0; for(const s of list) ext=Math.max(ext,(s.x-cx)*ux+(s.y-cy)*uy);
+    const back=ext+30; tx=cx+ux*back; ty=cy+uy*back;
+    // close to the gate: come in tight and bark once
+    if(Math.hypot(cx-180,cy-GATE.y)<60&&(S.barkCdAuto||0)<=0&&Math.hypot(D.x-tx,D.y-ty)<24){ bark(); S.barkCdAuto=3; }
+    // on the wrong side of the flock: walk around it instead of through it
+    const dc=Math.hypot(D.x-cx,D.y-cy), side=((D.x-cx)*ux+(D.y-cy)*uy)/(dc||1);
+    if(side<.3&&dc<ext+40){ const bx=D.x-cx, by=D.y-cy, bl=Math.hypot(bx,by)||1, sg=(bx*uy-by*ux)>0?1:-1; tx=cx+bx/bl*(ext+45)+sg*(-by/bl)*40; ty=cy+by/bl*(ext+45)+sg*(bx/bl)*40; }
+  }
+  S.target={x:clamp(tx,12,W-12),y:clamp(ty,12,H-12)};
+}
+
+/* ================= drawing ================= */
+function emoji(e,x,y,s){ g.font=`${s}px sans-serif`; g.textAlign='center'; g.textBaseline='middle'; g.fillText(e,x,y); g.textBaseline='alphabetic'; }
+function drawSheep(s){
+  const bob=s.penned?0:Math.abs(Math.sin(s.ph*3))*1.5, k=s.kind, body=k==='black'?'#3A3A3A':'#FFFFFF', head=k==='black'?'#1A1A1A':'#3A3A3A', r=k==='lamb'?7:9;
+  g.save(); g.translate(s.x,s.y-bob); g.scale(s.face,1);
+  g.fillStyle='rgba(0,0,0,.15)'; g.beginPath(); g.ellipse(0,bob+8,r+2,3,0,0,7); g.fill();
+  g.fillStyle=head; g.fillRect(-r*.6,2,2.5,6); g.fillRect(r*.3,2,2.5,6);
+  g.fillStyle=body; for(const [x,y,rr] of [[-r*.5,-1,r*.7],[r*.3,-2,r*.75],[0,1,r*.8],[-r*.2,-4,r*.6]]){ g.beginPath(); g.arc(x,y,rr,0,7); g.fill(); }
+  g.strokeStyle='rgba(0,0,0,.15)'; g.lineWidth=1; g.beginPath(); g.arc(0,-1,r*.9,0,7); g.stroke();
+  g.fillStyle=head; g.beginPath(); g.ellipse(r*.9,-2,r*.38,r*.32,0,0,7); g.fill();
+  g.fillStyle='#fff'; g.beginPath(); g.arc(r*1.05,-3,1.1,0,7); g.fill();
+  g.restore();
+  if(s.asleep){ g.fillStyle='#4A6AA0'; g.font='800 10px sans-serif'; g.textAlign='center'; g.fillText('Zz',s.x+8,s.y-12-Math.sin(S.t*3)*2); }
+  if(s.baa>0&&!s.penned){ g.fillStyle='#fff'; g.font='800 9px sans-serif'; g.textAlign='center'; g.fillText('メェ',s.x,s.y-14); }
+}
+function drawCorgi(D){
+  const run=Math.hypot(D.vx,D.vy)>20, leg=run?Math.sin(D.run*2)*3:0;
+  g.save(); g.translate(D.x,D.y); g.scale(D.face,1);
+  g.fillStyle='rgba(0,0,0,.18)'; g.beginPath(); g.ellipse(0,8,13,3.5,0,0,7); g.fill();
+  g.fillStyle='#C8742A'; g.fillRect(-9,3+leg*.3,3,6); g.fillRect(6,3-leg*.3,3,6); g.fillRect(-5,3-leg*.3,3,6); g.fillRect(3,3+leg*.3,3,6);
+  g.fillStyle='#E8963A'; g.beginPath(); g.ellipse(0,0,13,7,0,0,7); g.fill();
+  g.fillStyle='#FFF4E0'; g.beginPath(); g.ellipse(2,3,8,3.5,0,0,7); g.fill();
+  g.fillStyle='#E8963A'; g.beginPath(); g.arc(12,-5,6.5,0,7); g.fill(); g.fillStyle='#FFF4E0'; g.beginPath(); g.ellipse(15,-3,4,3,0,0,7); g.fill();
+  g.fillStyle='#E8963A'; g.beginPath(); g.moveTo(8,-9); g.lineTo(9,-17); g.lineTo(13,-10); g.fill(); g.beginPath(); g.moveTo(13,-10); g.lineTo(16,-17); g.lineTo(17,-9); g.fill();
+  g.fillStyle='#1A1A1A'; g.beginPath(); g.arc(14,-6,1.2,0,7); g.fill(); g.beginPath(); g.arc(19,-3.5,1.4,0,7); g.fill();
+  g.restore();
+}
+function drawWolf(w){ if(w.st==='wait') return; g.save(); g.translate(w.x,w.y); g.scale(w.face,1); emoji('🐺',0,-2,30); g.restore(); }
+function draw(){
+  g.setTransform(1,0,0,1,0,0);
+  const gr=g.createLinearGradient(0,0,0,H); const night=st().wolf; gr.addColorStop(0,night?'#3A5A3A':'#9AD86A'); gr.addColorStop(1,night?'#2A4A2A':'#7ABE4A'); g.fillStyle=gr; g.fillRect(0,0,W,H);
+  g.fillStyle=night?'rgba(255,255,255,.05)':'rgba(255,255,255,.12)'; for(let k=0;k<60;k++){ const x=(k*97)%W, y=(k*53)%H; g.fillRect(x,y,2,5); }
+  if(night){ g.fillStyle='#FFF4C8'; g.beginPath(); g.arc(320,40,16,0,7); g.fill(); }
+  const s=st();
+  if(s.pond){ const p=s.pond; g.fillStyle='#5AA8E0'; g.beginPath(); g.ellipse(p.x,p.y,p.rx,p.ry,0,0,7); g.fill(); g.strokeStyle='rgba(255,255,255,.5)'; g.lineWidth=2; g.beginPath(); g.ellipse(p.x-8,p.y-4,p.rx*.5,p.ry*.3,0,Math.PI,Math.PI*1.8); g.stroke(); }
+  // pen
+  g.fillStyle=night?'#4A6A3A':'#B8E08A'; g.fillRect(PEN.x0,PEN.y0,PEN.x1-PEN.x0,PEN.y1-PEN.y0);
+  g.strokeStyle='#8A5A2A'; g.lineWidth=4; g.beginPath(); g.moveTo(PEN.g0,PEN.y1); g.lineTo(PEN.x0,PEN.y1); g.lineTo(PEN.x0,PEN.y0); g.lineTo(PEN.x1,PEN.y0); g.lineTo(PEN.x1,PEN.y1); g.lineTo(PEN.g1,PEN.y1); g.stroke();
+  g.fillStyle='#6A4A2A'; for(let x=PEN.x0;x<=PEN.x1;x+=20){ g.fillRect(x-2,PEN.y0-3,4,8); } for(const x of [PEN.x0,PEN.g0,PEN.g1,PEN.x1]) g.fillRect(x-3,PEN.y1-5,6,10);
+  g.fillStyle='rgba(255,255,255,.8)'; g.font='800 10px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.fillText('▼ いりぐち ▼',180,PEN.y1+14);
+  for(const [tx,ty] of s.trees){ g.fillStyle='rgba(0,0,0,.18)'; g.beginPath(); g.ellipse(tx,ty+14,20,6,0,0,7); g.fill(); emoji('🌳',tx,ty-6,44); }
+  const items=[...S.sheep.filter(x=>!x.gone),S.dog].filter(Boolean).sort((a,b)=>a.y-b.y);
+  for(const o of items){ if(o===S.dog) drawCorgi(o); else drawSheep(o); }
+  if(S.wolf) drawWolf(S.wolf);
+  if(S.target&&S.scene==='play'&&!S.auto){ g.strokeStyle='rgba(255,255,255,.5)'; g.lineWidth=2; g.beginPath(); g.arc(S.target.x,S.target.y,8,0,7); g.stroke(); }
+  for(const p of S.parts){ const a=Math.max(0,1-p.t/(p.k==='ring'?.6:1.2)); g.globalAlpha=a;
+    if(p.k==='ring'){ g.strokeStyle='#FFF2B0'; g.lineWidth=3; g.beginPath(); g.arc(p.x,p.y,20+p.t*170,0,7); g.stroke(); }
+    else { g.fillStyle='#fff'; g.strokeStyle='rgba(0,0,0,.4)'; g.lineWidth=3; g.font='800 13px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.strokeText(p.txt,p.x,p.y-p.t*20); g.fillText(p.txt,p.x,p.y-p.t*20); } }
+  g.globalAlpha=1;
+  // HUD
+  if(S.scene==='play'||S.scene==='result'){ const pen=S.sheep.filter(x=>x.penned).length, tot=S.sheep.length;
+    g.fillStyle='rgba(0,0,0,.35)'; g.fillRect(0,H-26,W,26); g.fillStyle='#fff'; g.font='800 13px "M PLUS Rounded 1c",sans-serif'; g.textAlign='left'; g.fillText(`🐑 ${pen}/${tot-S.taken}`,8,H-8);
+    g.textAlign='center'; g.fillText(`ステージ${S.si+1}`,180,H-8); g.textAlign='right'; g.fillStyle=S.timeLeft<15?'#FFB0A0':'#fff'; g.fillText(`⏱ ${Math.max(0,Math.ceil(S.timeLeft))}`,W-8,H-8); }
+  if(S.msg&&S.msgT<2.4){ g.globalAlpha=Math.min(1,2.4-S.msgT); g.fillStyle='rgba(30,40,20,.75)'; g.fillRect(30,200,300,36); g.fillStyle='#FFF4C8'; g.font='800 15px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.fillText(S.msg,180,224); g.globalAlpha=1; }
+  if(S.auto){ g.fillStyle='rgba(255,255,255,.8)'; g.font='800 11px sans-serif'; g.textAlign='right'; g.fillText('🤖 AUTO',W-8,H-32); }
+  $('barkBtn').disabled=S.barkCd>0;
+}
+
+/* ================= UI ================= */
+function renderStages(){ $('stgList').innerHTML=STAGES.map((s,i)=>`<button data-i="${i}" ${i>0&&!S.best.stars[i-1]?'disabled':''}>${i+1}<small>${'⭐'.repeat(S.best.stars[i])||'—'}</small></button>`).join('');
+  $('stgList').querySelectorAll('button').forEach(b=>b.onclick=()=>{ ac(); user(); startStage(+b.dataset.i); }); }
+function toTitle(){ S.scene='title'; S.resT=0; $('resultOv').hidden=true; $('titleOv').hidden=false; renderStages(); }
+function setAuto(v){ S.auto=!!v; $('autoBtn').setAttribute('aria-pressed',S.auto); S.resT=0; if(!S.auto) S.target=null; if(S.auto&&S.scene==='title') startStage(0); }
+function user(){ if(S.auto){ setAuto(false); S.target=null; } }
+function toField(e){ const r=cv.getBoundingClientRect(); return {x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H}; }
+let holding=false;
+cv.addEventListener('pointerdown',e=>{ if(S.scene!=='play') return; e.preventDefault(); ac(); user(); holding=true; try{ cv.setPointerCapture(e.pointerId); }catch(_){} S.target=toField(e); });
+cv.addEventListener('pointermove',e=>{ if(holding) S.target=toField(e); });
+const release=()=>{ holding=false; S.target=null; };
+cv.addEventListener('pointerup',release); cv.addEventListener('pointercancel',release);
+$('barkBtn').addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); user(); bark(); });
+$('autoBtn').onclick=()=>{ ac(); setAuto(!S.auto); };
+$('autoStartBtn').onclick=()=>{ ac(); setAuto(true); };
+$('muteBtn').onclick=()=>{ ac(); setMute(!muted); };
+$('nextBtn').onclick=()=>{ ac(); user(); startStage(S.si+1); };
+$('retryBtn').onclick=()=>{ ac(); user(); startStage(S.si); };
+$('menuBtn').onclick=()=>{ ac(); user(); toTitle(); };
+const KM={arrowleft:'left',a:'left',arrowright:'right',d:'right',arrowup:'up',w:'up',arrowdown:'down',s:'down'};
+addEventListener('keydown',e=>{ const k=e.key.toLowerCase();
+  if(k==='o'){ ac(); setAuto(!S.auto); return; } if(k==='m'){ ac(); setMute(!muted); return; }
+  if(KM[k]){ e.preventDefault(); user(); S.keys[KM[k]]=true; return; }
+  if(k===' '){ e.preventDefault(); ac(); user(); if(S.scene==='play') bark(); else if(S.scene==='result') ($('nextBtn').hidden?$('retryBtn'):$('nextBtn')).click(); } });
+addEventListener('keyup',e=>{ const k=KM[e.key.toLowerCase()]; if(k) S.keys[k]=false; });
+addEventListener('blur',()=>{ S.keys={}; });
+
+/* ================= sound ================= */
+let AC=null, muted=false; try{ muted=localStorage.getItem('hitsujiMute')==='1'; }catch(e){}
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==='suspended') AC.resume(); }
+function tone(f,d,type='sine',v=.07,delay=0,f2){ if(muted||!AC) return; const t=AC.currentTime+delay, o=AC.createOscillator(), gn=AC.createGain(); o.type=type; o.frequency.setValueAtTime(f,t); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+d); gn.gain.setValueAtTime(v,t); gn.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(gn).connect(AC.destination); o.start(t); o.stop(t+d+.02); }
+function sfx(k){
+  if(k==='bark'){ tone(520,.08,'square',.08,0,300); tone(600,.1,'square',.07,.12,320); }
+  else if(k==='pen'){ tone(700,.25,'triangle',.06,0,560); tone(660,.2,'triangle',.05,.12,520); }
+  else if(k==='howl') tone(300,1.2,'sine',.06,0,600);
+  else if(k==='yelp') tone(1200,.15,'square',.06,0,1800);
+  else if(k==='bad') [392,330,262].forEach((q,i)=>tone(q,.2,'triangle',.06,i*.15));
+  else if(k==='clear') [523,659,784,1046,784,1046].forEach((q,i)=>tone(q,.16,'square',.05,i*.1));
+  else if(k==='start') [392,523,659].forEach((q,i)=>tone(q,.12,'triangle',.06,i*.1));
+}
+function setMute(m){ muted=m; $('muteBtn').textContent=m?'音 OFF':'音 ON'; try{ localStorage.setItem('hitsujiMute',m?'1':'0'); }catch(e){} }
+
+setMute(muted); S.si=0; toTitle(); S.sheep=[]; S.dog={x:180,y:440,vx:0,vy:0,face:1,run:0};
+let last=performance.now();
+function loop(now){ const dt=Math.min(.05,(now-last)/1000); last=now; if(!S.manual) update(dt); draw(); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+
+window.__hitsuji={ get S(){ return S; }, setAuto, manual(v=true){ S.manual=v; }, step(dt=1/60){ update(dt); }, seed(v){ seed=(Math.abs(v|0)%2147483646)+1; }, startStage, bark, STAGES };
+})();
+</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>

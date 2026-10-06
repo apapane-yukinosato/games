@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="ゆきの里のくだらないゲーム置き場">
+<title>ゆきの里ゲームズ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&display=swap">
+<style>
+:root{
+  --navy:#232B4E; --navy2:#2F3864; --deep:#141a35;
+  --paper:#F7F3EA; --mute:#A9B0CF;
+  --yellow:#F4C542; --coral:#F08A6C; --mint:#7CCBA2;
+  color-scheme:dark;
+}
+html,body{min-height:100%}
+body{margin:0;background:var(--navy);color:var(--paper);
+  font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif}
+main{max-width:980px;margin:0 auto;padding:32px 16px 48px;box-sizing:border-box}
+header h1{margin:0;font-size:32px;font-weight:800;line-height:1.2}
+header h1 span{color:var(--yellow)}
+header p{margin:6px 0 14px;font-size:14px;color:var(--mute)}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin:0;padding:0;list-style:none}
+.game{display:flex;flex-direction:column;height:100%;box-sizing:border-box;padding:18px;border-radius:18px;
+  background:var(--paper);color:var(--navy);text-decoration:none;box-shadow:0 6px 0 var(--deep);
+  transition:transform .12s,box-shadow .12s}
+.game:hover{transform:translateY(-2px);box-shadow:0 8px 0 var(--deep)}
+.game:active{transform:translateY(4px);box-shadow:0 2px 0 var(--deep)}
+.game:focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
+.icon{font-size:44px;line-height:1;margin-bottom:10px}
+.game h3{margin:0;font-size:20px;font-weight:800;line-height:1.3}
+.game p{margin:6px 0 14px;font-size:13.5px;line-height:1.5;color:#5A628A;flex:1}
+.play{align-self:flex-start;font-weight:800;font-size:14px;padding:6px 14px;border-radius:999px;
+  background:var(--navy);color:var(--yellow)}
+.bar{position:sticky;top:0;z-index:5;margin:0 -16px 8px;padding:10px 16px 10px;background:rgba(35,43,78,.94);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-bottom:1px solid var(--navy2)}
+.tools{display:flex;gap:8px;margin-bottom:8px}
+#q{flex:1;min-width:0;font:inherit;font-size:16px;padding:9px 14px;border-radius:999px;border:2px solid var(--navy2);background:var(--deep);color:var(--paper);outline:none}
+#q:focus{border-color:var(--yellow)}
+#rand{font:inherit;font-weight:800;font-size:14px;padding:0 14px;border-radius:999px;border:0;background:var(--yellow);color:var(--navy);cursor:pointer;white-space:nowrap}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.chips::-webkit-scrollbar{display:none}
+@media (min-width:601px){.chips{flex-wrap:wrap}}
+.chip{flex:none;display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;background:var(--navy2);color:var(--paper);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+.chip b{font-size:11px;color:var(--mute);font-weight:800}
+.chip.on{background:var(--paper);color:var(--navy)}
+.chip.on b{color:#5A628A}
+.chip:focus-visible,#rand:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+section.cat{scroll-margin-top:110px;margin-top:26px}
+section.cat>h2,.recent h2{margin:0;font-size:20px;font-weight:800}
+section.cat>h2 small{font-size:12px;color:var(--mute);font-weight:800;margin-left:4px}
+.sub{margin:2px 0 12px;font-size:12px;color:var(--mute)}
+.recent{margin-top:14px}
+.recent h2{font-size:15px;margin-bottom:8px}
+.rlist{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.rlist::-webkit-scrollbar{display:none}
+.rlist a{flex:none;display:flex;align-items:center;gap:6px;padding:8px 14px 8px 10px;border-radius:14px;background:var(--paper);color:var(--navy);text-decoration:none;font-weight:800;font-size:14px;box-shadow:0 4px 0 var(--deep)}
+.rlist a span{font-size:22px}
+.game{position:relative}
+.new{position:absolute;top:12px;right:12px;font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px;background:var(--coral);color:#fff}
+.none{text-align:center;color:var(--mute);margin:40px 0}
+.game.pick{animation:pick .9s ease 2}
+@keyframes pick{50%{box-shadow:0 0 0 5px var(--yellow),0 6px 0 var(--deep)}}
+footer{margin-top:36px;font-size:12px;color:var(--mute);text-align:center}
+/* phones: two small cards per row so the list is not so long */
+@media (max-width:600px){
+  main{padding:20px 10px 36px}
+  header h1{font-size:24px}
+  header p{margin:4px 0 16px;font-size:12px}
+  .list{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .game{padding:10px 10px 12px;border-radius:14px;box-shadow:0 4px 0 var(--deep)}
+  .game:hover{box-shadow:0 5px 0 var(--deep)}
+  .game:active{transform:translateY(3px);box-shadow:0 1px 0 var(--deep)}
+  .icon{font-size:30px;margin-bottom:6px}
+  .game h3{font-size:15px}
+  .game p{margin:4px 0 8px;font-size:11px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;flex:1 0 auto}
+  .play{font-size:11px;padding:4px 10px}
+  .bar{margin:0 -10px 6px;padding:8px 10px}
+  section.cat{margin-top:20px;scroll-margin-top:100px}
+  section.cat>h2{font-size:17px}
+  .new{top:8px;right:8px;font-size:9px;padding:2px 6px}
+}
+</style>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-180.png">
+<meta name="apple-mobile-web-app-title" content="ゆきの里ゲームズ">
+</head>
+<body>
+<main>
+  <header>
+    <h1>ゆきの里<span>ゲームズ</span></h1>
+    <p>くだらないゲーム置き場。スマホでもあそべます。ほとんどのゲームに 🤖 オートモードつき。</p>
+  </header>
+
+  <nav class="bar" aria-label="カテゴリ">
+    <div class="tools">
+      <input id="q" type="search" placeholder="🔎 ゲームをさがす" aria-label="ゲームをさがす" autocomplete="off">
+      <button id="rand" type="button" title="どれかひとつ">🎲 おまかせ</button>
+    </div>
+    <div class="chips">
+    <a href="#action" class="chip" data-cat="action"><span aria-hidden="true">⚔️</span>アクション<b>12</b></a>
+    <a href="#skill" class="chip" data-cat="skill"><span aria-hidden="true">🎯</span>うでだめし<b>7</b></a>
+    <a href="#puzzle" class="chip" data-cat="puzzle"><span aria-hidden="true">🧩</span>パズル<b>5</b></a>
+    <a href="#adv" class="chip" data-cat="adv"><span aria-hidden="true">🔍</span>推理・アドベンチャー<b>6</b></a>
+    <a href="#sim" class="chip" data-cat="sim"><span aria-hidden="true">🏰</span>RPG・育成・シミュレーション<b>12</b></a>
+    </div>
+  </nav>
+
+  <section class="recent" id="recent" hidden>
+    <h2><span aria-hidden="true">🕘</span> さいきん あそんだ</h2>
+    <div class="rlist" id="rlist"></div>
+  </section>
+
+  <p class="none" id="none" hidden>みつかりませんでした。</p>
+
+  <!-- ゲームを増やすとき：フォルダ（例: newgame/index.html）を作り、合うカテゴリの <ul class="list"> に <li> を1つコピーして書きかえる。新作は <span class="new">NEW</span> をつける（古いものの NEW は外す） -->
+  <section class="cat" id="action">
+    <h2><span aria-hidden="true">⚔️</span> アクション <small>12こ</small></h2>
+    <p class="sub">たたかって、たおせ。</p>
+    <ul class="list">
+    <li>
+      <a class="game" href="tsuboken/">
+        <span class="new">NEW</span>
+        <div class="icon" aria-hidden="true">👊</div>
+        <h3>活殺ツボ拳</h3>
+        <p>マサ新影流の後継者・宮沢活人が、敵のツボ（秘孔）を突いて倒す2Dアクション。自分のツボで回復・攻撃力アップ・防御力アップ。レベルが上がるほど強いツボが使える。全3面、最後は黒影殺との対決。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="thief/">
+        <span class="new">NEW</span>
+        <div class="icon" aria-hidden="true">🦊</div>
+        <h3>怪盗ルナール</h3>
+        <p>警備員を麻酔銃でねむらせ、監視カメラをこわして、お宝をぬすむステルスアクション。ぬすんだ品はオークションで換金。オートモードは、スパスパ撃って進むプロの手際。全5つの予告状。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="dyson4/">
+        <span class="new">NEW</span>
+        <div class="icon" aria-hidden="true">🌑</div>
+        <h3>マネーダイソン4 吸着玉</h3>
+        <p>亜空間の王様に「王子」にされたダイソンが、元女神の魂「吸着玉」を転がして、部屋も街も山も地球も、あらゆるものをくっつけて大きくする塊魂風ゲーム。全5面。最後は…。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="kick/">
+        <div class="icon" aria-hidden="true">🦶</div>
+        <h3>ワンキックマン</h3>
+        <p>強すぎるヒーロー。どんな巨大怪人も蹴り1発でバラバラ、攻撃されてもノーダメージ。でも街はこわされる！ カエル→カニ→ゴーレム→竜→宇宙怪獣→2発かかる人型怪人の全6話。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="byoki/">
+        <div class="icon" aria-hidden="true">🤧</div>
+        <h3>病気滅の刃</h3>
+        <p>風邪で鼻がつまった剣士。使えるのは口の呼吸だけ！ のどがカラカラになる前に型をはなち、風邪のモンスターを完治させろ。病気の始祖・病気仏事 南無産をたおせ。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="dyson2/">
+        <div class="icon" aria-hidden="true">⏳</div>
+        <h3>マネーダイソン2</h3>
+        <p>世界のお金を吸い尽くし、人類は石器時代へ。ダイソンはついに「寿命」を吸えるようになった。人から、木から、そして地球から──。吸われた人はお年寄りに。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="hunt/">
+        <div class="icon" aria-hidden="true">🐉</div>
+        <h3>竜狩り ― DRAGON HUNT ―</h3>
+        <p>大剣・ランス・ボウガンで巨大な火竜に挑む横スクロールアクション。攻撃と回避だけで狩りきれ。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="kendo/">
+        <div class="icon" aria-hidden="true">🥋</div>
+        <h3>一本 ― IPPON ―</h3>
+        <p>選手視点の剣道一本勝負。相手の隙を見きわめて五人抜き。最後の相手は真剣でくる。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="masa/">
+        <div class="icon" aria-hidden="true">🥊</div>
+        <h3>マサ伝説</h3>
+        <p>マサが主人公の2ライン格闘ゲーム。奥と手前のラインを行き来して、ライン飛ばし、体力が赤く光ったら超必殺技「マサ・ガイザー」！8人の格闘家を倒して、ハウル・タワーの頂上へ。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="dyna/">
+        <div class="icon" aria-hidden="true">🧨</div>
+        <h3>ダイナマイトマン</h3>
+        <p>ボムでブロックをこわし、アイテムでパワーアップ。コンピュータ（1〜3人）と勝ちぬきバトル！つよさは3段階。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="starguard/">
+        <div class="icon" aria-hidden="true">🌌</div>
+        <h3>スターガード</h3>
+        <p>銀河マップでワープして、コクピット視点で敵部隊と宇宙戦。基地と惑星を守り、7つのキーを集めて暗黒惑星をたたけ！</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="dyson/">
+        <div class="icon" aria-hidden="true">🌀</div>
+        <h3>マネーダイソン</h3>
+        <p>他人のお金を吸い取る男の物語。街の人に手をかざして資産を吸い、能力をきたえて、SPに守られた大富豪からも。直触りは一瞬で全部吸えるけど警察に追われる！めざせ世界一。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    </ul>
+  </section>
+  <section class="cat" id="skill">
+    <h2><span aria-hidden="true">🎯</span> うでだめし <small>7こ</small></h2>
+    <p class="sub">シューティング・レース・音ゲー・スポーツ。</p>
+    <ul class="list">
+    <li>
+      <a class="game" href="tsubo/">
+        <span class="new">NEW</span>
+        <div class="icon" aria-hidden="true">👉</div>
+        <h3>押せ！ツボ！</h3>
+        <p>マサ新影流の活法で、ツボをおぼえるゲーム。眼精疲労・肩こり・腰痛・胃腸の不調に効くツボを図で学んで、お客さんの体をタップして押そう。正しいツボで加点、まちがえると減点。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="money/">
+        <div class="icon" aria-hidden="true">💴</div>
+        <h3>人生マネーシューター</h3>
+        <p>お金を弾にして22さいから85さいまで。給料・保険・投資・ライフイベント…あやしい話はよけて、しあわせな人生をめざそう。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="launch/">
+        <div class="icon" aria-hidden="true">🎈</div>
+        <h3>コギ・ランチャー</h3>
+        <p>パチンコでコーギーを飛ばして風船をわる！3回の発射でハイスコアをめざせ。爆弾風船・トランポリン・扇風機も。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="lander/">
+        <div class="icon" aria-hidden="true">🚀</div>
+        <h3>プラネット・ランダー</h3>
+        <p>月・火星・地球・土星・木星・太陽・ブラックホールにスペースシャトルで着陸。星ごとに重力がちがう！燃料に気をつけて。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="homerun/">
+        <div class="icon" aria-hidden="true">⚾</div>
+        <h3>コーギーのホームランダービー</h3>
+        <p>犬たちが投げてくる変化球や魔球を、コーギーがかっ飛ばす！決められた球数でノルマのホームランを打てばクリア。消える魔球のハスキーに勝てるか？</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="candy/">
+        <div class="icon" aria-hidden="true">🍭</div>
+        <h3>キャンディ・グランプリ</h3>
+        <p>ソーダ峡谷サーキットを6台で3周する3Dカートレース。ドリフトで火花をためてダッシュしよう。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="step/">
+        <div class="icon" aria-hidden="true">🎵</div>
+        <h3>コギ・ステップ！</h3>
+        <p>ダンスダンスレボリューション風の音ゲー。流れてくる矢印に合わせて←↓↑→！4曲（ジャズ1曲をふくむ）×3段階、長押しのフリーズ矢印も。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    </ul>
+  </section>
+  <section class="cat" id="puzzle">
+    <h2><span aria-hidden="true">🧩</span> パズル <small>5こ</small></h2>
+    <p class="sub">じっくり考える。</p>
+    <ul class="list">
+    <li>
+      <a class="game" href="kogikogi/">
+        <div class="icon" aria-hidden="true">🐶</div>
+        <h3>コギコギ</h3>
+        <p>おちてくるコーギーを同じ色で4ひきつなげて消す落ちものパズル。れんさでワンワン！</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="kubiki/">
+        <div class="icon" aria-hidden="true">🧱</div>
+        <h3>ХОРОШО（ハラショー）</h3>
+        <p>落ちてくるブロックをそろえて消す落ちものパズル。BGM はロシア民謡「コロベイニキ」「カリンカ」。レベルが上がると曲も速くなる！</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="oyatsu/">
+        <div class="icon" aria-hidden="true">🦴</div>
+        <h3>コーギーのおやつかくし</h3>
+        <p>庭にうめたおやつを守るマインスイーパ。数字はおやつのにおい。ほり出しちゃうと、ほかの犬に食べられる！</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="rayu/">
+        <div class="icon" aria-hidden="true">🥟</div>
+        <h3>ラー油つなげ</h3>
+        <p>餃子のタレに浮かぶラー油をドラッグでつなげて、ひとつの大きな油に。速く動かすとちぎれるので、ゆっくり！</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="igawa/">
+        <div class="icon" aria-hidden="true">🌉</div>
+        <h3>井河家の橋わたり</h3>
+        <p>狼・ヤギ・キャベツみたいな川わたりパズル。母がいないと、父は息子を怒るし、息子と娘はけんかする。母といっしょに、家族4人を橋のむこうへ！</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    </ul>
+  </section>
+  <section class="cat" id="adv">
+    <h2><span aria-hidden="true">🔍</span> 推理・アドベンチャー <small>6こ</small></h2>
+    <p class="sub">見やぶれ、ムジュン。</p>
+    <ul class="list">
+    <li>
+      <a class="game" href="yukinator/">
+        <div class="icon" aria-hidden="true">❄️</div>
+        <h3>ユキネーター</h3>
+        <p>思い浮かべたものを当てる…はずの雪の占い師。ちょっとトゲのある彼女の質問に答えていくと、なぜか必ずあの人物にたどりつく。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="kansa/">
+        <div class="icon" aria-hidden="true">🔍</div>
+        <h3>逆転内部監査</h3>
+        <p>逆転経理の続編。内部通報から資料を請求し、担当者の証言のムジュンを暴くと黒幕が登場。「異議あり！」で追いつめ、指摘事項まで当てろ。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="keiri/">
+        <div class="icon" aria-hidden="true">⚖️</div>
+        <h3>逆転経理</h3>
+        <p>経理部の精算法廷。従業員の経費申請の証言を「待った！」でゆさぶり、証拠品とのムジュンに「異議あり！」で差し戻せ。8件の点数でランクを競う。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="benjo/">
+        <div class="icon" aria-hidden="true">🚻</div>
+        <h3>便所の入口</h3>
+        <p>お腹が痛い！ トイレはこの通路の先…なのに通路がループする。異変を見つけたら引き返せ。見のがしたら「あと 8」からやり直し。もらしたらおしまい。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="densha/">
+        <div class="icon" aria-hidden="true">🚃</div>
+        <h3>満員電車で座りたい</h3>
+        <p>カバンをしまい始めた人の前に立って、ライバルより先に座れ！ ブレーキ前はつり革。お年寄りには、ゆずる？ 寝たふり？ 昼・朝ラッシュ・終電の3路線。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="sleeper/">
+        <div class="icon" aria-hidden="true">😪</div>
+        <h3>ねない配信</h3>
+        <p>ショートスリーパーを名乗る配信者の24時間配信。お風呂やカメラ不調でごまかして、視聴者にバレずにこっそり寝ろ！</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    </ul>
+  </section>
+  <section class="cat" id="sim">
+    <h2><span aria-hidden="true">🏰</span> RPG・育成・シミュレーション <small>12こ</small></h2>
+    <p class="sub">育てて、集めて、経営する。</p>
+    <ul class="list">
+    <li>
+      <a class="game" href="dyson3/">
+        <div class="icon" aria-hidden="true">🌀</div>
+        <h3>マネーダイソン3 異世界転生編</h3>
+        <p>異世界に転生したダイソンは「与える」力を手に入れた。倒した敵のステータスを吸って仲間に分け、マス目の上のターン制バトルで強敵に挑むタクティクスRPG。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="kakei/">
+        <div class="icon" aria-hidden="true">💸</div>
+        <h3>家計見直しシミュレーター</h3>
+        <p>スマホ代・保険・車の固定費をどんどん削って、浮いたお金を投資へ。10年後・20年後の「もし」を数字で見て、家計を見直そう。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="black/">
+        <div class="icon" aria-hidden="true">🏢</div>
+        <h3>浄化！ブラック企業</h3>
+        <p>日本一ブラックな「漆黒商事」を、ディアブロ風のアクションRPGで浄化する。暗いオフィスを探索してブラック社員をホワイト化し、戦利品を集めて、宇宙の法則を書きかえる社長をたおせ。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="jubutsu/">
+        <div class="icon" aria-hidden="true">🧧</div>
+        <h3>呪物買付</h3>
+        <p>新人骨董商になって、野生の呪物に封印の札を投げてしもべに。人形は骨に、骨は遺物に、遺物は人形に強い。呪物師と戦い、店に呪物を集め、呪物の始祖をたおせ。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="hitsuji/">
+        <div class="icon" aria-hidden="true">🐕</div>
+        <h3>コーギーのひつじ追い</h3>
+        <p>牧羊犬コーギーになって、ひつじを柵に追いこもう。うしろから回りこんで押し、「ワン！」で散らす。黒ひつじ・ねぼすけ・オオカミも出る全5ステージ。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="namayake/">
+        <div class="icon" aria-hidden="true">🍳</div>
+        <h3>生焼けヒーロー</h3>
+        <p>半熟英雄風のリアルタイム戦略。将軍を出陣させて城をうばい、合戦では兵士の押し合いを連打で応援。ピンチには卵から生焼けモンスターを召喚！</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="onna/">
+        <div class="icon" aria-hidden="true">💘</div>
+        <h3>女゛ぁ！</h3>
+        <p>まったくモテない男子の恋愛シミュレーション。中3の勉強しだいで進学校・男子校・不良高校に分かれる！男子校なら東大か野球でメジャーへ。パワプロ式に経験点をためて能力アップ。最初は声をかけても無視されるけど、卒業式に伝説の桜の下で告白されるのは…？</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="gyoza/">
+        <div class="icon" aria-hidden="true">🥟</div>
+        <h3>コーギーの餃子屋さん</h3>
+        <p>店長はコーギー！餃子をこんがり焼いて、注文どおりにお客さんへ。ラー油多めの注文も。90秒でどれだけ売れるかな？</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="kaki/">
+        <div class="icon" aria-hidden="true">🔫</div>
+        <h3>火器円舞</h3>
+        <p>銃の九十九神「銃士」を率いて錆鬼をうち払う、刀剣乱舞風の育成バトル。索敵・陣形・遠戦・白兵戦・真剣必殺・一騎打ち。重傷のまま進軍すると破壊も……</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="armor/">
+        <div class="icon" aria-hidden="true">🤖</div>
+        <h3>アーマーを、ほら</h3>
+        <p>ルーレットで頭・胴・腕・脚のパーツを引いてロボを組み立て、3ステージのロボバトルを勝ち抜く。S ランクをねらってストップ！</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="miner/">
+        <div class="icon" aria-hidden="true">🪐</div>
+        <h3>スペース・マイナー</h3>
+        <p>未知の惑星で資材を掘って基地を大きくしよう。荷物を持った帰り道はエイリアンに狙われる！夜は基地を守りぬけ。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    <li>
+      <a class="game" href="corgi/">
+        <div class="icon" aria-hidden="true">🐕</div>
+        <h3>コーギーのおさんぽ</h3>
+        <p>コーギーを連れて町内600mを歩く。ご近所の目（モラル）を守りながら、おうちまで無事に帰ろう。</p>
+        <span class="play">あそぶ →</span>
+      </a>
+    </li>
+    </ul>
+  </section>
+
+  <footer><a href="hw/" style="color:inherit">📲 iPhoneセンサーラボ（ゲームではなく、端末のセンサーをためす道具）</a><br>© ゆきの里</footer>
+</main>
+<script>
+(()=>{
+  const q=document.getElementById('q'), cards=[...document.querySelectorAll('section.cat li')], secs=[...document.querySelectorAll('section.cat')], chips=[...document.querySelectorAll('.chip')];
+  const norm=t=>t.toLowerCase().replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60));
+  cards.forEach(li=>{ li.dataset.k=norm(li.textContent+' '+li.querySelector('a').getAttribute('href')); });
+  // search: hide cards (and empty categories) that do not match
+  q.addEventListener('input',()=>{ const w=norm(q.value.trim()); let n=0;
+    cards.forEach(li=>{ const ok=!w||li.dataset.k.includes(w); li.hidden=!ok; if(ok) n++; });
+    secs.forEach(s=>{ s.hidden=![...s.querySelectorAll('li')].some(li=>!li.hidden); });
+    document.getElementById('none').hidden=n>0; });
+  // light up the category chip of the section on screen
+  const io=new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting){ chips.forEach(c=>c.classList.toggle('on',c.dataset.cat===e.target.id));
+    const on=chips.find(c=>c.dataset.cat===e.target.id); if(on) on.scrollIntoView({block:'nearest',inline:'nearest'}); } }); },{rootMargin:'-120px 0px -60% 0px'});
+  secs.forEach(s=>io.observe(s));
+  // recently played (this browser only)
+  let rec=[]; try{ rec=JSON.parse(localStorage.getItem('menuRecent')||'[]'); }catch(e){}
+  const byHref=h=>cards.find(li=>li.querySelector('a').getAttribute('href')===h);
+  rec=rec.filter(byHref).slice(0,8);
+  if(rec.length){ const box=document.getElementById('rlist');
+    rec.forEach(h=>{ const li=byHref(h), a=document.createElement('a'); a.href=h; a.className='ra';
+      const ic=document.createElement('span'); ic.textContent=li.querySelector('.icon').textContent; a.append(ic,li.querySelector('h3').textContent); box.append(a); });
+    document.getElementById('recent').hidden=false; }
+  document.addEventListener('click',e=>{ const a=e.target.closest('a.game,a.ra'); if(!a) return; const h=a.getAttribute('href');
+    try{ const r=[h,...rec.filter(x=>x!==h)].slice(0,8); localStorage.setItem('menuRecent',JSON.stringify(r)); }catch(err){} });
+  // random pick: scroll to a card and make it glow
+  document.getElementById('rand').onclick=()=>{ const vis=cards.filter(li=>!li.hidden&&!li.closest('section').hidden); if(!vis.length) return;
+    const a=vis[Math.floor(Math.random()*vis.length)].querySelector('a.game');
+    document.querySelectorAll('.game.pick').forEach(x=>x.classList.remove('pick')); a.scrollIntoView({behavior:'smooth',block:'center'});
+    void a.offsetWidth; a.classList.add('pick'); setTimeout(()=>a.focus({preventScroll:true}),500); };
+})();
+</script>
+</body>
+</html>

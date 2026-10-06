@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="半熟英雄風のリアルタイム戦略ゲーム。将軍を出陣させて城をうばい、押し合いの合戦で連打、ピンチには卵から生焼けモンスターを召喚！">
+<title>生焼けヒーロー</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&family=Dela+Gothic+One&display=swap">
+<style>
+:root{--bg:#FFF6E4;--ink:#3A2A1A;--card:#FFFFFF;--line:#EAD2A8;--mute:#9A8466;--yolk:#F2B21A;--blue:#3A7AE0;--red:#D83A3A;--green:#4AA04A}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:3px solid var(--yolk);outline-offset:2px}
+#app{max-width:520px;margin:0 auto;padding:8px 10px 14px;padding-top:calc(8px + env(safe-area-inset-top,0px));position:relative}
+#top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:17px;font-family:"Dela Gothic One",sans-serif;color:#C8781A;letter-spacing:.04em}
+.mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--card);cursor:pointer;white-space:nowrap}
+.mini[aria-pressed=true]{background:var(--yolk);border-color:var(--yolk)}
+#info{display:flex;gap:10px;align-items:center;font-weight:800;font-size:13px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 10px}
+#info .sp{flex:1}
+.mbar{width:70px;height:8px;border-radius:5px;background:#F2E4C8;overflow:hidden}.mbar i{display:block;height:100%;background:var(--yolk)}
+#cv{display:block;width:100%;aspect-ratio:360/320;border-radius:14px;margin-top:6px;background:#9AC86A;touch-action:none}
+#ctrl{margin-top:6px}
+.gens{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.gen{border:2px solid var(--line);border-radius:12px;background:var(--card);padding:5px 6px;text-align:left;cursor:pointer;font-size:11px;line-height:1.3;min-height:58px}
+.gen b{display:block;font-size:12px}
+.gen.sel{border-color:var(--yolk);box-shadow:0 0 0 2px var(--yolk)}
+.gen.dead{opacity:.45}
+.hpb{height:5px;border-radius:3px;background:#F2E4C8;overflow:hidden;margin-top:2px}.hpb i{display:block;height:100%;background:var(--green)}
+.hint{font-size:12px;color:var(--mute);text-align:center;margin:6px 0 0;min-height:16px}
+.tacs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tac{min-height:46px;border:2px solid var(--line);border-radius:12px;background:var(--card);font-weight:800;font-size:13px;cursor:pointer}
+.tac.on{background:var(--yolk);border-color:#C8901A}
+.row2{display:grid;grid-template-columns:2fr 1fr;gap:6px;margin-top:6px}
+.big{min-height:64px;border:0;border-radius:16px;font-weight:800;font-size:18px;cursor:pointer;touch-action:manipulation}
+#mashBtn{background:radial-gradient(circle at 40% 30%,#FFD860,#F2A01A);box-shadow:0 5px 0 #A8680A;color:#4A2A00}
+#mashBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #A8680A}
+#eggBtn{background:#FFF;border:2px solid var(--line);font-size:15px}
+#eggBtn:disabled{opacity:.45}
+.cmds{display:grid;gap:6px}
+.cmd{min-height:46px;border:2px solid var(--line);border-radius:12px;background:var(--card);font-weight:800;font-size:14px;cursor:pointer;text-align:left;padding:6px 12px}
+.cmd small{display:block;font-size:11px;color:var(--mute);font-weight:500}
+.cmd:disabled{opacity:.45}
+.ov{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;background:rgba(40,24,8,.5);padding:60px 12px 12px;z-index:5}
+.card{background:var(--card);border-radius:16px;padding:14px;width:100%;max-width:420px;max-height:calc(100vh - 80px);overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.25);text-align:center}
+.card h2{margin:0 0 6px;font-family:"Dela Gothic One",sans-serif;font-size:21px;color:#C8781A}
+.sub{font-size:12px;color:var(--mute);margin:0 0 8px;white-space:pre-line;line-height:1.6}
+.story{font-size:14px;line-height:1.8;white-space:pre-line;margin:8px 0;text-align:left}
+.go{display:block;width:100%;min-height:46px;border:0;border-radius:14px;font-weight:800;font-size:16px;cursor:pointer;margin-top:10px;background:var(--yolk);color:#4A2A00;box-shadow:0 4px 0 #A8680A}
+.go.alt{background:#F4E8D0;box-shadow:0 4px 0 #D8C8A8}
+.back{display:block;margin-top:10px;font-size:13px;font-weight:800;color:var(--mute);text-decoration:none}
+.shop{display:grid;gap:6px;text-align:left;margin-top:6px}
+.it{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:6px 8px}
+.it .ic{font-size:28px}
+.it small{display:block;font-size:11px;color:var(--mute)}
+.it button{border:0;border-radius:10px;background:var(--yolk);font-weight:800;padding:8px 10px;cursor:pointer;min-width:64px}
+.it button:disabled{background:#EEE2CC;color:#A89878;cursor:default}
+#bigTitle{font-family:"Dela Gothic One",sans-serif;font-size:40px;color:#C8781A;line-height:1.15;margin:4px 0;text-shadow:3px 3px 0 #FFE2A0}
+.keys{font-size:11px;color:var(--mute);text-align:center;margin-top:8px}
+@media (pointer:coarse){.keys{display:none}}
+</style>
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-180.png">
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>生焼けヒーロー</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false" title="Oキー">🤖 オート</button>
+    <button class="mini" id="muteBtn">音 ON</button>
+  </div>
+  <div id="info"><span id="gold">💰 0G</span><span id="mon">📅 1月</span><div class="mbar"><i id="monI"></i></div><span class="sp"></span><span id="cas">🏰 1 / 1</span></div>
+  <canvas id="cv" width="360" height="320" aria-label="地図と合戦の画面"></canvas>
+  <div id="ctrl"></div>
+  <p class="keys">地図：将軍をえらんで行き先の城をタップ　合戦：1〜4 作戦　スペース 連打　E たまご　O オート　M 音</p>
+
+  <div class="ov" id="titleOv">
+    <div class="card">
+      <div id="bigTitle">生焼け<br>ヒーロー</div>
+      <p class="sub">タマゴ王国 vs コゲコゲ帝国。
+将軍を出陣させて城をうばい、合戦では兵士の押し合いを連打で応援。
+ピンチになったら、たまごから「生焼けモンスター」を召喚だ！
+敵の本城「コゲコゲ城」をうばえば勝ち。</p>
+      <button class="go" id="startBtn">出陣する</button>
+      <button class="go alt" id="autoStartBtn">🤖 オートで見る</button>
+      <p class="sub" id="bestTxt" style="margin-top:8px"></p>
+      <a class="back" href="../">← ゲーム一覧にもどる</a>
+    </div>
+  </div>
+  <div class="ov" id="monthOv" hidden>
+    <div class="card">
+      <h2 id="mTitle">📅 2月になった</h2>
+      <p class="sub" id="mSub"></p>
+      <button class="go alt" id="refillBtn">兵を補充する</button>
+      <p class="sub" style="margin-top:10px">🥚 たまご屋（持てるのは6こまで）</p>
+      <div class="shop" id="shop"></div>
+      <button class="go" id="mGo">出陣！</button>
+    </div>
+  </div>
+  <div class="ov" id="eggOv" hidden>
+    <div class="card"><h2>どのたまごを割る？</h2><div class="shop" id="eggList"></div><button class="go alt" id="eggCancel">やめる</button></div>
+  </div>
+  <div class="ov" id="endOv" hidden>
+    <div class="card"><h2 id="endTitle"></h2><div class="story" id="endText"></div><button class="go" id="endBtn">もう一度</button><a class="back" href="../">← ゲーム一覧にもどる</a></div>
+  </div>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+let seed=(Date.now()%2147483646)+1; const rnd=()=>{ seed=seed*16807%2147483647; return (seed-1)/2147483646; };
+const clamp=(v,a,b)=>v<a?a:v>b?b:v, pick=a=>a[Math.floor(rnd()*a.length)];
+const W=360,H=320;
+
+/* ================= data ================= */
+const CASTLES0=[
+  {n:'タマゴ城',x:42,y:160,inc:30,own:'P',main:1},
+  {n:'カラザ砦',x:112,y:72,inc:12,own:'N'},
+  {n:'キミ村',x:112,y:248,inc:12,own:'N'},
+  {n:'シロミ町',x:182,y:160,inc:18,own:'N'},
+  {n:'スス砦',x:252,y:72,inc:14,own:'E'},
+  {n:'コゲ村',x:252,y:248,inc:14,own:'E'},
+  {n:'コゲコゲ城',x:318,y:160,inc:30,own:'E',main:1},
+];
+const ROADS=[[0,1],[0,2],[1,3],[2,3],[1,4],[2,5],[3,4],[3,5],[4,6],[5,6]];
+const GENS0=[
+  {side:'P',n:'ゆでたまご将軍',s:'ゆで',hp:150,atk:11,home:0},
+  {side:'P',n:'めだまやき姫',s:'めだま',hp:110,atk:14,home:0},
+  {side:'P',n:'スクランブル卿',s:'スクラン',hp:130,atk:10,home:0},
+  {side:'E',n:'コゲパン将軍',s:'コゲパン',hp:130,atk:10,home:4},
+  {side:'E',n:'スス騎士',s:'スス',hp:120,atk:12,home:5},
+  {side:'E',n:'炭火大王',s:'大王',hp:240,atk:15,home:6,boss:1},
+];
+// egg monsters (all undercooked)
+const EGGS={
+  tamagon:{n:'ナマタマゴン',ic:'🐲',hp:60,atk:16,sp:{n:'なまぬるブレス',t:'sol',v:12,d:'敵の兵を12人たおす'},uses:2,cost:30},
+  cookie:{n:'生地クッキー兵団',ic:'🍪',hp:60,atk:12,sp:{n:'焼けてないけど援軍',t:'heal',v:10,d:'味方の兵が10人ふえる'},uses:2,cost:35},
+  pancake:{n:'生焼けパンケーキ巨人',ic:'🥞',hp:130,atk:15,sp:{n:'ベチャッとのしかかり',t:'mon',v:90,d:'敵モンスターに90ダメージ'},uses:2,cost:40},
+  steak:{n:'レアステーキング',ic:'🥩',hp:80,atk:18,sp:{n:'にくじるビーム',t:'gen',v:55,d:'敵の将軍に55ダメージ'},uses:2,cost:45},
+  ufo:{n:'ぬる目玉焼きUFO',ic:'🍳',hp:75,atk:14,sp:{n:'キャトル兵ティ',t:'steal',v:8,d:'敵の兵を8人さらって味方にする'},uses:2,cost:55},
+  burger:{n:'半生ハンバーグ魔人',ic:'🍔',hp:95,atk:20,sp:{n:'肉汁バクハツ',t:'all',v:8,d:'敵の兵8人・将軍25・モンスター40'},uses:2,cost:60},
+  pizza:{n:'ピザカッター将',ic:'🍕',hp:70,atk:17,sp:{n:'8等分ぎり',t:'half',v:0,d:'敵の兵を半分にする'},uses:1,cost:70},
+  germ:{n:'おなかピーピー大魔王',ic:'🦠',hp:160,atk:28,sp:{n:'食あたりの呪い',t:'doom',v:0,d:'敵の兵が全滅、将軍のHPが半分に'},uses:1,cost:150},
+};
+const EGG_IDS=Object.keys(EGGS);
+const TAC={charge:{n:'とつげき',push:1.35,dmg:1.6,taken:1.3,miss:.25},attack:{n:'こうげき',push:1,dmg:1,taken:1,miss:0},guard:{n:'ぼうぎょ',push:.7,dmg:.45,taken:.5,miss:0}};
+const MONTH_LEN=32, MAX_SOL=30, SPEED=30;
+
+/* ================= state ================= */
+const S={scene:'title',castles:[],gens:[],gold:0,month:1,mt:0,eggs:[],sel:null,B:null,auto:false,manual:false,t:0,fx:[],msg:'',msgT:0,aiT:0,autoT:0,shopList:[],
+  stats:{wins:0,losses:0,eggs:0,caps:0},
+  best:(()=>{ try{ return JSON.parse(localStorage.getItem('namayakeBest')||'null')||{clears:0,fast:0}; }catch(e){ return {clears:0,fast:0}; } })()};
+function saveBest(){ try{ localStorage.setItem('namayakeBest',JSON.stringify(S.best)); }catch(e){} }
+function newGame(){
+  S.castles=CASTLES0.map((c,i)=>({...c,id:i,guard:c.main?25:0}));
+  S.gens=GENS0.map((g,i)=>({...g,id:i,maxhp:g.hp,sol:g.side==='E'&&!g.boss?20:MAX_SOL,at:g.home,x:CASTLES0[g.home].x,y:CASTLES0[g.home].y,path:[],dead:false,eggs:g.side==='E'?(g.boss?['steak','burger']:[pick(['tamagon','cookie','pancake'])]):[]}));
+  S.gold=40; S.month=1; S.mt=0; S.eggs=['tamagon','cookie']; S.sel=null; S.B=null; S.fx=[]; S.aiT=0; S.stats={wins:0,losses:0,eggs:0,caps:0};
+  S.scene='map'; ['titleOv','endOv','monthOv','eggOv'].forEach(i=>$(i).hidden=true);
+  say('タマゴ王国、出陣！ 将軍をえらんで、行き先の城をタップ'); sfx('start'); renderCtrl();
+}
+function say(m){ S.msg=m; S.msgT=0; }
+
+/* ================= map ================= */
+const nb=id=>ROADS.filter(r=>r.includes(id)).map(r=>r[0]===id?r[1]:r[0]);
+function route(from,to){ // BFS shortest path in hops
+  const prev={[from]:-1}, q=[from];
+  while(q.length){ const c=q.shift(); if(c===to) break; for(const n of nb(c)) if(!(n in prev)){ prev[n]=c; q.push(n); } }
+  if(!(to in prev)) return []; const p=[]; for(let c=to;c!==from;c=prev[c]) p.unshift(c); return p;
+}
+function sendGen(g,to){ if(!g||g.dead) return; const from=g.at!=null?g.at:nearestCastle(g); if(from===to&&g.at===to) return; g.path=route(from,to); if(g.at==null&&g.next!=null) g.path=[g.next,...route(g.next,to)].filter((v,i,a)=>i===0||v!==a[i-1]); g.at=null; g.next=g.path[0]; }
+function nearestCastle(g){ let b=0,bd=1e9; S.castles.forEach(c=>{ const d=Math.hypot(c.x-g.x,c.y-g.y); if(d<bd){ bd=d; b=c.id; } }); return b; }
+function stationed(cid,side){ return S.gens.filter(g=>!g.dead&&g.at===cid&&g.side===side); }
+function ownMain(side){ return side==='P'?0:6; }
+function updateMap(dt){
+  S.mt+=dt; if(S.mt>=MONTH_LEN){ S.mt=0; monthChange(); return; }
+  for(const g of S.gens){ if(g.dead||g.at!=null||g.next==null) continue;
+    const c=S.castles[g.next], dx=c.x-g.x, dy=c.y-g.y, d=Math.hypot(dx,dy), st=SPEED*dt*(g.sol<8?.85:1);
+    if(d<=st){ g.x=c.x; g.y=c.y; g.path.shift(); if(arrive(g,c)) return; g.next=g.path[0]; if(g.next==null) g.at=c.id; }
+    else { g.x+=dx/d*st; g.y+=dy/d*st; } }
+  // armies that meet on the road fight
+  for(const a of S.gens) for(const b of S.gens){ if(a.side!=='P'||b.side!=='E'||a.dead||b.dead) continue; if(a.at==null&&b.at==null&&Math.hypot(a.x-b.x,a.y-b.y)<13){ startBattle(a,b,null); return; } }
+  // two armies parked in the same castle fight it out
+  for(const c of S.castles){ const a=stationed(c.id,'P'), b=stationed(c.id,'E'); if(a.length&&b.length){ startBattle(a[0],b[0],c.id); return; } }
+  enemyAI(dt); if(S.auto) autoMap(dt);
+}
+function arrive(g,c){
+  const foes=stationed(c.id,g.side==='P'?'E':'P');
+  if(foes.length){ g.at=c.id; g.path=[]; g.next=null; startBattle(g.side==='P'?g:foes[0],g.side==='P'?foes[0]:g,c.id); return true; }
+  // a main castle left empty is still defended by its garrison
+  if(c.own!==g.side&&c.main&&c.guard>0){ g.at=c.id; g.path=[]; g.next=null; const gd=garrison(c); startBattle(g.side==='P'?g:gd,g.side==='P'?gd:g,c.id); return true; }
+  if(c.own!==g.side) capture(c,g.side);
+  return S.scene!=='map';
+}
+function garrison(c){ return {id:-1,side:c.own,n:'留守番隊',s:'留守',hp:120,maxhp:120,atk:11,sol:c.guard,temp:1,eggs:[],at:c.id,x:c.x,y:c.y,path:[],next:null}; }
+function capture(c,side){ if(c.own===side) return; const was=c.own; c.own=side; sfx(side==='P'?'cap':'lost');
+  S.fx.push({k:'txt',x:c.x,y:c.y-24,t:0,txt:side==='P'?'占領！':'うばわれた！',col:side==='P'?'#1A5AC0':'#C02020'});
+  if(side==='P') S.stats.caps++;
+  say(side==='P'?`${c.n}を占領した！`:`${c.n}がコゲコゲ帝国にうばわれた…`);
+  if(c.main) endGame(side==='P'); }
+function monthChange(){
+  S.month++; let inc=0; for(const c of S.castles) if(c.own==='P') inc+=c.inc; S.gold+=inc;
+  let einc=0; for(const c of S.castles) if(c.own==='E') einc+=c.inc;
+  for(const c of S.castles) if(c.main) c.guard=Math.min(30,c.guard+10);
+  for(const g of S.gens){ if(g.dead&&S.castles[ownMain(g.side)].own===g.side){ g.dead=false; g.hp=Math.round(g.maxhp*.5); g.sol=g.side==='P'?0:12; g.at=ownMain(g.side); g.x=S.castles[g.at].x; g.y=S.castles[g.at].y; g.path=[]; g.next=null; }
+    if(!g.dead) g.hp=Math.min(g.maxhp,g.hp+Math.round(g.maxhp*.3)); }
+  // the empire refills its soldiers and sometimes buys an egg
+  let eg=einc+S.month*4; for(const g of S.gens) if(g.side==='E'&&!g.dead&&g.at!=null&&S.castles[g.at].own==='E'){ const n=Math.min(MAX_SOL-g.sol,eg); g.sol+=n; eg-=n; }
+  for(const g of S.gens) if(g.side==='E'&&!g.dead&&g.eggs.length<2&&rnd()<.35+S.month*.03) g.eggs.push(pick(EGG_IDS.slice(0,6)));
+  S.shopList=[]; const pool=EGG_IDS.slice(); for(let i=0;i<4;i++) S.shopList.push(pool.splice(Math.floor(rnd()*(pool.length-(S.month<3?1:0))),1)[0]);
+  S.scene='month'; $('mTitle').textContent=`📅 ${S.month}月になった`;
+  $('mSub').textContent=`城からの収入 +${inc}G（いま ${S.gold}G）\n将軍たちのHPが少し回復した。`; renderShop(); $('monthOv').hidden=false; sfx('month');
+}
+function refillCost(){ let n=0; for(const g of S.gens) if(g.side==='P'&&!g.dead&&g.at!=null&&S.castles[g.at].own==='P') n+=MAX_SOL-g.sol; return n; }
+function refill(){ for(const g of S.gens) if(g.side==='P'&&!g.dead&&g.at!=null&&S.castles[g.at].own==='P'){ const n=Math.min(MAX_SOL-g.sol,S.gold); g.sol+=n; S.gold-=n; } sfx('buy'); renderShop(); }
+function buyEgg(id){ const e=EGGS[id]; if(S.gold<e.cost||S.eggs.length>=6) return; S.gold-=e.cost; S.eggs.push(id); sfx('buy'); renderShop(); }
+function renderShop(){
+  const rc=refillCost(); $('refillBtn').textContent=rc?`兵を補充する（城にいる将軍 ${rc}人ぶん・1人1G）`:'兵はみんな満タン'; $('refillBtn').disabled=!rc||!S.gold;
+  $('shop').innerHTML=S.shopList.map(id=>{ const e=EGGS[id]; return `<div class="it"><span class="ic">${e.ic}</span><div><b>${e.n}</b><small>HP${e.hp}・必殺「${e.sp.n}」${e.sp.d}（${e.uses}回）</small></div><button data-id="${id}" ${S.gold<e.cost||S.eggs.length>=6?'disabled':''}>${e.cost}G</button></div>`; }).join('');
+  $('shop').querySelectorAll('button').forEach(b=>b.onclick=()=>{ ac(); user(); buyEgg(b.dataset.id); });
+  $('mSub').textContent=$('mSub').textContent.replace(/（いま \d+G）/,`（いま ${S.gold}G）`); renderInfo();
+}
+function closeMonth(){ $('monthOv').hidden=true; S.scene='map'; renderCtrl(); }
+
+/* ================= enemy AI on the map ================= */
+function enemyAI(dt){
+  S.aiT-=dt; if(S.aiT>0) return; S.aiT=2.5;
+  for(const g of S.gens){ if(g.side!=='E'||g.dead||g.boss||g.at==null) continue;
+    if(g.sol<10){ if(g.at!==ownMain('E')&&S.castles[g.at].own!=='E') sendGen(g,ownMain('E')); continue; }
+    if(S.month<2&&S.mt<16) continue;
+    // go for the closest castle that is not ours, preferring empty ones
+    let best=null,bv=-1e9; for(const c of S.castles){ if(c.own==='E') continue; const r=route(g.at,c.id); if(!r.length) continue; const def=stationed(c.id,'P').reduce((s,x)=>s+x.sol+x.hp/10,0);
+      const v=-r.length*10-def+(c.main&&S.month>=3?6:0)+(c.own==='P'?4:0); if(v>bv){ bv=v; best=c.id; } }
+    if(best!=null&&rnd()<.6) sendGen(g,best); }
+}
+
+/* ================= battle ================= */
+function startBattle(p,e,cid){
+  S.scene='battle'; S.sel=null;
+  S.B={p,e,cid,front:180,t:0,tacP:'attack',tacE:'attack',mash:0,mashE:0,mon:{P:null,E:null},mode:'push',hatch:null,log:'',logT:0,turnBusy:0,dust:[],pSol0:p.sol,eSol0:e.sol,eggT:0,autoMash:0};
+  say(`合戦！ ${p.n} vs ${e.n}`); sfx('clash'); renderCtrl();
+}
+function power(g,tac,mash){ return (g.sol*1+g.atk*1.6+6)*TAC[tac].push*(1+mash*.7); }
+function hurtSide(g,dmg){ // damage goes to the soldiers first, then the general
+  if(g.sol>0){ g.solHp=(g.solHp||0)+dmg; while(g.solHp>=10&&g.sol>0){ g.solHp-=10; g.sol--; } if(g.sol<=0){ g.sol=0; g.solHp=0; } }
+  else g.hp=Math.max(0,g.hp-dmg*.75);
+}
+function updateBattle(dt){
+  const B=S.B; B.t+=dt; if(B.logT>0) B.logT-=dt;
+  if(B.hatch){ B.hatch.t+=dt; if(B.hatch.t>1.1){ const h=B.hatch; B.hatch=null; B.mon[h.side]={id:h.id,...EGGS[h.id],hpNow:EGGS[h.id].hp,usesLeft:EGGS[h.id].uses}; B.mode='cmd'; blog(`${EGGS[h.id].ic} ${EGGS[h.id].n} があらわれた！`); renderCtrl(); } return; }
+  if(B.mode==='cmd'){ if(B.turnBusy>0){ B.turnBusy-=dt; if(B.turnBusy<=0){ B.turnBusy=0; enemyCmd(); } } if(S.B&&S.auto) autoBattle(dt); return; }
+  // real-time shoving match
+  B.mash=Math.max(0,B.mash-dt*1.6); B.mashE=clamp(B.mashE+(rnd()-.5)*dt*2,.15,.25+Math.min(.35,S.month*.03));
+  enemyTactic();
+  const pp=power(B.p,B.tacP,B.mash), pe=power(B.e,B.tacE,B.mashE);
+  B.front=clamp(B.front+(pp-pe)*.9*dt,70,290);
+  const deepP=B.front<120?1.5:1, deepE=B.front>240?1.5:1;
+  const dP=(B.p.sol*.17+B.p.atk*.22+1)*TAC[B.tacP].dmg*(rnd()<TAC[B.tacP].miss?0:1)*TAC[B.tacE].taken*deepE*(1+B.mash*.3);
+  const dE=(B.e.sol*.17+B.e.atk*.22+1)*TAC[B.tacE].dmg*(rnd()<TAC[B.tacE].miss?0:1)*TAC[B.tacP].taken*deepP;
+  // a garrison fights from behind the castle walls
+  hurtSide(B.e,dP*dt*3.2*(B.e.temp?.65:1)); hurtSide(B.p,dE*dt*3.2*(B.p.temp?.65:1));
+  if(rnd()<dt*14) B.dust.push({x:B.front+(rnd()-.5)*30,y:220+rnd()*50,t:0});
+  // the enemy general cracks an egg when it is losing
+  B.eggT-=dt; if(B.eggT<=0&&B.e.eggs.length&&!B.mon.E&&(B.e.sol<B.p.sol*.75||B.e.hp<B.e.maxhp*.5||B.e.boss&&B.t>4)){ B.eggT=6; if(rnd()<.6){ const id=B.e.eggs.shift(); hatch('E',id); return; } }
+  if(S.auto) autoBattle(dt);
+  if(S.B) checkBattleEnd();
+}
+function enemyTactic(){ const B=S.B; B.tacT=(B.tacT||0)-1/60; if(B.tacT<=0){ B.tacT=3; const r=power(B.e,'attack',0)/power(B.p,'attack',0); B.tacE=r>1.25?'charge':r<.6?'guard':'attack'; } }
+function blog(t){ S.B.log=t; S.B.logT=3; }
+function hatch(side,id){ const B=S.B; B.hatch={side,id,t:0}; sfx('egg'); if(side==='P') S.stats.eggs++; blog(side==='P'?'🥚 たまごを割った！ …パキッ':'🥚 敵がたまごを割った！'); renderCtrl(); }
+function useEgg(id){ const B=S.B; if(!B||B.mon.P||B.hatch||S.scene!=='battle') return; const i=S.eggs.indexOf(id); if(i<0) return; S.eggs.splice(i,1); $('eggOv').hidden=true; hatch('P',id); }
+function foe(side){ return side==='P'?'E':'P'; }
+function applySpecial(side){
+  const B=S.B, m=B.mon[side], me=side==='P'?B.p:B.e, en=side==='P'?B.e:B.p, em=B.mon[foe(side)], sp=m.sp; m.usesLeft--;
+  let t=`${m.ic}「${sp.n}」！`;
+  if(sp.t==='sol'){ const k=Math.min(en.sol,sp.v); en.sol-=k; t+=` 兵が${k}人たおれた`; }
+  else if(sp.t==='heal'){ const k=Math.min(MAX_SOL+10-me.sol,sp.v); me.sol+=k; t+=` 兵が${k}人ふえた`; }
+  else if(sp.t==='mon'){ if(em){ em.hpNow-=sp.v; t+=` ${em.n}に${sp.v}ダメージ`; } else { const k=Math.min(en.sol,6); en.sol-=k; t+=` 兵が${k}人つぶれた`; } }
+  else if(sp.t==='gen'){ en.hp=Math.max(0,en.hp-sp.v); t+=` ${en.n}に${sp.v}ダメージ`; }
+  else if(sp.t==='steal'){ const k=Math.min(en.sol,sp.v); en.sol-=k; me.sol+=k; t+=` 兵を${k}人さらった`; }
+  else if(sp.t==='all'){ en.sol=Math.max(0,en.sol-sp.v); en.hp=Math.max(0,en.hp-25); if(em) em.hpNow-=40; t+=' 全体に大ダメージ'; }
+  else if(sp.t==='half'){ const k=Math.ceil(en.sol/2); en.sol-=k; t+=` 兵が半分に（-${k}人）`; }
+  else if(sp.t==='doom'){ en.sol=0; en.hp=Math.round(en.hp/2); t+=' 兵が全滅、将軍もおなかをこわした'; }
+  blog(t); sfx('boom'); B.flash={side:foe(side),t:.5};
+}
+function normalAttack(side){
+  const B=S.B, m=B.mon[side], me=side==='P'?B.p:B.e, en=side==='P'?B.e:B.p, em=B.mon[foe(side)];
+  if(m){ const d=Math.round(m.atk*(.8+rnd()*.4)); if(em){ em.hpNow-=d; blog(`${m.ic} ${m.n}のこうげき！ ${em.n}に${d}ダメージ`); } else { hurtSide(en,d*2.2); blog(`${m.ic} ${m.n}のこうげき！`); } }
+  else { const d=Math.round((me.sol*.6+me.atk)*(.8+rnd()*.4)); if(em){ em.hpNow-=d; blog(`兵たちのこうげき！ ${em.n}に${d}ダメージ`); } else hurtSide(en,d); }
+  sfx('hit'); B.flash={side:foe(side),t:.3};
+}
+function afterCmd(){ const B=S.B;
+  for(const sd of ['P','E']){ const m=B.mon[sd]; if(m&&m.hpNow<=0){ B.mon[sd]=null; blog(`${m.ic} ${m.n}はたおれた！ （生焼けだったので）`); sfx('pop'); } }
+  if(checkBattleEnd()) return true;
+  if(!B.mon.P&&!B.mon.E){ B.mode='push'; renderCtrl(); return true; }
+  return false;
+}
+// one round of the command battle: the player acts, then the enemy
+function playerCmd(kind){
+  const B=S.B; if(!B||B.mode!=='cmd'||B.turnBusy>0||B.hatch) return;
+  if(kind==='sp'){ if(!B.mon.P||B.mon.P.usesLeft<=0) return; applySpecial('P'); }
+  else if(kind==='atk') normalAttack('P');
+  else if(kind==='egg'){ $('eggOv').hidden=false; renderEggList(); return; }
+  else if(kind==='flee'){ retreat(B.p,true); return; }
+  if(afterCmd()) return; B.turnBusy=1.1; renderCtrl();
+}
+function enemyCmd(){ const B=S.B; if(!B||B.mode!=='cmd') return;
+  if(!B.mon.E&&B.e.eggs.length&&rnd()<.5){ hatch('E',B.e.eggs.shift()); return; }
+  const m=B.mon.E; if(m&&m.usesLeft>0&&rnd()<.6) applySpecial('E'); else normalAttack('E');
+  afterCmd(); renderCtrl(); }
+function checkBattleEnd(){ const B=S.B; if(!B) return true;
+  if(B.e.hp<=0){ battleOver('P'); return true; } if(B.p.hp<=0){ battleOver('E'); return true; }
+  if(B.mode==='push'&&B.t>50){ battleOver(B.p.sol+B.p.hp/8>=B.e.sol+B.e.hp/8?'P':'E'); return true; }
+  return false; }
+function retreat(g,flee,cid){ // a beaten or fleeing general runs home
+  const B=S.B, home=ownMain(g.side); if(cid===undefined) cid=B?B.cid:null;
+  if(flee){ g.sol=Math.floor(g.sol*.7); }
+  const lostMain=S.castles[home].own!==g.side||cid===home;
+  if(lostMain){ g.dead=true; g.at=null; g.path=[]; g.next=null; }
+  else { g.at=home; g.x=S.castles[home].x; g.y=S.castles[home].y; g.path=[]; g.next=null; }
+  if(flee) battleOver(foe(g.side),true);
+}
+function battleOver(win,fled){
+  const B=S.B; if(!B) return; S.B=null; S.scene='map'; const w=win==='P'?B.p:B.e, l=win==='P'?B.e:B.p;
+  for(const q of [B.p,B.e]) if(q.temp) S.castles[q.at].guard=q.sol;
+  if(!fled&&!l.temp){ l.hp=Math.max(1,Math.round(l.maxhp*.25)); l.sol=0; retreat(l,false,B.cid); }
+  if(l.temp) S.castles[l.at].guard=0;
+  if(win==='P') S.stats.wins++; else S.stats.losses++;
+  sfx(win==='P'?'win':'lose'); say(win==='P'?`${w.n}の勝ち！ ${l.n}は${fled?'逃げ出した':'逃げ帰った'}`:`${l.n}${fled?'は退却した':'が負けた…'}`);
+  // the winner takes the castle if nobody is left to defend it
+  const cid=B.cid!=null?B.cid:(w.at!=null?w.at:null);
+  if(B.cid!=null&&!w.temp){ w.at=B.cid; w.x=S.castles[B.cid].x; w.y=S.castles[B.cid].y; if(!stationed(B.cid,foe(win)).length&&S.castles[B.cid].own!==win) capture(S.castles[B.cid],win); }
+  if(S.scene==='map') renderCtrl();
+}
+
+/* ================= end ================= */
+function endGame(won){
+  S.scene='end'; S.B=null;
+  if(won&&!S.auto){ S.best.clears++; if(!S.best.fast||S.month<S.best.fast) S.best.fast=S.month; saveBest(); }
+  $('endTitle').textContent=won?'🎉 コゲコゲ帝国をたおした！':'💀 タマゴ城が落ちた…';
+  $('endText').textContent=(won?`炭火大王は「まだ中まで火が通ってなかった…」と言いのこして去っていった。\nタマゴ王国に、ほどよい半熟の平和がもどった。`:`コゲコゲ帝国に、タマゴ城を焼きつくされた。\n…でも中はまだ生焼けだ。もう一度！`)+
+    `\n\n📅 かかった月：${S.month}か月\n⚔️ 合戦 ${S.stats.wins}勝 ${S.stats.losses}敗\n🥚 割ったたまご：${S.stats.eggs}こ\n🏰 占領した城：${S.stats.caps}`+(won&&S.best.fast?`\n🏆 最速クリア：${S.best.fast}か月`:'');
+  $('endOv').hidden=false; S.autoT=0; sfx(won?'clear':'lose');
+}
+
+/* ================= auto: a careful commander ================= */
+function autoMap(dt){
+  S.autoT-=dt; if(S.autoT>0) return; S.autoT=.8;
+  const mine=S.gens.filter(g=>g.side==='P'&&!g.dead), foes=S.gens.filter(g=>g.side==='E'&&!g.dead);
+  // keep the home castle safe
+  const threat=foes.find(f=>Math.hypot(f.x-S.castles[0].x,f.y-S.castles[0].y)<150&&f.at!==6);
+  if(threat&&!stationed(0,'P').length&&!mine.some(g=>g.path.includes(0))){ const d=mine.filter(g=>g.at!=null).sort((a,b)=>Math.hypot(a.x-42,a.y-160)-Math.hypot(b.x-42,b.y-160))[0]; if(d) sendGen(d,0); }
+  // go back to defend when an enemy army is marching on the home castle
+  const coming=foes.some(f=>f.path.includes(0)||(f.at!=null&&route(f.at,0).length===1));
+  let guard=stationed(0,'P')[0]||mine.find(g=>g.path.includes(0)&&g.path[g.path.length-1]===0);
+  if(!coming&&guard&&guard.at===0&&stationed(0,'P').length===1&&guard.sol>=14) guard=null;
+  else if(!guard&&coming){ const d=mine.filter(g=>g.at!=null).sort((a,b)=>route(a.at,0).length-route(b.at,0).length||a.sol-b.sol)[0]; if(d){ sendGen(d,0); guard=d; } }
+  const others=foes.filter(f=>!f.boss).length;
+  for(const g of mine){ if(g.at==null||g===guard) continue;
+    if(g.sol<14||g.hp<g.maxhp*.45){ if(S.castles[g.at].own!=='P'){ const own=S.castles.filter(c=>c.own==='P').sort((a,b)=>route(g.at,a.id).length-route(g.at,b.id).length)[0]; if(own) sendGen(g,own.id); } continue; }
+    let best=null,bv=-1e9;
+    for(const c of S.castles){ if(c.own==='P') continue; const r=route(g.at,c.id); if(!r.length) continue;
+      const def=stationed(c.id,'E').reduce((s,x)=>s+x.sol+x.hp/6,0); if(c.main&&(g.sol+g.hp/6<def*.8&&S.eggs.length<2)) continue;
+      const v=-r.length*8-def*.6+c.inc*.4+(c.main&&others===0?20:0); if(v>bv){ bv=v; best=c.id; } }
+    if(best!=null) sendGen(g,best); }
+}
+function autoBattle(dt){
+  const B=S.B; if(!B) return; B.autoMash-=dt; if(B.autoMash<=0&&B.mode==='push'){ B.autoMash=.12; mash(); }
+  if(B.mode==='push'){ const r=power(B.p,'attack',0)/power(B.e,'attack',0); B.tacP=r>1.3?'charge':r<.55&&B.p.hp<B.p.maxhp*.3?'guard':'attack';
+    if(S.eggs.length&&!B.mon.P&&!B.hatch&&(B.e.boss||r<.9||B.mon.E||B.p.hp<B.p.maxhp*.5)){ const id=S.eggs.slice().sort((a,b)=>EGGS[b].cost-EGGS[a].cost)[0]; useEgg(id); return; }
+    if(r<.35&&B.p.hp<B.p.maxhp*.25&&!S.eggs.length) { retreat(B.p,true); } return; }
+  if(B.mode==='cmd'&&B.turnBusy<=0&&!B.hatch){ B.autoMash-=0; if((B.cmdT=(B.cmdT||0)+dt)<.6) return; B.cmdT=0;
+    if(B.mon.P) return playerCmd(B.mon.P.usesLeft>0?'sp':'atk');
+    if(S.eggs.length){ const id=S.eggs.slice().sort((a,b)=>EGGS[b].cost-EGGS[a].cost)[0]; useEgg(id); return; }
+    playerCmd('atk'); }
+}
+function autoMonth(){ refill(); const want=S.shopList.slice().sort((a,b)=>EGGS[b].cost-EGGS[a].cost);
+  for(const id of want){ if(S.eggs.length<4&&S.gold-EGGS[id].cost>=10) buyEgg(id); } closeMonth(); }
+
+/* ================= input ================= */
+function mash(){ const B=S.B; if(!B||B.mode!=='push') return; B.mash=Math.min(1,B.mash+.22); if(rnd()<.5) sfx('mash'); }
+function setTac(t){ if(S.B&&S.B.mode==='push'){ S.B.tacP=t; renderCtrl(); } }
+const cv=$('cv'), g=cv.getContext('2d');
+cv.addEventListener('pointerdown',e=>{ ac(); const r=cv.getBoundingClientRect(), x=(e.clientX-r.left)/r.width*W, y=(e.clientY-r.top)/r.height*H;
+  if(S.scene==='battle'){ user(); mash(); return; }
+  if(S.scene!=='map') return; user();
+  // tap a general to select it, or a castle to send the selected general there
+  const gg=S.gens.filter(q=>q.side==='P'&&!q.dead).find(q=>Math.hypot(q.x-x,q.y-y-2)<16);
+  if(gg){ S.sel=gg.id; sfx('tap'); renderCtrl(); return; }
+  const c=S.castles.find(q=>Math.hypot(q.x-x,q.y-y)<24);
+  if(c&&S.sel!=null){ const sg=S.gens[S.sel]; sendGen(sg,c.id); sfx('go'); say(`${sg.n}、${c.n}へ出陣！`); S.sel=null; renderCtrl(); }
+});
+let ctrlHtml='';
+function setCtrl(h){ if(h===ctrlHtml) return false; ctrlHtml=h; $('ctrl').innerHTML=h; return true; }
+function renderCtrl(){
+  const C=$('ctrl');
+  if(S.scene==='battle'||S.scene==='end'&&S.B){ const B=S.B; if(!B) return;
+    if(B.mode==='cmd'||B.hatch){ const m=B.mon.P;
+      if(!setCtrl(`<div class="cmds">${m?`<button class="cmd" data-c="sp" ${m.usesLeft<=0?'disabled':''}>✨ ${m.sp.n}（あと${m.usesLeft}回）<small>${m.sp.d}</small></button><button class="cmd" data-c="atk">👊 ${m.n}でこうげき</button>`:
+        `<button class="cmd" data-c="atk">⚔️ 兵でこうげき<small>敵モンスターに兵と将軍でなぐりかかる</small></button><button class="cmd" data-c="egg" ${S.eggs.length?'':'disabled'}>🥚 たまごを割る（${S.eggs.length}こ）</button>`}
+        <button class="cmd" data-c="flee">🏃 たいきゃく<small>兵を3割うしなって本城へ逃げる</small></button></div><p class="hint">${B.turnBusy>0?'敵の番…':'モンスターが出ると、1回ずつ交代でたたかうコマンドバトル'}</p>`)) return;
+      C.querySelectorAll('.cmd').forEach(b=>b.onclick=()=>{ ac(); user(); playerCmd(b.dataset.c); }); return; }
+    if(!setCtrl(`<div class="tacs">${Object.keys(TAC).map((k,i)=>`<button class="tac${B.tacP===k?' on':''}" data-t="${k}">${['⚡','⚔️','🛡'][i]} ${TAC[k].n}</button>`).join('')}<button class="tac" data-t="flee">🏃 たいきゃく</button></div>
+      <div class="row2"><button class="big" id="mashBtn">💪 れんだ！</button><button class="big" id="eggBtn" ${S.eggs.length&&!B.mon.P?'':'disabled'}>🥚 たまご<br><small>${S.eggs.length}こ</small></button></div>
+      <p class="hint">「れんだ」を連打すると押しこめる。押しこまれると大ダメージ！</p>`)) return;
+    C.querySelectorAll('.tac').forEach(b=>b.onclick=()=>{ ac(); user(); if(b.dataset.t==='flee') retreat(B.p,true); else setTac(b.dataset.t); });
+    $('mashBtn').addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); user(); mash(); });
+    $('eggBtn').onclick=()=>{ ac(); user(); if(!S.eggs.length) return; $('eggOv').hidden=false; renderEggList(); };
+    return; }
+  if(S.scene==='map'||S.scene==='month'){
+    const ps=S.gens.filter(q=>q.side==='P');
+    if(!setCtrl(`<div class="gens">${ps.map(q=>`<button class="gen${S.sel===q.id?' sel':''}${q.dead?' dead':''}" data-g="${q.id}"><b>${q.n}</b>${q.dead?'💀 たおれている（来月もどる）':`👥 兵 ${q.sol}　${q.at!=null?'📍'+S.castles[q.at].n:'🚶 移動中'}`}<div class="hpb"><i style="width:${q.hp/q.maxhp*100}%"></i></div></button>`).join('')}</div>
+      <p class="hint">${S.sel!=null?`${S.gens[S.sel].n}：行き先の城をタップ`:`将軍をえらんで、地図の城をタップ。🥚 たまご ${S.eggs.length}こ`}</p>`)) return;
+    C.querySelectorAll('.gen').forEach(b=>b.onclick=()=>{ ac(); user(); const q=S.gens[+b.dataset.g]; if(q.dead) return; S.sel=S.sel===q.id?null:q.id; sfx('tap'); renderCtrl(); });
+    return; }
+  setCtrl('');
+}
+function renderEggList(){
+  const counts={}; S.eggs.forEach(id=>counts[id]=(counts[id]||0)+1);
+  $('eggList').innerHTML=Object.keys(counts).map(id=>{ const e=EGGS[id]; return `<div class="it"><span class="ic">${e.ic}</span><div><b>${e.n} ×${counts[id]}</b><small>HP${e.hp}・こうげき${e.atk}・必殺「${e.sp.n}」${e.sp.d}</small></div><button data-id="${id}">割る</button></div>`; }).join('');
+  $('eggList').querySelectorAll('button').forEach(b=>b.onclick=()=>{ ac(); user(); useEgg(b.dataset.id); });
+}
+function renderInfo(){
+  $('gold').textContent=`💰 ${S.gold}G`; $('mon').textContent=`📅 ${S.month}月`; $('monI').style.width=(S.mt/MONTH_LEN*100)+'%';
+  const p=S.castles.filter(c=>c.own==='P').length, e=S.castles.filter(c=>c.own==='E').length; $('cas').textContent=`🏰 ${p} 対 ${e}`;
+}
+
+/* ================= drawing ================= */
+function drawCastle(c){
+  const col=c.own==='P'?'#3A7AE0':c.own==='E'?'#D83A3A':'#9A9A9A';
+  g.fillStyle='rgba(0,0,0,.18)'; g.beginPath(); g.ellipse(c.x,c.y+12,18,5,0,0,7); g.fill();
+  const s=c.main?1.25:1; g.save(); g.translate(c.x,c.y); g.scale(s,s);
+  g.fillStyle='#E8DCC8'; g.fillRect(-13,-8,26,18); g.fillRect(-15,-14,8,8); g.fillRect(7,-14,8,8); g.fillRect(-4,-17,8,10);
+  g.fillStyle='#8A6A4A'; g.fillRect(-3,2,6,8);
+  g.strokeStyle='#5A4A3A'; g.lineWidth=1; g.beginPath(); g.moveTo(0,-17); g.lineTo(0,-28); g.stroke();
+  g.fillStyle=col; g.beginPath(); g.moveTo(0,-28); g.lineTo(11,-24); g.lineTo(0,-20); g.fill();
+  g.restore();
+  if(c.main&&c.guard>0){ g.font='800 8px sans-serif'; g.textAlign='center'; g.fillStyle='#3A2A1A'; g.fillText('守'+c.guard,c.x,c.y-34); }
+  g.font='800 10px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.lineWidth=3; g.strokeStyle='rgba(255,255,255,.85)'; g.strokeText(c.n,c.x,c.y+26); g.fillStyle='#3A2A1A'; g.fillText(c.n,c.x,c.y+26);
+}
+function drawGenMap(q){
+  if(q.dead) return; const sel=S.sel===q.id, col=q.side==='P'?'#3A7AE0':'#D83A3A', ox=q.at!=null?(q.side==='P'?-12:12):0, oy=q.at!=null?-2+((q.id%3)-1)*9:0;
+  const x=q.x+ox, y=q.y+oy;
+  if(q.next!=null&&q.side==='P'){ g.strokeStyle='rgba(58,122,224,.6)'; g.setLineDash([4,4]); g.lineWidth=2; g.beginPath(); g.moveTo(x,y); for(const id of q.path){ const c=S.castles[id]; g.lineTo(c.x,c.y); } g.stroke(); g.setLineDash([]); }
+  if(sel){ g.strokeStyle='#F2B21A'; g.lineWidth=3; g.beginPath(); g.arc(x,y,13,0,7); g.stroke(); }
+  g.fillStyle=col; g.beginPath(); g.arc(x,y,9,0,7); g.fill(); g.strokeStyle='#fff'; g.lineWidth=2; g.stroke();
+  g.fillStyle='#fff'; g.font='800 9px sans-serif'; g.textAlign='center'; g.fillText(q.boss?'王':q.s[0],x,y+3);
+  g.fillStyle='#3A2A1A'; g.font='800 8px sans-serif'; g.fillText(q.sol,x,y-12);
+}
+function drawMap(){
+  const gr=g.createLinearGradient(0,0,0,H); gr.addColorStop(0,'#B8DC88'); gr.addColorStop(1,'#98C46A'); g.fillStyle=gr; g.fillRect(0,0,W,H);
+  g.fillStyle='rgba(255,255,255,.18)'; for(let i=0;i<40;i++){ g.beginPath(); g.arc((i*97)%W,(i*53)%H,2,0,7); g.fill(); }
+  g.strokeStyle='#C8A878'; g.lineWidth=6; g.lineCap='round'; for(const [a,b] of ROADS){ const A=S.castles[a],Bc=S.castles[b]; g.beginPath(); g.moveTo(A.x,A.y); g.lineTo(Bc.x,Bc.y); g.stroke(); }
+  g.strokeStyle='#E0C898'; g.lineWidth=2; for(const [a,b] of ROADS){ const A=S.castles[a],Bc=S.castles[b]; g.beginPath(); g.moveTo(A.x,A.y); g.lineTo(Bc.x,Bc.y); g.stroke(); }
+  for(const c of S.castles) drawCastle(c);
+  for(const q of S.gens) drawGenMap(q);
+  drawFx(); drawMsg();
+}
+function soldier(x,y,col,dir,bob,hit){
+  g.fillStyle=hit?'#FFF':col; g.fillRect(x-3,y-8+bob,6,8); g.fillStyle='#F2D2B4'; g.beginPath(); g.arc(x,y-11+bob,3.2,0,7); g.fill();
+  g.strokeStyle='#8A8A9A'; g.lineWidth=1.5; g.beginPath(); g.moveTo(x+dir*2,y-6+bob); g.lineTo(x+dir*8,y-12+bob); g.stroke();
+}
+function genFig(x,y,q,dir){
+  g.fillStyle=q.side==='P'?'#2A5AB0':'#A02020'; g.beginPath(); g.moveTo(x-9,y); g.lineTo(x-7,y-18); g.lineTo(x+7,y-18); g.lineTo(x+9,y); g.fill();
+  g.fillStyle=q.side==='P'?'#FFF8E0':'#4A3A2A'; g.beginPath(); g.ellipse(x,y-27,9,11,0,0,7); g.fill(); // egg head / burnt toast head
+  g.fillStyle='#2A1A1A'; g.fillRect(x-4+dir*2,y-29,2,3); g.fillRect(x+2+dir*2,y-29,2,3);
+  g.fillStyle='#F2B21A'; g.beginPath(); g.moveTo(x-7,y-36); g.lineTo(x-4,y-42); g.lineTo(x,y-37); g.lineTo(x+4,y-42); g.lineTo(x+7,y-36); g.fill();
+}
+function monFig(m,x,y,t,flip,hit){
+  g.save(); g.translate(x,y+Math.sin(t*3)*3); if(hit) g.globalAlpha=.5+.5*Math.sin(t*40);
+  g.font='64px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(m.ic,0,0);
+  // angry eyes so the food looks like a monster
+  g.fillStyle='#fff'; g.beginPath(); g.ellipse(-10,-4,6,7,0,0,7); g.ellipse(10,-4,6,7,0,0,7); g.fill();
+  g.fillStyle='#1A1A1A'; g.beginPath(); g.arc(-10+(flip?-2:2),-3,3,0,7); g.arc(10+(flip?-2:2),-3,3,0,7); g.fill();
+  g.strokeStyle='#1A1A1A'; g.lineWidth=2.5; g.beginPath(); g.moveTo(-17,-14); g.lineTo(-4,-10); g.moveTo(17,-14); g.lineTo(4,-10); g.stroke();
+  g.restore(); g.textBaseline='alphabetic';
+  g.fillStyle='rgba(0,0,0,.4)'; g.fillRect(x-30,y+40,60,6); g.fillStyle='#4AC04A'; g.fillRect(x-30,y+40,60*clamp(m.hpNow/m.hp,0,1),6);
+  g.fillStyle='#fff'; g.font='800 9px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.fillText(m.n,x,y+56);
+}
+function drawBattle(){
+  const B=S.B, t=S.t;
+  const sky=g.createLinearGradient(0,0,0,H); sky.addColorStop(0,'#8AC8F0'); sky.addColorStop(.55,'#D8F0FF'); sky.addColorStop(.56,'#A8C870'); sky.addColorStop(1,'#88A850'); g.fillStyle=sky; g.fillRect(0,0,W,H);
+  g.fillStyle='rgba(255,255,255,.8)'; for(let i=0;i<3;i++){ const cx=(i*140+t*8)%440-40; g.beginPath(); g.ellipse(cx,40+i*18,30,10,0,0,7); g.fill(); }
+  // headers
+  const hdr=(q,x,al)=>{ g.textAlign=al; g.fillStyle='#1A1A2A'; g.font='800 12px "M PLUS Rounded 1c",sans-serif'; g.fillText(q.n,x,18); g.font='800 10px sans-serif'; g.fillText(`👥${q.sol}  ❤️${Math.ceil(q.hp)}/${q.maxhp}`,x,32);
+    const bx=al==='left'?x:x-120; g.fillStyle='rgba(0,0,0,.25)'; g.fillRect(bx,36,120,5); g.fillStyle=q.side==='P'?'#3A7AE0':'#D83A3A'; g.fillRect(bx,36,120*q.hp/q.maxhp,5); };
+  hdr(B.p,8,'left'); hdr(B.e,W-8,'right');
+  // the shoving line
+  const fr=B.front; g.fillStyle=B.mode==='push'?'rgba(80,140,255,.25)':'rgba(0,0,0,.08)'; g.fillRect(fr-4,190,8,110);
+  const fl=B.flash; if(fl){ fl.t-=1/60; if(fl.t<=0) B.flash=null; }
+  for(const [q,dir,col] of [[B.p,1,'#3A6AD0'],[B.e,-1,'#C83030']]){
+    const n=Math.min(q.sol,35), hit=fl&&fl.side===q.side;
+    for(let i=0;i<n;i++){ const col2=Math.floor(i/5), row=i%5; const sx=fr-dir*(12+col2*13)+(B.mode==='push'?Math.sin(t*12+i)*1.5:0), sy=208+row*18+(col2%2)*5;
+      soldier(sx,sy,col,dir,Math.sin(t*10+i*1.7)*1.2,hit&&i%3===0); }
+    const gx=clamp(fr-dir*(30+Math.ceil(n/5)*13),24,W-24); genFig(gx,262,q,dir);
+  }
+  for(const d of B.dust){ d.t+=1/60; g.fillStyle=`rgba(200,180,140,${Math.max(0,.6-d.t)})`; g.beginPath(); g.arc(d.x,d.y-d.t*20,4+d.t*10,0,7); g.fill(); } B.dust=B.dust.filter(d=>d.t<.6);
+  // monsters and hatching
+  if(B.hatch){ const h=B.hatch, x=h.side==='P'?100:260, k=h.t/1.1; g.save(); g.translate(x,158+Math.sin(h.t*30)*(k*4)); g.fillStyle='#FFF8E8'; g.beginPath(); g.ellipse(0,0,26,34,0,0,7); g.fill(); g.strokeStyle='#C8A878'; g.lineWidth=2; g.stroke();
+    if(k>.4){ g.strokeStyle='#5A4A3A'; g.beginPath(); g.moveTo(-20,-4); g.lineTo(-10,4); g.lineTo(0,-6); g.lineTo(10,4); g.lineTo(20,-4); g.stroke(); } g.restore();
+    if(k>.8){ g.fillStyle=`rgba(255,240,160,${(k-.8)*4})`; g.beginPath(); g.arc(x,158,60,0,7); g.fill(); } }
+  if(B.mon.P) monFig(B.mon.P,100,158,t,false,fl&&fl.side==='P');
+  if(B.mon.E) monFig(B.mon.E,260,158,t+1,true,fl&&fl.side==='E');
+  // mash gauge
+  if(B.mode==='push'){ g.fillStyle='rgba(0,0,0,.3)'; g.fillRect(110,52,140,8); g.fillStyle='#3A8AFF'; g.fillRect(110,52,140*B.mash,8); g.fillStyle='#1A1A2A'; g.font='800 9px sans-serif'; g.textAlign='center'; g.fillText('れんだ パワー',180,70);
+    g.fillStyle='#1A1A2A'; g.font='800 11px "M PLUS Rounded 1c",sans-serif'; g.fillText(`作戦：${TAC[B.tacP].n}　vs　${TAC[B.tacE].n}`,180,86); }
+  if(B.log&&B.logT>0){ g.fillStyle='rgba(20,12,4,.78)'; g.fillRect(10,92,340,26); g.fillStyle='#FFE8A0'; g.font='800 12px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.fillText(B.log,180,110); }
+}
+function drawFx(){ for(const f of S.fx){ f.t+=1/60; if(f.k==='txt'){ g.globalAlpha=Math.max(0,1-f.t/1.6); g.font='800 13px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.lineWidth=3; g.strokeStyle='#fff'; g.strokeText(f.txt,f.x,f.y-f.t*16); g.fillStyle=f.col; g.fillText(f.txt,f.x,f.y-f.t*16); g.globalAlpha=1; } } S.fx=S.fx.filter(f=>f.t<1.6); }
+function drawMsg(){ if(!S.msg||S.msgT>4) return; g.globalAlpha=Math.min(1,4-S.msgT); g.fillStyle='rgba(30,20,8,.75)'; g.fillRect(8,H-30,W-16,22); g.fillStyle='#FFF2C8'; g.font='800 11px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.fillText(S.msg,W/2,H-15); g.globalAlpha=1; }
+function draw(){
+  if(S.scene==='battle'&&S.B) drawBattle();
+  else if(S.castles.length) drawMap();
+  else { g.fillStyle='#FFE8B0'; g.fillRect(0,0,W,H); g.font='120px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('🍳',W/2,H/2); g.textBaseline='alphabetic'; }
+  if(S.auto){ g.fillStyle='#C8781A'; g.font='800 11px sans-serif'; g.textAlign='left'; g.fillText('🤖 AUTO',8,S.scene==='battle'?H-8:14); }
+}
+
+/* ================= loop ================= */
+let barT=0;
+function update(dt){
+  S.t+=dt; S.msgT+=dt;
+  if(S.scene==='map') updateMap(dt);
+  else if(S.scene==='battle'&&S.B) updateBattle(dt);
+  else if(S.scene==='month'){ if(S.auto){ S.autoT+=dt; if(S.autoT>1.2){ S.autoT=0; autoMonth(); } } }
+  else if(S.scene==='end'){ if(S.auto){ S.autoT+=dt; if(S.autoT>5){ S.autoT=0; newGame(); } } }
+  else if(S.scene==='title'){ if(S.auto){ S.autoT+=dt; if(S.autoT>.6){ S.autoT=0; newGame(); } } }
+  if(!$('eggOv').hidden&&(S.scene!=='battle'||!S.B||S.B.mon.P)) $('eggOv').hidden=true;
+}
+function setAuto(v){ S.auto=!!v; $('autoBtn').setAttribute('aria-pressed',S.auto); S.autoT=0; }
+function user(){ if(S.auto) setAuto(false); }
+function toTitle(){ S.scene='title'; ['monthOv','eggOv','endOv'].forEach(i=>$(i).hidden=true); $('titleOv').hidden=false;
+  $('bestTxt').textContent=S.best.clears?`🏆 クリア ${S.best.clears}回　最速 ${S.best.fast}か月`:''; }
+$('startBtn').onclick=()=>{ ac(); user(); newGame(); };
+$('autoStartBtn').onclick=()=>{ ac(); setAuto(true); newGame(); };
+$('autoBtn').onclick=()=>{ ac(); setAuto(!S.auto); };
+$('muteBtn').onclick=()=>{ ac(); setMute(!muted); };
+$('refillBtn').onclick=()=>{ ac(); user(); refill(); };
+$('mGo').onclick=()=>{ ac(); user(); closeMonth(); };
+$('eggCancel').onclick=()=>{ ac(); $('eggOv').hidden=true; };
+$('endBtn').onclick=()=>{ ac(); user(); newGame(); };
+addEventListener('keydown',e=>{
+  const k=e.key.toLowerCase();
+  if(k==='o'){ ac(); setAuto(!S.auto); return; }
+  if(k==='m'){ ac(); setMute(!muted); return; }
+  if(S.scene==='battle'&&S.B){ ac();
+    if(k===' '){ e.preventDefault(); user(); if(S.B.mode==='push') mash(); return; }
+    if(S.B.mode==='push'){ if(k>='1'&&k<='3'){ user(); setTac(['charge','attack','guard'][+k-1]); } if(k==='4'){ user(); retreat(S.B.p,true); } if(k==='e'&&S.eggs.length&&!S.B.mon.P){ user(); $('eggOv').hidden=false; renderEggList(); } }
+    else { if(k==='1'){ user(); playerCmd(S.B.mon.P?'sp':'atk'); } if(k==='2'){ user(); playerCmd(S.B.mon.P?'atk':'egg'); } if(k==='4'){ user(); playerCmd('flee'); } }
+    return; }
+  if(S.scene==='month'&&k==='enter'){ user(); closeMonth(); return; }
+  if((S.scene==='end'||S.scene==='title')&&k==='enter'){ user(); newGame(); }
+});
+
+/* ================= sound ================= */
+let AC=null, muted=false; try{ muted=localStorage.getItem('namayakeMute')==='1'; }catch(e){}
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==='suspended') AC.resume(); }
+function tone(f,d,type='sine',v=.06,delay=0,f2){ if(muted||!AC) return; const t=AC.currentTime+delay, o=AC.createOscillator(), gn=AC.createGain(); o.type=type; o.frequency.setValueAtTime(f,t); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+d); gn.gain.setValueAtTime(v,t); gn.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(gn).connect(AC.destination); o.start(t); o.stop(t+d+.02); }
+function sfx(k){
+  if(k==='tap') tone(880,.05,'triangle',.05);
+  else if(k==='go') [523,659].forEach((f,i)=>tone(f,.08,'square',.04,i*.07));
+  else if(k==='mash') tone(300+Math.random()*80,.04,'square',.03);
+  else if(k==='hit') tone(180,.12,'sawtooth',.07,0,90);
+  else if(k==='boom'){ tone(110,.5,'sawtooth',.1,0,40); tone(660,.3,'square',.04,.05,220); }
+  else if(k==='egg'){ tone(1200,.05,'square',.05); tone(1600,.05,'square',.05,.4); tone(900,.4,'triangle',.06,.8,1800); }
+  else if(k==='pop') tone(700,.2,'sine',.06,0,200);
+  else if(k==='clash') for(let i=0;i<5;i++) tone(200+i*40,.08,'sawtooth',.05,i*.06);
+  else if(k==='win') [523,659,784,1046].forEach((f,i)=>tone(f,.14,'square',.05,i*.09));
+  else if(k==='lose') [392,330,262].forEach((f,i)=>tone(f,.2,'triangle',.06,i*.15));
+  else if(k==='cap') [784,988].forEach((f,i)=>tone(f,.12,'triangle',.06,i*.1));
+  else if(k==='lost') tone(300,.4,'sawtooth',.06,0,150);
+  else if(k==='month') [659,784,988].forEach((f,i)=>tone(f,.1,'sine',.06,i*.1));
+  else if(k==='buy') tone(988,.1,'triangle',.06,0,1480);
+  else if(k==='start') [392,523,659,784].forEach((f,i)=>tone(f,.12,'square',.05,i*.1));
+  else if(k==='clear') [523,659,784,1046,1319].forEach((f,i)=>tone(f,.2,'square',.05,i*.12));
+}
+function setMute(m){ muted=m; $('muteBtn').textContent=m?'音 OFF':'音 ON'; try{ localStorage.setItem('namayakeMute',m?'1':'0'); }catch(e){} }
+
+setMute(muted); toTitle();
+let last=performance.now(), lastScene='';
+function loop(now){ const dt=Math.min(.05,(now-last)/1000); last=now; if(!S.manual) update(dt); draw(); renderInfo();
+  if(S.scene!==lastScene||now-barT>500){ barT=now; if(S.scene==='map'||S.scene!==lastScene) renderCtrl(); lastScene=S.scene; }
+  requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+
+window.__namayake={ get S(){ return S; }, setAuto, manual(v=true){ S.manual=v; }, step(dt=1/60){ update(dt); }, seed(v){ seed=(Math.abs(v|0)%2147483646)+1; },
+  newGame, sendGen, useEgg, playerCmd, mash, setTac, refill, buyEgg, closeMonth, EGGS };
+})();
+</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>
