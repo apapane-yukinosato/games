@@ -88,28 +88,28 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
 <script>
 (()=>{
 const $=id=>document.getElementById(id);
-const W=520,H=300,HX=86,LY=118,LH=92,WIN=0.12,PERF=0.045,GOOD=0.085;
+const W=520,H=300,HX=86,LY=118,LH=92,WIN=0.14,PERF=0.055,GOOD=0.1;
 const cv=$('cv'),cx=cv.getContext('2d');
 const ls={get(k){try{return localStorage.getItem(k)}catch(_){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(_){}}};
 
 /* ---------- 曲データ ----------
    m: 1小節16ステップ。小文字=ド(c4)〜シ、大文字=1オクターブ上。'.'=休み、'-'=のばす。メロディの音符ごとにタップが1つ出る */
 const SONGS=[
- {id:'s1',name:'はじめてのタンバリン',icon:'🎈',lv:1,bpm:100,key:0,app:1.9,bg:['#3B2A7A','#E0709A'],style:'pad',
+ {id:'s1',grid:4,name:'はじめてのタンバリン',icon:'🎈',lv:1,bpm:100,key:0,app:1.9,bg:['#3B2A7A','#E0709A'],style:'pad',
   drum:{k:'x.......x.......',s:'....x.......x...',h:'x.x.x.x.x.x.x.x.'},
   end:[48,'M'],form:['A','A','B','A','B','C','B','C'],
   sec:{
    A:{ch:[[48,'M'],[53,'M'],[55,'M'],[48,'M']],m:['C...E...G...E...','f...a...C...a...','g...b...D...b...','E...D...C.......']},
    B:{ch:[[57,'m'],[53,'M'],[55,'M'],[48,'M']],m:['a.C.E...C.a.e...','f.a.C.a.f.a.C...','g.b.D.b.G...D...','E.D.C.D.E...C...']},
    C:{ch:[[53,'M'],[55,'M'],[57,'m'],[48,'M']],m:['f.f.e.f.a.a.g.f.','g.g.f.g.b.b.a.g.','a.a.g.a.C.C.b.a.','G...E...C.......']}}},
- {id:'s2',name:'ゆきのまつり',icon:'❄️',lv:2,bpm:128,key:3,app:1.6,bg:['#14336B','#5FC4E8'],style:'stab',
+ {id:'s2',grid:2,name:'ゆきのまつり',icon:'❄️',lv:2,bpm:128,key:3,app:1.6,bg:['#14336B','#5FC4E8'],style:'stab',
   drum:{k:'x...x...x...x...',s:'....x.......x...',h:'.o.x.o.x.o.x.o.x'.replace(/o/g,'x')},
   end:[57,'m'],form:['A','A','B','A','C','B','C','C'],
   sec:{
    A:{ch:[[57,'m'],[53,'M'],[48,'M'],[55,'M']],m:['E..E..D.E..C.a..','C..C..a.C..a.f..','E..E..G.E..D.C..','D..D..b.d..b.g..']},
    B:{ch:[[53,'M'],[48,'M'],[55,'M'],[57,'m']],m:['A.A.G.A.C.a.G.F.','G.G.E.G.C.E.G.E.','D.D.b.D.G.D.b.g.','C.C.a.C.E.C.a.E.']},
    C:{ch:[[57,'m'],[55,'M'],[53,'M'],[55,'M']],m:['EE.EE.E.D.C.D.E.','DD.DD.D.C.b.C.D.','CC.CC.C.a.f.a.C.','D.D.b.D.G...D...']}}},
- {id:'s3',name:'ぐるぐるカーニバル',icon:'🎪',lv:3,bpm:160,key:5,app:1.35,bg:['#5A1450','#FF8A3D'],style:'arp',
+ {id:'s3',grid:2,name:'ぐるぐるカーニバル',icon:'🎪',lv:3,bpm:160,key:5,app:1.35,bg:['#5A1450','#FF8A3D'],style:'arp',
   drum:{k:'x...x...x...x...',s:'....x.......x..x',h:'x.x.x.x.x.x.x.x.'},
   end:[48,'M'],form:['A','A','B','B','A','C','B','C'],
   sec:{
@@ -132,7 +132,7 @@ function build(song){
       let len=j-s; if(len===1){ let q=j; while(q<16&&mel[q]==='.') q++; len=Math.min(q-s,4); }
       const midi=(c===c.toUpperCase()?72:60)+SEMI[c.toLowerCase()]+song.key;
       add(t0+s*st,'mel',{f:mf(midi),d:len*st*0.92});
-      notes.push({t:t0+s*st,done:false,miss:false,sched:false});
+      if(i!==3&&s%song.grid===0) notes.push({t:t0+s*st,done:false,miss:false,sched:false}); // 4小節の最後は休み。細かい音はタップしない
     }
     const r=ch[0]+song.key,tri=[r,r+(ch[1]==='M'?4:3),r+7].map(mf);
     chordBar(song,add,t0,st,bar,r,tri,song.style,b);
