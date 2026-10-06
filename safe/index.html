@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="指に伝わるカチカチをたよりに、ダイヤルを回して金庫をあける。ハプティクス（触覚）で遊ぶ金庫やぶり。">
+<title>金庫やぶり</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&family=Dela+Gothic+One&display=swap">
+<style>
+:root{--bg:#14171C;--ink:#ECE6D8;--card:#232932;--line:#3B4452;--mute:#9AA3B0;--gold:#F2B233;--red:#E0533D;--green:#47C27A;--blue:#5B8CFF}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--ink);overscroll-behavior:none}
+body{font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+#app{max-width:520px;margin:0 auto;padding:8px 10px 16px;padding-top:calc(8px + env(safe-area-inset-top,0px))}
+#top{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 9px;background:var(--card);cursor:pointer;white-space:nowrap}
+.mini[aria-pressed=true]{background:var(--gold);border-color:var(--gold);color:#2A2008}
+#hud{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px;text-align:center}
+#hud div{background:var(--card);border-radius:10px;padding:4px 2px;font-size:11px;color:var(--mute);font-weight:800}
+#hud b{display:block;font-family:"Dela Gothic One",sans-serif;font-size:20px;color:var(--ink);font-weight:400;line-height:1.2}
+#hud #tm.low b{color:var(--red)}
+#lamps{display:flex;justify-content:center;gap:8px;margin:2px 0 6px;min-height:22px}
+#lamps i{width:22px;height:22px;border-radius:50%;border:3px solid var(--line);background:#0c0e11}
+#lamps i.cur{border-color:var(--gold);box-shadow:0 0 8px var(--gold)}
+#lamps i.ok{background:var(--green);border-color:var(--green);box-shadow:0 0 8px var(--green)}
+#wrap{position:relative}
+#cv{display:block;width:100%;aspect-ratio:520/540;border-radius:16px;background:#1b1f26;touch-action:none}
+.ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(8,10,14,.62);border-radius:16px;padding:12px;z-index:3}
+.card{background:var(--card);border-radius:16px;padding:14px;width:100%;max-width:400px;max-height:100%;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+.card h2{margin:0;text-align:center;font-family:"Dela Gothic One","M PLUS Rounded 1c",sans-serif;font-size:26px;line-height:1.3;font-weight:400}
+.card h2 span{color:var(--gold)}
+.sub{text-align:center;font-size:12px;color:var(--mute);margin:6px 0 10px;line-height:1.7}
+.card ul{margin:8px 0;padding-left:20px;font-size:12.5px;line-height:1.8}
+.go{display:block;width:100%;min-height:48px;border:0;border-radius:14px;font-weight:800;font-size:16px;cursor:pointer;margin-top:8px;background:var(--gold);color:#2A2008;box-shadow:0 4px 0 #A97A12}
+.go.alt{background:#394252;color:var(--ink);box-shadow:0 4px 0 #262d38}
+.back{display:block;text-align:center;margin-top:10px;font-size:13px;font-weight:800;color:var(--mute);text-decoration:none}
+.big{font-family:"Dela Gothic One",sans-serif;font-size:42px;text-align:center;line-height:1.1;margin:6px 0;color:var(--gold)}
+.rows{display:grid;grid-template-columns:1fr auto;gap:3px 12px;font-size:13px;margin:8px 0}
+.rows b{text-align:right}
+.note{font-size:11.5px;color:var(--mute);text-align:center;margin:8px 0 0;line-height:1.6}
+#meter{margin:8px 0 6px;text-align:center}
+#mtxt{font-size:14px;font-weight:800;min-height:22px}
+#mbar{height:12px;border-radius:999px;background:#0c0e11;overflow:hidden;margin-top:4px}
+#mfill{display:block;height:100%;width:0;background:linear-gradient(90deg,#5B8CFF,#47C27A,#F2B233,#E0533D);background-size:520px 100%;transition:width .08s}
+#ctl{display:grid;grid-template-columns:1fr 1fr 2.2fr 1fr 1fr;gap:6px}
+#ctl button{min-height:56px;border:0;border-radius:14px;background:#394252;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 4px 0 #262d38}
+#ctl button:active{transform:translateY(2px);box-shadow:0 2px 0 #262d38}
+#ctl #lockBtn{background:var(--gold);color:#2A2008;font-size:17px;box-shadow:0 4px 0 #A97A12}
+#sub{display:flex;gap:6px;justify-content:center;margin-top:10px}
+.help{font-size:11.5px;color:var(--mute);text-align:center;margin:10px 0 0;line-height:1.6}
+@media (pointer:coarse){.pc{display:none}}
+</style>
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-180.png">
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>金庫やぶり</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false" title="Oキー">🤖 オート</button>
+    <button class="mini" id="hapBtn" aria-pressed="true" title="触覚">📳</button>
+    <button class="mini" id="muteBtn">音 ON</button>
+  </div>
+  <div id="hud">
+    <div>ステージ<b id="stg">1</b></div>
+    <div id="tm">のこり<b id="tmv">0</b></div>
+    <div>スコア<b id="sc">0</b></div>
+  </div>
+  <div id="lamps"></div>
+  <div id="wrap">
+    <canvas id="cv" width="520" height="540" aria-label="金庫のダイヤル"></canvas>
+    <div class="ov" id="ov"></div>
+  </div>
+  <div id="meter"><div id="mtxt"></div><div id="mbar"><i id="mfill"></i></div></div>
+  <div id="ctl">
+    <button id="m5" aria-label="5もどす">⏪</button>
+    <button id="m1" aria-label="1もどす">◀</button>
+    <button id="lockBtn">🔒 ロック</button>
+    <button id="p1" aria-label="1すすめる">▶</button>
+    <button id="p5" aria-label="5すすめる">⏩</button>
+  </div>
+  <div id="sub"><button class="mini" id="eyeBtn" aria-pressed="false">👁 メーターを出す</button></div>
+  <p class="help">ダイヤルをなぞって回す（◀ ▶ は1つずつ）。ぴったりの番号で 🔒 ロック。まちがえると −5秒。<span class="pc"><br>キー：← → で回す（Shift で5つずつ）／ Space でロック／ O でオート</span></p>
+</div>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const cv=$('cv'), ctx=cv.getContext('2d'), W=520, H=540, CX=W/2, CY=282, R=196;
+const dpr=Math.min(2,window.devicePixelRatio||1); cv.width=W*dpr; cv.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+const ld=(k,d)=>{ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(_){ return d; } };
+const sv=(k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(_){} };
+let sndOn=ld('safe_snd',true), hapOn=ld('safe_hap',true), best=ld('safe_best',{score:0,stage:0});
+const MAXSTAGE=10;
+const S={mode:'title',auto:false,stage:1,n:1,locks:[],idx:0,val:0,t:0,score:0,wrong:0,shake:0,flash:0,banner:'',wait:0,aw:.06,rw:0,showMeter:false,clearedAll:false,hap:{count:0,last:''}};
+const circ=(a,b)=>{ const d=Math.abs(a-b)%100; return Math.min(d,100-d); };
+const isHidden=()=>!(S.stage<=2||S.showMeter);
+
+// ---- sound (WebAudio) ----
+let ac=null;
+const aud=()=>{ if(!sndOn) return null; try{ if(!ac) ac=new (window.AudioContext||window.webkitAudioContext)(); if(ac.state==='suspended') ac.resume(); return ac; }catch(_){ return null; } };
+function tone(f,d,type,v,when,f2){ const a=aud(); if(!a) return; const o=a.createOscillator(), g=a.createGain(), t0=a.currentTime+(when||0);
+  o.type=type||'square'; o.frequency.setValueAtTime(f,t0); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t0+d);
+  g.gain.setValueAtTime(v||.06,t0); g.gain.exponentialRampToValueAtTime(.0001,t0+d); o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0+d+.03); }
+const sfx={
+  click(lv){ tone(lv>=2?2600:lv===1?2000:1500,.025,'square',lv>=2?.07:.045); },
+  burst(){ tone(1000,.05,'square',.08); tone(1500,.05,'square',.08,.05); tone(2200,.09,'square',.08,.1); },
+  lock(){ tone(150,.18,'sawtooth',.14,0,55); tone(900,.05,'square',.06,.02); },
+  wrong(){ tone(120,.34,'sawtooth',.1,0,70); tone(125,.34,'square',.05,0,72); },
+  clear(){ [523,659,784,1047].forEach((f,i)=>tone(f,.16,'triangle',.1,i*.09)); tone(1318,.4,'triangle',.1,.4); },
+  over(){ tone(330,.25,'triangle',.1); tone(247,.25,'triangle',.1,.2); tone(165,.5,'triangle',.1,.4); }
+};
+
+// ---- haptics ----
+// Android: navigator.vibrate / iPhone (iOS 18+ Safari): <input type="checkbox" switch> を click すると触覚が出る
+const PAT={tick:[6],burst:[22,28,22,28,40],buzz:[70,35,70,35,70,35,110],open:[30,40,30,40,30,40,80]};
+const REP={tick:1,burst:3,buzz:5,open:4};
+function swTick(){ const l=document.createElement('label'); l.style.cssText='position:fixed;left:-120px;top:-120px;opacity:0;pointer-events:none'; l.innerHTML='<input type="checkbox" switch>'; document.body.appendChild(l); l.click(); setTimeout(()=>l.remove(),60); }
+function haptic(k){ S.hap.count++; S.hap.last=k; if(!hapOn) return;
+  try{ if(typeof navigator.vibrate==='function'){ navigator.vibrate(PAT[k]); return; } }catch(_){}
+  for(let i=0;i<REP[k];i++){ if(i) setTimeout(swTick,i*45); else swTick(); } }
+const hapKind=()=>{ if(typeof navigator.vibrate==='function') return 'vib';
+  try{ const i=document.createElement('input'); i.type='checkbox'; i.setAttribute('switch',''); document.body.appendChild(i); const a=getComputedStyle(i).appearance||getComputedStyle(i).webkitAppearance||''; i.remove(); return /switch/.test(a)?'switch':'none'; }catch(_){ return 'none'; } };
+
+// ---- game ----
+// 数字 m が目標 tg からどれだけ「感じる」か：3=ぴったり 2=ちかい 1=ふつうのカチ 0=なし
+function feel(m,tg){ const d=circ(m,tg); if(d===0) return 3; if(d<=4) return 2; if(d<=10) return m%2===0?1:0; return m%5===0?1:0; }
+function setVal(nv){
+  const old=S.val; S.val=((nv%100)+100)%100;
+  if(S.mode!=='play') return;
+  const a=Math.round(old)%100, b=Math.round(S.val)%100; if(a===b) return;
+  const d=((b-a+150)%100)-50, dir=Math.sign(d), cnt=Math.min(Math.abs(d),40), tg=S.locks[S.idx];
+  let top=0, sounds=0;
+  for(let i=1;i<=cnt;i++){ const m=((a+dir*i)%100+100)%100, lv=feel(m,tg); if(lv>top) top=lv; if(lv>0&&sounds<3){ sounds++; if(lv===3) sfx.burst(); else sfx.click(lv); } }
+  if(top>=3) haptic('burst'); else if(top>0) haptic('tick');
+}
+function genLocks(n){ const out=[]; let prev=Math.round(S.val)%100; for(let i=0;i<n;i++){ let x; do{ x=Math.floor(Math.random()*100); }while(circ(x,prev)<15); out.push(x); prev=x; } return out; }
+function startStage(){ S.n=Math.min(5,1+(S.stage>>1)); S.locks=genLocks(S.n); S.idx=0; S.t=20+12*S.n; S.mode='play'; S.banner=''; S.aw=.06; hideOv(); refresh(); }
+function startGame(){ S.stage=1; S.score=0; S.wrong=0; S.showMeter=false; S.clearedAll=false; S.val=Math.round(S.val)%100; ac||aud(); startStage(); }
+function tryLock(){
+  if(S.mode!=='play') return;
+  const tg=S.locks[S.idx];
+  if(Math.round(S.val)%100===tg){
+    S.idx++; S.flash=.35; sfx.lock();
+    if(S.idx>=S.n) clearStage(); else haptic('open');
+  }else{
+    S.t=Math.max(0,S.t-5); S.wrong++; S.shake=.4; haptic('buzz'); sfx.wrong();
+    if(S.t<=0) finish(false);
+  }
+  refresh();
+}
+function clearStage(){
+  const bonus=Math.ceil(S.t)*10*(isHidden()?2:1)+100*S.stage; S.score+=bonus;
+  S.banner='ひらいた！ +'+bonus; S.mode='between'; S.wait=S.auto?.55:1.4; haptic('open'); sfx.clear();
+}
+function finish(all){
+  S.mode='result'; S.clearedAll=!!all; S.banner=''; S.rw=2; haptic(all?'open':'buzz'); if(!all) sfx.over();
+  const prevBest=best.score;
+  if(S.score>best.score){ best={score:S.score,stage:Math.max(best.stage,all?MAXSTAGE:S.stage)}; sv('safe_best',best); }
+  else if((all?MAXSTAGE:S.stage)>best.stage){ best.stage=all?MAXSTAGE:S.stage; sv('safe_best',best); }
+  showResult(prevBest);
+}
+function step(dt){
+  if(S.shake>0) S.shake=Math.max(0,S.shake-dt);
+  if(S.flash>0) S.flash=Math.max(0,S.flash-dt);
+  if(S.mode==='play'){
+    S.t-=dt; if(S.t<=0){ S.t=0; finish(false); refresh(); return; }
+    if(S.auto){
+      const tg=S.locks[S.idx], d=((tg-S.val+150)%100)-50;
+      if(Math.abs(d)<.001){ S.aw-=dt; if(S.aw<=0){ tryLock(); S.aw=.06; } }
+      else{ setVal(S.val+Math.sign(d)*Math.min(Math.abs(d),300*dt)); S.aw=.06; }
+    }
+  }else if(S.mode==='between'){
+    S.wait-=dt; if(S.wait<=0){ if(S.stage>=MAXSTAGE) finish(true); else{ S.stage++; startStage(); } }
+  }else if(S.mode==='result'&&S.auto){
+    S.rw-=dt; if(S.rw<=0) startGame();
+  }
+  refresh();
+}
+
+// ---- UI ----
+const ov=$('ov');
+function hideOv(){ ov.hidden=true; ov.innerHTML=''; }
+function showOv(h){ ov.hidden=false; ov.innerHTML=h; }
+function showTitle(){
+  const k=hapKind(), msg={vib:'この端末：振動 API が使えます（Android など）',switch:'この端末：スイッチ触覚が使えます（iPhone）',none:'この端末：触覚が使えません（音と画面で遊べます）'}[k];
+  showOv(`<div class="card"><h2>金庫<span>やぶり</span></h2>
+  <p class="sub">ダイヤルを回して、指に伝わる「カチッ」をたよりに番号をさがそう。</p>
+  <ul><li>とおいとカチ…カチ…、ちかいほど細かく。ぴったりで「ブルッ！」</li><li>ぴったりで 🔒 ロック。まちがえると −5秒</li><li>全${MAXSTAGE}ステージ。3からはメーターなし（得点2倍）</li></ul>
+  <div class="rows"><span>ベスト</span><b>${best.score}点（ステージ${best.stage}）</b></div>
+  <button class="go" id="startBtn">はじめる</button>
+  <p class="note">${msg}<br>iPhone は iOS 18 以降の Safari で触覚が出ます。なぞっても出ないときは ◀ ▶ を1回ずつ押してください。</p>
+  <a class="back" href="../">← ゲーム一覧にもどる</a></div>`);
+  $('startBtn').onclick=()=>{ startGame(); };
+}
+function showResult(prevBest){
+  const nb=S.score>prevBest;
+  showOv(`<div class="card"><h2>${S.clearedAll?'金庫室を<span>制覇！</span>':'タイム<span>アップ…</span>'}</h2>
+  <div class="big">${S.score}点</div>
+  <div class="rows"><span>とうたつ</span><b>ステージ ${S.clearedAll?MAXSTAGE:S.stage}</b><span>ロックのミス</span><b>${S.wrong}回</b><span>ベスト</span><b>${best.score}点${nb?'（新記録！）':''}</b></div>
+  <button class="go" id="againBtn">もういちど</button>
+  <a class="back" href="../">← ゲーム一覧にもどる</a></div>`);
+  $('againBtn').onclick=()=>startGame();
+}
+const MT=d=>d===0?'🎯 ぴったり！ロックしよう':d<=2?'🔥 あつい！':d<=6?'♨️ ちかい':d<=15?'🙂 あたたかい':d<=30?'😐 ふつう':'🧊 つめたい';
+function refresh(){
+  $('stg').textContent=S.stage; $('sc').textContent=S.score;
+  $('tmv').textContent=Math.ceil(S.t); $('tm').classList.toggle('low',S.mode==='play'&&S.t<=10);
+  const L=$('lamps'); if(L.childElementCount!==S.n||S.mode==='title'){ L.innerHTML=''; for(let i=0;i<S.n;i++) L.appendChild(document.createElement('i')); }
+  [...L.children].forEach((e,i)=>{ e.className=(S.mode==='play'&&i===S.idx)?'cur':(i<S.idx||S.mode==='between')?'ok':''; });
+  const hid=isHidden(), tg=S.locks[S.idx];
+  if(S.mode==='play'&&!hid&&tg!=null){ const d=circ(Math.round(S.val)%100,tg); $('mtxt').textContent=MT(d); $('mfill').style.width=Math.round((1-d/50)*100)+'%'; }
+  else{ $('mtxt').textContent=S.mode==='play'?'👂 触覚と音だけをたよりに！':'　'; $('mfill').style.width='0'; }
+  $('eyeBtn').hidden=!(S.stage>2); $('eyeBtn').setAttribute('aria-pressed',S.showMeter);
+  $('eyeBtn').textContent=S.showMeter?'👁 メーター：出している（得点 ×1）':'👁 メーターを出す';
+  $('autoBtn').setAttribute('aria-pressed',S.auto);
+  $('muteBtn').textContent=sndOn?'音 ON':'音 OFF';
+  const hb=$('hapBtn'); hb.setAttribute('aria-pressed',hapOn); hb.textContent=hapOn?'📳':'📴';
+}
+
+// ---- drawing ----
+function rr(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function draw(){
+  ctx.save(); ctx.clearRect(0,0,W,H);
+  if(S.shake>0) ctx.translate(Math.sin(S.shake*70)*9*(S.shake/.4),0);
+  let g=ctx.createLinearGradient(0,0,W,H); g.addColorStop(0,'#6A7380'); g.addColorStop(.5,'#3E454F'); g.addColorStop(1,'#2A2F37');
+  rr(8,8,W-16,H-16,28); ctx.fillStyle=g; ctx.fill(); ctx.lineWidth=4; ctx.strokeStyle='#14171C'; ctx.stroke();
+  rr(22,22,W-44,H-44,20); ctx.lineWidth=2; ctx.strokeStyle='rgba(255,255,255,.12)'; ctx.stroke();
+  ctx.fillStyle='#232830'; [[38,38],[W-38,38],[38,H-38],[W-38,H-38]].forEach(([x,y])=>{ ctx.beginPath(); ctx.arc(x,y,8,0,7); ctx.fill(); ctx.fillStyle='rgba(255,255,255,.2)'; ctx.beginPath(); ctx.arc(x-2,y-2,3,0,7); ctx.fill(); ctx.fillStyle='#232830'; });
+  // dial base
+  ctx.beginPath(); ctx.arc(CX,CY,R+14,0,7); ctx.fillStyle='#14171C'; ctx.fill();
+  g=ctx.createRadialGradient(CX-40,CY-50,20,CX,CY,R); g.addColorStop(0,'#F4EFE2'); g.addColorStop(1,'#CFC6B0');
+  ctx.beginPath(); ctx.arc(CX,CY,R,0,7); ctx.fillStyle=g; ctx.fill();
+  // rotating dial
+  ctx.save(); ctx.translate(CX,CY); ctx.rotate(S.val*Math.PI/50);
+  ctx.strokeStyle='#1d2026'; ctx.fillStyle='#1d2026'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  for(let i=0;i<100;i++){
+    ctx.save(); ctx.rotate(-i*Math.PI/50);
+    const len=i%10===0?26:i%5===0?18:10; ctx.lineWidth=i%10===0?3:1.6;
+    ctx.beginPath(); ctx.moveTo(0,-R+6); ctx.lineTo(0,-R+6+len); ctx.stroke();
+    if(i%10===0){ ctx.font='800 20px "M PLUS Rounded 1c",sans-serif'; ctx.fillText(String(i),0,-R+48); }
+    ctx.restore();
+  }
+  g=ctx.createRadialGradient(-20,-20,5,0,0,92); g.addColorStop(0,'#59606B'); g.addColorStop(1,'#272B32');
+  ctx.beginPath(); ctx.arc(0,0,92,0,7); ctx.fillStyle=g; ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.14)'; ctx.lineWidth=3;
+  for(let i=0;i<24;i++){ ctx.save(); ctx.rotate(i*Math.PI/12); ctx.beginPath(); ctx.moveTo(0,-92); ctx.lineTo(0,-80); ctx.stroke(); ctx.restore(); }
+  ctx.restore();
+  // pointer
+  ctx.beginPath(); ctx.moveTo(CX,CY-R+30); ctx.lineTo(CX-14,CY-R-14); ctx.lineTo(CX+14,CY-R-14); ctx.closePath(); ctx.fillStyle='#E0533D'; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle='#14171C'; ctx.stroke();
+  // readout
+  rr(CX-48,CY-30,96,60,12); ctx.fillStyle='#0c0e11'; ctx.fill(); ctx.strokeStyle='#F2B233'; ctx.lineWidth=2; ctx.stroke();
+  ctx.fillStyle='#F2B233'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font='400 40px "Dela Gothic One",sans-serif';
+  ctx.fillText(String(Math.round(S.val)%100).padStart(2,'0'),CX,CY+2);
+  if(S.flash>0){ ctx.fillStyle='rgba(71,194,122,'+(S.flash/.35*.35)+')'; rr(8,8,W-16,H-16,28); ctx.fill(); }
+  if(S.mode==='between'&&S.banner){ ctx.fillStyle='rgba(8,10,14,.78)'; rr(40,CY-46,W-80,92,18); ctx.fill(); ctx.fillStyle='#47C27A'; ctx.font='400 34px "Dela Gothic One",sans-serif'; ctx.fillText(S.banner,CX,CY+2); }
+  ctx.restore();
+}
+
+// ---- input ----
+const stepBy=n=>{ if(S.mode==='play') setVal(Math.round(S.val)+n); refresh(); };
+let dragA=null;
+const ang=e=>{ const r=cv.getBoundingClientRect(), x=(e.clientX-r.left)/r.width*W-CX, y=(e.clientY-r.top)/r.height*H-CY; return Math.atan2(x,-y); };
+cv.addEventListener('pointerdown',e=>{ if(S.mode!=='play') return; dragA=ang(e); try{ cv.setPointerCapture(e.pointerId); }catch(_){} });
+cv.addEventListener('pointermove',e=>{ if(dragA==null||S.mode!=='play') return; const a=ang(e); let d=a-dragA; while(d>Math.PI) d-=2*Math.PI; while(d<-Math.PI) d+=2*Math.PI; dragA=a; setVal(S.val+d/(2*Math.PI)*100); });
+const endDrag=()=>{ if(dragA==null) return; dragA=null; if(S.mode==='play') S.val=Math.round(S.val)%100; };
+cv.addEventListener('pointerup',endDrag); cv.addEventListener('pointercancel',endDrag);
+$('m5').onclick=()=>stepBy(-5); $('m1').onclick=()=>stepBy(-1); $('p1').onclick=()=>stepBy(1); $('p5').onclick=()=>stepBy(5);
+$('lockBtn').onclick=tryLock;
+$('eyeBtn').onclick=()=>{ S.showMeter=!S.showMeter; refresh(); };
+$('muteBtn').onclick=()=>{ sndOn=!sndOn; sv('safe_snd',sndOn); refresh(); };
+$('hapBtn').onclick=()=>{ hapOn=!hapOn; sv('safe_hap',hapOn); if(hapOn) haptic('tick'); refresh(); };
+function setAuto(on){
+  S.auto=!!on; refresh();
+  if(S.auto&&S.mode==='title') startGame();
+}
+$('autoBtn').onclick=()=>setAuto(!S.auto);
+// 人が操作したら手動にもどす
+addEventListener('pointerdown',e=>{ if(S.auto&&e.isTrusted&&!e.target.closest('#autoBtn')) setAuto(false); },true);
+addEventListener('keydown',e=>{
+  const k=e.key;
+  if(k==='o'||k==='O'){ setAuto(!S.auto); return; }
+  if(S.auto&&e.isTrusted) setAuto(false);
+  if(k==='ArrowLeft'){ stepBy(e.shiftKey?-5:-1); e.preventDefault(); }
+  else if(k==='ArrowRight'){ stepBy(e.shiftKey?5:1); e.preventDefault(); }
+  else if(k===' '||k==='Enter'){ if(S.mode==='play'&&!(e.target.closest&&e.target.closest('button'))){ tryLock(); e.preventDefault(); } }
+});
+
+// ---- loop & test hook ----
+let last=0;
+function loop(ts){ const dt=last?Math.min(.05,(ts-last)/1000):0; last=ts; if(dt>0) step(dt); draw(); requestAnimationFrame(loop); }
+window.__safe={
+  state:()=>({mode:S.mode,stage:S.stage,n:S.n,idx:S.idx,locks:S.locks.slice(),val:S.val,t:S.t,score:S.score,wrong:S.wrong,auto:S.auto,hidden:isHidden(),hap:{...S.hap},best:{...best}}),
+  step(dt){ let r=dt; while(r>0){ const d=Math.min(1/60,r); step(d); r-=d; } draw(); },
+  setAuto, setVal:v=>setVal(v), lock:tryLock, start:startGame, draw, target:()=>S.locks[S.idx], stepBy
+};
+showTitle(); refresh(); requestAnimationFrame(loop);
+})();
+</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>
