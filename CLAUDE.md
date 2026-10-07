@@ -9,7 +9,7 @@ GitHub Pages で公開している、ブラウザで遊べる小さなゲーム�
 - `README.md` … ゲーム一覧の表（URL つき）。ゲームを追加したら1行足す。公開 URL は https://apapane-yukinosato.github.io/games/
 - `icon-180.png` … ホーム画面に追加したときのアイコン（雪の結晶とゲームコントローラー、全ページから `apple-touch-icon` で読む）。新しいゲームのページにも `<link rel="apple-touch-icon" href="../icon-180.png">` を入れる
 - `<game>/index.html` … 1ゲーム＝1フォルダ＝1ファイル（HTML/CSS/JS をすべて1ファイルに入れる）
-- 外部ライブラリは基本なし（`candy/` だけ three.js を CDN から読む）。音は WebAudio で合成する
+- 外部ライブラリは基本なし（`candy/` と `yukiblade/` だけ three.js を CDN から読む）。音は WebAudio で合成する
 
 ## すべてのゲームに必ず入れるもの
 
