@@ -87,10 +87,10 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
     <div>ほしの かず<b id="tot">0</b></div>
   </div>
   <div id="prevwrap"><div class="lbl">👀 おてほん（この形にしよう）</div><div class="board" id="prev"></div></div>
-  <div class="lbl">ブロックを ゆびで スライド</div>
+  <div class="lbl">ブロックを ゆびで スライド（つけたまま つづけて うごかせる）</div>
   <div class="board" id="board"></div>
   <div id="ctl"><button id="undoBtn">↩ もどす</button><button id="hintBtn">💡 ヒント</button><button id="resetBtn">🔄 やりなおし</button></div>
-  <p class="help"><span class="pc-only">ブロックをドラッグ、またはクリックで選んで矢印キーで動かせる ／ O でオート<br></span>赤・青・緑・黄色の形が、おてほんと同じ場所になればクリア。同じ色・同じ形のブロックは、入れかわってもOK。</p>
+  <p class="help"><span class="pc-only">ブロックをドラッグ（ゆびをつけたまま、右→上のように続けて動かせる）、またはクリックで選んで矢印キーで動かせる ／ O でオート<br></span>赤・青・緑・黄色の形が、おてほんと同じ場所になればクリア。同じ色・同じ形のブロックは、入れかわってもOK。</p>
 </div>
 <div id="toast"></div>
 <div class="ov" id="ov" hidden></div>
@@ -281,19 +281,31 @@ function loop(now){ requestAnimationFrame(loop); const dt=Math.min(0.1,(now-last
 
 /* ---------- 入力 ---------- */
 let drag=null;
+// ブロックのまんなか（画面上のざひょう）。ブロックが動きおわる前でも、ろんりの位置で計算する
+function pcCenter(p){ const r=$('board').getBoundingClientRect(); return [r.left+3+3+(p.c+p.w/2)*S.cell-3,r.top+3+3+(p.r+p.h/2)*S.cell-3]; }
+// ゆびを つけたまま うごかすかぎり、ブロックが ゆびに ついていく（1マスずつ、右へ→上へ、のように つづけて うごく）
+function dragFollow(e){
+  const d=drag; if(!d) return; let guard=0;
+  while(guard++<12&&!S.solved){
+    const [cx,cy]=pcCenter(d.p),dx=e.clientX-d.ax-cx,dy=e.clientY-d.ay-cy,th=S.cell*0.6;
+    const c=[]; if(Math.abs(dx)>=th) c.push([Math.abs(dx),[0,dx>0?1:-1]]); if(Math.abs(dy)>=th) c.push([Math.abs(dy),[dy>0?1:-1,0]]);
+    if(!c.length) return; c.sort((a,b)=>b[0]-a[0]);
+    let moved=false; for(const [,dm] of c){ if(movePiece(d.p,dm)){ moved=true; d.moved++; break; } }
+    if(!moved){ if(!d.moved&&!d.warned){ d.warned=true; sfx('bad'); } return; }
+  }
+}
 $('board').addEventListener('pointerdown',e=>{
   const el=e.target.closest('.pc'); if(!el||S.solved) return; e.preventDefault(); ensureAudio(); if(S.auto) setAuto(false);
-  const p=S.pcs.find(q=>q.id===+el.dataset.id); drag={p,x:e.clientX,y:e.clientY,done:false,id:e.pointerId}; try{$('board').setPointerCapture(e.pointerId)}catch(_){}
+  const p=S.pcs.find(q=>q.id===+el.dataset.id),[cx,cy]=pcCenter(p); drag={p,ax:e.clientX-cx,ay:e.clientY-cy,moved:0,warned:false,id:e.pointerId}; try{$('board').setPointerCapture(e.pointerId)}catch(_){}
   S.sel=p.id; refresh();
 });
-$('board').addEventListener('pointermove',e=>{
-  if(!drag||drag.done||e.pointerId!==drag.id) return; const dx=e.clientX-drag.x,dy=e.clientY-drag.y,th=S.cell*0.28;
-  if(Math.abs(dx)<th&&Math.abs(dy)<th) return;
-  const d=Math.abs(dx)>Math.abs(dy)?[0,dx>0?1:-1]:[dy>0?1:-1,0]; drag.done=true;
-  if(!movePiece(drag.p,d)){ sfx('bad'); }
-});
-function endDrag(e){ if(!drag||e.pointerId!==drag.id) return; const p=drag.p,wasDone=drag.done; drag=null;
-  if(!wasDone){ const opts=DIRS.filter(d=>canMove(p,d)); if(opts.length===1) movePiece(p,opts[0]); else if(opts.length===0) { sfx('bad'); toast('そこは うごかせない'); } else toast('すべらせたい ほうへ ゆびを うごかして'); }
+$('board').addEventListener('pointermove',e=>{ if(drag&&e.pointerId===drag.id) dragFollow(e); });
+function endDrag(e){ if(!drag||e.pointerId!==drag.id) return; const drag0=drag,p=drag.p,moved=drag.moved,warned=drag.warned; drag=null;
+  if(!moved&&!warned&&!S.solved){
+    // 短くはじいただけ（ゆびを はなす とき、すこしでも うごいていれば その方向へ1マス）
+    const [cx,cy]=pcCenter(p),dx=e.clientX-drag0.ax-cx,dy=e.clientY-drag0.ay-cy,fl=S.cell*0.2;
+    if(Math.abs(dx)>=fl||Math.abs(dy)>=fl){ const dm=Math.abs(dx)>=Math.abs(dy)?[0,dx>0?1:-1]:[dy>0?1:-1,0]; if(!movePiece(p,dm)) sfx('bad'); return; }
+    const opts=DIRS.filter(d=>canMove(p,d)); if(opts.length===1) movePiece(p,opts[0]); else if(opts.length===0) { sfx('bad'); toast('そこは うごかせない'); } else toast('ゆびを つけたまま すべらせてね'); }
 }
 $('board').addEventListener('pointerup',endDrag); $('board').addEventListener('pointercancel',endDrag);
 addEventListener('keydown',e=>{
