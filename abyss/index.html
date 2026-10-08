@@ -804,7 +804,8 @@ function derive(h){
   const w=weapon; const ranged=w&&w.sub==='bow';
   d.ranged=!!ranged; d.wmin=w?w.min:1; d.wmax=w?w.max:2;
   const stat=ranged?dex:(w&&w.sub==='staff')?str*.6:str;
-  d.mult=1+stat/100+d.dmgPct/100; d.flat=Math.floor(h.level/2)+d.dmgFlat;
+  const fighter=h.cls!=='sorc';
+  d.mult=1+stat/100+d.dmgPct/100+(fighter?h.level*.025:0); d.flat=Math.floor(h.level/2)+d.dmgFlat+(fighter?Math.floor(h.level*1.2):0);
   d.avgDmg=((d.wmin+d.wmax)/2)*d.mult+d.flat;
   d.swing=(h.cls==='rogue'?.46:h.cls==='sorc'?.6:.56)*(w?w.spd:1)/(1+d.atkSpeed/100);
   d.castT=(h.cls==='sorc'?.38:.5)/(1+(d.atkSpeed*.5)/100);
@@ -1082,7 +1083,7 @@ function updateHero(dt){
       const m=o.mon; if(m.dead||m.hp<=0){ h.order=null; break; }
       const dd=Math.hypot(m.x-h.x,m.y-h.y); const reach=d.ranged?9.5:1.2+m.r;
       if(dd<=reach&&(!d.ranged||rayClear(lv,h.x,h.y,m.x,m.y))){ h.face=Math.atan2(m.y-h.y,m.x-h.x); startAttack(m.x,m.y,m); }
-      else walkToward(m.x,m.y,dt,.3);
+      else if(!walkToward(m.x,m.y,dt,.3)){ o.fail=(o.fail||0)+1; if(o.fail>10){ m.ignoreT=G.time+20; h.order=null; } }
       break; }
     case 'attackPos': { startAttack(o.x,o.y,null); h.order=null; break; }
     case 'pickup': {
@@ -2227,7 +2228,7 @@ function drawHUD(c,time){
   // banner
   if(bannerT>0){ const a=Math.min(1,bannerT/.6,(3.2-bannerT)/.3); c.globalAlpha=Math.max(0,a); txt(c,bannerTxt,VW/2,VH*.2,34*UI,'#FFF3C8','center','rgba(60,20,80,.95)'); if(bannerSub) txt(c,bannerSub,VW/2,VH*.2+30*UI,16*UI,'#FFD0F0','center','rgba(60,20,80,.9)'); c.globalAlpha=1; }
   // points available hint
-  if(h.pts>0){ txt(c,'ポイント '+h.pts+' をふりわけよう（C）',VW/2-200*u,VH-100*u,11*u,'#9AF0B8','left','rgba(0,30,10,.9)'); }
+  if(h.pts>0){ txt(c,'ポイント '+h.pts+' をふりわけよう（C）',VW/2-80*u,VH-104*u,11*u,'#9AF0B8','right','rgba(0,30,10,.9)'); }
   // mini hint for low life
   if(h.life<d.maxLife*.3&&!h.dead){ c.fillStyle='rgba(255,0,40,'+(.08+.08*Math.sin(time*8))+')'; c.fillRect(0,0,VW,VH); }
 }
@@ -2636,7 +2637,7 @@ const AI={t:0,dist:null,distT:0,distTile:-1,kiteTo:null,kiteT:0,town:null,trip:n
 function autoReset(){ Object.assign(AI,{restT:0,dsl:0,lastDeaths:undefined,lastLevel:undefined,t:0,dist:null,distT:0,kiteTo:null,town:null,trip:null,flash:0,flashP:null,lastTrip:-999,nextTripGold:700,stuckT:0,goalKey:'',goalT:0,lvEnter:0,lastLv:-1,portalWait:0}); }
 const aiFlash=(p,t)=>{ if(!G.panels[p]){ G.panels[p]=true; refreshPanels(); } AI.flash=Math.max(AI.flash,t); AI.flashP=p; };
 const isMeleeAI=m=>['melee','fallen','ghost','statue','king','bat'].includes(m.ai)||m.key==='butcher'||(m.ai==='diablo');
-function needLv(d){ return Math.max(1,Math.round(d*(H&&H.cls==='sorc'?.95:1.3))+Math.floor((AI.dsl||0)/2)); }
+function needLv(d){ return Math.max(1,Math.round(d*(H&&H.cls==='sorc'?.95:1.6))+Math.floor((AI.dsl||0)/2)); }
 function bossReq(key){ return {butcher:7,king:9,lazarus:15,diablo:20}[key]||99; }
 function curClass(){ return H.cls; }
 /* ---------- scoring ---------- */
@@ -2819,17 +2820,36 @@ function fightSorc(thr){
   const t0=thr.find(m=>m.alert&&!(m.ignoreT>G.time)); if(t0){ if(isMeleeAI(t0)) return false; aiApproach(t0); return true; }
   return false;
 }
+function chokeScore(x,y){ const lv=G.lv; let n=0; for(const [dx,dy] of DIRS) if(walkable(lv,x+dx,y+dy)) n++; return n; }
+function aiFindChoke(list){
+  const lv=G.lv, f=aiDist(); let best=null,bc=1e9; const hx=Math.floor(H.x), hy=Math.floor(H.y);
+  for(let dy=-14;dy<=14;dy++) for(let dx=-14;dx<=14;dx++){ const x=hx+dx, y=hy+dy; if(!walkable(lv,x,y)) continue; const t=lv.t[y*lv.w+x]; if(t!==T_FLOOR) continue; const d=f[y*lv.w+x]; if(d<0||d>16) continue;
+    if(chokeScore(x,y)>3) continue; let md=1e9; for(const m of list) md=Math.min(md,Math.hypot(m.x-x-.5,m.y-y-.5)); if(md<d+2.5) continue;
+    if(d<bc){ bc=d; best=[x+.5,y+.5]; } }
+  return best;
+}
+function aiChoke(thr){
+  if(AI.noChoke>G.time) return false; const h=H;
+  const am=thr.filter(m=>m.alert&&m.dist<13&&isMeleeAI(m)); if(am.length<3||!am.some(m=>m.dist<9)) { AI.chokeTo=null; AI.atChokeT=0; return false; }
+  if(chokeScore(Math.floor(h.x),Math.floor(h.y))<=3){ AI.chokeTo=null; AI.atChokeT=(AI.atChokeT||0)+AI.dt; if(AI.atChokeT>8&&Math.min(...am.map(m=>m.dist))>4){ AI.noChoke=G.time+30; AI.atChokeT=0; } return false; }
+  if(AI.chokeTo&&Math.hypot(AI.chokeTo[0]-h.x,AI.chokeTo[1]-h.y)>.6){ AI.chokeT=(AI.chokeT||0)+AI.dt; const mvd=Math.hypot(h.x-(AI.cx||0),h.y-(AI.cy||0)); AI.cx=h.x; AI.cy=h.y; if(mvd<.01){ AI.chokeStill=(AI.chokeStill||0)+AI.dt; if(AI.chokeStill>.7){ AI.noChoke=G.time+25; AI.chokeStill=0; AI.chokeTo=null; return false; } } else AI.chokeStill=0; if(AI.chokeT>7){ AI.noChoke=G.time+12; AI.chokeT=0; AI.chokeTo=null; return false; } if(!h.order||h.order.type!=='move') orderMove(AI.chokeTo[0],AI.chokeTo[1]); AI.dbg='choke'; return true; }
+  const c=aiFindChoke(am); if(!c){ AI.noChoke=G.time+3; return false; } AI.chokeTo=c; AI.chokeT=0; orderMove(c[0],c[1]); AI.dbg='choke'; return true;
+}
 function fightRogue(thr){
-  const lv=G.lv, h=H; const vis=thr.filter(m=>m.dist<=9&&rayClear(lv,h.x,h.y,m.x,m.y));
+  const lv=G.lv, h=H; if(aiChoke(thr)) return true; const atChoke=chokeScore(Math.floor(h.x),Math.floor(h.y))<=3&&thr.filter(m=>m.alert&&m.dist<9&&isMeleeAI(m)).length>=3; const vis=thr.filter(m=>m.dist<=9&&rayClear(lv,h.x,h.y,m.x,m.y));
   const melee=thr.filter(m=>isMeleeAI(m)&&m.alert&&m.dist<9); const closeM=melee.filter(m=>m.dist<2.6+(m.spd>4?1:0));
-  if(closeM.length&&!h.act){ if(aiKite(melee)) return true; }
-  if(vis.length){ const tgt=vis.find(m=>(m.ai==='ranged'||m.ai==='caster')&&m.alert)||vis[0]; if(!H.order||H.order.type!=='attack'||H.order.mon!==tgt) orderAttack(tgt); return true; }
+  const unst=closeM.filter(m=>m.stone<=.4&&m.key!=='diablo'&&rayClear(lv,h.x,h.y,m.x,m.y));
+  if(unst.length&&castOK('stone')&&!h.act){ castSpell('stone',unst[0].x,unst[0].y); return true; }
+  if(closeM.filter(m=>m.stone<=.4).length&&!h.act&&!atChoke){ if(aiKite(melee.filter(m=>m.stone<=.4))) return true; }
+  const vis2=vis.filter(m=>!(m.ignoreT>G.time)); if(vis2.length){ const tgt=vis2.find(m=>(m.ai==='ranged'||m.ai==='caster')&&m.alert)||vis2[0]; if(!H.order||H.order.type!=='attack'||H.order.mon!==tgt) orderAttack(tgt); return true; }
   const t0=thr.find(m=>m.alert&&!(m.ignoreT>G.time)); if(t0){ if(isMeleeAI(t0)) return false; aiApproach(t0); return true; } return false;
 }
 function fightWarrior(thr){
-  const lv=G.lv, h=H; const alert=thr.filter(m=>m.alert||m.dist<8); if(!alert.length) return false;
+  const lv=G.lv, h=H; if(aiChoke(thr)) return true; const alert=thr.filter(m=>(m.alert||m.dist<8)&&!(m.ignoreT>G.time)); if(!alert.length) return false;
   // avoid casters' lines? just fight nearest; prefer pulling packs into corridors: skip
-  let tgt=alert.find(m=>m.dist<2.2)||alert[0];
+  const sc=alert.filter(m=>m.alert&&m.stone<=.4&&isMeleeAI(m)&&m.dist<5.2&&m.key!=='diablo'&&rayClear(lv,h.x,h.y,m.x,m.y));
+  if(sc.length&&castOK('stone')&&(alert.filter(m=>m.alert&&m.dist<6&&isMeleeAI(m)&&m.stone<=.4).length>=2||sc[0].boss||sc[0].hp>120)){ castSpell('stone',sc[0].x,sc[0].y); return true; }
+  let tgt=alert.find(m=>m.dist<2.2&&m.stone<=.4)||alert.find(m=>m.dist<2.2)||alert[0];
   if(tgt.ai==='ranged'||tgt.ai==='caster'){ const near=alert.find(m=>m.dist<3); if(near) tgt=near; }
   if(!H.order||H.order.type!=='attack'||H.order.mon!==tgt||H.order.mon.dead) orderAttack(tgt);
   return true;
@@ -2843,6 +2863,7 @@ function autoStats(){
   if(c==='sorc'){ k=(b.vit<b.mag*.8||b.vit<30)?'vit':'mag'; if(b.dex<20&&H.level>8&&b.mag>50) k='dex'; }
   else if(c==='warrior'){ k=b.str<b.vit*1.3?'str':(b.vit<90?'vit':'dex'); if(b.dex<35&&b.str>70) k='dex'; }
   else { k=b.dex<b.vit*2?'dex':'vit'; if(b.str<40&&b.dex>90&&H.level>20) k='str'; }
+  if(c!=='sorc'&&b.mag<27&&H.level>=4) k='mag';
   if(b[k]>=CLASSES[c].cap[k]) k=['vit','str','mag','dex'].find(x=>b[x]<CLASSES[c].cap[x]);
   if(!k) return false; return addStat(k);
 }
@@ -2854,7 +2875,7 @@ function autoEquipOne(){
 function autoBooks(){
   for(const it of H.inv){ if(it.t==='book'){ const S=SPELLS[it.k]; if(H.d.rawMag>=S.req&&(H.spells[it.k]||0)<(it.k==='firebolt'?10:8)&&worthBook(it.k)){ return readBook(it); } } } return false;
 }
-function worthBook(k){ if(H.cls==='sorc') return true; return ['heal','townportal','manashield','lightning','firebolt','firewall'].includes(k)?true:false; }
+function worthBook(k){ if(H.cls==='sorc') return true; return ['stone','heal','townportal'].includes(k)?true:false; }
 function autoBelt(){
   for(const it of H.inv){ if(it.t==='potion'&&!POTIONS[it.k].stat){ const i=H.belt.findIndex(x=>!x); if(i>=0){ removeFromInv(H,it); H.belt[i]=it; return true; } } }
   for(const it of H.inv){ if(it.t==='potion'&&POTIONS[it.k].stat){ usePotion(it); return true; } }
@@ -2880,6 +2901,7 @@ function aiTripCheck(){
   const heal=potUnits(HEALK), mana=potUnits(MANAK);
   const since=G.time-AI.lastTrip; let why=null;
   if(heal<.9&&h.gold>=130&&since>40) why='heal'; else if(h.cls==='sorc'&&mana<2.2&&h.gold>=150&&since>40) why='mana';
+  else if(G.dlvl>=8&&G.lv.boss&&!G.lv.boss.dead&&!G.lv.boss.alert&&(heal<3||tpCount()<2)&&h.gold>=200&&since>25&&pd(G.lv.boss.x,G.lv.boss.y)<60) why='boss';
   else if(h.gold>=AI.nextTripGold&&since>260) why='gold'; else if(freeSlots()<4&&since>30) why='full'; else if(damagedWorst()<.28&&h.gold>=200&&since>30) why='repair';
   if(!why) return false;
   if(useScrollTP()){ AI.trip='toPortal'; AI.why=why; (AI.tripLog=AI.tripLog||[]).push([Math.round(G.time),G.dlvl,why,Math.round(h.gold),heal,mana,freeSlots()]); return true; }
@@ -2947,7 +2969,7 @@ function buyBest(arr,priceFn,reserve){
   for(const it of arr){ const pr=priceFn(it); if(pr>H.gold-reserve) continue; const g=upgradeGain(it); const val=g/(1+pr/1500); if(g>bg&&val>0&&(!best||g>best.g)){ best={it,g,pr}; } }
   if(!best) return false; const it=best.it; if(!addToInv(H,it)) return false; H.gold-=best.pr; const i=arr.indexOf(it); if(i>=0) arr.splice(i,1); sfx('buy'); return true;
 }
-function wantPots(){ return H.cls==='sorc'?{heal:3.5,mana:9}:H.cls==='rogue'?{heal:6,mana:2}:{heal:8,mana:.6}; }
+function wantPots(){ return H.cls==='sorc'?{heal:3.5,mana:9}:H.cls==='rogue'?{heal:6,mana:3}:{heal:8,mana:3}; }
 function buyPotions(inf,kindsH,kindsM){
   const w=wantPots(); let n=0;
   const buyUnits=(base,full,kinds,target)=>{ let guard=0; while(potUnits(kinds)<target&&guard++<14){ const rich=H.gold>2200; const c=(rich&&inf.find(x=>x.k===full))||inf.find(x=>x.k===base)||inf.find(x=>x.k===full); if(!c) break; const price=itemBuyValue(c); if(H.gold<price+(tpCount()<2?120:20)) break; const cp=Object.assign({},c,{u:uid(),m:{}}); if(!addItem(H,cp)) break; H.gold-=price; n++; } };
@@ -2957,11 +2979,11 @@ function doAutoShop(id){
   const stk=ensureStock(); let did=0;
   if(id==='griswold'){ AI.lastGris=AI.t; openShop('griswold','smith'); did+=aiSellJunk();
     const rep=[...SLOTS.map(x=>H.eq[x]),...H.inv].filter(x=>x&&x.maxdur>0&&x.dur<x.maxdur*.9); for(const it of rep){ const c=repairCost(it); if(H.gold>=c+150){ H.gold-=c; doRepair(it); did++; } }
-    let guard=0; while(guard++<4&&(buyBest(stk.smith,itemBuyValue,200)||buyBest(stk.smithP,it=>Math.round(itemBuyValue(it)*1.25),200))){ did++; autoEquipOne(); }
+    let guard=0; const res=200; while(guard++<4&&(buyBest(stk.smith,itemBuyValue,res)||buyBest(stk.smithP,it=>Math.round(itemBuyValue(it)*1.25),res))){ did++; autoEquipOne(); }
     SHOP.tab=did?'smith':'smith';
   } else if(id==='adria'){ AI.lastAdria=AI.t; openShop('adria','witch'); const inf=SHOP.inf;
     // TP scrolls first
-    const tp=inf.find(x=>x.k==='tp'); let want=Math.max(0,(G.maxD>=3?3:G.maxD>=1?2:1)-tpCount()); while(want>0&&H.gold>=itemBuyValue(tp)+30){ if(!addToInv(H,Object.assign({},tp,{u:uid()}))) break; H.gold-=itemBuyValue(tp); want--; did++; }
+    const tp=inf.find(x=>x.k==='tp'); let want=Math.max(0,(G.maxD>=10?4:G.maxD>=3?3:G.maxD>=1?2:1)-tpCount()); while(want>0&&H.gold>=itemBuyValue(tp)+30){ if(!addToInv(H,Object.assign({},tp,{u:uid()}))) break; H.gold-=itemBuyValue(tp); want--; did++; }
     did+=buyPotions(inf,['heal'],['mana','fullmana']);
     // books
     for(let g=0;g<4;g++){ const books=stk.witch.filter(it=>it.t==='book'&&H.d.rawMag>=SPELLS[it.k].req&&worthBook(it.k)&&(H.spells[it.k]||0)<8).sort((a,b)=>bookPrio(a.k)-bookPrio(b.k)); const b=books.find(it=>itemBuyValue(it)<=H.gold-160); if(!b) break; if(!addToInv(H,b)) break; H.gold-=itemBuyValue(b); stk.witch.splice(stk.witch.indexOf(b),1); did++; autoBooks(); }
