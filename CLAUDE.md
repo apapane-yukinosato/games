@@ -39,5 +39,6 @@ GitHub Pages で公開している、ブラウザで遊べる小さなゲーム�
 
 ## 作業の決まり
 
-- サブエージェントを使うときは、Haiku 5.5（`claude-haiku-5-5`）を使う（`.claude/settings.json` の `CLAUDE_CODE_SUBAGENT_MODEL` でも指定している）。ただし、サブエージェントはユーザーが明示的に頼んだときだけ使う
+- サブエージェントは Sonnet 5.5（`claude-sonnet-5-5`）を使う（`.claude/settings.json` の `CLAUDE_CODE_SUBAGENT_MODEL` でも指定している）
+- 役割分担（ユーザーの指示）：メインのモデルは仕様を考える（設計・仕様書づくり・結果の確認とレビュー）だけにして、コーディング（ファイルの作成・編集・テスト・コミット）はすべて Sonnet 5.5 のサブエージェントに任せる
 - PR を作ったら、毎回そのままマージまで行う（ユーザーの指示）
