@@ -1615,7 +1615,7 @@ const aff=id=>G.love[id].aff, toki=id=>G.love[id].toki, met=id=>G.love[id].met;
 const avg=()=>SUBJ.reduce((s,k)=>s+G.st[k],0)/5;
 const sense=()=>G.st.sense, looks=()=>G.st.looks, undo=()=>G.st.undo, jpv=()=>G.st.jp, t_=()=>G.t, flag=n=>!!G.flags[n];
 const nm=()=>G.name;
-const fmt=s=>s.replace(/\{n\}/g,G.name);
+const fmt=s=>typeof s==='string'?s.replace(/\{n\}/g,(G&&G.name)||best.lastName||'あなた'):s;
 const avgOf=subs=>subs.reduce((s,k)=>s+G.st[k],0)/subs.length;
 const hens=uid=>{const u=UNIS[uid];return Math.round((30+.65*avgOf(u.subs))*10)/10;};
 const rankOf=v=>v>=90?'S':v>=80?'A':v>=70?'B':v>=60?'C':v>=50?'D':v>=40?'E':v>=30?'F':'G';
@@ -2089,14 +2089,15 @@ function comboText(id,tier,path){
   if(tier==='normal') return ronin?'浪人生になった{n}を、'+H.s+'は「がんばれ」と、手紙で励まし続けてくれた。':'それぞれの道へ。\nふとした春の日に、ふたりで過ごした日々を思い出すのだろう。';
   return ronin?'フラれて、浪人。\n春は、まだ遠い。':'合格したけれど、フラれてしまった。\n桜餅の味は、すこししょっぱかった。';
 }
+let FORCE_END=null;
 function finalCeremony(){
-  const cand=HIDS.map(id=>({id,tier:loveTier(id)})).filter(c=>c.tier).sort((a,b)=>{ const tv=x=>x.tier==='good'?3:x.tier==='normal'?2:1; const sc=x=>tv(x)*1000+aff(x.id)+toki(x.id)*1.2; return sc(b)-sc(a); });
+  const cand=FORCE_END?(FORCE_END.hid?[{id:FORCE_END.hid,tier:FORCE_END.tier}]:[]):HIDS.map(id=>({id,tier:loveTier(id)})).filter(c=>c.tier).sort((a,b)=>{ const tv=x=>x.tier==='good'?3:x.tier==='normal'?2:1; const sc=x=>tv(x)*1000+aff(x.id)+toki(x.id)*1.2; return sc(b)-sc(a); });
   const c=cand[0], path=G.path||'ronin';
   const steps=[];
   if(!HL){ steps.push(...compile([{bg:'gate',clear:1},'3月。卒業式の日。桜が満開の、ゆきの里高校。','校長先生の長い話も、今日ばかりは、胸にしみる。',['hiro','smile','「{n}、卒業おめでとう！ オレの情報網のおかげだぜ？」'],['me','','「…半分くらいはな」'],['hiro','laugh','「半分も認めてくれたか！ 嬉しいね！」'],'式のあと。「卒業式の日に、校庭の桜の木の下で告白された二人は永遠に結ばれる」――そんな伝説を、ふと思い出した。'],simpleCtx())); }
   steps.push(()=>{
     G.ending=null;
-    if(!c){ const eid='alone'; G.end={id:eid,tier:'alone',hid:null,path,title:'桜の木の下で、ひとり',text:'約束の桜の木の下で、{n}は、ひとりで待っていた。\n…だれも、来なかった。\n\nでも、後悔だけじゃない。3年間、がむしゃらにがんばった自分が、そこにいた。\n\n'+fmt(PATH_TXT[path])+'\n\n恋はなかったけれど、人生は、ここから始まる。'};
+    if(!c){ const eid='alone'; G.end={id:eid,tier:'alone',hid:null,path,title:'桜の木の下で、ひとり',text:fmt('約束の桜の木の下で、{n}は、ひとりで待っていた。\n…だれも、来なかった。\n\nでも、後悔だけじゃない。3年間、がむしゃらにがんばった自分が、そこにいた。\n\n'+fmt(PATH_TXT[path])+'\n\n恋はなかったけれど、人生は、ここから始まる。')};
       if(!HL){ UI.scene('tree',[],simpleCtx()); UI.bgm('sad'); script(['桜の花びらが、はらはらと舞う。','{n}は、ひとりで、木を見上げた。\n（来年こそ、いや、次のステージで…！）'],simpleCtx()); }
       qpush(()=>finishEnding()); return; }
     const H=HR[c.id], E=H.end[c.tier], ctx={who:c.id,outfit:outfitNow(c.id)};
@@ -2114,8 +2115,8 @@ function finishEnding(){
   const E=G.end; if(!E||G.sim) return;
   best.end[E.id]=1; best.end['path_'+PATHKEY[E.path]]=1; best.plays++;
   if(E.hid&&E.tier==='good') best.heroes[E.hid]=1;
-  const r=UNIS[E.path]?UNIS[E.path].rank:0; if(r>best.uni) best.uni=r; best.uniName=best.uniName&&r<(best.uniRank||0)?best.uniName:(r>=(best.uniRank||0)?UNIS[E.path].n:best.uniName); if(r>=(best.uniRank||0)) best.uniRank=r;
-  best.endTxt[E.id]={title:E.title,text:E.text,hid:E.hid,tier:E.tier,path:E.path};
+  const r=UNIS[E.path]?UNIS[E.path].rank:0; if(r>best.uni) best.uni=r; if(r>0) best.uniName=best.uniName&&r<(best.uniRank||0)?best.uniName:(r>=(best.uniRank||0)?UNIS[E.path].n:best.uniName); if(r>=(best.uniRank||0)) best.uniRank=r;
+  best.lastName=G.name; best.endTxt[E.id]={title:fmt(E.title),text:fmt(E.text),hid:E.hid,tier:E.tier,path:E.path};
   if(!HL){ saveBest(); try{ localStorage.removeItem(SAVEKEY); }catch(e){} blockUI(done=>UI.ending(E,done)); }
 }
 const END_TOTAL=24+7+1;
@@ -2342,7 +2343,7 @@ function faceCanvas(id,size,outfit,expr){
 /* ================= UI 2: flows & overlays ================= */
 const U={auto:false,skip:false,adv:false,cont:null,full:'',pos:0,speed:46,pending:null,cgPause:0,choiceCb:null,ov:[],mode:'title',hidden:false,seen:false,toastT:0,cmdCb:null};
 const hashStr=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return h;};
-const el=(html)=>{const d=document.createElement('div');d.innerHTML=html.trim();return d.firstChild;};
+const el=(html)=>{const d=document.createElement('div');d.innerHTML=fmt(html).trim();return d.firstChild;};
 const heartsStr=(v)=>{const n=Math.round(v/20*2)/2;let s='';for(let i=1;i<=5;i++)s+=i<=n?'♥':(i-.5===n?'♥':'♡');return s;};
 function showOv(inner,cls,opts){
   const d=el(`<div class="ov ${cls||''}"><div class="card">${inner}</div></div>`); $('app').appendChild(d); U.ov.push(d);
@@ -2350,7 +2351,7 @@ function showOv(inner,cls,opts){
 }
 function closeOv(d){ if(d&&d.parentNode) d.parentNode.removeChild(d); U.ov=U.ov.filter(x=>x!==d); }
 function closeAllOv(){ U.ov.slice().forEach(closeOv); }
-function toast(s){ const t=$('toast'); t.textContent=s; t.classList.add('on'); U.toastT=1.8; }
+function toast(s){ const t=$('toast'); t.textContent=fmt(s); t.classList.add('on'); U.toastT=1.8; }
 function setPending(wait,fn){ U.pending={wait,fn}; }
 function autoKick(fn){ U.kick=fn; if(U.auto) fn(); }
 function clearKick(){ U.kick=null; U.pending=null; }
@@ -2372,6 +2373,7 @@ UI.cg=(type,who,ctx)=>{ const spec=CGSPEC(type,who); SG.cg={spec,who,t0:SG.t}; $
 UI.endCG=()=>{ SG.cg=null; $('cgTag').hidden=true; };
 /* ---- text ---- */
 UI.say=(who,expr,text,ctx)=>blockUI(done=>{
+  text=fmt(text);
   showTbox(true); $('cmd').hidden=true;
   if(ART.CHR[who]) sgChar(who,(ctx&&ctx.outfit)||outfitFor(G.t),expr||'normal');
   const np=$('nameplate');
@@ -2395,7 +2397,7 @@ function advance(){
 UI.choose=(opts,cb)=>{
   showTbox(false); const box=$('choices'); box.innerHTML=''; box.hidden=false;
   const pick=i=>{ box.hidden=true; box.innerHTML=''; clearKick(); AU.sfx('choice'); showTbox(true); cb(i); };
-  opts.forEach((o,i)=>{ const b=document.createElement('button'); b.className='chbtn'; b.textContent=o.t; b.onclick=()=>pick(i); box.appendChild(b); });
+  opts.forEach((o,i)=>{ const b=document.createElement('button'); b.className='chbtn'; b.textContent=fmt(o.t); b.onclick=()=>pick(i); box.appendChild(b); });
   { let bi=0,bv=-1e9; opts.forEach((o,i)=>{ if(o.ai>bv){bv=o.ai;bi=i;} }); autoKick(()=>setPending(.22,()=>pick(bi))); }
 };
 UI.ask=(cfg,cb,aiFn,cancel)=>{
@@ -2403,8 +2405,8 @@ UI.ask=(cfg,cb,aiFn,cancel)=>{
   const d=showOv(`<h2>${cfg.title||''}</h2><p class="sub">${cfg.sub||''}</p><div class="optlist"></div>${cancel?'<button class="go alt" data-c="1">もどる</button>':''}`);
   const list=d.querySelector('.optlist'); const fin=v=>{ closeOv(d); clearKick(); AU.sfx('ok'); cb(v); };
   cfg.opts.forEach(o=>{ const b=document.createElement('button'); b.className='opt'; b.disabled=!!o.disabled;
-    if(o.icon){ b.style.display='grid'; b.style.gridTemplateColumns='46px 1fr'; b.style.gap='10px'; b.style.alignItems='center'; b.appendChild(o.icon); o.icon.style.cssText='width:46px;height:46px;border-radius:12px'; const w=document.createElement('div'); w.innerHTML=o.label+(o.sub?'<small>'+o.sub+'</small>':''); b.appendChild(w); }
-    else b.innerHTML=o.label+(o.sub?'<small>'+o.sub+'</small>':'');
+    if(o.icon){ b.style.display='grid'; b.style.gridTemplateColumns='46px 1fr'; b.style.gap='10px'; b.style.alignItems='center'; b.appendChild(o.icon); o.icon.style.cssText='width:46px;height:46px;border-radius:12px'; const w=document.createElement('div'); w.innerHTML=fmt(o.label+(o.sub?'<small>'+o.sub+'</small>':'')); b.appendChild(w); }
+    else b.innerHTML=fmt(o.label+(o.sub?'<small>'+o.sub+'</small>':''));
     b.onclick=()=>fin(o.val); list.appendChild(b); });
   if(cancel){ d.querySelector('[data-c]').onclick=()=>{ closeOv(d); cancel(); }; }
   if(aiFn) autoKick(()=>setPending(.2,()=>{ const v=aiFn(); fin(v); }));
@@ -2522,7 +2524,7 @@ function openGallery(){
   const showEnd=()=>{ body.innerHTML=`<p class="sub">収集率 ${endCount()}／${END_TOTAL}</p>`; const wrap=document.createElement('div');
     const items=[]; for(const h of HIDS) for(const t of ['good','normal','bad']) items.push([h+'_'+t,HR[h].s+'｜'+HR[h].end[t].t]);
     items.push(['alone','ひとりぼっち｜桜の木の下で、ひとり']); for(const p of ['todai','shirits','march','local','senmon','job','ronin']) items.push(['path_'+p,'進路｜'+({todai:'東都大学合格',shirits:'私立最難関に合格',march:'名門私立に合格',local:'地元国立に合格',senmon:'専門学校へ進学',job:'就職',ronin:'浪人'})[p]]);
-    for(const [id,lb] of items){ const open=!!best.end[id]; const b=document.createElement('button'); b.className='opt'; b.innerHTML=open?lb.replace('｜','<small>')+'</small>':'？？？<small>未達成</small>'; if(open&&best.endTxt[id]) b.onclick=()=>{ const e=best.endTxt[id]; const dd=showOv(`<div class="shout">${e.title}</div><div class="story">${e.text}</div><button class="go" id="eX">とじる</button>`); dd.querySelector('#eX').onclick=()=>closeOv(dd); }; wrap.appendChild(b); }
+    for(const [id,lb] of items){ const open=!!best.end[id]; const b=document.createElement('button'); b.className='opt'; b.innerHTML=open?lb.replace('｜','<small>')+'</small>':'？？？<small>未達成</small>'; if(open&&best.endTxt[id]) b.onclick=()=>{ const e=best.endTxt[id]; const dd=showOv(`<div class="shout">${fmt(e.title)}</div><div class="story">${fmt(e.text)}</div><button class="go" id="eX">とじる</button>`); dd.querySelector('#eX').onclick=()=>closeOv(dd); }; wrap.appendChild(b); }
     body.appendChild(wrap); };
   showCG();
   tabs.forEach(t=>t.onclick=()=>{ tabs.forEach(x=>x.classList.toggle('on',x===t)); t.dataset.t==='cg'?showCG():showEnd(); });
@@ -2577,7 +2579,7 @@ UI.ending=(E,done)=>{
   showTbox(false); closeAllOv(); AU.play(E.tier==='bad'||E.tier==='alone'?'sad':'result'); if(E.tier!=='bad'&&E.tier!=='alone') AU.sfx('pass');
   const cvWrap='<canvas id="endCv" width="640" height="360"></canvas>';
   const best_=`最高合格校：${best.uniName||'―'}　攻略ヒロイン：${Object.keys(best.heroes).length}／8　エンディング：${endCount()}／${END_TOTAL}（${Math.round(endCount()/END_TOTAL*100)}％）`;
-  const d=showOv(`<h2>${E.tier==='good'?'🌸 ハッピーエンド':E.tier==='normal'?'🌸 エンディング':E.tier==='alone'?'🌸 エンディング':'🍂 エンディング'}</h2>${cvWrap}<div class="shout">${E.title}</div><div class="story">${E.text}</div><p class="sumline">${E.hid?HR[E.hid].n+'　好感度 '+aff(E.hid)+'／ときめき '+toki(E.hid)+'<br>':''}進路：${UNIS[E.path].n}（偏差値 ${hens('todai').toFixed(1)}）<br>${best_}</p><button class="go" id="enNew">もういちど遊ぶ</button><button class="go alt" id="enGal">📔 回想を見る</button><button class="go alt" id="enTitle">タイトルへ</button><a class="link" href="../">← ゲーム一覧にもどる</a>`);
+  const d=showOv(`<h2>${E.tier==='good'?'🌸 ハッピーエンド':E.tier==='normal'?'🌸 エンディング':E.tier==='alone'?'🌸 エンディング':'🍂 エンディング'}</h2>${cvWrap}<div class="shout">${fmt(E.title)}</div><div class="story">${fmt(E.text)}</div><p class="sumline">${E.hid?HR[E.hid].n+'　好感度 '+aff(E.hid)+'／ときめき '+toki(E.hid)+'<br>':''}進路：${UNIS[E.path].n}（偏差値 ${hens('todai').toFixed(1)}）<br>${best_}</p><button class="go" id="enNew">もういちど遊ぶ</button><button class="go alt" id="enGal">📔 回想を見る</button><button class="go alt" id="enTitle">タイトルへ</button><a class="link" href="../">← ゲーム一覧にもどる</a>`);
   const cv=d.querySelector('#endCv'), g=cv.getContext('2d');
   if(E.hid){ drawCG(g,640,360,CGSPEC(E.tier==='bad'?'tree_bad':'tree',E.hid),E.hid,1.5); } else { coverDraw(g,BGART.get('tree'),640,360,1); const s=ART.meSilhouette(); g.drawImage(s,260,70,150,230); }
   const fin=nx=>{ closeOv(d); clearKick(); done(); if(nx==='new') startNewFlow(); else toTitle(); };
@@ -2686,6 +2688,7 @@ window.__onna2={
   unlockAll(){ for(const h of HIDS){ for(const t of ['fire','illum','sunset',h==='yuzuki'?'rain':'special','tree']) best.cg[h+'_'+t]=1; if(h==='makoto') best.cg.makoto_special2=1; for(const t of ['good','normal','bad']){ best.end[h+'_'+t]=1; best.endTxt[h+'_'+t]={title:HR[h].end[t].t,text:HR[h].end[t].after,hid:h,tier:t,path:'local'}; } best.heroes[h]=1; } best.end.alone=1; for(const p of ['todai','shirits','march','local','senmon','job','ronin']) best.end['path_'+p]=1; best.uniName='東都大学'; best.uniRank=8; best.endTxt.alone={title:'桜の木の下で、ひとり',text:'…',hid:null,tier:'alone',path:'local'}; saveBest(); },
   scene(o){ $('cgTag').hidden=true; closeAllOv(); $('title').hidden=true; SG.title=false; SG.cg=null; sgBg(o.bg||'classroom'); SG.chars=o.chars?o.chars.map(c=>({id:c.id,outfit:c.outfit||'winter',expr:c.expr||'normal',a:1})):o.id?[{id:o.id,outfit:o.outfit||'winter',expr:o.expr||'normal',a:1}]:[]; if(o.text){ showTbox(true); $('nameplate').hidden=!o.who; $('nameplate').textContent=o.who||''; $('msgtext').textContent=o.text; $('msgtext').className=o.who?'':'narr'; $('nx').hidden=false; } else showTbox(false); $('cmd').hidden=true; $('choices').hidden=true; },
   cg(type,who){ closeAllOv(); $('title').hidden=true; SG.title=false; SG.cg={spec:CGSPEC(type,who),who,t0:SG.t}; $('cgTag').textContent='EVENT CG｜'+SG.cg.spec.title; $('cgTag').hidden=false; showTbox(false); },
+  forceEnding(hid,tier,path){ FORCE_END={hid,tier}; G.path=path||'ronin'; Q=[]; WAIT=false; U.cont=null; U.pending=null; U.kick=null; closeAllOv(); finalCeremony(); pump(); },
   openStatus,openUp,openHiro,openCalendar,openGallery,openSave:()=>openSave('save'),toTitle,
   cgNow(){ return SG.cg?SG.cg.who+'_'+(SG.cg.spec.title||''):null; },
   fx:{ART,BGART,AU}, pump, answer(){ },
