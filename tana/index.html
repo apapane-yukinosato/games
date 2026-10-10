@@ -165,7 +165,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offse
 .title2{font-size:20px;font-weight:900;text-align:center;color:#f3e9ff}
 .sub2{font-size:13px;color:var(--mut);text-align:center;font-weight:700}
 /* toasts */
-#toasts{position:fixed;left:0;right:0;top:calc(78px + env(safe-area-inset-top,0px));z-index:98;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none}
+#toasts{position:fixed;left:0;right:0;bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:98;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none}
 #toasts div{max-width:92vw;padding:6px 14px;border-radius:999px;font-size:12.5px;font-weight:800;background:#241f38ee;border:1px solid var(--line);color:var(--ink);animation:tin .25s both}
 #toasts div.ok{border-color:#4a9a70;color:#c3f3d6}
 #toasts div.bad{border-color:#a04558;color:#ffc9d2}
@@ -393,7 +393,7 @@ function weekPlant(G,p,msgs){
  const wetBad=dorm?m0>25:m2>50;p.soggy=wetBad?p.soggy+1:0;
  if(wetBad){rootD+=4+3*p.soggy;if(!dorm)p.stretch+=3;if(p.soggy>=3)dmg+=4;if(p.soggy===1)msgs.push(['warn',sp.s+'の土が湿りすぎ…根が傷んでいる']);}
  const thirst=!dorm&&m0<dry*.5;if(thirst){dmg+=4+(m0<=0?4:0);if(m0<=0)msgs.push(['warn',sp.s+'がしおれている！']);}
- p.m=m2;
+ p.m=m2;p.wilt=thirst;
  if(T<sp.minT){const d=sp.minT-T;dmg+=6+d*4;rootD+=d*1.5;msgs.push(['bad',sp.s+'が寒さで傷んだ']);}
  if(T>sp.maxT){const d=T-sp.maxT;dmg+=d*3+3;msgs.push(['bad',sp.s+'が暑さで焼けた']);}
  if(p.nutri>85){dmg+=8;rootD+=6;p.stretch+=8;p.nutri*=.8;msgs.push(['warn',sp.s+'が肥料焼け']);}
@@ -1018,7 +1018,7 @@ const SFX={
 };
 function sfx(k,a){try{SFX[k]&&SFX[k](a);}catch(e){}}
 /* ---------- timers ---------- */
-function later(sec,fn){S.timers.push({t:sec*(S.auto?.35:1),fn});}
+function later(sec,fn){S.timers.push({t:sec*(S.auto?.18:1),fn});}
 /* ---------- helpers ---------- */
 const plantOf=id=>G.plants.find(p=>p.id===id);
 const visOpts=p=>({dorm:!p.bare&&isDorm(G,p),cold:tempBase(G.week)<17});
@@ -1027,7 +1027,7 @@ const sigOf=p=>[p.sp,p.pt,p.sand?1:0,p.pest?1:0,p.bare>0?1:0,Math.round(p.size/2
 const CC=new Map();
 function getCanvas(p,w,h,tag){const key=p.id+'_'+w+(tag||'');const sig=sigOf(p);let e=CC.get(key);if(!e||e.sig!==sig){e={sig,cv:plantCanvas(p,w,h,tag==='big'?visOpts(p):cardOpts(p))};CC.set(key,e);}return e.cv;}
 function rbadge(r){return'<span class="rb" style="background:'+RC[r]+'">'+r+'</span>';}
-function toast(msg,type){const el=document.createElement('div');el.textContent=msg;if(type)el.className=type;const w=$('#toasts');w.appendChild(el);while(w.children.length>3)w.removeChild(w.firstChild);setTimeout(()=>el.remove(),S.auto?1300:2600);}
+function toast(msg,type){const el=document.createElement('div');el.textContent=msg;if(type)el.className=type;const w=$('#toasts');w.appendChild(el);while(w.children.length>2)w.removeChild(w.firstChild);setTimeout(()=>el.remove(),S.auto?900:1900);}
 function confirmBox(text,okLabel,fn){const c=$('#cf');c.hidden=false;c.innerHTML='<div class="sheet" style="max-width:340px;text-align:center"><div style="font-size:15px;font-weight:800;line-height:1.6;margin:6px 0 14px">'+text+'</div><div class="row"><button class="btn alt" id="cfN">やめる</button><button class="btn" id="cfY">'+okLabel+'</button></div></div>';$('#cfN').onclick=()=>{c.hidden=true;};$('#cfY').onclick=()=>{c.hidden=true;fn();};}
 function plantNeeds(p){ // returns {wantWater,dry,dorm,g}
  const E=placeEnv(G,p.place,G.week),g=gFactor(SP[p.sp].ty,E.T),dry=dryRate(G,p,E);
@@ -1037,6 +1037,7 @@ function badges(p){
  const n=plantNeeds(p),sp=SP[p.sp];const b=[];
  if(p.bare)b.push('🫧');
  if(p.pest)b.push('🐛');
+ if(p.wilt)b.push('🥀');
  if(n.want)b.push('💧');
  if(!p.bare&&n.dorm)b.push('💤');
  if(n.E.T<sp.minT+1.5||n.E.T>sp.maxT-1.5)b.push(n.E.T<sp.minT+1.5?'❄️':'🔥');
@@ -1283,9 +1284,11 @@ function showClear(){
  $('#clear').hidden=false;sfx('win');
 }
 /* ---------- week / auto ---------- */
+function mergeMsgs(msgs){const g=new Map(),out=[];for(const m of msgs){const x=/^『?([^がを『』]+?)』?(が.+|を.+)$/.exec(m[1]);if(!x){out.push(m);continue;}const k=m[0]+'|'+x[2];if(!g.has(k)){const e={t:m[0],names:[],suf:x[2]};g.set(k,e);out.push(e);}g.get(k).names.push(x[1]);}
+ return out.map(e=>Array.isArray(e)?e:[e.t,(e.names.length>3?e.names.length+'株':[...new Set(e.names)].join('・'))+e.suf]);}
 function doNextWeek(){
  const msgs=nextWeek(G);sfx(msgs.some(m=>m[0]==='bad')?'bad':'week');
- (S.auto?msgs.filter(m=>m[0]==='bad'||m[0]==='ok').slice(0,2):msgs.slice(0,3)).forEach(m=>toast(m[1],m[0]));
+ mergeMsgs(S.auto?msgs.filter(m=>m[0]==='bad'||m[0]==='ok'):msgs).slice(0,2).forEach(m=>toast(m[1],m[0]));
  renderAll();save();
 }
 function userNext(){
@@ -1306,7 +1309,7 @@ function autoTick(dt){
  S.autoT-=dt;if(S.autoT>0)return;
  const before=snap();const label=aiAct(G);
  if(label){
-  S.autoT=.1;$('#ticker').textContent='🤖 '+label;
+  S.autoT=.05;$('#ticker').textContent='🤖 '+label;
   if(/水/.test(label))sfx('water');else if(/肥/.test(label))sfx('fert');else if(/形|胴|子株/.test(label))sfx('snip');else if(/殺虫|予防/.test(label))sfx('spray');else if(/鉢/.test(label))sfx('pot');else if(/買う/.test(label))sfx('coin');else sfx('tap');
   if(G.aiGot&&G.aiGot.length){const l=G.aiGot;G.aiGot=[];renderAll();gachaReveal(l,null);return;}
   if(G.aiResult){const r=G.aiResult;G.aiResult=null;const p=plantOf(r.pid);resolveRecord(r);renderAll();showReveal(r,p||{pt:'plain'});return;}
@@ -1314,7 +1317,7 @@ function autoTick(dt){
   for(const[id,v]of after)if(before.get(id)!==v)flash(id,/水/.test(label)?'fl-w':/肥/.test(label)?'fl-f':/形|胴|子株/.test(label)?'fl-s':'fl-i');
   return;
  }
- S.autoT=.45;doNextWeek();
+ S.autoT=.15;doNextWeek();
 }
 function resolveRecord(r){G.lastShow=r;recordShow(r);}
 function runFor(dt){
