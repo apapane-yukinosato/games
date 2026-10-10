@@ -29,6 +29,7 @@ GitHub Pages で公開している、ブラウザで遊べる小さなゲーム�
 - 「← 一覧」リンク（`../`）をヘッダーに、結果画面にも「← ゲーム一覧にもどる」
 - スマホ（縦 390px 幅）で遊べるレイアウトと、タッチ用ボタン
 - 音の ON/OFF（localStorage に保存）、ベスト記録の保存（localStorage）
+- ズームしないガード（ユーザーの指示）：viewport に `maximum-scale=1,user-scalable=no`、CSS に `html,body{touch-action:manipulation}`、`</body>` 直前の swipe guard の前に「zoom guard」スニペット（ほかのゲームからそのままコピーする）。ピンチ・ダブルタップでズームしない
 - スワイプで一覧にもどらないガード（`</body>` の直前に置く「swipe guard」スニペット。ほかのゲームからそのままコピーする）：画面の左右はしから始まるタッチを止める（iPhone の戻るスワイプ対策）、`overscroll-behavior:none`、1回目の「もどる」はゲームに残ってメッセージを出し、2.5秒以内の2回目で本当にもどる
 - テスト用フック `window.__<game>`（状態の取得、`step(dt)` で時間を進める、`setAuto` など）
 
