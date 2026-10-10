@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
-<meta name="description" content="アガベ・塊根植物・多肉を育てて品評会に出す、おしゃれな植物棚ゲーム。水やり・肥料・形づくり、仕入れはガチャ。オートモードつき。">
-<title>植物棚 ―アガベ・塊根・多肉―</title>
+<meta name="description" content="アガベ・塊根植物・多肉を育てて品評会に出す、おしゃれな植物育成ゲーム。水やり・肥料・形づくり、仕入れはガチャ。オートモードつき。">
+<title>草育て ―アガベ・塊根・多肉―</title>
 <link rel="apple-touch-icon" href="../icon-180.png">
 <link rel="icon" type="image/png" href="../icon-180.png">
 <style>
@@ -89,6 +89,21 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offse
 .act:disabled{opacity:.38;cursor:default}
 .act:not(:disabled):active{transform:scale(.96);background:#35304d}
 .act.wide{grid-column:span 3;flex-direction:row;justify-content:center;gap:8px}
+.sheet.det{touch-action:pan-y}
+.dbw{position:relative}.dbw .dbig{margin:8px 0}
+.nav{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:52px;border:0;border-radius:12px;background:#14101ccc;color:#fff;font-size:30px;font-weight:900;line-height:1;display:flex;align-items:center;justify-content:center;padding:0 0 4px}
+.nav.pv{left:6px}.nav.nx{right:6px}.nav:active{background:#3a3158}
+.dpos{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);background:#14101ccc;color:#fff;font-size:11px;font-weight:900;padding:2px 10px;border-radius:999px}
+.dbar{position:sticky;bottom:-14px;margin:10px -14px -14px;padding:9px 14px;background:#211d33;border-top:1px solid var(--line);border-radius:0 0 18px 18px;display:flex;align-items:center;gap:10px;z-index:3;font-size:13px;font-weight:800}
+.dbar .dap b{color:var(--grn);font-size:17px}.dbar.zero .dap b{color:#ff8a8a}
+.dap{display:inline-block}.dap.bump{animation:apbump .4s ease-out}
+.dbar .ddt{margin-left:auto;color:var(--mut);font-size:12px}
+.dbar .dwarn{flex-basis:100%;color:#ff8a8a;font-size:11px}.dbar.zero{flex-wrap:wrap;gap:2px 10px}
+.act.noap small{color:#ff9a9a;font-size:9px}
+@keyframes apbump{0%{transform:scale(1)}30%{transform:scale(1.45);color:#ffd36b}100%{transform:scale(1)}}
+@keyframes inR{from{transform:translateX(60px);opacity:0}to{transform:none;opacity:1}}
+@keyframes inL{from{transform:translateX(-60px);opacity:0}to{transform:none;opacity:1}}
+.sheet.in-r{animation:inR .22s ease-out}.sheet.in-l{animation:inL .22s ease-out}
 .pick{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
 .pick button{border:1px solid var(--line);background:#2d2942;border-radius:999px;padding:6px 11px;font-size:12px;font-weight:800}
 .pick button.cur{background:#3a3158;border-color:var(--vio)}
@@ -201,7 +216,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offse
 </head>
 <body>
 <div id="app">
- <div id="top"><a href="../">← 一覧</a><h1>🪴 植物棚</h1><button class="mini" id="bSpd" hidden>⏩ ×1</button><button class="mini" id="bAuto" aria-pressed="false" title="オートモード（Oキー）">🤖 オート</button><button class="mini" id="bSnd" aria-pressed="true" title="音のON/OFF">🔊</button></div>
+ <div id="top"><a href="../">← 一覧</a><h1>🪴 草育て</h1><button class="mini" id="bSpd" hidden>⏩ ×1</button><button class="mini" id="bAuto" aria-pressed="false" title="オートモード（Oキー）">🤖 オート</button><button class="mini" id="bSnd" aria-pressed="true" title="音のON/OFF">🔊</button></div>
  <div id="hud">
   <span id="hDate"></span><span id="hMoney"></span><span id="hTk"></span>
   <div class="r2"><span id="hAp"></span><button class="chip" id="bFan" aria-pressed="true">🌀 風 ON</button><span id="hShow"></span></div>
@@ -228,7 +243,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offse
 <div id="toasts"></div>
 <div id="title" class="full"><div class="in">
  <div class="sub">アガベ ・ 塊根 ・ 多肉</div>
- <h2>植物棚</h2>
+ <h2>草育て</h2>
  <canvas id="tcv" width="440" height="220"></canvas>
  <div class="rules"><b>育てる</b>：水やり・肥料・形づくりで、アガベ・塊根・多肉を育てよう。季節（夏型・冬型・春秋型）に注意。<br><b>仕入れ</b>：ぜんぶガチャ！排出率と天井は公開。現地株は発根管理が必要。<br><b>品評会</b>：地区 → 県 → 全国。<b>全国グランプリ</b>で優勝すればグランドチャンピオン！</div>
  <div class="recs"><div>最高順位<b id="rRank">-</b></div><div>トロフィー<b id="rTro">0</b></div><div>最高評価点<b id="rScore">-</b></div><div>最短グランプリ<b id="rFast">-</b></div></div>
@@ -1062,8 +1077,9 @@ function advice(p){
  return'いい感じ！'+TYN[sp.ty]+'。'+(n.g>=1?'ぐんぐん育つ時期。':'');
 }
 /* ---------- render ---------- */
+function dateTxt(){const wy=wyOf(G.week);return(Math.floor(G.week/52)+1)+'年目 '+SEAS[season(G.week)]+' '+(wy%13+1)+'週';}
 function renderHud(){
- const wy=wyOf(G.week);$('#hDate').textContent=(Math.floor(G.week/52)+1)+'年目 '+SEAS[season(G.week)]+' '+(wy%13+1)+'週';
+ $('#hDate').textContent=dateTxt();
  $('#hMoney').textContent=yen(G.money);$('#hTk').textContent='🎫'+G.tk;
  $('#hAp').innerHTML='✋ 手入れ <b>'+G.ap+'/'+apMax(G)+'</b>';
  const fb=$('#bFan');fb.setAttribute('aria-pressed',G.fan?'true':'false');fb.textContent='🌀 風 '+(G.fan?'ON':'OFF');
@@ -1098,15 +1114,20 @@ function renderAll(){
 function setView(v){S.view=v;S.sel=null;$('#vShelf').classList.toggle('on',v==='shelf');$('#vGacha').classList.toggle('on',v==='gacha');$('#vShop').classList.toggle('on',v==='shop');$('#vShow').classList.toggle('on',v==='show');renderAll();}
 /* ---------- detail ---------- */
 function bar(label,val,color,txt){return'<div class="bar">'+label+'<em>'+(txt!==undefined?txt:Math.round(val))+'</em><div><i style="width:'+clamp(val,0,100)+'%;background:'+color+'"></i></div></div>';}
-function openDetail(id){S.detail=id;const q=plantOf(id);if(q)q.new=false;S.potPick=false;S.placePick=false;$('#detail').hidden=false;renderDetail();}
+function openDetail(id){S.detail=id;S.dAp=G.ap;const q=plantOf(id);if(q)q.new=false;S.potPick=false;S.placePick=false;$('#detail').hidden=false;renderDetail();}
 function closeDetail(){S.detail=null;$('#detail').hidden=true;renderAll();}
-function actBtn(a,ic,label,sub,dis,cls){return'<button class="act '+(cls||'')+'" data-a="'+a+'"'+(dis?' disabled':'')+'><span>'+ic+'</span>'+label+(sub?'<small>'+sub+'</small>':'')+'</button>';}
+function actBtn(a,ic,label,sub,dis,cls,cost){
+ let c=cls||'';
+ if(cost){if(G.ap<1){c+=' noap';sub='手入れ回数が足りない';dis=true;}else sub=(sub==='手入れ1'||!sub)?'✋ -1':sub+'・✋-1';}
+ return'<button class="act '+c+'" data-a="'+a+'"'+(dis?' disabled':'')+'><span>'+ic+'</span>'+label+(sub?'<small>'+sub+'</small>':'')+'</button>';}
 function renderDetail(){
  const p=plantOf(S.detail);const d=$('#detail');if(!p){closeDetail();return;}
  const sp=SP[p.sp],n=plantNeeds(p),ap=G.ap;
+ const oldSh=d.querySelector('.sheet');const keepSt=oldSh?oldSh.scrollTop:0;
+ const lst=detList(),idx=lst.indexOf(p.id),multi=lst.length>1;
  let h='<div class="sheet det"><button class="x" id="dX" aria-label="とじる">✕</button><div class="dh"><span class="rb2" style="background:'+RC[sp.r]+'">'+sp.r+'</span><b>'+esc(sp.n)+'</b></div>';
  h+='<div class="dh"><small>'+GRP[sp.g].ic+GRP[sp.g].n+'・'+TYN[sp.ty]+'　素質 <span style="color:var(--gold)">'+'★'.repeat(stars(p))+'☆'.repeat(5-stars(p))+'</span>　'+(p.age)+'週めの株</small></div>';
- h+='<div class="dcols"><div class="dl"><div class="dbig" id="dBig"></div>';
+ h+='<div class="dcols"><div class="dl"><div class="dbw"><div class="dbig" id="dBig"></div>'+(multi?'<button class="nav pv" data-a="prev" aria-label="前の株">‹</button><button class="nav nx" data-a="next" aria-label="次の株">›</button>':'')+'<div class="dpos">'+(idx+1)+' / '+lst.length+(p.inBox?' 📦':'')+'</div></div>';
  const ch=[];
  if(p.bare)ch.push('<span class="w">🫧 発根中 あと'+Math.ceil(p.bare)+'週'+(p.hatsu?'・発根剤済':'')+'</span>');
  else ch.push(n.dorm?'<span>💤 休眠中</span>':'<span class="g">🌱 成長期</span>');
@@ -1121,18 +1142,33 @@ function renderDetail(){
   h+='<div class="acts">';
   if(p.inBox){h+=actBtn('unbox','🪴','棚に出す','空き '+(slotsMax(G)-shelfPlants(G).length),shelfPlants(G).length>=slotsMax(G),'wide');}
   else if(p.bare){
-   h+=actBtn('koshi','🫗','腰水','手入れ1',ap<1||p.koshi)+actBtn('rootA','🧪','発根剤','×'+G.inv.root,!(G.inv.root>0)||p.hatsu)+actBtn('place','☀️','置き場所',PLACES[p.place].n,ap<1);
+   h+=actBtn('koshi','🫗','腰水','手入れ1',p.koshi,'',1)+actBtn('rootA','🧪','発根剤','×'+G.inv.root,!(G.inv.root>0)||p.hatsu)+actBtn('place','☀️','置き場所',PLACES[p.place].n,false,'',1);
   }else{
-   h+=actBtn('wb','💧','たっぷり','手入れ1',ap<1)+actBtn('ws','💧','少し','手入れ1',ap<1)+actBtn('f1','🌱','緩効性肥料','×'+G.inv.fert1,ap<1||!(G.inv.fert1>0));
-   h+=actBtn('f2','🌱','液肥','×'+G.inv.fert2,ap<1||!(G.inv.fert2>0))+actBtn('shape','✂️',sp.g==='agave'?'下葉取り':sp.g==='caudex'?'剪定':(p.stretch>=25&&p.size>=40?'胴切り':'葉の整理'),'手入れ1',ap<1)+actBtn('prop','🐣',(sp.dr==='rosette'||sp.dr==='haworthia')?'葉挿し/子株':'子株外し',sp.pr>0?'子株'+p.pups:'なし',ap<1||!A.canProp(p));
-   h+=actBtn('pot','🪴','植え替え','手入れ1',ap<1)+actBtn('sand','🏖️','化粧砂','×'+G.inv.sand,ap<1||p.sand||!(G.inv.sand>0))+actBtn('place','☀️','置き場所',PLACES[p.place].n,ap<1);
+   h+=actBtn('wb','💧','たっぷり','手入れ1',false,'',1)+actBtn('ws','💧','少し','手入れ1',false,'',1)+actBtn('f1','🌱','緩効性肥料','×'+G.inv.fert1,!(G.inv.fert1>0),'',1);
+   h+=actBtn('f2','🌱','液肥','×'+G.inv.fert2,!(G.inv.fert2>0),'',1)+actBtn('shape','✂️',sp.g==='agave'?'下葉取り':sp.g==='caudex'?'剪定':(p.stretch>=25&&p.size>=40?'胴切り':'葉の整理'),'手入れ1',false,'',1)+actBtn('prop','🐣',(sp.dr==='rosette'||sp.dr==='haworthia')?'葉挿し/子株':'子株外し',sp.pr>0?'子株'+p.pups:'なし',!A.canProp(p),'',1);
+   h+=actBtn('pot','🪴','植え替え','手入れ1',false,'',1)+actBtn('sand','🏖️','化粧砂','×'+G.inv.sand,p.sand||!(G.inv.sand>0),'',1)+actBtn('place','☀️','置き場所',PLACES[p.place].n,false,'',1);
    h+=actBtn('vital','💊','活力剤','×'+G.inv.vital,!(G.inv.vital>0))+actBtn('pest','🐛','殺虫剤','×'+G.inv.pest,!(G.inv.pest>0))+actBtn('amp','⚡','アンプル','×'+G.inv.amp+(p.ampCd>0?' 効果中':''),!(G.inv.amp>0)||p.ampCd>0);
    if(G.inv.amp2>0)h+=actBtn('amp2','🌟','超アンプル','×'+G.inv.amp2,p.ampCd>0,'wide');
   }
   h+=actBtn('sell','💰','売る（'+yen(price(G,p))+'）','',false,'wide')+'</div>';
  }
- h+='</div></div></div>';d.innerHTML=h;
+ h+='</div></div>';
+ const drop=G.ap<S.dAp;S.dAp=G.ap;
+ h+='<div class="dbar'+(G.ap<1?' zero':'')+'"><span class="dap'+(drop?' bump':'')+'">✋ 手入れ <b>'+G.ap+'/'+apMax(G)+'</b></span><span class="ddt">'+dateTxt()+'</span>'+(G.ap<1?'<span class="dwarn">手入れ回数が足りない</span>':'')+'</div></div>';
+ d.innerHTML=h;
+ const sh=d.querySelector('.sheet');
+ if(S.dDir){sh.classList.add(S.dDir>0?'in-r':'in-l');sh.scrollTop=0;S.dDir=0;setTimeout(()=>{sh.classList.remove('in-r','in-l');S.dAnim=false;},240);}else sh.scrollTop=keepSt;
  $('#dBig').appendChild(plantCanvas(p,300,200,visOpts(p)));
+}
+function detList(){return shelfPlants(G).concat(G.plants.filter(q=>q.inBox)).map(q=>q.id);}
+function detNav(dir){
+ if(S.detail==null||S.dAnim||S.potPick||S.placePick||!$('#cf').hidden)return false;
+ const l=detList();if(l.length<2)return false;
+ let i=l.indexOf(S.detail);if(i<0)i=0;
+ const id=l[(i+dir+l.length)%l.length];
+ S.dDir=dir;S.dAnim=true;sfx('tap');
+ const q=plantOf(id);if(q)q.new=false;
+ S.detail=id;renderDetail();return true;
 }
 function flash(id,cls){const el=document.querySelector('.pc[data-id="'+id+'"]');if(el){el.classList.add(cls);later(.45,()=>el.classList.remove(cls));}}
 function doAct(a,arg){
@@ -1144,6 +1180,8 @@ function doAct(a,arg){
   case'f2':r=A.fert(G,p,'fert2');snd='fert';fl='fl-f';break;
   case'shape':r=A.shape(G,p);snd='snip';fl='fl-s';break;
   case'prop':r=A.propagate(G,p);snd='snip';fl='fl-s';break;
+  case'prev':detNav(-1);return;
+  case'next':detNav(1);return;
   case'pot':S.potPick=true;renderDetail();return;
   case'place':S.placePick=true;renderDetail();return;
   case'cancelPick':S.potPick=S.placePick=false;renderDetail();return;
@@ -1342,10 +1380,23 @@ function bind(){
  $('#shelf').addEventListener('click',e=>{const c=e.target.closest('.pc[data-id]');if(c){sfx('tap');openDetail(+c.dataset.id);}});
  $('#boxList').addEventListener('click',e=>{const c=e.target.closest('.pc[data-id]');if(c){sfx('tap');openDetail(+c.dataset.id);}});
  $('#detail').addEventListener('click',e=>{
+  if(S.swiped&&Date.now()-S.swiped<400)return;
   if(e.target.id==='detail'||e.target.id==='dX'){closeDetail();return;}
   const b=e.target.closest('button');if(!b||b.disabled)return;
   if(b.dataset.pot)doAct('repot',b.dataset.pot);else if(b.dataset.pl)doAct('move',b.dataset.pl);else if(b.dataset.a)doAct(b.dataset.a);
  });
+ (()=>{const dt=$('#detail');let t0=null;const EG=30;
+  const sheet=()=>dt.querySelector('.sheet');
+  dt.addEventListener('touchstart',e=>{t0=null;if(e.touches.length!==1||S.dAnim||S.potPick||S.placePick||!$('#cf').hidden)return;const t=e.touches[0];
+   if(t.clientX<EG||t.clientX>innerWidth-EG)return;t0={x:t.clientX,y:t.clientY,drag:false};},{passive:true});
+  dt.addEventListener('touchmove',e=>{if(!t0)return;const t=e.touches[0],dx=t.clientX-t0.x,dy=t.clientY-t0.y;
+   if(!t0.drag&&Math.abs(dx)>14&&Math.abs(dx)>1.5*Math.abs(dy))t0.drag=true;
+   if(t0.drag){const sh=sheet();if(sh){sh.style.transition='none';sh.style.transform='translateX('+(dx*.5)+'px)';sh.style.opacity=String(1-Math.min(.5,Math.abs(dx)/500));}}},{passive:true});
+  dt.addEventListener('touchend',e=>{if(!t0)return;const t=e.changedTouches[0],dx=t.clientX-t0.x,dy=t.clientY-t0.y,was=t0.drag;t0=null;
+   const sh=sheet();if(sh&&was){sh.style.transition='';sh.style.transform='';sh.style.opacity='';}
+   if(Math.abs(dx)>50&&Math.abs(dx)>1.5*Math.abs(dy)){S.swiped=Date.now();detNav(dx<0?1:-1);}},{passive:true});
+  dt.addEventListener('touchcancel',()=>{t0=null;const sh=sheet();if(sh){sh.style.transition='';sh.style.transform='';sh.style.opacity='';}},{passive:true});
+ })();
  $('#vGacha').addEventListener('click',e=>{const b=e.target.closest('button[data-g]');if(b&&!b.disabled){ac();doGacha(b.dataset.g,+b.dataset.n,b.dataset.p);}});
  $('#vShop').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;
   if(b.dataset.buy)doBuy(A.buyItem(G,b.dataset.buy));else if(b.dataset.pot)doBuy(A.buyPot(G,b.dataset.pot));else if(b.dataset.up)doBuy(A.buyUp(G,b.dataset.up));});
@@ -1362,6 +1413,7 @@ function bind(){
   if(e.key==='o'||e.key==='O'){ac();setAuto(!S.auto);return;}
   if(S.auto){setAuto(false);}
   if(S.scene!=='game')return;
+  if(S.detail!=null&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();detNav(e.key==='ArrowLeft'?-1:1);return;}
   if(e.key==='Escape'){if(!$('#cf').hidden)$('#cf').hidden=true;else if(S.detail!=null)closeDetail();else if(S.view!=='shelf')setView('shelf');}
   else if(e.key==='n'||e.key==='N'||e.key===' '){if(S.detail==null&&!S.revOpen&&$('#cf').hidden){e.preventDefault();userNext();}}
   else if(e.key==='1')setView('shelf');else if(e.key==='2')setView('gacha');else if(e.key==='3')setView('shop');else if(e.key==='4')setView('show');
