@@ -22,7 +22,7 @@
 | ❄️ | ユキネーター | https://apapane-yukinosato.github.io/games/yukinator/ | アキネーター風の当てっこゲーム。雪の占い師ユキネーター（女性）が「答えて欲しいものを思い浮かべて」「思い浮かべた？」と聞き、少しトゲのある口調で質問してくる。5択（はい・いいえ・わからない・たぶんそう・たぶん違う）の質問に何と答えても、最後は「え？そんなものを私の口から言わすの？」と言いながら、必ず「竈門炭治郎」にたどりつく。「いいえ」と言い張るほど強引になる。 |
 | 🐕 | コーギーのおさんぽ | https://apapane-yukinosato.github.io/games/corgi/ | コーギーを連れて町内600mを歩く。ご近所の目（モラル）を守りながら、おうちまで無事に帰ろう。 |
 | 🍭 | キャンディ・グランプリ | https://apapane-yukinosato.github.io/games/candy/ | ソーダ峡谷サーキットを6台で3周する3Dカートレース。ドリフトで火花をためてダッシュ。 |
-| 🐶 | コギコギ | https://apapane-yukinosato.github.io/games/kogikogi/ | 同じ色のコーギーを4ひきつなげて消す落ちものパズル。1000点ごとにステージが進み、ステージ3はボス戦。 |
+| 🐶 | コギコギ | https://apapane-yukinosato.github.io/games/kogikogi/ | 同じ色のコーギーを4ひきつなげて消す落ちものパズル。1000点ごとにステージが進み、ステージ3はボス戦。♾ エターナルモード（ずっと続く）もあるよ。 |
 | 💴 | 人生マネーシューター | https://apapane-yukinosato.github.io/games/money/ | お金を弾にして22さいから85さいまで。給料・保険・投資・ライフイベント…あやしい話はよけて、しあわせな人生をめざす金融教育シューティング。 |
 | 🥋 | 一本 ― IPPON ― | https://apapane-yukinosato.github.io/games/kendo/ | 選手視点の剣道一本勝負。相手の隙を見きわめて五人抜き。最後の相手は真剣でくる。 |
 | 🦴 | コーギーのおやつかくし | https://apapane-yukinosato.github.io/games/oyatsu/ | 庭にうめたおやつを守るマインスイーパ。数字はおやつのにおい。ほり出すと、ほかの犬に食べられる！ |
