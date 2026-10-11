@@ -182,7 +182,10 @@ const NEUTRAL=[
   {icon:'🎎',title:'倒れた案山子',text:'案山子が倒れている。風のしわざか。カカシに罪はない。'},
   {icon:'🐸',title:'蛙の大合唱',text:'ケロケロうるさい。事件とは無関係だ。耳がつらい。'},
   {icon:'🍡',title:'団子の串',text:'団子の串が落ちている。……まだ新しい。豆吉の仕業では？'},
-  {icon:'⛩',title:'小さな祠',text:'道端の祠に手を合わせた。田之助は今日も真面目である。'}
+  {icon:'⛩',title:'小さな祠',text:'道端の祠に手を合わせた。田之助は今日も真面目である。'},
+  {icon:'🪨',title:'古い道しるべ',text:'苔むした道しるべ。「江戸まで八十里」。関係ないが、遠いな。'},
+  {icon:'🐓',title:'迷い鶏',text:'鶏が一羽うろうろしている。事件とは無関係。たぶん夕飯になる。'},
+  {icon:'🍂',title:'落ち葉の山',text:'落ち葉が山になっている。掘ってみたが、焼き芋の気配だけだった。'}
 ];
 const HONEST_DECOY=[
   {icon:'🌾',title:'新しい畦',text:'新しい畦がある。……と思ったが、水害で崩れた畦を村人が直しただけだった。'},
@@ -336,7 +339,7 @@ function genVillage(seed,idx,kind,used,opt){
     else t=placeFrom(ring(b),b.center);
     return addSpot({cat,site:b.id,icon:d.icon,title:d.title,text:d.text(b.name),label:TN[g[t.r][t.c]]},t);
   }
-  const addNeutral=(n)=>{ for(let k=0;k<n;k++){ const d=rng.pick(NEUTRAL); const cs=[]; for(let r=3;r<=9;r++)for(let c=0;c<W;c++) if(free(r,c)&&r!==8) cs.push({r,c}); const t=rng.pick(cs); addSpot({cat:'none',icon:d.icon,title:d.title,text:d.text,label:TN[g[t.r][t.c]]},t); } };
+  const addNeutral=(n)=>{ for(let k=0;k<n;k++){ const d=rng.pick(NEUTRAL); const cs=[]; for(let r=1;r<=9;r++)for(let c=0;c<W;c++) if(free(r,c)&&r!==8&&g[r][c]!=='s') cs.push({r,c}); const t=rng.pick(cs); addSpot({cat:'none',icon:d.icon,title:d.title,text:d.text,label:TN[g[t.r][t.c]]},t); } };
   const notes={}; // 証言ノート（人物id→定義）
   const mkTalk=(role,note,lines)=>{ const f=F(role); f.note=note?Object.assign({id:f.id,kind:'talk',cat:'talk',site:null,contra:null,title:ROLE_JA[role]+'・'+f.name+'の証言',icon:'💬'},note):null; f.lines=lines; };
   const quote=(f,t)=>{ const p=PS[f.pers]; return f.role==='child'?`「${t}」`:`「${t}${p.suf}」`; };
@@ -383,7 +386,7 @@ function genVillage(seed,idx,kind,used,opt){
       const mf=F('monk'); mkTalk('monk',{cat:'sound',site:D2.id,icon:'🔔'},[['monk',quote(mf,`${D2.name}の裏でな、夜な夜な何やら運び込む音がしたような…気のせいかのう`)]]);
       mkTalk(otherRole,null,[[otherRole,quote(F(otherRole),rng.pick(flavor[otherRole]))]]);
     }
-    addNeutral(rng.i(3,4));
+    addNeutral(rng.i(11,13));
   }else{
     // 本当に不作の村
     const causeSpot={rain:{cat:'flood',icon:'🌊',title:'水に浸かった田',text:'田んぼが水の底。稲がぷかぷか浮いて、根から腐っている。長雨の被害は本物だ。',mod:'flood'},
@@ -400,7 +403,7 @@ function genVillage(seed,idx,kind,used,opt){
     // 怪しく見えるが無関係なもの
     const hd=rng.shuffle(HONEST_DECOY).slice(0,rng.i(3,4));
     for(const d of hd){ const cs=[]; for(let r=1;r<=7;r++)for(let c=0;c<W;c++) if(free(r,c)) cs.push({r,c}); const t=rng.pick(cs); addSpot({cat:'none',icon:d.icon,title:d.title,text:d.text,label:TN[g[t.r][t.c]]},t); }
-    addNeutral(1);
+    addNeutral(rng.i(9,10));
     const ch=F('child'); mkTalk('child',{cat:'hunger',site:'honest',icon:'🧒'},[['child',`「おなかすいた…。ごはんは、ひえのおかゆだけなの…」`]]);
     const fm=F('farmer'); mkTalk('farmer',{cat:'ftalk',site:'honest',icon:'🧑‍🌾'},[['farmer',quote(fm,`今年は${CAUSE_JA[cause]}でなあ…。稲がみんなやられちまった`)]]);
     const wd=F('widow'); mkTalk('widow',{cat:'wtalk',site:'honest',icon:'👵'},[['widow',quote(wd,'米びつが空でねえ。種もみまで食べちまいそうさ')]]);
@@ -1513,7 +1516,13 @@ function stateOut(){
     notes:S.notes.map(n=>n.id),infers:S.infers.map(i=>i.site),contras:Object.keys(S.cf),caught:S.vcaught,ending:S.ending,result:S.result,score:S.score,
     vlog:S.vlog,dlg:!!S.dlg,choice:S.choice?{k:S.choice.k,n:S.choice.opts.length}:null,pend:S.pend,akuda:S.akuda,view:S.view,tab:S.tab};
 }
-window.__kenchi={
+function bruteCost(V){
+  const ts=V.spots.map(s=>({r:s.r,c:s.c})).concat(V.folks.filter(f=>f.role!=='chief').map(f=>({r:f.r,c:f.c})));
+  let pos={r:V.start.r,c:V.start.c}, tot=0, rest=ts.slice();
+  while(rest.length){ const d=dijk(V,pos.r,pos.c); let bi=0,bc=1e9,bp=null; rest.forEach((t,i)=>{ const a=approach(V,d,t); if(a&&a.cost<bc){ bc=a.cost; bi=i; bp=a; } }); tot+=bc+2; pos={r:bp.r,c:bp.c}; rest.splice(bi,1); }
+  return tot;
+}
+window.__kenchi={ bruteCost,
   state:stateOut, setAuto, reveal:truthInfo,
   step(dt,n){ n=n||1; for(let k=0;k<n;k++){ let t=dt; while(t>0){ const d=Math.min(t,.05); update(d); t-=d; } } if(S.dirty) render(); dlgText(); draw(); },
   newGame(seed,opt){ S.forceDaughter=opt&&opt.daughter?[1,1,1,1,1]:null; newGame(seed); },
@@ -1555,7 +1564,7 @@ window.__kenchi={
         // 重複マス
         const seen=new Set(); for(const s of V.spots){ const k=s.r+','+s.c; if(seen.has(k)) out.bad.push({seed,i,why:'dup tile',k}); seen.add(k); if(V.grid[s.r][s.c]==='R') out.bad.push({seed,i,why:'spot on river'}); }
         for(const f of V.folks){ const k=f.r+','+f.c; if(seen.has(k)) out.bad.push({seed,i,why:'folk overlaps',k}); seen.add(k); }
-        const bp=bestPair(V,V.start); if(!bp) out.bad.push({seed,i,why:'no pair'}); else { out.stats.minCost.push(bp.cost); if(bp.cost>34) out.bad.push({seed,i,why:'too far',cost:bp.cost}); }
+        const bc=bruteCost(V); (out.stats.brute=out.stats.brute||[]).push(bc); const bp=bestPair(V,V.start); if(!bp) out.bad.push({seed,i,why:'no pair'}); else { out.stats.minCost.push(bp.cost); if(bp.cost>34) out.bad.push({seed,i,why:'too far',cost:bp.cost}); }
         // 全手がかりを集めた場合の総コスト（全部は調べ切れないこと）
         let tot=0; V.spots.forEach(()=>tot+=2); V.folks.forEach(()=>tot+=2); out.stats['tot']=(out.stats['tot']||0)+tot;
       }
