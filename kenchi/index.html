@@ -1,0 +1,1602 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="description" content="検地奉行・堅物田之助になって、秋の巡回で5つの村を歩き、隠し田や隠し米を見やぶる時代劇コミカル推理アドベンチャー。">
+<title>検地奉行</title>
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&family=Shippori+Mincho+B1:wght@600;800&display=swap">
+<style>
+html,body{touch-action:manipulation}
+:root{--bg:#EBDDB8;--paper:#F6EBCF;--paper2:#EBD9AE;--ink:#3A2A1A;--mute:#7A6648;--shu:#C8321E;--shu2:#9E2412;--indigo:#2F3F6B;--gold:#C89A2A;--green:#5F8F55;color-scheme:light}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);overscroll-behavior:none}
+body{font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  background:radial-gradient(circle at 20% 10%,#F2E5C2,transparent 60%),var(--bg)}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:3px solid var(--shu);outline-offset:2px}
+.mc{font-family:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif}
+#app{height:100dvh;max-width:1180px;margin:0 auto;padding:calc(6px + env(safe-area-inset-top,0px)) 8px calc(6px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:5px}
+#top{display:flex;align-items:center;gap:6px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:17px;font-weight:800;letter-spacing:.08em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mini{font-size:12px;font-weight:800;border:2px solid var(--ink);border-radius:999px;padding:4px 9px;background:var(--paper);cursor:pointer;white-space:nowrap}
+.mini[aria-pressed=true]{background:var(--shu);border-color:var(--shu2);color:#fff}
+#hud{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.st{background:var(--paper);border:2px solid var(--ink);border-radius:8px;padding:2px 4px;font-size:11px;font-weight:800;line-height:1.25;min-width:0}
+.st b{display:block;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.st i{display:block;height:4px;border-radius:2px;background:#d7c79c;margin-top:1px;overflow:hidden}
+.st i s{display:block;height:100%;background:var(--green);text-decoration:none;transition:width .3s}
+.st.u i s{background:var(--shu)}.st.d i s{background:#6a4a9a}.st.k i s{background:var(--gold)}
+#time{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;background:var(--paper2);border:2px solid var(--ink);border-radius:8px;padding:2px 8px}
+#time span{white-space:nowrap}
+#tbar{flex:1;display:flex;gap:2px;height:10px}
+#tbar i{flex:1;background:#d7c79c;border:1px solid var(--ink);border-radius:2px}
+#tbar i.on{background:var(--gold)}
+#tbar i.dv{margin-left:4px}
+#game{flex:1;min-height:0;display:flex;flex-direction:column;gap:5px}
+#mapWrap{flex:0 0 47%;min-height:0;display:flex;justify-content:center;align-items:center;position:relative}
+#cv{height:100%;aspect-ratio:4/5;max-width:100%;border:3px solid var(--ink);border-radius:6px;background:var(--paper);touch-action:manipulation;display:block}
+#panel{flex:1;min-height:0;display:flex;flex-direction:column;gap:5px;position:relative}
+#dlg{position:relative;background:#FFF8E4;border:3px solid var(--ink);border-radius:10px;padding:14px 10px 8px;min-height:92px;max-height:128px;cursor:pointer;box-shadow:0 3px 0 rgba(58,42,26,.35)}
+#dname{position:absolute;left:10px;top:-12px;background:var(--ink);color:var(--paper);font-weight:800;font-size:12px;padding:1px 10px;border-radius:6px}
+#dtext{font-size:14px;line-height:1.55;white-space:pre-wrap;overflow:auto;max-height:80px}
+#dnext{position:absolute;right:10px;bottom:3px;font-size:11px;color:var(--shu);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.2}}
+#tabs{display:flex;gap:4px}
+#tabs button{flex:1;border:2px solid var(--ink);border-radius:8px 8px 0 0;background:var(--paper2);font-weight:800;font-size:13px;padding:5px 2px;cursor:pointer}
+#tabs button[aria-selected=true]{background:var(--paper);box-shadow:0 2px 0 var(--paper)}
+#content{flex:1;min-height:0;overflow:auto;background:var(--paper);border:2px solid var(--ink);border-radius:0 0 10px 10px;margin-top:-5px;padding:8px;overscroll-behavior:contain}
+#content.dim{opacity:.45;pointer-events:none}
+#screen{flex:1;min-height:0;overflow:auto;background:var(--paper);border:3px solid var(--ink);border-radius:10px;padding:10px;text-align:center;overscroll-behavior:contain}
+.btn{display:block;width:100%;border:2px solid var(--ink);border-radius:10px;background:var(--paper2);font-weight:800;font-size:14px;padding:8px 8px;cursor:pointer;text-align:left;box-shadow:0 3px 0 rgba(58,42,26,.4);margin-bottom:6px;line-height:1.35}
+.btn small{display:block;font-weight:500;font-size:11px;color:var(--mute)}
+.btn.pri{background:var(--shu);border-color:var(--shu2);color:#fff;box-shadow:0 3px 0 var(--shu2)}
+.btn.pri small{color:#ffe0d8}
+.btn.go{background:var(--indigo);border-color:#1b2748;color:#fff;box-shadow:0 3px 0 #1b2748}
+.btn.go small{color:#d0d8f0}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.c{text-align:center}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+h4{margin:6px 0 4px;font-size:13px;letter-spacing:.06em;border-bottom:2px solid var(--ink);padding-bottom:1px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.card{border:2px solid var(--ink);border-radius:8px;background:#FFF8E4;padding:4px 5px;text-align:left;cursor:pointer;font-size:11px;line-height:1.35;min-width:0}
+.card b{display:block;font-size:12px}
+.card span{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:var(--mute)}
+.card em{font-style:normal;display:inline-block;background:var(--indigo);color:#fff;border-radius:6px;padding:0 5px;font-size:10px;margin-top:2px}
+.card.sel{background:#FFE2B8;border-color:var(--shu);box-shadow:0 0 0 2px var(--shu)}
+.inf{background:#FFF0D0;border:2px solid var(--shu);border-radius:8px;padding:4px 8px;margin-bottom:4px;font-size:12.5px;font-weight:800}
+.docs .doc{background:#FFF8E4;border:2px solid var(--ink);border-radius:8px;padding:4px 6px 6px;margin-bottom:6px}
+.docs .doc.cl{border-color:var(--shu);background:#FFEFD8}
+.docs .doc h5{margin:0 0 3px;font-size:12px;color:var(--mute);letter-spacing:.06em}
+.ln{display:block;width:100%;text-align:left;border:1.5px dashed #b9a679;background:transparent;border-radius:6px;padding:4px 6px;font-size:13px;font-weight:800;margin-bottom:3px;cursor:pointer}
+.ln.sel{background:#FFE2B8;border:2px solid var(--shu)}
+.ln.hit{border:2px solid var(--shu);background:#FFD9CF}
+.muted{color:var(--mute);font-size:12px}
+.toast{position:absolute;left:50%;top:6px;transform:translateX(-50%);background:rgba(58,42,26,.92);color:#fff;font-size:12px;font-weight:800;border-radius:999px;padding:4px 12px;pointer-events:none;white-space:nowrap;max-width:94%;overflow:hidden;text-overflow:ellipsis;z-index:3}
+.title-big{font-size:34px;font-weight:800;letter-spacing:.12em;margin:4px 0 0;color:var(--shu2)}
+.sub-big{font-size:15px;font-weight:800;letter-spacing:.2em;margin:0 0 8px}
+.endt{font-size:26px;font-weight:800;letter-spacing:.1em;color:var(--shu2);margin:2px 0}
+.dz{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:6px 0}
+.dz div{border:2px solid var(--ink);border-radius:8px;padding:3px;font-size:11px;font-weight:800;background:#FFF8E4}
+.dz div.no{opacity:.45;background:#d7c79c}
+@media (min-width:900px){
+  #game{flex-direction:row}
+  #mapWrap{flex:0 0 auto;height:100%}
+  #cv{height:100%;width:auto}
+  #panel{flex:1;max-width:560px}
+  #dtext{font-size:15px;max-height:96px}
+  #dlg{max-height:150px}
+}
+@media (max-height:700px){#hud{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="top"><a href="../" id="back">← 一覧</a><h1 class="mc">検地奉行</h1><button class="mini" id="autoBtn" aria-pressed="false" title="オートモード（Oキー）">🤖 オート</button><button class="mini" id="muteBtn">音 ON</button></header>
+  <div id="hud" hidden>
+    <div class="st"><span>🏅 藩の評価</span><b id="hHyo">40</b><i><s id="bHyo" style="width:40%"></s></i></div>
+    <div class="st u"><span>🔥 村の恨み</span><b id="hUra">0</b><i><s id="bUra" style="width:0"></s></i></div>
+    <div class="st k"><span>💰 懐</span><b id="hKob">0両</b><i><s id="bKob" style="width:0"></s></i></div>
+    <div class="st d"><span>👁 目付の疑い</span><b id="hUta">0</b><i><s id="bUta" style="width:0"></s></i></div>
+  </div>
+  <div id="time" hidden><span id="tvil">第1村</span><div id="tbar"></div><span id="tleft">残り24刻</span></div>
+  <main id="game">
+    <div id="mapWrap"><canvas id="cv" width="320" height="400" aria-label="村の地図"></canvas></div>
+    <section id="panel">
+      <div id="dlg" role="status" hidden><div id="dname"></div><div id="dtext"></div><div id="dnext">▼</div></div>
+      <div id="tabs" role="tablist" hidden>
+        <button role="tab" data-t="act" aria-selected="true">🧭 命令</button>
+        <button role="tab" data-t="note" aria-selected="false">📒 手帳</button>
+        <button role="tab" data-t="docs" aria-selected="false">📜 資料</button>
+      </div>
+      <div id="content" hidden></div>
+      <div id="screen"></div>
+    </section>
+  </main>
+</div>
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const W=8,H=10,TS=40,HALF=48; // 3日×8刻 = 24刻 = 48半刻
+
+/* ===== 乱数（seed つき） ===== */
+function mkRng(seed){
+  let a=(seed|0)||1;
+  const f=()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+  return {f,i:(x,y)=>x+Math.floor(f()*(y-x+1)),pick:arr=>arr[Math.floor(f()*arr.length)],chance:p=>f()<p,
+    shuffle:arr=>{const x=arr.slice();for(let i=x.length-1;i>0;i--){const j=Math.floor(f()*(i+1));[x[i],x[j]]=[x[j],x[i]];}return x;}};
+}
+
+/* ===== マス ===== */
+const TC={g:1,p:1,'=':1,d:1,w:1,B:1,b:1,H:1,Y:1,K:1,T:1,M:2,F:2,s:2,R:99};
+const TN={g:'草地',p:'田',_:'',  '=':'道',d:'山道',w:'水路',B:'板橋',b:'橋',H:'農家',Y:'名主屋敷',K:'蔵',T:'お寺',M:'山',F:'林',s:'沢',R:'川'};
+const walkable=t=>t!=='R';
+
+/* ===== 名前・せりふの素材 ===== */
+const POOL={
+  village:['稲葉','雨宮','水無','大田原','千束','小糠','蛙沢','白河原','米蔵','麦野','藁科','実野','瑞穂','畦道','案山子','千石'],
+  chief:['狸塚 腹右衛門','貉田 太兵衛','狸原 ぽん蔵','豆狸 満右衛門','腹鼓 たぬ兵衛'],
+  farmer:['権助','与作','万吉','茂兵衛','孫六','五平'],
+  widow:['おタネ','おヨネ','おスミ','お梅','おクマ'],
+  child:['太郎','小春','次郎','おミツ','金坊'],
+  hunter:['弥平','源蔵','又八','熊五郎'],
+  monk:['慈念','玄海','徳庵','空円'],
+  temple:['万福','慈光','常楽','福禄','大悲'],
+  pers:['gamets','kiyowa','oshaberi','ganko','ochoushi']
+};
+const PERS={gamets:'がめつい',kiyowa:'気弱',oshaberi:'おしゃべり',ganko:'頑固',ochoushi:'お調子者'};
+const PS={
+  gamets:{hi:'へい、お奉行さま。話の代金は…いえ冗談ですじゃ。',suf:'…ところで、お代は？'},
+  kiyowa:{hi:'ひっ！お、お奉行さま…！',suf:'…かもしれませんです…'},
+  oshaberi:{hi:'あらあらお奉行さま、聞いてくださいな！',suf:'…ねえ、聞いてる？'},
+  ganko:{hi:'……何の用じゃ。',suf:'…それだけじゃ。'},
+  ochoushi:{hi:'へいっ、お奉行さま！ご機嫌うるわしゅう！',suf:'ってなもんでさぁ！'}
+};
+const ROLE_JA={chief:'名主',farmer:'農民',child:'子ども',widow:'後家',hunter:'猟師',monk:'和尚'};
+const CAUSE_JA={rain:'長雨',pest:'ウンカの害',drought:'日照り'};
+
+/* ===== 手がかりの種類 ===== */
+const FIELD_CLUES={
+  water:{icon:'💧',title:'水路の分岐',text:z=>`水路から、帳簿にない細い水の筋が${z}の方角へ分かれている。誰かが勝手に水を引いておるな。`},
+  foot:{icon:'👣',title:'新しい足跡',text:z=>`山道に新しい足跡と、こぼれた籾（もみ）。${z}のほうへ点々と続いている。`},
+  sparrow:{icon:'🐦',title:'スズメの群れ',text:z=>`スズメが大群で${z}のほうへ飛んでいく。稲穂でもなければ、あんなに集まらぬ。`},
+  ash:{icon:'🔥',title:'焼いた藁の灰',text:z=>`焼いた藁の灰が積もっている。${z}で、新しく畦（あぜ）を焼いたような跡だ。`},
+  ridge:{icon:'🌾',title:'新しい畦',text:z=>`土の色が妙に新しい畦（あぜ）。${z}の奥へ続いている。つくって日が浅いぞ。`},
+  mud:{icon:'🌊',title:'濁った沢',text:z=>`沢の水が茶色く濁っている。${z}の上で、誰かが土を掘り返しておるな。`}
+};
+const RICE_CLUES={
+  tatami:{icon:'🛖',title:'床が沈む',text:b=>`${b}の床が、踏むとやけに沈む。床下に重たい物（米俵）があるぞ。`},
+  rat:{icon:'🐀',title:'ネズミの群れ',text:b=>`${b}のまわりにネズミがうじゃうじゃ。米の匂いに集まっておるな。`},
+  bran:{icon:'👃',title:'米ぬかの匂い',text:b=>`${b}から米ぬかの匂いがぷんぷんする。精米したてだ。`},
+  rut:{icon:'🛒',title:'荷車の轍',text:b=>`夜中に通った荷車の新しい轍（わだち）が、${b}の裏口へ続いている。`}
+};
+const NEUTRAL=[
+  {icon:'🦌',title:'鹿の足跡',text:'ただの鹿の足跡だった。ひづめの形が鹿そのもの。'},
+  {icon:'🪵',title:'焚き火のあと',text:'猟師が昼めしを焚いた跡のようだ。事件とは関係なさそう。'},
+  {icon:'🎎',title:'倒れた案山子',text:'案山子が倒れている。風のしわざか。カカシに罪はない。'},
+  {icon:'🐸',title:'蛙の大合唱',text:'ケロケロうるさい。事件とは無関係だ。耳がつらい。'},
+  {icon:'🍡',title:'団子の串',text:'団子の串が落ちている。……まだ新しい。豆吉の仕業では？'},
+  {icon:'⛩',title:'小さな祠',text:'道端の祠に手を合わせた。田之助は今日も真面目である。'}
+];
+const HONEST_DECOY=[
+  {icon:'🌾',title:'新しい畦',text:'新しい畦がある。……と思ったが、水害で崩れた畦を村人が直しただけだった。'},
+  {icon:'👣',title:'山道の足跡',text:'山道の足跡は、猟師のものと分かった。怪しくない。'},
+  {icon:'🔥',title:'焼いた藁',text:'焼いた藁の灰。虫にやられた稲を焼いて始末した跡だ。むしろ気の毒である。'},
+  {icon:'💧',title:'水の筋',text:'水路から細い筋が……昔からある排水の溝だった。帳簿にもちゃんと載っている。'},
+  {icon:'🐦',title:'スズメの群れ',text:'スズメが群れている。落ち穂をついばんでいるだけだ。腹ペコなのは人もスズメも同じか。'}
+];
+
+/* ===== 村をつくる ===== */
+function genVillage(seed,idx,kind,used,opt){
+  opt=opt||{};
+  const rng=mkRng(seed);
+  const V={idx,kind,seed};
+  // 名前
+  let nm; do{ nm=rng.pick(POOL.village); }while(used.includes(nm)); used.push(nm); V.name=nm+'村';
+  let nb; do{ nb=rng.pick(POOL.village); }while(used.includes(nb)); V.nbName=nb+'村'; // 隣村（used には入れない）
+  // ---- 地形 ----
+  const flip=rng.chance(.5), fc=c=>flip?W-1-c:c;
+  const g=[]; for(let r=0;r<H;r++) g.push(Array(W).fill('g'));
+  const set=(r,c,t)=>{ g[r][fc(c)]=t; };
+  for(let r=0;r<=2;r++) for(let c=0;c<W;c++){ const x=rng.f(); set(r,c, r===0?(x<.7?'M':'F'):(x<.4?'M':x<.8?'F':'g')); }
+  const sc=rng.i(3,4);
+  for(let r=0;r<=2;r++) set(r,sc,'s');
+  for(let r=3;r<=7;r++) for(let c=0;c<W;c++) set(r,c,'p');
+  for(let c=0;c<W;c++) set(5,c,'=');
+  const cols=[0,1,2,3,4,5,6,7];
+  const bc=rng.pick(cols.filter(c=>c>=1&&c<=6&&c!==sc));
+  const nc=rng.pick(cols.filter(c=>c>=1&&c<=6&&c!==sc&&c!==bc));
+  set(6,bc,'=');set(7,bc,'=');
+  for(let c=0;c<W;c++) set(8,c,'R'); set(8,bc,'b'); set(9,bc,'=');
+  set(3,nc,'=');set(4,nc,'=');set(2,nc,'d');
+  set(3,sc,'w');set(4,sc,'w');set(5,sc,'B');set(6,sc,'w');set(7,sc,'w');
+  const fr=rng.shuffle(cols.filter(c=>c!==sc&&c!==bc&&c!==nc));
+  const yc=fr[0], yr=rng.pick([4,6]); set(yr,yc,'Y');
+  const kr=yr===4?3:7; set(kr,yc,'K');
+  const farms=[];
+  for(let k=1;k<=2;k++){ const r=rng.pick([4,6]); set(r,fr[k],'H'); farms.push({r,c:fc(fr[k])}); }
+  const tc=fr[3], tr=rng.pick([3,7]); set(tr,tc,'T'); set(tr===3?4:6,tc,'d');
+  if(rng.chance(.5)){ const r=rng.pick([4,6]); set(r,fr[4],'H'); farms.push({r,c:fc(fr[4])}); }
+  V.grid=g; V.flip=flip;
+  V.start={r:9,c:fc(bc)};
+  V.chiefHouse={r:yr,c:fc(yc)}; V.kura={r:kr,c:fc(yc)}; V.temple={r:tr,c:fc(tc)}; V.farms=farms;
+  V.canalCol=fc(sc);
+  V.ts=rng.i(1,99999);
+  // ---- 区域（隠し田の候補地） ----
+  const zdef=[[0,2,'西'],[3,4,'北'],[5,7,'東']];
+  const zones=zdef.map((z,i)=>{
+    const tiles=[]; let nF=0,nM=0,nS=0;
+    for(let r=0;r<=2;r++) for(let c=z[0];c<=z[1];c++){ tiles.push({r,c}); const t=g[r][c]; if(t==='F')nF++; if(t==='M')nM++; if(t==='s')nS++; }
+    const suf=nS?'の沢':(nF>=nM?'の林':'の山裏');
+    return {id:'z'+i,kind:'zone',name:z[2]+suf,tiles,center:{r:1,c:Math.floor((z[0]+z[1])/2)},hasS:nS>0};
+  });
+  V.zones=zones;
+  // ---- 人物 ----
+  const occ=new Set([V.start.r+','+V.start.c]);
+  const K_=(r,c)=>r+','+c;
+  const free=(r,c)=>r>=0&&r<H&&c>=0&&c<W&&walkable(g[r][c])&&!occ.has(K_(r,c));
+  const folks=[]; V.folks=folks;
+  function mkFolk(role,pos){
+    const f={id:'f_'+role,role,name:rng.pick(POOL[role]),pers:rng.pick(POOL.pers),r:pos.r,c:pos.c,talked:false};
+    occ.add(K_(pos.r,pos.c)); folks.push(f); return f;
+  }
+  const chiefName=rng.pick(POOL.chief);
+  const cpos={r:5,c:V.chiefHouse.c};
+  const chief=mkFolk('chief',cpos); chief.name=chiefName; V.chief=chief;
+  // 農民（田の中）
+  { let c=[]; for(let r=3;r<=7;r++)for(let x=0;x<W;x++){ if(g[r][x]==='p'&&free(r,x)&&Math.abs(r-farms[0].r)+Math.abs(x-farms[0].c)<=3) c.push({r,c:x}); }
+    if(!c.length){ for(let r=3;r<=7;r++)for(let x=0;x<W;x++) if(g[r][x]==='p'&&free(r,x)) c.push({r,c:x}); }
+    mkFolk('farmer',rng.pick(c)); }
+  // 後家（家の前の道）
+  { let p={r:5,c:farms[1].c}; if(!free(p.r,p.c)){ p={r:5,c:(p.c+1)%W}; } mkFolk('widow',p); }
+  // 猟師（山の入口）
+  { let c=[]; for(let x=0;x<W;x++){ if(free(2,x)&&g[2][x]!=='s') c.push({r:2,c:x}); } mkFolk('hunter',rng.pick(c)); }
+  // 和尚（お寺の前）
+  { let p={r:tr===3?4:6,c:V.temple.c}; mkFolk('monk',p); }
+  // 子ども（道ばた）
+  { let c=[]; for(let x=0;x<W;x++) if(free(5,x)) c.push({r:5,c:x}); for(let x=0;x<W;x++) if(free(9,x)&&x!==V.start.c) c.push({r:9,c:x}); mkFolk('child',rng.pick(c)); }
+  const F=role=>folks.find(f=>f.role===role);
+  // 家の持ち主（農民・後家）
+  farms[0].owner=F('farmer').name; farms[1].owner=F('widow').name;
+  // ---- 数字 ----
+  const L=rng.i(12,22), ypf=rng.pick([1.6,1.8,2.0,2.2]), K=Math.round(L*ypf);
+  const Ln=Math.max(10,L+rng.i(-3,3)), ypn=ypf+rng.pick([-.2,0,.2]), Kn=Math.round(Ln*ypn);
+  const hidK=rng.i(2,3);
+  let cause=rng.pick(['rain','pest','drought']);
+  const wOf=c=>c==='rain'?{rain:'heavy',pest:false,flood:false}:c==='pest'?{rain:'normal',pest:true,flood:false}:{rain:'light',pest:false,flood:false};
+  let weather, D=L, Q, rOurs, rN;
+  if(kind==='honest'){
+    weather=wOf(cause); if(cause==='rain'&&rng.chance(.65)) weather.flood=true;
+    rN=.5+rng.f()*.15; rOurs=rN+(rng.f()-.5)*.1;
+    D=L-(weather.flood?rng.i(1,3):0);
+  }else if(kind==='field'){
+    if(rng.chance(.5)){ weather=wOf(cause); } else { weather={rain:'normal',pest:false,flood:false}; }
+    const bad=weather.rain!=='normal'||weather.pest;
+    rN=bad?.5+rng.f()*.15:.93+rng.f()*.1; rOurs=rN+(rng.f()-.5)*.06;
+    D=L-hidK;
+  }else{
+    if(rng.chance(.4)){ weather=wOf(cause); } else { weather={rain:'normal',pest:false,flood:false}; }
+    const bad=weather.rain!=='normal'||weather.pest;
+    rN=bad?.55+rng.f()*.12:.93+rng.f()*.1; rOurs=rN*.55;
+  }
+  Q=Math.max(1,Math.round(D*ypf*rOurs));
+  const Qn=Math.round(Ln*ypn*rN);
+  V.cause=cause; V.weather=weather; V.L=L;V.K=K;V.D=D;V.Q=Q;V.Ln=Ln;V.Kn=Kn;V.Qn=Qn;V.ypf=ypf;
+  V.hidK=hidK; V.hidKoku=kind==='field'?Math.max(1,Math.round(hidK*ypf*.95)):kind==='rice'?Math.max(2,Math.round(K*.3)):0;
+  V.bribe=kind==='honest'?rng.i(1,3):rng.i(10,30);
+  V.daughter=kind!=='honest'&&(opt.forceDaughter||rng.chance(.3));
+  V.decl=buildDecl(V);
+  // ---- 隠し場所 ----
+  let sites=[]; let ti=-1;
+  const tname=rng.pick(POOL.temple)+'寺';
+  if(kind==='field') sites=zones;
+  else if(kind==='rice'){
+    sites=[{id:'kura',kind:'bld',name:'名主の蔵',tiles:[V.kura],center:V.kura},
+      {id:'tera',kind:'bld',name:tname+'の本堂',tiles:[V.temple],center:V.temple},
+      {id:'ie',kind:'bld',name:farms[0].owner+'の家',tiles:[farms[0]],center:farms[0]}];
+    V.templeName=tname;
+  }
+  V.sites=sites;
+  if(kind!=='honest'){ ti=rng.i(0,2); V.truthIdx=ti; V.truth=sites[ti]; } else { V.truthIdx=-1; V.truth=null; }
+  const decoys=sites.filter((s,i)=>i!==ti);
+  // ---- 手がかりスポット ----
+  const spots=[]; V.spots=spots; V.paddyMod={};
+  const near=(cen,rad)=>{ const o=[]; for(let r=cen.r-rad;r<=cen.r+rad;r++)for(let c=cen.c-rad;c<=cen.c+rad;c++){ if(free(r,c)&&(Math.abs(r-cen.r)+Math.abs(c-cen.c))<=rad) o.push({r,c}); } return o; };
+  const placeFrom=(cands,fallbackCen)=>{
+    let a=cands.filter(t=>free(t.r,t.c));
+    if(!a.length&&fallbackCen){ for(let rad=1;rad<=4&&!a.length;rad++) a=near(fallbackCen,rad); }
+    if(!a.length){ for(let r=0;r<H&&!a.length;r++)for(let c=0;c<W;c++) if(free(r,c)&&r<8) a.push({r,c}); }
+    return rng.pick(a);
+  };
+  const addSpot=(o,tile)=>{
+    const s=Object.assign({id:'s'+spots.length,done:false,site:null,cat:o.cat||'none',contra:null,kind:'clue'},o,{r:tile.r,c:tile.c});
+    spots.push(s); occ.add(K_(tile.r,tile.c)); return s;
+  };
+  const zoneTiles=z=>z.tiles.filter(t=>free(t.r,t.c)&&g[t.r][t.c]!=='s');
+  const canalTiles=()=>{ const o=[]; for(const r of [3,4,6,7]) if(free(r,V.canalCol)) o.push({r,c:V.canalCol}); return o; };
+  const plainNear=z=>{ const o=[]; for(let r=3;r<=4;r++)for(let c=z.tiles[0].c-1;c<=z.tiles[z.tiles.length-1].c+1;c++) if(free(r,c)&&(g[r][c]==='p'||g[r][c]==='=')) o.push({r,c}); return o; };
+  const ring=(b)=>{ let o=near(b.center,1); if(!o.length) o=near(b.center,2); return o; };
+  function fieldSpot(cat,z){
+    const d=FIELD_CLUES[cat]; let cands;
+    if(cat==='water') cands=canalTiles(); else if(cat==='sparrow') cands=plainNear(z);
+    else if(cat==='mud') cands=z.tiles.filter(t=>free(t.r,t.c)&&g[t.r][t.c]==='s');
+    else cands=zoneTiles(z);
+    const t=placeFrom(cands,z.center);
+    return addSpot({cat,site:z.id,icon:d.icon,title:d.title,text:d.text(z.name),label:TN[g[t.r][t.c]]},t);
+  }
+  function riceSpot(cat,b){
+    const d=RICE_CLUES[cat]; let t;
+    if(cat==='tatami') t=free(b.center.r,b.center.c)?b.center:placeFrom(ring(b),b.center);
+    else t=placeFrom(ring(b),b.center);
+    return addSpot({cat,site:b.id,icon:d.icon,title:d.title,text:d.text(b.name),label:TN[g[t.r][t.c]]},t);
+  }
+  const addNeutral=(n)=>{ for(let k=0;k<n;k++){ const d=rng.pick(NEUTRAL); const cs=[]; for(let r=3;r<=9;r++)for(let c=0;c<W;c++) if(free(r,c)&&r!==8) cs.push({r,c}); const t=rng.pick(cs); addSpot({cat:'none',icon:d.icon,title:d.title,text:d.text,label:TN[g[t.r][t.c]]},t); } };
+  const notes={}; // 証言ノート（人物id→定義）
+  const mkTalk=(role,note,lines)=>{ const f=F(role); f.note=note?Object.assign({id:f.id,kind:'talk',cat:'talk',site:null,contra:null,title:ROLE_JA[role]+'・'+f.name+'の証言',icon:'💬'},note):null; f.lines=lines; };
+  const quote=(f,t)=>{ const p=PS[f.pers]; return f.role==='child'?`「${t}」`:`「${t}${p.suf}」`; };
+  const flavor={
+    farmer:['今年の稲は、ちとさびしい出来でしてなあ。','あんたも大変じゃのう。田んぼの数を数えて回るなんて。','うちの田んぼは、先祖代々の宝ですじゃ。'],
+    widow:['うちの人が生きとったら、もうちっと楽だったろうにねえ。','お奉行さま、お茶でもどうぞ。お茶っぱしかないけどね。','この村はいい人ばかりだよ。たぶん。'],
+    hunter:['山の獣は、人間よりよっぽど正直だぞ。','今日は猪が出なくてな。腹が減った。','山はいつも通りだ。変わりはない。'],
+    monk:['南無阿弥陀仏…。お奉行さまにも仏のご加護を。','お布施の話？いやいや、今日は説法だけじゃ。','人はみな、何かを隠して生きておるものよ。'],
+    child:['ねえねえ、そのちょんまげ、さわっていい？','おじちゃんの刀、ぴかぴかだね！','かくれんぼしてたの。みつかっちゃった！']
+  };
+  if(kind==='field'||kind==='rice'){
+    const T=sites[ti], D1=decoys[0], D2=decoys[1];
+    let liarRole=rng.pick(['farmer','widow']), otherRole=liarRole==='farmer'?'widow':'farmer';
+    if(kind==='field'){
+      // 本物の手がかり：3種類
+      const avail=Object.keys(FIELD_CLUES).filter(k=>k!=='mud'||T.hasS);
+      const real=rng.shuffle(avail).slice(0,3);
+      real.forEach(c=>fieldSpot(c,T));
+      // ダミー（それぞれ1つだけ）
+      const a1=Object.keys(FIELD_CLUES).filter(k=>k!=='mud'||D1.hasS);
+      fieldSpot(rng.pick(a1),D1);
+      // 証言
+      const hf=F('hunter'); mkTalk('hunter',{cat:'smoke',site:T.id,icon:'🪵'},
+        [['hunter',quote(hf,`${T.name}の奥で、夜ふけに煙が上がるのを見たぞ。炭焼きの季節でもないのにな`)]]);
+      const cf=F('child'); mkTalk('child',{cat:'child',site:T.id,icon:'🧒'},
+        [['child',`「このまえね、おとうが${T.name}のひみつの田んぼで…あっ、これ言っちゃだめなんだった！」`]]);
+      const lf=F(liarRole); const mudTile=placeFrom(near({r:lf.r,c:lf.c},2),{r:lf.r,c:lf.c});
+      const mud=addSpot({cat:'sandal',site:T.id,icon:'🥾',title:'泥だらけの草鞋',text:`ぬれた草鞋（わらじ）が干してある。底に${T.name}の赤土がべったり。`,label:TN[g[mudTile.r][mudTile.c]]},mudTile);
+      mkTalk(liarRole,{cat:'lie',site:null,contra:mud.id,icon:'🙊'},[[liarRole,quote(lf,`${T.name}？あんな所へは誰も行っとらん。わしも山へは行っとらんぞ`)]]);
+      mud.contra=lf.id; mud.contraText=`「山へは行っとらん」と言うのに、草鞋は${T.name}の泥だらけ！つまり${T.name}に何かがある！`;
+      V.liar=lf.id;
+      const mf=F('monk'); mkTalk('monk',{cat:'sound',site:D2.id,icon:'🔔'},[['monk',quote(mf,`${D2.name}では、夜になると妙な物音がするとか…。わしは見ておらんがの`)]]);
+      mkTalk(otherRole,null,[[otherRole,quote(F(otherRole),rng.pick(flavor[otherRole]))]]);
+    }else{
+      const real=rng.shuffle(Object.keys(RICE_CLUES)).slice(0,3);
+      const rs=real.map(c=>riceSpot(c,T));
+      riceSpot(rng.pick(Object.keys(RICE_CLUES)),D1);
+      const hf=F('hunter'); mkTalk('hunter',{cat:'cart',site:T.id,icon:'🛒'},[['hunter',quote(hf,`夜中、${T.name}のほうへ荷車の音がしたぞ。ゴトゴトとな`)]]);
+      const cf=F('child'); mkTalk('child',{cat:'child',site:T.id,icon:'🧒'},[['child',`「${T.name}のゆかしたにね、おっきなたわらがいっぱいあるんだよ！あっ、ないしょだった…」`]]);
+      const lf=F(liarRole); const cs=rng.pick(rs);
+      mkTalk(liarRole,{cat:'lie',site:null,contra:cs.id,icon:'🙊'},[[liarRole,quote(lf,`${T.name}に米なんぞ、一粒もありゃせんよ`)]]);
+      cs.contra=lf.id; cs.contraText=`「米は一粒もない」と言うのに、${T.name}は「${cs.title}」！うそをついておるな！`;
+      V.liar=lf.id;
+      const mf=F('monk'); mkTalk('monk',{cat:'sound',site:D2.id,icon:'🔔'},[['monk',quote(mf,`${D2.name}の裏でな、夜な夜な何やら運び込む音がしたような…気のせいかのう`)]]);
+      mkTalk(otherRole,null,[[otherRole,quote(F(otherRole),rng.pick(flavor[otherRole]))]]);
+    }
+    addNeutral(rng.i(3,4));
+  }else{
+    // 本当に不作の村
+    const causeSpot={rain:{cat:'flood',icon:'🌊',title:'水に浸かった田',text:'田んぼが水の底。稲がぷかぷか浮いて、根から腐っている。長雨の被害は本物だ。',mod:'flood'},
+      pest:{cat:'pest',icon:'🐛',title:'ウンカの害',text:'稲にウンカがびっしり。茎ごと枯れて、穂がスカスカだ。虫害は本物だ。',mod:'pest'},
+      drought:{cat:'dry',icon:'🏜',title:'ひび割れた田',text:'田んぼの土がカラカラにひび割れている。水不足で稲が立ち枯れておる。日照りは本物だ。',mod:'crack'}}[cause];
+    const pcs=[]; for(let r=3;r<=7;r++)for(let c=0;c<W;c++) if(g[r][c]==='p'&&free(r,c)) pcs.push({r,c});
+    const pt=rng.pick(pcs);
+    addSpot({cat:causeSpot.cat,site:'honest',icon:causeSpot.icon,title:causeSpot.title,text:causeSpot.text,label:'田'},pt);
+    V.paddyMod[K_(pt.r,pt.c)]=causeSpot.mod;
+    for(const t of rng.shuffle(pcs).slice(0,7)) if(!V.paddyMod[K_(t.r,t.c)]) V.paddyMod[K_(t.r,t.c)]=causeSpot.mod;
+    const hf=farms[rng.i(0,farms.length-1)];
+    const binTile=free(hf.r,hf.c)?{r:hf.r,c:hf.c}:placeFrom(near(hf,1),hf);
+    addSpot({cat:'bin',site:'honest',icon:'🍚',title:'空の米びつ',text:'のぞいた米びつは空っぽ。底にぬかが少し残るだけ。暮らしの苦しさが伝わる。',label:'農家'},binTile);
+    // 怪しく見えるが無関係なもの
+    const hd=rng.shuffle(HONEST_DECOY).slice(0,rng.i(3,4));
+    for(const d of hd){ const cs=[]; for(let r=1;r<=7;r++)for(let c=0;c<W;c++) if(free(r,c)) cs.push({r,c}); const t=rng.pick(cs); addSpot({cat:'none',icon:d.icon,title:d.title,text:d.text,label:TN[g[t.r][t.c]]},t); }
+    addNeutral(1);
+    const ch=F('child'); mkTalk('child',{cat:'hunger',site:'honest',icon:'🧒'},[['child',`「おなかすいた…。ごはんは、ひえのおかゆだけなの…」`]]);
+    const fm=F('farmer'); mkTalk('farmer',{cat:'ftalk',site:'honest',icon:'🧑‍🌾'},[['farmer',quote(fm,`今年は${CAUSE_JA[cause]}でなあ…。稲がみんなやられちまった`)]]);
+    const wd=F('widow'); mkTalk('widow',{cat:'wtalk',site:'honest',icon:'👵'},[['widow',quote(wd,'米びつが空でねえ。種もみまで食べちまいそうさ')]]);
+    mkTalk('hunter',null,[['hunter',quote(F('hunter'),rng.pick(flavor.hunter))]]);
+    mkTalk('monk',null,[['monk',quote(F('monk'),'今年は檀家からのお布施も減ってのう。みな苦しいのじゃ')]]);
+  }
+  // 名主：問いつめでのメモ（悪い村のみ）
+  if(kind!=='honest'){
+    const T=V.truth;
+    V.flusterNote={id:'n_fluster',kind:'talk',cat:'fluster',site:T.id,contra:null,icon:'💦',title:'名主のうろたえ',text:`${T.name}の話になると、名主が汗だくで目をそらす。`};
+    V.hintNote={id:'n_hint',kind:'talk',cat:'hint',site:T.id,contra:null,icon:'🙏',title:'名主の白状',text:`名主「降参ですじゃ…。隠してあるのは、${T.name}の近くで…」`};
+  }
+  // 手帳に入れる文
+  for(const f of folks){ if(f.role==='chief') continue; if(f.note){ f.note.text=f.lines.map(l=>l[1]).join(''); } }
+  for(const f of folks){ if(f.role==='chief') continue; if(!f.lines) f.lines=[[f.role,quote(f,rng.pick(flavor[f.role]))]]; }
+  // 田の見た目（普通の村）
+  V.spotsByTile={}; spots.forEach(s=>{ V.spotsByTile[K_(s.r,s.c)]=s; });
+  // 摘発で出現する田
+  if(kind==='field'){ const cand=rng.shuffle(V.truth.tiles.filter(t=>g[t.r][t.c]!=='s')); V.hiddenTiles=cand.slice(0,Math.max(4,hidK+2)); }
+  else V.hiddenTiles=[];
+  return V;
+}
+
+/* ===== 申告と資料 ===== */
+function buildDecl(V){
+  const rainTxt={heavy:'多い（長雨）',normal:'例年なみ',light:'少ない（日照り）'}[V.weather.rain];
+  const facts=[
+    {id:'F1a',doc:'去年の検地帳',text:`田 ${V.L} 枚`},
+    {id:'F1b',doc:'去年の検地帳',text:`石高 ${V.K} 石`},
+    {id:'F2a',doc:'藩の天候記録',text:`雨量：${rainTxt}`},
+    {id:'F2b',doc:'藩の天候記録',text:`虫害：${V.weather.pest?'あり':'なし'}`},
+    {id:'F2c',doc:'藩の天候記録',text:`水害：${V.weather.flood?'あり（川があふれた）':'なし'}`},
+    {id:'F3a',doc:`隣の${V.nbName}`,text:`田 ${V.Ln} 枚`},
+    {id:'F3b',doc:`隣の${V.nbName}`,text:`今年 ${V.Qn} 石（去年 ${V.Kn} 石）`}
+  ];
+  const claims=[
+    {id:'C1',text:`田は ${V.D} 枚`},
+    {id:'C2',text:`石高は ${V.Q} 石`},
+    {id:'C3',text:`不作のわけは「${CAUSE_JA[V.cause]}」`}
+  ];
+  const w=V.weather, cause=V.cause;
+  const oursR=(V.Q/V.D)/(V.K/V.L), nbR=V.Qn/V.Kn;
+  const yieldBad=oursR<nbR-.2;
+  const causeBad=cause==='rain'?w.rain!=='heavy':cause==='drought'?w.rain!=='light':!w.pest;
+  const res={};
+  for(const c of claims)for(const f of facts) res[c.id+':'+f.id]={contra:false,msg:'その二つは、関係がなさそうだ。'};
+  // 田の枚数
+  res['C1:F1a']= V.D<V.L ? (w.flood?{contra:false,msg:`田が${V.L-V.D}枚減っているが、水害の記録がある。潰れた田があるのだろう。ムジュンはない。`}
+      :{contra:true,kind:'fewer',msg:`去年は${V.L}枚、今年は${V.D}枚。水害の記録もないのに、田が${V.L-V.D}枚も消えるか！`}) : {contra:false,msg:'去年と同じ枚数だ。ムジュンはない。'};
+  if(V.D<V.L&&w.flood) res['C1:F2c']={contra:false,msg:'水害の記録があるので、田が減ったのも納得がいく。ムジュンはない。'};
+  // 原因
+  if(cause==='pest'){
+    res['C3:F2b']= causeBad?{contra:true,kind:'cause',msg:'「ウンカの害」と言うが、天候記録に虫害はない！'}:{contra:false,msg:'虫害の記録がある。申告どおりだ。ムジュンはない。'};
+  }else{
+    res['C3:F2a']= causeBad?{contra:true,kind:'cause',msg:cause==='rain'?'「長雨」と言うが、記録では雨量は多くない！':'「日照り」と言うが、記録では雨は少なくない！'}:{contra:false,msg:'記録も同じ天気だ。申告どおり。ムジュンはない。'};
+  }
+  // 石高
+  res['C2:F3b']= yieldBad?{contra:true,kind:'yield',msg:`田一枚あたりの取れ高が、隣の${V.nbName}より明らかに低い！同じ空の下でこれはおかしい！`}
+      :{contra:false,msg:`隣の${V.nbName}の取れ高と比べても、おかしくはない。ムジュンはない。`};
+  const list=Object.keys(res).filter(k=>res[k].contra);
+  return {claims,facts,res,contras:list};
+}
+
+/* ===== 手がかりの組み合わせ（推理） ===== */
+function pairResult(V,a,b){
+  if(!a||!b||a.id===b.id) return null;
+  if(a.contra===b.id||b.contra===a.id){
+    const sp=a.kind==='clue'&&a.contraText?a:(b.kind==='clue'&&b.contraText?b:null);
+    const siteId=(a.site||b.site);
+    return {site:siteId,by:'contra',text:sp?sp.contraText:'ムジュンを見つけた！'};
+  }
+  if(a.site&&a.site===b.site&&a.cat!==b.cat) return {site:a.site,by:'combo'};
+  return null;
+}
+function siteName(V,id){ if(id==='honest') return null; const s=V.sites.find(x=>x.id===id); return s?s.name:'?'; }
+function noteList(V){ // 村にある全メモの定義（検証用）
+  const out=[];
+  V.spots.forEach(s=>out.push({id:s.id,kind:'clue',cat:s.cat,site:s.site,contra:s.contra,contraText:s.contraText,r:s.r,c:s.c,src:'spot'}));
+  V.folks.forEach(f=>{ if(f.note) out.push(Object.assign({r:f.r,c:f.c,src:'folk'},f.note)); });
+  return out;
+}
+function analyze(V){
+  const ns=noteList(V); const found=new Set();
+  for(let i=0;i<ns.length;i++)for(let j=i+1;j<ns.length;j++){ const p=pairResult(V,ns[i],ns[j]); if(p) found.add(p.site); }
+  return {sites:[...found],notes:ns};
+}
+
+/* ===== 保存 ===== */
+const LSget=(k,d)=>{ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(e){ return d; } };
+const LSput=(k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} };
+let muted=LSget('kenchiMute',false)===true;
+let best=LSget('kenchiBest',null)||{score:0,rank:'-'};
+let book=LSget('kenchiEndings',[]); if(!Array.isArray(book)) book=[];
+
+/* ===== 音（WebAudio で合成） ===== */
+let AC=null;
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==='suspended'){ try{ AC.resume(); }catch(e){} } return AC; }
+function tone(f,d,type,v,t0,f2){
+  if(muted) return; const a=ac(); if(!a) return;
+  try{ const t=a.currentTime+(t0||0), o=a.createOscillator(), g=a.createGain();
+    o.type=type||'sine'; o.frequency.setValueAtTime(f,t); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+d);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(v||.15,t+.01); g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+d+.05); }catch(e){}
+}
+function noise(d,v,t0,lp){
+  if(muted) return; const a=ac(); if(!a) return;
+  try{ const t=a.currentTime+(t0||0), n=Math.floor(a.sampleRate*d), b=a.createBuffer(1,n,a.sampleRate), x=b.getChannelData(0);
+    for(let i=0;i<n;i++) x[i]=(Math.random()*2-1)*(1-i/n);
+    const s=a.createBufferSource(), g=a.createGain(), f=a.createBiquadFilter(); f.type='lowpass'; f.frequency.value=lp||3000;
+    s.buffer=b; g.gain.value=v||.2; s.connect(f); f.connect(g); g.connect(a.destination); s.start(t); }catch(e){}
+}
+const SFX={
+  clack(){ tone(1500,.07,'square',.12); tone(1100,.09,'square',.1,.13); noise(.05,.15,0,5000); noise(.05,.12,.13,5000); },
+  don(){ tone(150,.6,'sine',.4,0,40); noise(.4,.3,0,600); },
+  koban(){ [0,.07,.14].forEach((t,i)=>{ tone(2400+i*300,.25,'triangle',.1,t); tone(3600+i*300,.18,'sine',.05,t); }); },
+  step(){ noise(.04,.05,0,900); },
+  ok(){ tone(660,.1,'triangle',.12); tone(990,.16,'triangle',.12,.09); },
+  ng(){ tone(220,.18,'sawtooth',.08,0,160); },
+  hirameki(){ tone(880,.1,'triangle',.12); tone(1320,.1,'triangle',.12,.08); tone(1760,.22,'triangle',.12,.16); },
+  night(){ tone(330,.5,'sine',.08,0,220); tone(247,.7,'sine',.06,.2,165); },
+  tick(){ tone(900,.025,'square',.025); },
+  gong(){ tone(110,1.4,'sine',.3); tone(220,1.2,'sine',.12); noise(.2,.1,0,900); },
+  don2(){ SFX.don(); }
+};
+function sfx(n){ try{ SFX[n]&&SFX[n](); }catch(e){} }
+
+/* ===== 状態 ===== */
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const S={ui:'title',auto:false,seed:1,dirty:true,tm:0,view:'scene',scene:{k:'title',face:{}},phase:'title',tab:'act',
+  hyo:40,ura:0,kob:0,uta:0,bribes:0,strict:0,mercy:0,caughtN:0,missN:0,falseAcc:0,right:0,score:0,akuda:false,pend:null,vlog:[],usedNames:[],
+  V:null,vi:0,used:0,pos:{r:9,c:0},kpos:{r:9,c:0},walk:null,dlg:null,choice:null,fx:null,sel:null,accuse:false,
+  notes:[],infers:[],cf:{},selNotes:[],doc:{c:null,f:null},vsc:{inf:0,con:0},vcaught:false,tu:false,rev:null,plan:[],result:null,ending:null,resultWait:0,msgText:''};
+const FACES={};
+const WHO={tano:'田之助',koz:'豆吉',sys:'',metsuke:'お目付',shogun:'上様'};
+const rr=(a)=>a[Math.floor(Math.random()*a.length)]; // 演出だけ（ゲーム結果には影響しない）
+const leftH=()=>HALF-S.used;
+const leftTxt=()=>{ const l=leftH(); return (l/2)+''; };
+function setAuto(on){ S.auto=!!on; $('autoBtn').setAttribute('aria-pressed',S.auto?'true':'false'); S.dirty=true; }
+
+function resetRun(seed){
+  Object.assign(S,{seed,vi:0,hyo:40,ura:0,kob:0,uta:0,bribes:0,strict:0,mercy:0,caughtN:0,missN:0,falseAcc:0,right:0,score:0,akuda:false,pend:null,vlog:[],usedNames:[],V:null,result:null,ending:null,dlg:null,choice:null,fx:null,walk:null});
+  const rng=mkRng(seed*31+7); const h=rng.chance(.4)?2:1; const idx=rng.shuffle([0,1,2,3,4]).slice(0,h);
+  S.plan=[0,1,2,3,4].map(i=>idx.includes(i)?'honest':rng.pick(['field','rice']));
+}
+function chg(k,v){ const hi=k==='kob'?99999:100; S[k]=clamp(S[k]+v,0,hi); if(S.ura>=100&&!S.pend) S.pend='ikki'; if(S.uta>=100&&!S.pend) S.pend='kaieki'; S.dirty=true; }
+
+/* ===== 会話 ===== */
+function who(w){
+  if(w==='chief') return S.V?S.V.chief.name.split(' ')[0]+'名主':'名主';
+  if(WHO[w]!==undefined) return WHO[w];
+  if(S.V){ const f=S.V.folks.find(x=>x.role===w); if(f) return f.name+'（'+ROLE_JA[w]+'）'; }
+  return '';
+}
+function say(lines,done){
+  S.dlg={lines:lines.map(l=>({w:l[0],t:l[1],f:l[2]||'n',fx:l[3]})),i:0,ch:0,wait:0,done:done||null};
+  lineStart(); S.dirty=true;
+}
+function lineStart(){ const l=S.dlg.lines[S.dlg.i]; S.dlg.ch=S.auto?l.t.length:0; S.dlg.wait=0; S.scene.talk=l.w; S.scene.tt=0; if(l.w!=='sys') S.scene.face[l.w]=l.f; if(l.fx==='rev'){ S.rev={t:0}; sfx('don'); } else sfx('tick'); }
+function advance(){
+  const d=S.dlg; if(!d) return;
+  const l=d.lines[d.i];
+  if(d.ch<l.t.length){ d.ch=l.t.length; return; }
+  d.i++;
+  if(d.i>=d.lines.length){ const cb=d.done; S.dlg=null; S.scene.talk=null; S.dirty=true; if(cb) cb(); }
+  else lineStart();
+}
+function msg(t,w){ S.msgText=(w?'':'')+t; S.msgWho=w?who(w):''; S.dirty=true; }
+const busy=()=>!!(S.dlg||S.walk||S.fx);
+
+/* ===== 地図の計算 ===== */
+function tileAt(r,c){ return S.V.grid[r][c]; }
+function pathTo(r,c){
+  const V=S.V, g=V.grid; if(r<0||r>=H||c<0||c>=W||g[r][c]==='R') return null;
+  const dist=[],prev=[]; for(let i=0;i<H;i++){ dist.push(Array(W).fill(1e9)); prev.push(Array(W).fill(null)); }
+  dist[S.pos.r][S.pos.c]=0; const q=[[S.pos.r,S.pos.c]];
+  while(q.length){ q.sort((a,b)=>dist[a[0]][a[1]]-dist[b[0]][b[1]]); const [y,x]=q.shift();
+    for(const [dy,dx] of [[1,0],[-1,0],[0,1],[0,-1]]){ const ny=y+dy,nx=x+dx; if(ny<0||ny>=H||nx<0||nx>=W) continue; const t=g[ny][nx]; if(t==='R') continue;
+      const nd=dist[y][x]+TC[t]; if(nd<dist[ny][nx]){ dist[ny][nx]=nd; prev[ny][nx]=[y,x]; q.push([ny,nx]); } } }
+  if(dist[r][c]>=1e9) return null;
+  const path=[]; let cur=[r,c]; while(!(cur[0]===S.pos.r&&cur[1]===S.pos.c)){ path.unshift({r:cur[0],c:cur[1]}); cur=prev[cur[0]][cur[1]]; }
+  return {path,cost:dist[r][c]};
+}
+function goTo(r,c){
+  if(r===S.pos.r&&c===S.pos.c) return true;
+  const p=pathTo(r,c); if(!p){ msg('そこへは行けぬ。'); return false; }
+  if(p.cost>leftH()){ msg(`刻が足りぬ（あと${leftTxt()}刻）。`); sfx('ng'); return false; }
+  S.walk={path:p.path,i:0,t:0}; S.sel=null; S.dirty=true; return true;
+}
+function spend(n){
+  const d0=Math.floor(Math.min(S.used,HALF-1)/16); S.used=Math.min(HALF,S.used+n);
+  const d1=Math.floor(Math.min(S.used,HALF-1)/16);
+  if(d1>d0&&S.used<HALF){ S.fx={t:'night',t0:0,dur:S.auto?.4:1.6,day:d1}; sfx('night'); }
+  S.dirty=true;
+}
+const man=(a,b)=>Math.abs(a.r-b.r)+Math.abs(a.c-b.c);
+const nearSpots=()=>S.V.spots.filter(s=>!s.done&&man(s,S.pos)<=1);
+const nearFolks=()=>S.V.folks.filter(f=>man(f,S.pos)<=1);
+
+/* ===== 手帳 ===== */
+function addNote(n){ if(S.notes.find(x=>x.id===n.id)) return; S.notes.push(n); S.dirty=true; }
+function spotNote(s){ return {id:s.id,kind:'clue',cat:s.cat,site:s.site,contra:s.contra,contraText:s.contraText,icon:s.icon,title:s.title,text:s.text}; }
+function pickNote(id){
+  const i=S.selNotes.indexOf(id); if(i>=0) S.selNotes.splice(i,1); else S.selNotes.push(id);
+  if(S.selNotes.length>=2) tryCombine();
+  S.dirty=true;
+}
+function tryCombine(){
+  const [a,b]=S.selNotes.map(id=>S.notes.find(n=>n.id===id)); S.selNotes=[];
+  const p=pairResult(S.V,a,b);
+  if(!p){ sfx('ng'); msg('うーむ…この二つは、つながらぬ。'); return false; }
+  if(S.infers.find(x=>x.site===p.site)){ msg('その推理は、すでに手帳にある。'); return false; }
+  const V=S.V;
+  const inf={id:'i'+S.infers.length,site:p.site,by:p.by,a:a.id,b:b.id,text:p.site==='honest'?'この村の不作は、本物だ！':`${siteName(V,p.site)}に${V.kind==='field'?'隠し田':'隠し米'}あり！`};
+  S.infers.push(inf); S.vsc.inf++; sfx('hirameki'); chg('hyo',1);
+  const first=p.by==='contra'?p.text:(p.site==='honest'?'二つの手がかり…やはりこの村の不作は、本物のようだ。':`二つの手がかりが、つながった！　${inf.text}`);
+  say([['tano',first,'a'],['koz',rr(['さすが旦那さま！ひらめきやしたね！','それでございやす！おみごとでやんす！','旦那さまの頭、今日もさえてやすぅ！']),'h']]);
+  return true;
+}
+function pickDoc(kind,id){
+  if(kind==='c') S.doc.c=S.doc.c===id?null:id; else S.doc.f=S.doc.f===id?null:id;
+  if(S.doc.c&&S.doc.f) tryTsuki(); S.dirty=true;
+}
+function tryTsuki(){
+  const key=S.doc.c+':'+S.doc.f; S.doc={c:null,f:null};
+  const r=S.V.decl.res[key]; if(!r) return false;
+  if(r.contra){
+    if(S.cf[key]){ msg('そのムジュンは、すでに手帳にある。'); return false; }
+    S.cf[key]=r; S.vsc.con++; chg('hyo',2); sfx('clack');
+    say([['tano',r.msg,'a'],['chief',rr(['ぐっ！そ、それは…！','ひえっ！','ぎくり！']),'s']]);
+    return true;
+  }
+  sfx('ng'); msg(r.msg); return false;
+}
+
+/* ===== 探索コマンド ===== */
+function investigate(s){
+  if(leftH()<2){ msg('刻が足りぬ。'); sfx('ng'); return; }
+  s.done=true; spend(2); addNote(spotNote(s)); sfx('ok');
+  const lines=[['tano',s.text,'n']];
+  say(lines);
+}
+function talk(f){
+  if(f.role==='chief'){ return talkChief(); }
+  if(leftH()<2){ msg('刻が足りぬ。'); sfx('ng'); return; }
+  f.talked=true; spend(2);
+  const p=PS[f.pers];
+  const lines=[]; if(f.role!=='child') lines.push([f.role,p.hi,f.pers==='kiyowa'?'s':'h']); else lines.push([f.role,'あっ、お侍さまだ！','h']);
+  f.lines.forEach(l=>lines.push([l[0],l[1],'n']));
+  if(f.note) addNote(Object.assign({},f.note));
+  else addNote({id:f.id,kind:'talk',cat:'chat',site:null,contra:null,icon:'💬',title:ROLE_JA[f.role]+'・'+f.name+'の話',text:f.lines.map(l=>l[1]).join('')});
+  say(lines);
+}
+function talkChief(){
+  const V=S.V, ch=V.chief;
+  const canPress=V.kind!=='honest'&&!V.pressed&&S.infers.length>0;
+  if(canPress) return pressChief();
+  if(leftH()<2){ msg('刻が足りぬ。'); return; }
+  spend(2);
+  if(V.kind==='honest') say([['chief',rr(['お奉行さま、ご覧のとおりの有様でして…。お茶でもどうぞ。','どうか、村の苦しさをお察しくだされ…。']),'s'],['koz','名主さま、ちょっと痩せやしたね。おなか、鳴ってやせんか。','n']]);
+  else say([['chief',rr(['はて、隠しごと？　なんのことやら、ぽんぽこぽん♪','お奉行さま、わしは何も…何も隠しておりませんぞ！']),'h'],['koz','（ぜったい何か隠してやす…）','n']]);
+}
+function pressChief(){
+  const V=S.V, T=V.truth;
+  if(leftH()<2){ msg('刻が足りぬ。'); sfx('ng'); return; }
+  spend(2); V.pressed=true;
+  if(V.daughter){
+    say([['tano',`名主どの。この村のようすは、すべて見えてまいったぞ。${T.name}に、何を隠しておる！`,'a'],
+      ['chief','ぎくぎくっ！　……お、お奉行さま、ちとこちらへ…。','s'],
+      ['chief','どうか、どうかこの件、ご内聞に…。見逃してくださるなら、うちの娘を奉公に差し上げますゆえ…！','s'],
+      ['koz','えっ！？　だ、旦那さま、これは…！','x']],
+      ()=>{ S.choice={k:'daughter',title:'名主の申し出に、どう答える？',opts:[
+        {label:'申し出を受ける',sub:'…受けてしまう？',cls:'',fn:()=>acceptDaughter()},
+        {label:'きっぱり断る',sub:'「たわけ！」',cls:'pri',fn:()=>declineDaughter()}]}; S.tab='act'; S.dirty=true; });
+  }else{
+    addNote(Object.assign({},V.flusterNote));
+    say([['tano',`名主どの。${T.name}の話になると、汗が止まらぬようだが？`,'a'],
+      ['chief','ぐ、ぐぬぬ…。べ、べつに何も…！ところでお奉行さま、近ごろ小判の袋が重くて重くて…（ちらちら）','s'],
+      ['koz','名主さま、わかりやすすぎやす…。','n']]);
+  }
+}
+function acceptDaughter(){
+  S.choice=null; S.akuda=true; S.pend='seibai';
+  say([['tano','……ふむ。……よかろう。','n'],['koz','旦那さまァ！？　そ、それだけはいけやせん！','x'],['sys','――そのとき、障子の向こうで、何者かの気配が動いた。――']]);
+}
+function declineDaughter(){
+  S.choice=null; const V=S.V, T=V.truth; addNote(Object.assign({},V.hintNote)); chg('hyo',4); chg('ura',-3);
+  say([['tano','たわけぇっ！　人の道に外れた申し出、言語道断！　この堅物田之助、袖の下も娘御も、決して受けぬ！','a'],
+    ['chief','ひっ…！　ご、ごもっとも…。降参ですじゃ、お奉行さま…。','s'],
+    ['chief',`実は隠してあるのは、${T.name}の近くで…。`,'s'],
+    ['koz','旦那さま、かっこいいー！！','h']]);
+}
+
+/* ===== 摘発 ===== */
+function siteHit(T,r,c){
+  if(!T) return false;
+  if(T.kind==='zone') return r<=2&&T.tiles.some(t=>t.r===r&&t.c===c);
+  return T.tiles.some(t=>t.r===r&&t.c===c);
+}
+function startAccuse(){ S.accuse=true; S.sel=null; msg('どこを指す？　地図のマスをタップ。'); S.dirty=true; }
+function askAccuse(r,c){
+  const V=S.V, nm=V.grid[r][c];
+  S.accuseAt={r,c}; S.accuse=false;
+  S.choice={k:'accuse',title:`（${r+1}行 ${c+1}列・${TN[nm]||''}）に隠し場所があると指す？`,opts:[
+    {label:'ここだ！　御用だ！',sub:'外れれば恨みを買い、刻も失う',cls:'pri',fn:()=>{ S.choice=null; doAccuse(r,c); }},
+    {label:'やめておく',sub:'',cls:'',fn:()=>{ S.choice=null; S.accuseAt=null; S.dirty=true; }}]};
+  S.dirty=true;
+}
+function doAccuse(r,c){
+  const V=S.V, hit=siteHit(V.truth,r,c);
+  if(hit) return accuseSuccess();
+  S.falseAcc++; S.vsc.fa=(S.vsc.fa||0)+1; sfx('ng');
+  if(V.kind==='honest'){
+    chg('ura',24); chg('hyo',-6);
+    say([['tano','ここだ！　隠し田があるはず…掘り返せ！','a'],['sys','……掘り返したが、そこには何もなかった。'],
+      ['chief','お、お奉行さまっ！　わしらは本当に苦しいのです！　田を荒らされるなんて、あんまりですじゃ！','c'],
+      ['koz','旦那さま、村のみなさんの目が…こわいでやす…','s']],()=>afterMiss());
+  }else{
+    chg('ura',10); chg('hyo',-5); chg('uta',2);
+    say([['tano','ここだ！　掘り返せ！','a'],['sys','……掘り返したが、そこには何もなかった。'],
+      ['chief','はて？　わしらは何も隠しておりませんぞ？　ぽんぽこぽん♪','h'],
+      ['koz','旦那さま、外れでやす…。村のみなさんに笑われてやす。','s']],()=>afterMiss());
+  }
+}
+function afterMiss(){ S.accuseAt=null;
+  spend(Math.min(8,leftH())); S.accuseAt=null;
+  if(leftH()<=0){ S.tu=true; say([['tano','日が暮れてしまった…。もはや調べる刻はない。','s']],()=>toJudge()); }
+}
+function accuseSuccess(){
+  const V=S.V; S.vcaught=true; S.rev=null; S.caughtN++; chg('hyo',4);
+  const what=V.kind==='field'?'隠し田':'隠し米';
+  const lines=[['tano',`ここだ！　この${V.truth.name}に${what}があるはず！　掘り返せ！`,'a'],
+    ['sys','――　御用だ！　――','n','rev'],
+    ['koz',V.kind==='field'?`出た出た！　隠し田が${V.hidK}枚も！`:`出た出た！　俵がびっしり！　隠し米でやんす！`,'x'],
+    ['tano',`申告は${V.Q}石。だが実高は${V.Q+V.hidKoku}石！　……${V.chief.name.split(' ')[0]}名主、これはどういうことか！`,'a'],
+    ['chief',`ひ、ひえええ！　お奉行さま、これはほんの気持ちでして…（小判の袋をそっと差し出す）`,'s'],
+    ['koz','名主さま、手つきが慣れてやす…。','n']];
+  say(lines,()=>toJudge());
+}
+
+/* ===== 裁定 ===== */
+function toJudge(){
+  const V=S.V; S.phase='judge'; S.view='scene'; S.scene={k:'judge',face:{tano:'n',chief:'s',koz:'n'}}; S.accuse=false; S.sel=null; S.tab='act';
+  const caught=S.vcaught;
+  const pre=V.kind==='honest'?[['tano','さて、年貢の裁定である。この村の不作…さて、どう見るか。','n']]
+    :caught?[['tano','さて、年貢の裁定である。隠していた分も、きっちり計算し直した。','a']]
+    :[['tano','調べはここまで。…年貢の裁定を下す。','n']];
+  say(pre,()=>{
+    S.choice={k:'judge',title:`${V.name}の年貢、どう裁く？`,opts:[
+      {label:'厳しく取り立てる',sub:'藩の評価↑　村の恨み↑',cls:'pri',fn:()=>judge('strict')},
+      {label:'情けをかける',sub:'村の恨み↓　（正直な村なら信頼↑）',cls:'go',fn:()=>judge('mercy')},
+      {label:`袖の下を受け取る（${V.bribe}両）`,sub:'懐↑　だが目付の疑い↑',cls:'',fn:()=>judge('bribe')}]};
+    S.dirty=true; });
+}
+function judge(kind){
+  S.choice=null; const V=S.V, honest=V.kind==='honest', caught=S.vcaught; let out='wrong', lines;
+  if(kind==='strict'){
+    S.strict++;
+    if(honest){ chg('hyo',4); chg('ura',22); out='wrong';
+      lines=[['tano','不作などと申して、年貢を渋る気であろう。規定どおり、きっちり納めよ！','a'],['chief','そ、そんな…！　本当にないものは、ないのですじゃ…！','c'],['koz','旦那さま…ちょっと、きびしすぎやしませんか…','s']]; }
+    else if(caught){ chg('hyo',8); chg('ura',10); out='right'; S.right++;
+      lines=[['tano','不正をはたらいた罰じゃ。隠し分も含め、年貢はきっちり取り立てる！','a'],['chief','は、はは～っ！　ご、ごもっともにございます～！','s'],['koz','お見事でやんす！　藩のお殿さまもお喜びでやす！','h']]; }
+    else { chg('hyo',4); chg('ura',6); out='partial';
+      lines=[['tano','申告どおり、年貢はきっちり納めてもらう。','n'],['chief','（ほっ…隠したぶんはバレておらん…）','h'],['koz','旦那さま、あの名主さま、ぜったい何か隠してやしたよ…','s']]; }
+  }else if(kind==='mercy'){
+    S.mercy++;
+    if(honest){ chg('hyo',7); chg('ura',-10); out='right'; S.right++;
+      lines=[['tano','この不作、嘘偽りなしと見た。今年の年貢はおおいに減じよう。民を飢えさせては、元も子もない。','n'],['chief','お、お奉行さま…！　ありがたや、ありがたや…！','h'],['koz','旦那さま…！　豆吉は、一生ついていきやす！','h']]; }
+    else { chg('hyo',-8); chg('ura',-6); out='wrong';
+      lines=[['tano','……今年は、情けをかけよう。','n'],['chief',caught?'へ？　……ありがたや！（ほっ）':'おお、なんと慈悲深いお奉行さま！（ほくほく）','h'],['koz','だ、旦那さま、不正を見逃しちゃいやしたよ！？','x']]; }
+  }else{
+    chg('kob',V.bribe); S.bribes++; chg('uta',24); chg('hyo',-3); sfx('koban'); out='bribe';
+    if(honest){ chg('ura',14);
+      lines=[['tano','……そこまで言うなら、もらっておこう。','n'],['chief','（村の最後の蓄えが…）','c'],['koz','旦那さま、さすがにそれは…おなかを空かせた村から…','s']]; }
+    else lines=[['tano','……ふむ。そこまで言うなら、見なかったことにしてやろう。','n'],['chief','へへへ…お奉行さまは話がわかるお方で…','h'],['koz','旦那さま…！　裏帳簿に書いておきやすね…。','s']];
+  }
+  const sc=scoreVillage(out); S.vlog.push({name:V.name,kind:V.kind,caught,judge:kind,out,sc,left:leftH()});
+  S.score+=sc;
+  say(lines,()=>afterJudge(out));
+}
+function scoreVillage(out){
+  let s=0; const V=S.V;
+  s+=S.vsc.con*60+S.vsc.inf*80;
+  if(out==='right') s+=400+leftH()*5;
+  if(out==='partial') s+=60;
+  s-=(S.vsc.fa||0)*150; if(out==='bribe') s-=300;
+  return Math.max(-500,s);
+}
+function afterJudge(out){
+  S.phase='summary'; S.tab='act';
+  const V=S.V, last=S.vi>=4;
+  S.choice={k:'next',title:last?'巡回、すべて終了。':`${V.name}の裁定がおわった。`,opts:[
+    {label:last?'結果を見る':'次の村へ',sub:last?'':`第${S.vi+2}村へ向かう`,cls:'pri',fn:()=>{ S.choice=null; nextVillage(); }}]};
+  S.dirty=true;
+}
+function nextVillage(){
+  if(S.pend){ return startEnding(S.pend); }
+  if(S.vi>=4){ return startEnding(calcEnding()); }
+  beginVillage(S.vi+1);
+}
+function calcEnding(){
+  if(S.akuda) return 'seibai';
+  if(S.bribes>=3) return 'seibai';
+  if(S.right>=5&&S.bribes===0&&S.falseAcc<=1) return 'meibugyo';
+  if(S.strict>=3&&S.hyo>=70) return 'shusse';
+  return 'bonyo';
+}
+
+/* ===== 村のはじまり ===== */
+function beginVillage(i){
+  S.vi=i; const V=genVillage(S.seed*1009+i*7919+13,i,S.plan[i],S.usedNames,{forceDaughter:S.forceDaughter&&S.forceDaughter[i]});
+  S.V=V; S.used=0; S.pos={r:V.start.r,c:V.start.c}; S.kpos={r:V.start.r,c:V.start.c}; S.notes=[]; S.infers=[]; S.cf={}; S.selNotes=[]; S.doc={c:null,f:null};
+  S.vsc={inf:0,con:0,fa:0}; S.vcaught=false; S.tu=false; S.rev=null; S.sel=null; S.accuse=false; S.choice=null; S.walk=null; S.fx=null; S.msgText='';
+  S.ui='play'; S.phase='declare'; S.view='scene'; S.tab='docs'; S.scene={k:'declare',face:{tano:'n',koz:'n',chief:'h'}};
+  const chiefN=V.chief.name.split(' ')[0];
+  const causeJ=CAUSE_JA[V.cause];
+  const open=[
+    ['tano','うむ。検地奉行、堅物田之助。一寸のくるいも許さぬ。','n'],
+    ['tano','検地奉行、堅物田之助、参った。一粒の米もごまかしは許さぬぞ。','a'],
+    ['tano','秋の検地である。帳簿と実りを、きっちり見せてもらおう。','n']][i%3];
+  say([['sys',`第${i+1}村　${V.name}　（${S.plan.length}村のうち${i+1}つめ）`],
+    ['koz',`旦那さまぁ、${V.name}に着きやしたよ！　${['稲穂がゆれてやすねぇ','いい香りがしやすねぇ','なんだか静かな村でやす','かかしがこっちを見てやす…'][i%4]}！`,'h'],
+    open,
+    ['chief',`これはこれは検地奉行さま、遠路はるばる…。${V.chief.name}にございまする。`,'h'],
+    ['chief',`ご覧のとおり、今年は${causeJ}で、みごとな不作でして…。田はたった${V.D}枚、収穫は${V.Q}石ぽっきり。`,'s'],
+    ['chief','これでは年貢など、とてもとても…（ぽんぽこ、と腹が鳴る）','s'],
+    ['koz','旦那さま、いま名主さまのお腹から、鼓の音が…。','x'],
+    ['tano','気にするな。まずは資料と申告を見くらべよ。ムジュンを見つけたら「つきつけ」るのだ。','n']],
+    ()=>{ S.tab='docs'; S.dirty=true; });
+}
+function startExplore(){
+  S.phase='explore'; S.view='map'; S.tab='act'; S.sel=null;
+  say([['koz','さぁ旦那さま、村を歩いて調べやしょう！　怪しい所には「？」が出やすよ。','h'],
+    ['tano',`刻は三日・二十四刻。歩くのも、調べるのも、聞くのも刻を使う。すべては調べ切れぬぞ。`,'n']]);
+}
+
+/* ===== ゲームの流れ ===== */
+function newGame(seed,fromAuto){
+  resetRun(seed==null?(Date.now()%90000)+1:seed);
+  S.ui='play'; S.resultWait=0;
+  beginVillage(0);
+}
+function toTitle(){
+  S.ui='title'; S.phase='title'; S.view='scene'; S.scene={k:'title',face:{}}; S.dlg=null; S.choice=null; S.fx=null; S.walk=null; S.tab='act'; S.dirty=true;
+}
+const RANKS=[[5000,'S'],[4000,'A'],[3000,'B'],[2000,'C'],[-1e9,'D']];
+const rankOf=s=>RANKS.find(r=>s>=r[0])[1];
+const ENDS={
+  meibugyo:{title:'名奉行',sub:'― 天下に聞こえた堅物 ―',bonus:1500,desc:'不正はすべて暴き、苦しむ村には情けをかけ、袖の下は一文も受けなかった。「お奉行さまこそ、検地の鑑」と、国じゅうの村で語り継がれた。'},
+  shusse:{title:'出世（鬼の取り立て）',sub:'― 勘定奉行へ大出世 ―',bonus:800,desc:'容赦なき取り立てで、藩の蔵は米俵であふれた。殿のおぼえもめでたく、田之助は勘定奉行に大出世！　……村人たちの目は、ちょっと冷たいが。'},
+  ikki:{title:'百姓一揆',sub:'― 鍬と鎌が奉行所へ ―',bonus:0,desc:'「お奉行を許すな！」　鍬と鎌をかかげた村人たちが、奉行所をぐるりと取り囲んだ。取り立てがきびしすぎたのだ。田之助、まさかの大ピンチ。'},
+  kaieki:{title:'改易・切腹',sub:'― 裏帳簿、発覚 ―',bonus:0,desc:'目付の目はごまかせなかった。蔵の奥から裏帳簿が見つかり…「検地奉行・堅物田之助、改易を申しつける」。堅物の名が泣いておる。'},
+  seibai:{title:'悪代官 成敗',sub:'― 上様、見参 ―',bonus:0,desc:'小判と見逃しに手を染めた田之助の前に、お忍びの上様が現れた。「そこまでじゃ！　この悪代官、成敗いたす！」　ずばーん！'},
+  bonyo:{title:'凡庸な奉行',sub:'― 無事に帰れたので、よし ―',bonus:400,desc:'うまくいった村も、そうでない村もあった。可もなく不可もなく。「まあ、無事に帰れたのでよしとするか」と豆吉が笑った。'}
+};
+const END_ORDER=['meibugyo','shusse','bonyo','ikki','kaieki','seibai'];
+function startEnding(id){
+  S.pend=null; S.ending=id; S.phase='ending'; S.view='scene'; S.ui='result'; S.choice=null; S.tab='act';
+  S.scene={k:'end_'+id,face:{tano:'n',koz:'n',chief:'n'},t0:S.tm};
+  const E=ENDS[id]; S.score+=E.bonus; if(S.score<0) S.score=0;
+  S.result={id,score:S.score,rank:rankOf(S.score)};
+  if(!S.auto){
+    const bs=best.score; if(S.score>bs){ best={score:S.score,rank:S.result.rank}; LSput('kenchiBest',best); }
+    if(!book.includes(id)){ book.push(id); LSput('kenchiEndings',book); }
+  }
+  const L={
+    meibugyo:[['sys','――数か月後。国じゅうの村に、ひとつの噂が広まった。――'],['koz','「あの検地奉行さまは、嘘は見やぶり、涙には情けをかける」って！'],['tano','当たり前のことをしたまでだ。','n']],
+    shusse:[['sys','――藩の蔵は、米俵であふれかえった。――'],['tano','これで殿もお喜びであろう。','a'],['koz','旦那さま、村のほうから変な視線を感じやす…。','s']],
+    ikki:[['sys','――ワァァァ！！　村人たちが奉行所に押しよせた！――'],['tano','なっ、なんだこの大群は！？','x'],['koz','だから言ったでやんす！　きびしすぎやしたよぉ！','x']],
+    kaieki:[['sys','――目付が帳場に踏みこんだ。――'],['metsuke','裏帳簿は、すべて見つかったぞ。田之助、観念せい。','a'],['tano','ぐ…まさか、このような…。','s']],
+    seibai:[['shogun','そこまでじゃ！　天下の検地奉行が、民の泣き寝入りの上に小判を積むとは何事か！','a'],['tano','う、上様…！？　な、なぜここに…！','x'],['shogun','悪代官め、覚悟！　――成敗！！','a']],
+    bonyo:[['sys','――巡回、おわり。――'],['koz','終わった終わった！　団子でも食べて帰りやしょう！','h'],['tano','……うむ。明日も検地じゃ。','n']]
+  }[id];
+  S.scene.face.metsuke='n'; S.scene.face.shogun='n';
+  if(id==='seibai'||id==='ikki'||id==='kaieki') sfx(id==='seibai'?'don':'gong');
+  say(L,()=>{ S.dirty=true; S.resultWait=0; });
+}
+function setTab(t){ S.tab=t; S.dirty=true; }
+
+/* ===== 画面（DOM） ===== */
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let lastKey='';
+function siteChip(n){ if(!n.site) return ''; if(n.site==='honest') return '<em>村のくらし</em>'; const nm=siteName(S.V,n.site); return nm?`<em>→${esc(nm)}</em>`:''; }
+function tileLabel(){ const V=S.V; const t=V.grid[S.pos.r][S.pos.c]; return TN[t]||''; }
+
+function renderAct(){
+  const V=S.V; let h='';
+  if(S.choice){
+    h+=`<div class="muted" style="margin-bottom:6px;font-weight:800">${esc(S.choice.title)}</div>`;
+    S.choice.opts.forEach((o,i)=>{ h+=`<button class="btn ${o.cls||''}" data-a="choice" data-i="${i}">${esc(o.label)}${o.sub?`<small>${esc(o.sub)}</small>`:''}</button>`; });
+    return h;
+  }
+  if(S.phase==='declare'){
+    h+=`<div class="muted" style="margin-bottom:6px">📜 <b>資料</b>タブで、名主の申告と3つの資料を見くらべよう。ムジュンを見つけたら、申告の行と資料の行をタップして「つきつけ」る。ムジュンがない村もある。</div>`;
+    h+=`<button class="btn pri c" data-a="explore">村を歩いて調べる！<small>つきつけ ${Object.keys(S.cf).length}件　（ムジュンは${V.decl.contras.length?'あるかも…':'なさそう…？'}）</small></button>`;
+    return h;
+  }
+  if(S.phase==='explore'){
+    if(S.accuse){
+      h+=`<div class="muted" style="margin-bottom:6px;font-weight:800">🈴 地図の「隠し場所」と思うマスをタップ！</div><button class="btn c" data-a="cancelAcc">やめる</button>`;
+      return h;
+    }
+    h+=`<div class="muted" style="margin-bottom:5px">いま：<b>${esc(tileLabel())}</b>　／　地図のマスを2回タップで移動（${S.sel?`<b>${S.sel.cost/2}刻</b>かかる`:'マスは近いほど刻を使わない'}）</div>`;
+    if(S.sel) h+=`<button class="btn go" data-a="goSel">👣 ここへ行く<small>${S.sel.cost/2}刻 使う</small></button>`;
+    const ns=nearSpots(), nf=nearFolks();
+    ns.forEach(s=>{ h+=`<button class="btn" data-a="inv" data-id="${s.id}">🔍 ここを調べる（${esc(s.label||'')}）<small>1刻 使う　※気になる場所</small></button>`; });
+    nf.forEach(f=>{
+      if(f.role==='chief'){ const can=V.kind!=='honest'&&!V.pressed&&S.infers.length>0;
+        h+=`<button class="btn ${can?'pri':''}" data-a="talk" data-id="${f.id}">${can?'😤 名主を問いつめる':'💬 名主に話しかける'}<small>${esc(f.name)}　1刻 使う${can?'　※推理がそろった':''}</small></button>`; }
+      else if(!f.talked) h+=`<button class="btn" data-a="talk" data-id="${f.id}">💬 ${esc(f.name)}（${ROLE_JA[f.role]}・${PERS[f.pers]}）に聞く<small>1刻 使う</small></button>`;
+      else h+=`<div class="muted">✔ ${esc(f.name)}には話を聞いた</div>`;
+    });
+    if(!ns.length&&!nf.length) h+=`<div class="muted" style="margin:4px 0 8px">ここには調べるものも、話せる人もいないようだ。「？」や人影のあるマスへ。</div>`;
+    h+=`<div class="row2"><button class="btn pri c" data-a="accuse">🈴 摘発する！<small>隠し場所を指す</small></button><button class="btn c" data-a="toJudge">📋 裁定へ<small>調べを切り上げる</small></button></div>`;
+    return h;
+  }
+  return `<div class="muted">…</div>`;
+}
+function renderNote(){
+  let h='';
+  const cf=Object.keys(S.cf);
+  h+=`<h4>🔍 手がかり・証言　<span class="muted">（2つタップで「つなげる」）</span></h4>`;
+  if(!S.notes.length) h+=`<div class="muted">まだ何もない。村を歩いて調べ、人に話を聞こう。</div>`;
+  h+='<div class="cards">';
+  S.notes.forEach(n=>{ h+=`<button class="card ${S.selNotes.includes(n.id)?'sel':''}" data-a="note" data-id="${n.id}"><b>${n.icon} ${esc(n.title)}</b><span>${esc(n.text)}</span>${siteChip(n)}</button>`; });
+  h+='</div>';
+  h+=`<h4>💡 推理</h4>`;
+  if(!S.infers.length) h+=`<div class="muted">同じ場所を指す、ちがう種類の手がかり2つで「推理」が開く。嘘の証言は、手がかりとムジュンさせよう。</div>`;
+  S.infers.forEach(i=>{ h+=`<div class="inf">💡 ${esc(i.text)}</div>`; });
+  h+=`<h4>📜 申告のムジュン</h4>`;
+  if(!cf.length) h+=`<div class="muted">なし</div>`;
+  cf.forEach(k=>{ h+=`<div class="inf" style="border-color:var(--indigo)">⚠ ${esc(S.cf[k].msg)}</div>`; });
+  return h;
+}
+function renderDocs(){
+  const V=S.V, D=V.decl; let h='<div class="docs">';
+  h+=`<div class="doc cl"><h5>名主の申告（${esc(V.chief.name)}）</h5>`;
+  D.claims.forEach(c=>{ h+=`<button class="ln ${S.doc.c===c.id?'sel':''}" data-a="docc" data-id="${c.id}">🗣 ${esc(c.text)}</button>`; });
+  h+='</div>';
+  const groups=[]; D.facts.forEach(f=>{ let g=groups.find(x=>x.n===f.doc); if(!g){ g={n:f.doc,l:[]}; groups.push(g); } g.l.push(f); });
+  groups.forEach(gr=>{ h+=`<div class="doc"><h5>${esc(gr.n)}</h5>`; gr.l.forEach(f=>{ h+=`<button class="ln ${S.doc.f===f.id?'sel':''}" data-a="docf" data-id="${f.id}">${esc(f.text)}</button>`; }); h+='</div>'; });
+  h+=`<div class="muted">申告の行と資料の行を1つずつタップすると、「つきつけ」られる。（刻は使わない）　見つけたムジュン：<b>${Object.keys(S.cf).length}</b>件</div></div>`;
+  return h;
+}
+function renderTitle(){
+  const have=book.length;
+  let h=`<div class="title-big mc">検地奉行</div><div class="sub-big mc">― 隠し田ハンター ―</div>`;
+  h+=`<p class="muted" style="margin:2px 0 8px;line-height:1.6">堅物奉行・田之助と小者の豆吉が、秋の検地で5つの村をめぐる。村を歩いて手がかりを集め、嘘の証言を見やぶり、隠し田・隠し米に「御用だ！」。ただし、本当に不作の村もあるぞ。</p>`;
+  h+=`<button class="btn pri c" data-a="start">巡回に出る（はじめる）</button>`;
+  h+=`<button class="btn go c" data-a="startAuto">🤖 オートで見る<small>名奉行のプロ技を眺める（Oキーでも切りかえ）</small></button>`;
+  h+=`<div class="muted" style="margin:6px 0">ベスト：<b>${best.rank}</b>　${best.score}点　／　見つけたエンディング：<b>${have}/6</b></div>`;
+  h+=`<h4>📖 エンディング図鑑</h4><div class="dz">${END_ORDER.map(id=>`<div class="${book.includes(id)?'':'no'}">${book.includes(id)?esc(ENDS[id].title):'？？？'}</div>`).join('')}</div>`;
+  return h;
+}
+function renderResult(){
+  const E=ENDS[S.ending], R=S.result;
+  let h=`<div class="endt mc">${esc(E.title)}</div><div class="sub-big mc" style="font-size:13px">${esc(E.sub)}</div>`;
+  h+=`<p style="font-size:13px;line-height:1.65;margin:4px 0 8px;text-align:left">${esc(E.desc)}</p>`;
+  h+=`<div style="font-size:20px;font-weight:800;margin:4px 0">ランク <span style="color:var(--shu2);font-size:30px">${R.rank}</span>　${R.score}点</div>`;
+  h+=`<div class="muted" style="margin-bottom:6px">ベスト：${best.rank}　${best.score}点　／　エンディング ${book.length}/6</div>`;
+  h+=`<div style="text-align:left;font-size:12px;margin-bottom:6px">`;
+  S.vlog.forEach(v=>{ const t={right:'◎ 正しい裁き',wrong:'× まちがい',partial:'△ 見抜けず',bribe:'💰 袖の下'}[v.out]; h+=`<div>${esc(v.name)}（${v.kind==='honest'?'本当に不作':v.kind==='field'?'隠し田':'隠し米'}）　${t}</div>`; });
+  h+=`</div><div class="muted" style="margin-bottom:6px">評価 ${S.hyo}／恨み ${S.ura}／懐 ${S.kob}両／疑い ${S.uta}</div>`;
+  h+=`<button class="btn pri c" data-a="again">もう一度、巡回する</button><a class="btn c" href="../" style="text-decoration:none;color:inherit">← ゲーム一覧にもどる</a>`;
+  h+=`<h4>📖 エンディング図鑑</h4><div class="dz">${END_ORDER.map(id=>`<div class="${book.includes(id)?'':'no'}">${book.includes(id)?esc(ENDS[id].title):'？？？'}</div>`).join('')}</div>`;
+  return h;
+}
+function render(){
+  S.dirty=false;
+  const play=S.ui==='play', showDlg=play||!!S.dlg;
+  $('hud').hidden=!(play||S.ui==='result'); $('time').hidden=!play;
+  $('dlg').hidden=!showDlg; $('tabs').hidden=!play; $('content').hidden=!play; $('screen').hidden=!(S.ui!=='play'&&!S.dlg);
+  $('autoBtn').setAttribute('aria-pressed',S.auto?'true':'false');
+  $('muteBtn').textContent=muted?'音 OFF':'音 ON';
+  if(S.ui!=='title'){
+    $('hHyo').textContent=S.hyo; $('bHyo').style.width=S.hyo+'%';
+    $('hUra').textContent=S.ura; $('bUra').style.width=S.ura+'%';
+    $('hKob').textContent=S.kob+'両'; $('bKob').style.width=Math.min(100,S.kob/3)+'%';
+    $('hUta').textContent=S.uta; $('bUta').style.width=S.uta+'%';
+  }
+  if(play){
+    const day=Math.floor(Math.min(S.used,HALF-1)/16);
+    $('tvil').textContent=`第${S.vi+1}村 ${S.V.name}`;
+    const lh=Math.ceil(leftH()/2); let t='';
+    for(let k=0;k<24;k++) t+=`<i class="${k<lh?'on':''} ${k===8||k===16?'dv':''}"></i>`;
+    $('tbar').innerHTML=t; $('tleft').textContent=`${'一二三'[day]}日目 残り${leftTxt()}刻`;
+    [...$('tabs').children].forEach(b=>b.setAttribute('aria-selected',b.dataset.t===S.tab?'true':'false'));
+    const c=$('content'); c.classList.toggle('dim',!!S.dlg);
+    const key=S.tab+'|'+S.phase;
+    const html=S.tab==='act'?renderAct():S.tab==='note'?renderNote():renderDocs();
+    const keep=c.scrollTop; c.innerHTML=html; if(key===lastKey) c.scrollTop=keep; lastKey=key;
+  }
+  if(S.ui==='title') $('screen').innerHTML=renderTitle();
+  else if(S.ui==='result'&&!S.dlg) $('screen').innerHTML=renderResult();
+  dlgText(true);
+}
+function idleMsg(){
+  if(S.ui!=='play') return '';
+  return {declare:'（📜資料タブで、名主の申告と資料を見くらべよう）',explore:S.accuse?'（隠し場所と思うマスをタップ）':'（地図のマスをタップして、村を歩こう）',judge:'（年貢の裁定を下そう）',summary:'（この村の裁きは、おわった）'}[S.phase]||'';
+}
+let lastDt='';
+function dlgText(force){
+  let name='',text='',nx=false;
+  if(S.dlg){ const l=S.dlg.lines[S.dlg.i]; name=who(l.w); text=l.t.slice(0,Math.floor(S.dlg.ch)); nx=S.dlg.ch>=l.t.length; }
+  else { name=S.msgWho||''; text=S.msgText||idleMsg(); }
+  const k=name+'|'+text+'|'+nx; if(k===lastDt&&!force) return; lastDt=k;
+  $('dname').textContent=name; $('dname').hidden=!name; $('dtext').textContent=text; $('dnext').hidden=!(S.dlg&&nx);
+}
+
+/* ===== 入力 ===== */
+function act(a,id,i){
+  if(S.dlg&&a!=='noop') return;
+  switch(a){
+    case 'start': newGame(); break;
+    case 'startAuto': setAuto(true); newGame(); break;
+    case 'again': newGame(); break;
+    case 'explore': startExplore(); break;
+    case 'choice': { const c=S.choice; if(c&&c.opts[i]) c.opts[i].fn(); break; }
+    case 'goSel': if(S.sel) goTo(S.sel.r,S.sel.c); break;
+    case 'inv': { const s=S.V.spots.find(x=>x.id===id); if(s&&!s.done&&man(s,S.pos)<=1) investigate(s); break; }
+    case 'talk': { const f=S.V.folks.find(x=>x.id===id); if(f&&man(f,S.pos)<=1) talk(f); break; }
+    case 'accuse': startAccuse(); break;
+    case 'cancelAcc': S.accuse=false; msg('摘発は見送った。'); break;
+    case 'toJudge': if(S.phase==='explore') confirmJudge(); break;
+    case 'note': pickNote(id); break;
+    case 'docc': pickDoc('c',id); break;
+    case 'docf': pickDoc('f',id); break;
+  }
+  S.dirty=true;
+}
+function confirmJudge(){
+  S.choice={k:'confirm',title:'調べを切り上げて、裁定に入る？',opts:[
+    {label:'裁定に入る',sub:'もう村は歩かない',cls:'pri',fn:()=>{ S.choice=null; toJudge(); }},
+    {label:'もう少し調べる',sub:'',cls:'',fn:()=>{ S.choice=null; S.dirty=true; }}]};
+}
+function onTap(r,c){
+  if(S.ui!=='play'||S.view!=='map'||busy()||S.choice||S.phase!=='explore') return;
+  S.msgText=''; S.msgWho='';
+  if(S.accuse){ askAccuse(r,c); return; }
+  if(r===S.pos.r&&c===S.pos.c){ S.sel=null; S.dirty=true; return; }
+  if(S.sel&&S.sel.r===r&&S.sel.c===c){ goTo(r,c); return; }
+  const p=pathTo(r,c); if(!p){ msg('そこへは行けぬ。'); S.sel=null; } else S.sel={r,c,cost:p.cost};
+  S.dirty=true;
+}
+function humanTouch(e){
+  if(!S.auto) return;
+  if(e.target.closest&&e.target.closest('#autoBtn,#muteBtn,#top a')) return;
+  setAuto(false); msg('手動にもどした。');
+}
+document.addEventListener('pointerdown',e=>{ ac(); humanTouch(e); },true);
+document.addEventListener('keydown',e=>{
+  ac();
+  if(e.key==='o'||e.key==='O'){ if(e.repeat) return; setAuto(!S.auto); return; }
+  if(['Shift','Control','Alt','Meta','Tab'].includes(e.key)) return;
+  if(S.auto) setAuto(false);
+  if((e.key==='Enter'||e.key===' ')&&S.dlg){ e.preventDefault(); advance(); S.dirty=true; }
+});
+$('autoBtn').addEventListener('click',()=>{ setAuto(!S.auto); if(S.auto&&S.ui==='title') { newGame(); } });
+$('muteBtn').addEventListener('click',()=>{ muted=!muted; LSput('kenchiMute',muted); S.dirty=true; });
+$('dlg').addEventListener('click',()=>{ if(S.dlg){ advance(); S.dirty=true; } });
+$('tabs').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b&&!S.dlg) setTab(b.dataset.t); });
+function delegate(e){ const b=e.target.closest('[data-a]'); if(!b) return; act(b.dataset.a,b.dataset.id,+b.dataset.i); }
+$('content').addEventListener('click',delegate);
+$('screen').addEventListener('click',delegate);
+$('cv').addEventListener('pointerdown',e=>{
+  const rc=$('cv').getBoundingClientRect(); const x=(e.clientX-rc.left)/rc.width*320, y=(e.clientY-rc.top)/rc.height*400;
+  const c=Math.floor(x/TS), r=Math.floor(y/TS); if(r>=0&&r<H&&c>=0&&c<W) onTap(r,c);
+});
+
+/* ===== 絵（canvas） ===== */
+const cv=$('cv'), g=cv.getContext('2d');
+let csx=1,csy=1;
+const INK='#3A2A1A';
+function sizeCheck(){
+  const dpr=Math.min(window.devicePixelRatio||1,2.5), w=Math.max(1,Math.round(cv.clientWidth*dpr)), h=Math.max(1,Math.round(cv.clientHeight*dpr));
+  if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; }
+  csx=cv.width/320; csy=cv.height/400;
+}
+const ell=(x,y,rx,ry,rot)=>{ g.beginPath(); g.ellipse(x,y,rx,ry,rot||0,0,Math.PI*2); };
+const fs=(fill,stroke)=>{ if(fill){ g.fillStyle=fill; g.fill(); } if(stroke!==false){ g.strokeStyle=INK; g.stroke(); } };
+function poly(pts,fill,stroke){ g.beginPath(); g.moveTo(pts[0][0],pts[0][1]); for(let i=1;i<pts.length;i++) g.lineTo(pts[i][0],pts[i][1]); g.closePath(); fs(fill,stroke); }
+function rect(x,y,w,h,fill,stroke){ g.beginPath(); g.rect(x,y,w,h); fs(fill,stroke); }
+function circ(x,y,r,fill,stroke){ g.beginPath(); g.arc(x,y,r,0,Math.PI*2); fs(fill,stroke); }
+function hsh(r,c,k){ const v=Math.sin((r*131+c*71+k*17+(S.V?S.V.ts:0))*12.9898)*43758.5453; return v-Math.floor(v); }
+
+/* ----- 人物 ----- */
+const CH={
+  tano:{skin:'#F1C9A0',robe:'#2F3F6B',robe2:'#44589A',hair:'#1C1C24',acc:'#C8321E'},
+  koz:{skin:'#F1C9A0',robe:'#6FA86B',robe2:'#F2E9D0',hair:'#1C1C24',acc:'#E8C85A'},
+  chief:{skin:'#B98A55',robe:'#8A5A3A',robe2:'#E3CC98',hair:'#4A3426',acc:'#7AA84A'},
+  farmer:{skin:'#E8C49A',robe:'#8A7A58',robe2:'#D9B86A',hair:'#222',acc:'#D9B86A'},
+  child:{skin:'#F6D3AE',robe:'#D98A8A',robe2:'#F4E0C0',hair:'#222',acc:'#C8321E'},
+  widow:{skin:'#F3D8B8',robe:'#7A7A8A',robe2:'#ECECF2',hair:'#3A3A44',acc:'#A09090'},
+  hunter:{skin:'#D8A878',robe:'#5A6A4A',robe2:'#A07040',hair:'#2A2018',acc:'#A07040'},
+  monk:{skin:'#F0CFA6',robe:'#D08030',robe2:'#8B2B2B',hair:null,acc:'#8B2B2B'},
+  metsuke:{skin:'#EFC8A0',robe:'#222A3A',robe2:'#7A8090',hair:'#111',acc:'#C8C8D0'},
+  shogun:{skin:'#F3D0A8',robe:'#D4A830',robe2:'#F4E8B0',hair:'#111',acc:'#C8321E'}
+};
+function drawChar(k,x,y,s,o){
+  o=o||{}; const P=CH[k]; if(!P) return; const face=o.face||'n';
+  g.save(); g.translate(x,y+(o.bob||0)); const kk=k==='child'?.8:k==='koz'?.92:1; g.scale(s*kk*(o.flip?-1:1),s*kk);
+  g.lineWidth=Math.max(1.1,1.15/(s*kk)); g.lineJoin='round'; g.lineCap='round'; g.strokeStyle=INK;
+  g.fillStyle='rgba(40,30,10,.22)'; ell(0,0,16,4); g.fill();
+  // 足
+  ell(-6,-2,5,3,0); fs(k==='hunter'?'#6A4A2A':'#F4F0E0'); ell(6,-2,5,3,0); fs(k==='hunter'?'#6A4A2A':'#F4F0E0');
+  const wide=k==='chief';
+  // 体
+  g.beginPath();
+  if(wide){ g.moveTo(-17,-4); g.quadraticCurveTo(-21,-20,-11,-33); g.lineTo(11,-33); g.quadraticCurveTo(21,-20,17,-4); }
+  else { g.moveTo(-12,-5); g.quadraticCurveTo(-14,-20,-9,-33); g.lineTo(9,-33); g.quadraticCurveTo(14,-20,12,-5); }
+  g.closePath(); fs(P.robe);
+  if(wide){ ell(0,-15,12,11); fs(P.robe2); }
+  if(k==='tano'||k==='metsuke'){ poly([[-21,-30],[-8,-35],[0,-30],[8,-35],[21,-30],[15,-21],[-15,-21]],P.robe2); }
+  if(k==='shogun'){ poly([[-20,-30],[-8,-35],[0,-30],[8,-35],[20,-30],[16,-21],[-16,-21]],P.robe2); circ(0,-26,3.2,P.acc); }
+  // えり
+  g.beginPath(); g.moveTo(-5,-33); g.lineTo(0,-23); g.lineTo(5,-33); g.strokeStyle='#F6F0E0'; g.lineWidth*=2; g.stroke(); g.strokeStyle=INK; g.lineWidth=Math.max(1.1,1.15/(s*kk));
+  // 帯
+  if(k==='monk'){ poly([[-10,-33],[-2,-33],[10,-9],[2,-9]],P.robe2); }
+  else if(!wide){ rect(-12,-18,24,5,P.acc); }
+  if(k==='koz'){ poly([[-9,-24],[9,-24],[10,-8],[-10,-8]],'#F2E9D0'); }
+  if(k==='tano'){ circ(0,-28,2.4,P.acc,false); g.beginPath(); g.moveTo(-12,-14); g.lineTo(-22,-9); g.lineWidth*=2.2; g.strokeStyle='#201810'; g.stroke(); g.strokeStyle=INK; g.lineWidth=Math.max(1.1,1.15/(s*kk)); }
+  if(k==='hunter'){ poly([[-10,-33],[10,-33],[10,-18],[-10,-18]],P.robe2,false); g.beginPath(); g.moveTo(8,-40); g.lineTo(18,-60); g.strokeStyle='#6A4A2A'; g.lineWidth*=1.8; g.stroke(); g.strokeStyle=INK; g.lineWidth=Math.max(1.1,1.15/(s*kk)); }
+  // 袖
+  const armUp=o.armUp?-10:0;
+  ell(-14,-22+armUp,4.6,9,.2); fs(P.robe); ell(14,-22+armUp,4.6,9,-.2); fs(P.robe);
+  // 頭
+  const hx=0,hy=-46;
+  if(k==='chief'){
+    circ(-10,-57,4.6,P.hair); circ(10,-57,4.6,P.hair);
+    ell(0,-46,15,12.5); fs(P.skin);
+    ell(0,-40,7.5,5.5); fs('#ECD9A8',false);
+    // 目のまわりの模様
+    ell(-6,-47,5,3.6,-.35); g.fillStyle='#4A3426'; g.fill(); ell(6,-47,5,3.6,.35); g.fill();
+    ell(0,-43,2.2,1.6); g.fillStyle=INK; g.fill();
+    ell(2,-61,4,7,.9); fs(P.acc);
+  }else{
+    circ(hx,hy,13,P.skin);
+  }
+  // 髪・かぶりもの
+  if(k==='tano'||k==='metsuke'||k==='shogun'){
+    g.beginPath(); g.arc(0,-47,13.4,Math.PI*1.03,Math.PI*1.97); g.lineTo(9,-53); g.quadraticCurveTo(0,-56,-9,-53); g.closePath(); fs(P.hair);
+    ell(4,-61,5.5,2.6,-.25); fs(P.hair); if(k==='shogun'){ g.fillStyle='#E8C85A'; g.fillRect(-3,-60,6,2); }
+  }else if(k==='koz'){
+    g.beginPath(); g.arc(0,-47,13.4,Math.PI*1.0,Math.PI*2.0); g.closePath(); fs(P.hair);
+    poly([[-8,-58],[-5,-65],[-2,-58]],P.hair); poly([[-1,-59],[3,-66],[6,-58]],P.hair);
+    rect(-13,-53,26,4,'#F6F0E0'); circ(11,-52,2.4,'#F6F0E0');
+  }else if(k==='child'){
+    g.beginPath(); g.arc(0,-47,13.4,Math.PI*1.0,Math.PI*2.0); g.closePath(); fs(P.hair); rect(-14,-50,4,10,P.hair); rect(10,-50,4,10,P.hair); circ(9,-58,2.6,P.acc);
+  }else if(k==='farmer'){
+    g.beginPath(); g.arc(0,-47,13.2,Math.PI*1.05,Math.PI*1.95); g.closePath(); fs(P.hair);
+    poly([[-13,-56],[0,-69],[13,-56]],'#E0C27A'); ell(0,-56,21,5); fs('#D9B86A');
+    g.beginPath(); g.moveTo(-9,-54); g.lineTo(-11,-38); g.moveTo(9,-54); g.lineTo(11,-38); g.stroke();
+  }else if(k==='widow'){
+    g.beginPath(); g.arc(0,-47,13.4,Math.PI*1.0,Math.PI*2.0); g.closePath(); fs(P.hair); circ(0,-61,5.2,P.hair); rect(-3,-56,6,2,'#C8321E',false);
+  }else if(k==='hunter'){
+    g.beginPath(); g.arc(0,-47,13.4,Math.PI*1.0,Math.PI*2.0); g.closePath(); fs(P.hair); rect(-13,-53,26,4,'#B04A2A');
+    poly([[8,-52],[16,-64],[12,-52]],'#F4F0E0');
+  }else if(k==='monk'){
+    g.beginPath(); g.arc(-4,-53,4,Math.PI*1.1,Math.PI*1.7); g.strokeStyle='rgba(255,255,255,.8)'; g.stroke(); g.strokeStyle=INK;
+  }
+  faceDraw(k,face);
+  if(k==='child'||k==='koz'){ g.fillStyle='rgba(240,120,120,.4)'; ell(-8,-41,3.2,2); g.fill(); ell(8,-41,3.2,2); g.fill(); }
+  g.restore();
+}
+function faceDraw(k,f){
+  const tan=k==='chief'; const ey=-47, dark=(k==='chief')?'#fff':INK;
+  g.strokeStyle=INK; g.fillStyle=INK;
+  const brow=(x1,y1,x2,y2,w)=>{ g.beginPath(); g.moveTo(x1,y1); g.lineTo(x2,y2); g.lineWidth=w||1.8; g.stroke(); g.lineWidth=1.3; };
+  const eyes=()=>{
+    if(f==='h'){ [-5,5].forEach(x=>{ g.beginPath(); g.arc(x,ey+1,2.6,Math.PI*1.1,Math.PI*1.9); g.strokeStyle=tan?'#fff':INK; g.lineWidth=1.8; g.stroke(); }); g.lineWidth=1.3; g.strokeStyle=INK; }
+    else if(f==='c'){ [-5,5].forEach(x=>{ g.beginPath(); g.moveTo(x-2.5,ey); g.lineTo(x+2.5,ey); g.strokeStyle=tan?'#fff':INK; g.lineWidth=1.8; g.stroke(); }); g.lineWidth=1.3; g.strokeStyle=INK; g.fillStyle='#7EC8F0'; ell(-7,ey+4,1.2,2.4); g.fill(); ell(7,ey+4,1.2,2.4); g.fill(); g.fillStyle=INK; }
+    else if(f==='x'){ [-5,5].forEach(x=>{ circ(x,ey,3.2,'#fff'); circ(x,ey,1.2,INK,false); }); }
+    else { g.fillStyle=tan?'#fff':INK; [-5,5].forEach(x=>{ ell(x,ey,1.7,f==='s'?2:2.3); g.fill(); }); g.fillStyle=INK; }
+  };
+  eyes();
+  if(k==='tano'||k==='metsuke'){ if(f==='a') { brow(-9,ey-5,-2,ey-2,2.6); brow(9,ey-5,2,ey-2,2.6); } else if(f==='s'){ brow(-9,ey-2,-2,ey-5,2.4); brow(9,ey-2,2,ey-5,2.4); } else { brow(-9,ey-4,-2,ey-4,2.6); brow(9,ey-4,2,ey-4,2.6); } }
+  else if(!tan){ if(f==='a'){ brow(-8,ey-4,-3,ey-3,1.4); brow(8,ey-4,3,ey-3,1.4); } else if(f==='s'){ brow(-8,ey-3,-3,ey-5,1.4); brow(8,ey-3,3,ey-5,1.4); } }
+  // 口
+  const my=k==='chief'?-38:-39;
+  g.strokeStyle=INK; g.lineWidth=1.4;
+  if(f==='h'){ g.beginPath(); g.arc(0,my-1,3.2,.1*Math.PI,.9*Math.PI); g.stroke(); }
+  else if(f==='x'){ ell(0,my+1,2.2,2.8); g.fillStyle='#8a2a1a'; g.fill(); g.stroke(); }
+  else if(f==='a'){ g.beginPath(); g.moveTo(-3,my+1); g.lineTo(3,my+1); g.stroke(); }
+  else if(f==='s'||f==='c'){ g.beginPath(); g.arc(0,my+3,3,1.15*Math.PI,1.85*Math.PI); g.stroke(); }
+  else { g.beginPath(); g.moveTo(-2,my); g.quadraticCurveTo(0,my+1.4,2,my); g.stroke(); }
+  if(f==='s'){ g.fillStyle='#7EC8F0'; g.beginPath(); g.moveTo(12,-56); g.quadraticCurveTo(15,-51,12,-49); g.quadraticCurveTo(9,-51,12,-56); g.fill(); g.strokeStyle=INK; g.lineWidth=.8; g.stroke(); }
+  g.lineWidth=1.3;
+}
+
+/* ----- 地図 ----- */
+function drawTile(t,r,c,x,y){
+  const V=S.V; g.lineWidth=1.4; g.strokeStyle=INK; g.lineJoin='round';
+  const gr=()=>{ g.fillStyle='#CFD9A2'; g.fillRect(x,y,TS,TS); g.strokeStyle='#A9BB74'; g.lineWidth=1; for(let i=0;i<3;i++){ const px=x+6+hsh(r,c,i)*28, py=y+8+hsh(r,c,i+5)*26; g.beginPath(); g.moveTo(px-2,py); g.lineTo(px,py-4); g.lineTo(px+2,py); g.stroke(); } g.strokeStyle=INK; g.lineWidth=1.4; };
+  const wild=()=>{ g.fillStyle='#BCCF8E'; g.fillRect(x,y,TS,TS); };
+  const road=()=>{ g.fillStyle='#ECD9A8'; g.fillRect(x,y,TS,TS); g.fillStyle='#D2BC88'; for(let i=0;i<3;i++){ g.fillRect(x+5+hsh(r,c,i)*30,y+5+hsh(r,c,i+3)*30,2.5,2); } };
+  const water=(x0,w)=>{ g.fillStyle='#68B4DE'; g.fillRect(x+x0,y,w,TS); g.strokeStyle='rgba(58,42,26,.7)'; g.lineWidth=1.2; g.beginPath(); g.moveTo(x+x0,y); g.lineTo(x+x0,y+TS); g.moveTo(x+x0+w,y); g.lineTo(x+x0+w,y+TS); g.stroke(); g.strokeStyle='rgba(255,255,255,.7)'; g.beginPath(); g.moveTo(x+x0+3,y+8); g.lineTo(x+x0+w-4,y+10); g.moveTo(x+x0+4,y+26); g.lineTo(x+x0+w-3,y+24); g.stroke(); g.strokeStyle=INK; g.lineWidth=1.4; };
+  switch(t){
+    case 'g': gr(); break;
+    case '=': road(); break;
+    case 'd': g.fillStyle='#D8C18A'; g.fillRect(x,y,TS,TS); g.fillStyle='#BFA46E'; for(let i=0;i<4;i++) g.fillRect(x+4+hsh(r,c,i)*32,y+4+hsh(r,c,i+4)*30,3,2.4); break;
+    case 'p': {
+      const key=r+','+c, mod=V.paddyMod[key]; const hid=S.rev&&V.hiddenTiles.some(h=>h.r===r&&h.c===c);
+      const base=mod==='flood'?'#7FB8D8':mod==='pest'?'#BCAA58':mod==='crack'?'#DDB978':'#E6C85A';
+      g.fillStyle=base; g.fillRect(x,y,TS,TS);
+      g.strokeStyle=mod==='flood'?'#4A8AB0':'#C4A23C'; g.lineWidth=1.2;
+      for(let i=1;i<4;i++){ g.beginPath(); g.moveTo(x+3,y+i*10-2); g.lineTo(x+TS-3,y+i*10-2); g.stroke(); }
+      if(mod==='flood'){ g.strokeStyle='#2E6A3A'; for(let i=0;i<4;i++){ const px=x+6+hsh(r,c,i)*28,py=y+10+hsh(r,c,i+4)*22; g.beginPath(); g.moveTo(px,py+4); g.lineTo(px+1,py-4); g.stroke(); } }
+      if(mod==='crack'){ g.strokeStyle='#8F6A3A'; g.beginPath(); g.moveTo(x+6,y+8); g.lineTo(x+16,y+18); g.lineTo(x+12,y+28); g.moveTo(x+16,y+18); g.lineTo(x+30,y+14); g.stroke(); }
+      if(mod==='pest'){ g.fillStyle='#3A2A1A'; for(let i=0;i<7;i++) g.fillRect(x+4+hsh(r,c,i)*32,y+4+hsh(r,c,i+9)*32,2,2); }
+      g.strokeStyle='#9A7E32'; g.lineWidth=2; g.strokeRect(x+1,y+1,TS-2,TS-2); g.strokeStyle=INK; g.lineWidth=1.4;
+      break; }
+    case 'w': gr(); water(13,14); break;
+    case 'B': road(); water(13,14); g.fillStyle='#A87A4A'; g.fillRect(x+8,y+13,24,14); g.strokeStyle=INK; g.strokeRect(x+8,y+13,24,14); g.beginPath(); g.moveTo(x+8,y+20); g.lineTo(x+32,y+20); g.moveTo(x+16,y+13); g.lineTo(x+16,y+27); g.moveTo(x+24,y+13); g.lineTo(x+24,y+27); g.stroke(); break;
+    case 'R': g.fillStyle='#59A4D6'; g.fillRect(x,y,TS,TS); g.strokeStyle='rgba(255,255,255,.75)'; g.lineWidth=1.3; for(let i=0;i<2;i++){ g.beginPath(); const py=y+12+i*16; g.moveTo(x+2,py); g.quadraticCurveTo(x+10,py-5,x+18,py); g.quadraticCurveTo(x+27,py+5,x+36,py); g.stroke(); } g.strokeStyle=INK; break;
+    case 'b': g.fillStyle='#59A4D6'; g.fillRect(x,y,TS,TS); g.fillStyle='#B48650'; g.fillRect(x+9,y,22,TS); g.strokeStyle=INK; g.lineWidth=1.2; g.beginPath(); for(let i=0;i<5;i++){ g.moveTo(x+9,y+i*9+2); g.lineTo(x+31,y+i*9+2); } g.moveTo(x+9,y); g.lineTo(x+9,y+TS); g.moveTo(x+31,y); g.lineTo(x+31,y+TS); g.stroke(); break;
+    case 'M': wild(); poly([[x+3,y+35],[x+16,y+6],[x+29,y+35]],'#5F9050'); poly([[x+18,y+35],[x+28,y+15],[x+38,y+35]],'#4C7C46'); poly([[x+12,y+17],[x+16,y+6],[x+20,y+17],[x+16,y+15]],'#F6F6EE'); break;
+    case 'F': wild(); [[11,17,8],[28,15,8],[19,28,8]].forEach(a=>{ g.beginPath(); g.moveTo(x+a[0],y+a[1]+a[2]); g.lineTo(x+a[0],y+a[1]+a[2]+6); g.stroke(); circ(x+a[0],y+a[1],a[2],'#4F8A4A'); }); break;
+    case 's': wild(); g.strokeStyle=INK; g.lineWidth=11; g.strokeStyle='#6BB8E0'; g.beginPath(); g.moveTo(x+20,y); g.quadraticCurveTo(x+10,y+14,x+20,y+22); g.quadraticCurveTo(x+30,y+30,x+20,y+TS); g.stroke(); g.lineWidth=1.4; g.strokeStyle=INK; break;
+    case 'H': gr(); rect(x+8,y+20,24,14,'#F4E8C8'); poly([[x+3,y+23],[x+20,y+5],[x+37,y+23]],'#C9A24A'); g.beginPath(); g.moveTo(x+11,y+19); g.lineTo(x+20,y+10); g.moveTo(x+27,y+19); g.lineTo(x+20,y+10); g.stroke(); rect(x+17,y+25,7,9,'#4A3A2A'); break;
+    case 'Y': gr(); rect(x+5,y+18,30,17,'#F4E8C8'); poly([[x+1,y+20],[x+20,y+3],[x+39,y+20]],'#7A7F8C'); g.beginPath(); g.moveTo(x+8,y+16); g.lineTo(x+20,y+6); g.lineTo(x+32,y+16); g.stroke(); rect(x+16,y+24,8,11,'#C8321E'); rect(x+8,y+24,5,5,'#8A6A3A'); rect(x+27,y+24,5,5,'#8A6A3A'); break;
+    case 'K': gr(); rect(x+7,y+14,26,21,'#F7F2E2'); g.save(); g.beginPath(); g.rect(x+7,y+14,26,21); g.clip(); g.strokeStyle='#444'; g.lineWidth=1; for(let i=-26;i<30;i+=6){ g.beginPath(); g.moveTo(x+7+i,y+35); g.lineTo(x+7+i+21,y+14); g.stroke(); } g.restore(); g.strokeStyle=INK; g.lineWidth=1.4; g.strokeRect(x+7,y+14,26,21); poly([[x+3,y+16],[x+20,y+3],[x+37,y+16]],'#4A4F5C'); rect(x+16,y+22,8,13,'#222'); break;
+    case 'T': gr(); rect(x+8,y+16,24,18,'#C8A272'); rect(x+10,y+17,3,17,'#B03A2A',false); rect(x+27,y+17,3,17,'#B03A2A',false); poly([[x+1,y+18],[x+20,y+4],[x+39,y+18],[x+33,y+18],[x+20,y+9],[x+7,y+18]],'#3F5A78'); circ(x+20,y+3,2.4,'#E8C85A'); rect(x+16,y+24,8,10,'#4A3A2A'); break;
+    default: gr();
+  }
+}
+function drawMap(){
+  const V=S.V;
+  for(let r=0;r<H;r++) for(let c=0;c<W;c++) drawTile(V.grid[r][c],r,c,c*TS,r*TS);
+  // 地名・屋号
+  g.textAlign='center'; g.textBaseline='middle'; g.font='bold 9px "Shippori Mincho B1","Hiragino Mincho ProN",serif';
+  const lab=(t,x,y)=>{ g.lineWidth=3; g.strokeStyle='rgba(246,235,207,.9)'; g.strokeText(t,x,y); g.fillStyle=INK; g.fillText(t,x,y); };
+  V.zones.forEach(z=>{ const cx=(z.tiles[0].c+z.tiles[z.tiles.length-1].c+1)/2*TS; lab(z.name,cx,6); });
+  lab('名主',V.chiefHouse.c*TS+20,V.chiefHouse.r*TS+39);
+  V.farms.forEach(f=>lab(f.owner||'',f.c*TS+20,f.r*TS+39));
+  lab('蔵',V.kura.c*TS+20,V.kura.r*TS+38); lab('寺',V.temple.c*TS+20,V.temple.r*TS+38);
+  lab('川',  (V.start.c>3?1:6)*TS+20, 8*TS+20);
+  // 摘発で出た田・米
+  if(S.rev){
+    const k=clamp(S.rev.t/1.2,0,1);
+    if(V.kind==='field'){ V.hiddenTiles.forEach((h,i)=>{ const kk=clamp(k*1.6-i*.1,0,1); if(kk<=0) return; g.save(); g.translate(h.c*TS+20,h.r*TS+20); g.scale(kk,kk); g.translate(-20,-20); g.globalAlpha=.95; drawTile('p',-1,-1,0,0); g.restore(); }); }
+    else if(V.truth){ const c=V.truth.center; for(let i=0;i<5;i++){ const bx=c.c*TS+6+(i%3)*12, by=c.r*TS+(i<3?8:20)-(1-k)*30; g.globalAlpha=k; rect(bx,by,13,9,'#D9B873'); g.beginPath(); g.moveTo(bx+6.5,by); g.lineTo(bx+6.5,by+9); g.stroke(); g.globalAlpha=1; } }
+  }
+  // 手がかりマーカー
+  V.spots.forEach(s=>{
+    const x=s.c*TS, y=s.r*TS;
+    if(!s.done){ const p=1+.13*Math.sin(S.tm*4+s.r+s.c); g.save(); g.translate(x+31,y+9); g.scale(p,p); circ(0,0,7,'#C8321E'); g.fillStyle='#fff'; g.font='bold 10px sans-serif'; g.fillText('？',0,.5); g.restore(); }
+    else { g.globalAlpha=.9; g.font='13px sans-serif'; g.fillStyle=INK; g.fillText(s.icon,x+31,y+9); g.globalAlpha=1; }
+  });
+  // 人物（奥から手前へ）
+  const ents=[]; V.folks.forEach(f=>ents.push({k:f.role,r:f.r,c:f.c,f}));
+  ents.push({k:'koz',r:S.kpos.r,c:S.kpos.c,off:-9,k2:true}); ents.push({k:'tano',r:S.pos.r,c:S.pos.c,me:true,off:4});
+  ents.sort((a,b)=>a.r-b.r||(a.me?1:0)-(b.me?1:0));
+  ents.forEach(e=>{
+    const x=e.c*TS+20+(e.off||0), y=e.r*TS+38; const wk=S.walk&&(e.me||e.k2)?Math.abs(Math.sin(S.tm*14))*2:0;
+    drawChar(e.k,x,y-wk,e.me?.62:.52,{face:e.me?(S.scene.face.tano||'n'):'n'});
+    if(e.f&&!e.f.talked&&e.k!=='chief'){ const a=.7+.3*Math.sin(S.tm*3+e.r); g.globalAlpha=a; g.fillStyle='#fff'; ell(x+10,y-40,6,5); fs('#fff'); g.fillStyle=INK; g.font='bold 7px sans-serif'; g.fillText('…',x+10,y-40); g.globalAlpha=1; }
+  });
+  // 経路プレビュー
+  if(S.sel&&!S.walk){ const p=pathTo(S.sel.r,S.sel.c); if(p){ g.strokeStyle='rgba(200,50,30,.9)'; g.lineWidth=3; g.setLineDash([4,5]); g.beginPath(); g.moveTo(S.pos.c*TS+20,S.pos.r*TS+20); p.path.forEach(q=>g.lineTo(q.c*TS+20,q.r*TS+20)); g.stroke(); g.setLineDash([]);
+    const ex=S.sel.c*TS+20, ey=S.sel.r*TS+20; circ(ex,ey,7,'rgba(200,50,30,.35)'); g.fillStyle='#fff'; g.font='bold 10px sans-serif'; g.lineWidth=3; g.strokeStyle='#C8321E'; const tx=(S.sel.cost/2)+'刻'; g.strokeText(tx,ex,ey-16); g.fillText(tx,ex,ey-16); g.strokeStyle=INK; } }
+  // 摘発モード
+  if(S.accuse){ g.fillStyle='rgba(200,50,30,.14)'; g.fillRect(0,0,320,400); g.fillStyle='#C8321E'; g.font='bold 15px "Shippori Mincho B1",serif'; g.lineWidth=3; g.strokeStyle='#fff'; g.strokeText('どこを指す？',160,198); g.fillText('どこを指す？',160,198); }
+  if(S.accuseAt){ const a=S.accuseAt; g.strokeStyle='#C8321E'; g.lineWidth=3; g.strokeRect(a.c*TS+2,a.r*TS+2,TS-4,TS-4); }
+  // 夕ぐれ
+  const ph=(S.used%16)/16; if(ph>.5){ g.fillStyle=`rgba(200,90,30,${(ph-.5)*.3})`; g.fillRect(0,0,320,400); }
+  // 紙の縁
+  const vg=g.createRadialGradient(160,200,150,160,200,260); vg.addColorStop(0,'rgba(120,80,30,0)'); vg.addColorStop(1,'rgba(120,80,30,.22)'); g.fillStyle=vg; g.fillRect(0,0,320,400);
+}
+
+/* ----- 場面 ----- */
+function sky(c1,c2){ const gr=g.createLinearGradient(0,0,0,400); gr.addColorStop(0,c1); gr.addColorStop(1,c2); g.fillStyle=gr; g.fillRect(0,0,320,400); }
+function hills(y,col,seed){ g.fillStyle=col; g.beginPath(); g.moveTo(0,400); g.lineTo(0,y); for(let x=0;x<=320;x+=20) g.lineTo(x,y-14-Math.sin(x*.03+seed)*14-Math.cos(x*.07+seed)*8); g.lineTo(320,400); g.closePath(); g.fill(); g.strokeStyle=INK; g.lineWidth=1.3; g.stroke(); }
+function room(){
+  g.fillStyle='#EBD9AE'; g.fillRect(0,0,320,400);
+  // 障子
+  g.fillStyle='#FAF3DC'; g.fillRect(0,0,320,250); g.strokeStyle='#9A8458'; g.lineWidth=1.4;
+  for(let x=0;x<=320;x+=40){ g.beginPath(); g.moveTo(x,0); g.lineTo(x,250); g.stroke(); } for(let y=0;y<=250;y+=50){ g.beginPath(); g.moveTo(0,y); g.lineTo(320,y); g.stroke(); }
+  g.fillStyle='#6B4A2A'; g.fillRect(0,246,320,8);
+  // 畳
+  g.fillStyle='#A9BC6E'; g.fillRect(0,254,320,146); g.strokeStyle='#5A6A34'; g.lineWidth=2;
+  for(let i=0;i<4;i++){ g.beginPath(); g.moveTo(0,254+i*40); g.lineTo(320,254+i*40); g.stroke(); } g.beginPath(); g.moveTo(110,254); g.lineTo(60,400); g.moveTo(230,254); g.lineTo(270,400); g.stroke();
+  // 掛け軸
+  rect(138,30,44,92,'#F3E7C6'); rect(142,34,36,84,'#FFF9E6'); g.fillStyle='#C8321E'; g.font='bold 30px "Shippori Mincho B1",serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('誠',160,76);
+}
+function charKey(k,x,y,s,extra){ const o=Object.assign({face:S.scene.face[k]||'n'},extra||{}); if(S.scene.talk===k) o.bob=-Math.abs(Math.sin(S.tm*9))*3; drawChar(k,x,y,s,o); }
+function seal(x,y,r,t,rot){ g.save(); g.translate(x,y); g.rotate(rot||0); circ(0,0,r,'rgba(200,50,30,.9)',false); g.strokeStyle='#fff'; g.lineWidth=2; g.beginPath(); g.arc(0,0,r-4,0,Math.PI*2); g.stroke(); g.fillStyle='#fff'; g.font=`bold ${r*(t.length>2?.52:.8)}px "Shippori Mincho B1",serif`; g.textAlign='center'; g.textBaseline='middle'; g.fillText(t,0,2); g.restore(); }
+function bale(x,y){ rect(x,y,22,14,'#D9B873'); g.beginPath(); g.moveTo(x+7,y); g.lineTo(x+7,y+14); g.moveTo(x+15,y); g.lineTo(x+15,y+14); g.stroke(); }
+function drawScene(){
+  const k=S.scene.k, t=S.tm-(S.scene.t0||0); g.textAlign='center'; g.textBaseline='middle';
+  if(k==='title'){
+    sky('#F6E3B0','#EBD9AE'); circ(250,70,34,'#E4503A',false); hills(240,'#9DB57A',1); hills(290,'#7FA063',3);
+    g.fillStyle='#E3CC88'; g.fillRect(0,300,320,100);
+    for(let i=0;i<8;i++){ g.strokeStyle='#C4A23C'; g.beginPath(); g.moveTo(10+i*40,330); g.lineTo(34+i*40,330); g.stroke(); }
+    charKey('tano',100,372,2.0); charKey('koz',48,388,1.6,{armUp:true}); charKey('chief',235,372,1.9);
+    g.font='bold 40px "Shippori Mincho B1",serif'; g.lineWidth=5; g.strokeStyle='#F6EBCF'; g.strokeText('検地奉行',160,52); g.fillStyle='#9E2412'; g.fillText('検地奉行',160,52);
+    seal(278,128,22,'検',.2);
+    return;
+  }
+  if(k==='declare'||k==='judge'){
+    room();
+    charKey('tano',100,352,2.0); charKey('koz',44,388,1.6); charKey('chief',236,352,2.0);
+    if(k==='judge'){ // 小判の袋
+      circ(168,378,12,'#C89A2A'); g.fillStyle='#fff'; g.font='bold 11px serif'; g.fillText('両',168,378);
+      if(S.vcaught){ for(let i=0;i<3;i++) bale(236+i*24,380-(i%2)*14); }
+    }
+    return;
+  }
+  if(k.startsWith('end_')){
+    const id=k.slice(4);
+    if(id==='meibugyo'){
+      sky('#FFF1C4','#F6E3B0'); g.save(); g.translate(160,170); for(let i=0;i<14;i++){ g.rotate(Math.PI/7); g.fillStyle='rgba(255,230,140,.55)'; g.beginPath(); g.moveTo(0,0); g.lineTo(300,-22); g.lineTo(300,22); g.closePath(); g.fill(); } g.restore();
+      hills(300,'#9DB57A',2); g.fillStyle='#E3CC88'; g.fillRect(0,320,320,80);
+      ['farmer','child','widow'].forEach((n,i)=>drawChar(n,[50,270,225][i],[372,380,384][i],1.4,{face:'h',armUp:true,bob:-Math.abs(Math.sin(S.tm*6+i))*5}));
+      charKey('tano',160,372,2.3,{face:'h'}); charKey('koz',105,388,1.6,{face:'h',armUp:true});
+      seal(160,70,40,'名奉行',-.1);
+      for(let i=0;i<24;i++){ const px=(i*53+S.tm*30)%340-10, py=(i*37+S.tm*55)%420-10; circ(px,py,3,'rgba(240,150,170,.8)',false); }
+    }else if(id==='shusse'){
+      sky('#FFE9A8','#F2C970'); hills(300,'#B7A060',2); g.fillStyle='#C9A25A'; g.fillRect(0,320,320,80);
+      for(let r=0;r<3;r++)for(let c=0;c<(5-r);c++) bale(60+c*38+r*19,372-r*16);
+      charKey('tano',160,328,2.0,{face:'h'}); charKey('koz',60,392,1.5,{face:'n'});
+      drawChar('farmer',280,392,1.3,{face:'a'}); drawChar('child',250,396,1.2,{face:'c'});
+      for(let i=0;i<14;i++){ const px=(i*61)%320, py=(S.tm*60+i*47)%400; circ(px,py,4,'#E8C85A'); }
+      g.font='bold 34px "Shippori Mincho B1",serif'; g.lineWidth=5; g.strokeStyle='#F6EBCF'; g.strokeText('大出世！',160,60); g.fillStyle='#9E2412'; g.fillText('大出世！',160,60);
+    }else if(id==='ikki'){
+      sky('#3A2A4A','#7A3A2A'); hills(280,'#2F2A3A',4); g.fillStyle='#4A3A2A'; g.fillRect(0,300,320,100);
+      [[40,340],[90,360],[150,350],[210,360],[270,345],[300,375],[20,385]].forEach((p,i)=>{ drawChar(i%3===0?'farmer':i%3===1?'hunter':'widow',p[0],p[1],1.3,{face:'a',armUp:true,bob:-Math.abs(Math.sin(S.tm*8+i))*3}); g.strokeStyle='#6A4A2A'; g.lineWidth=3; g.beginPath(); g.moveTo(p[0]+14,p[1]-30); g.lineTo(p[0]+22,p[1]-86); g.stroke(); if(i%2===0){ circ(p[0]+22,p[1]-92,7,'#FF9A2A',false); circ(p[0]+22,p[1]-92,3.5,'#FFE070',false); } });
+      charKey('tano',160,330,1.8,{face:'x'}); charKey('koz',110,334,1.4,{face:'x'});
+      g.font='bold 34px "Shippori Mincho B1",serif'; g.lineWidth=5; g.strokeStyle='#201020'; g.strokeText('一揆じゃ！',160,50); g.fillStyle='#FF6A3A'; g.fillText('一揆じゃ！',160,50);
+    }else if(id==='kaieki'){
+      room(); g.fillStyle='rgba(0,0,0,.25)'; g.fillRect(0,0,320,400);
+      rect(60,60,200,150,'#F3E7C6'); g.fillStyle=INK; g.font='bold 22px "Shippori Mincho B1",serif'; g.fillText('裏帳簿',160,90);
+      for(let i=0;i<5;i++){ g.fillStyle='#8A7A5A'; g.fillRect(80,112+i*18,140-i*8,3); }
+      seal(212,166,32,'改易',-.3);
+      charKey('metsuke',240,380,2.1,{face:'a'}); charKey('tano',100,380,1.9,{face:'s'}); charKey('koz',48,392,1.4,{face:'x'});
+    }else if(id==='seibai'){
+      sky('#FFE9A8','#FFD27A'); g.save(); g.translate(160,130); for(let i=0;i<16;i++){ g.rotate(Math.PI/8); g.fillStyle='rgba(255,255,255,.35)'; g.beginPath(); g.moveTo(0,0); g.lineTo(320,-16); g.lineTo(320,16); g.closePath(); g.fill(); } g.restore();
+      g.fillStyle='#C9A25A'; g.fillRect(0,320,320,80);
+      charKey('shogun',200,300,2.2,{face:'a'}); charKey('metsuke',270,388,1.6,{face:'a'}); charKey('tano',90,388,1.7,{face:t>2?'x':'s'}); charKey('koz',40,396,1.3,{face:'x'});
+      const sl=clamp(t*2.2,0,1); g.strokeStyle='#fff'; g.lineWidth=7; g.beginPath(); g.moveTo(20,60); g.lineTo(20+280*sl,300*sl+60); g.stroke(); g.strokeStyle='#C8321E'; g.lineWidth=2; g.stroke();
+      g.font='bold 40px "Shippori Mincho B1",serif'; g.lineWidth=6; g.strokeStyle='#F6EBCF'; g.strokeText('成敗！',160,48); g.fillStyle='#9E2412'; g.fillText('成敗！',160,48);
+    }else{
+      sky('#F7C58A','#F0A06A'); circ(80,250,48,'#E4503A',false); hills(300,'#8E8A66',5); g.fillStyle='#C9A25A'; g.fillRect(0,330,320,70);
+      charKey('tano',170,372,2.0,{face:'n'}); charKey('koz',230,390,1.7,{face:'h'});
+      g.font='16px sans-serif'; g.fillText('🍡',250,330);
+    }
+    return;
+  }
+  sky('#F6E3B0','#EBD9AE');
+}
+function drawFx(){
+  if(S.fx&&S.fx.t==='night'){
+    const f=S.fx, k=f.t0/f.dur, a=Math.sin(Math.PI*clamp(k,0,1))*.88;
+    g.fillStyle=`rgba(15,20,50,${a})`; g.fillRect(0,0,320,400);
+    for(let i=0;i<20;i++){ g.fillStyle=`rgba(255,255,220,${a})`; g.fillRect((i*67)%320,(i*41)%300,2,2); }
+    g.globalAlpha=clamp(a*1.5,0,1); g.fillStyle='#F6EBCF'; g.font='bold 24px "Shippori Mincho B1",serif'; g.textAlign='center'; g.fillText(k<.5?'日が暮れ…':`${'一二三'[f.day]}日目の朝`,160,190); g.globalAlpha=1;
+  }
+  if(S.rev&&S.rev.t<2.4&&S.view==='map'){
+    const t=S.rev.t, sc=t<.25?3-(t/.25)*2:1; g.save(); if(t<.4) g.translate((Math.random()-.5)*8,(Math.random()-.5)*8);
+    g.globalAlpha=clamp(2.4-t,0,1); seal(160,190,70*sc,'御用だ',-.2); g.restore();
+  }
+}
+function draw(){
+  sizeCheck(); g.setTransform(csx,0,0,csy,0,0); g.clearRect(0,0,320,400);
+  g.textAlign='center'; g.textBaseline='middle';
+  if(S.view==='map'&&S.V) drawMap(); else drawScene();
+  drawFx();
+}
+
+/* ===== 時間を進める ===== */
+function updateDlg(dt){
+  const d=S.dlg, l=d.lines[d.i];
+  if(d.ch<l.t.length){ d.ch=Math.min(l.t.length,d.ch+dt*(S.auto?999:55)); }
+  else if(S.auto){ d.wait+=dt; if(d.wait>.14+l.t.length*.003){ advance(); S.dirty=true; } }
+}
+function updateWalk(dt){
+  const w=S.walk; w.t+=dt; const st=S.auto?.04:.13;
+  while(S.walk&&w.t>=st){
+    w.t-=st; const p=w.path[w.i];
+    S.kpos={r:S.pos.r,c:S.pos.c}; S.pos={r:p.r,c:p.c}; spend(TC[tileAt(p.r,p.c)]); sfx('step'); w.i++;
+    if(w.i>=w.path.length){ S.walk=null; S.dirty=true; break; }
+    if(S.fx) break;
+  }
+}
+function update(dt){
+  S.tm+=dt; if(S.rev) S.rev.t+=dt;
+  if(S.fx){ S.fx.t0+=dt; if(S.fx.t0>=S.fx.dur){ S.fx=null; S.dirty=true; } return; }
+  if(S.dlg){ updateDlg(dt); return; }
+  if(S.walk){ updateWalk(dt); return; }
+  if(S.ui==='play'){
+    if(S.pend&&(S.phase==='explore'||S.phase==='declare')){ startEnding(S.pend); return; }
+    if(S.phase==='explore'&&!S.choice&&!S.accuse&&leftH()<=0&&!S.tu){
+      S.tu=true;
+      say([['tano','日が暮れ、三日目も終わってしまった…。もはや調べる刻はない。','s'],['koz','最後に、あやしい所を指して勝負するか、裁定に入るか…でやんす。','n']],()=>{
+        S.choice={k:'timeup',title:'刻が尽きた。どうする？',opts:[
+          {label:'最後に摘発する！',sub:'当てずっぽうでも、賭けてみる',cls:'pri',fn:()=>{ S.choice=null; startAccuse(); }},
+          {label:'裁定に入る',sub:'',cls:'',fn:()=>{ S.choice=null; toJudge(); }}]}; S.dirty=true; });
+      return;
+    }
+  }
+  if(S.auto) autoStep(dt);
+}
+
+/* ===== 🤖 オート（TAS 風：最短・最速・最適） ===== */
+function dijk(V,sr,sc){
+  const g=V.grid, dist=[]; for(let i=0;i<H;i++) dist.push(Array(W).fill(1e9));
+  dist[sr][sc]=0; const q=[[sr,sc]];
+  while(q.length){ q.sort((a,b)=>dist[a[0]][a[1]]-dist[b[0]][b[1]]); const [y,x]=q.shift();
+    for(const [dy,dx] of [[1,0],[-1,0],[0,1],[0,-1]]){ const ny=y+dy,nx=x+dx; if(ny<0||ny>=H||nx<0||nx>=W||g[ny][nx]==='R') continue; const nd=dist[y][x]+TC[g[ny][nx]]; if(nd<dist[ny][nx]){ dist[ny][nx]=nd; q.push([ny,nx]); } } }
+  return dist;
+}
+function approach(V,dist,t){ // 対象の隣（または同じマス）へ行く最小コスト
+  let best=null;
+  for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){ if(Math.abs(dr)+Math.abs(dc)>1) continue; const r=t.r+dr,c=t.c+dc; if(r<0||r>=H||c<0||c>=W||V.grid[r][c]==='R') continue; if(dist[r][c]>=1e9) continue;
+    if(!best||dist[r][c]<best.cost) best={r,c,cost:dist[r][c]}; }
+  return best;
+}
+function bestPair(V,from){
+  const info=analyze(V), ns=info.notes, truthSite=V.truth?V.truth.id:'honest';
+  const d0=dijk(V,from.r,from.c); let best=null;
+  for(let i=0;i<ns.length;i++)for(let j=i+1;j<ns.length;j++){
+    const p=pairResult(V,ns[i],ns[j]); if(!p||p.site!==truthSite) continue;
+    for(const [a,b] of [[ns[i],ns[j]],[ns[j],ns[i]]]){
+      const pa=approach(V,d0,a); if(!pa) continue;
+      const da=dijk(V,pa.r,pa.c), pb=approach(V,da,b); if(!pb) continue;
+      const cost=pa.cost+2+pb.cost+2; if(!best||cost<best.cost) best={a,b,cost};
+    }
+  }
+  return best;
+}
+function autoPlan(){
+  const V=S.V, bp=bestPair(V,S.pos);
+  const steps=[]; if(bp){ steps.push(bp.a,bp.b); }
+  return {vi:S.vi,seed:S.seed,steps,i:0,combined:false,pressed:false,pair:bp};
+}
+function autoChoice(){
+  const c=S.choice, V=S.V; let i=0;
+  if(c.k==='daughter') i=1;
+  else if(c.k==='judge') i=V.kind==='honest'?1:0;
+  c.opts[i].fn(); S.dirty=true;
+}
+function autoDeclare(){
+  const V=S.V, todo=V.decl.contras.filter(k=>!S.cf[k]);
+  if(todo.length){ const [c,f]=todo[0].split(':'); S.doc={c,f}; tryTsuki(); S.dirty=true; return; }
+  startExplore(); S.dirty=true;
+}
+function autoGoNear(t){ // t のそばまで最短で行く。着いていれば true
+  if(man(t,S.pos)<=1) return true;
+  const dist=dijk(S.V,S.pos.r,S.pos.c), a=approach(S.V,dist,t);
+  if(!a||a.cost>leftH()){ return 'fail'; }
+  goTo(a.r,a.c); return false;
+}
+function autoExplore(){
+  const V=S.V;
+  if(!S.ap||S.ap.vi!==S.vi||S.ap.seed!==S.seed) S.ap=autoPlan();
+  const ap=S.ap;
+  while(ap.i<ap.steps.length&&S.notes.find(n=>n.id===ap.steps[ap.i].id)) ap.i++;
+  if(ap.i<ap.steps.length){
+    const t=ap.steps[ap.i], r=autoGoNear(t);
+    if(r==='fail'){ ap.i=ap.steps.length; ap.failed=true; return; }
+    if(r===true){ if(t.src==='spot'){ const s=V.spots.find(x=>x.id===t.id); investigate(s); } else { talk(V.folks.find(x=>x.id===t.id)); } }
+    return;
+  }
+  if(!ap.combined){
+    ap.combined=true;
+    if(ap.pair){ const want=V.truth?V.truth.id:'honest'; if(!S.infers.find(x=>x.site===want)){ S.selNotes=[]; pickNote(ap.pair.a.id); pickNote(ap.pair.b.id); } }
+    return;
+  }
+  if(V.kind==='honest'||ap.failed){ if(V.kind==='honest') { toJudge(); return; } }
+  if(V.daughter&&!V.pressed&&S.infers.length&&leftH()>=2){
+    const r=autoGoNear(V.chief);
+    if(r===true) talkChief(); else if(r==='fail') V.pressed=true;
+    return;
+  }
+  if(V.kind!=='honest'){
+    const T=V.truth.center; startAccuse(); askAccuse(T.r,T.c); S.dirty=true; return;
+  }
+  toJudge();
+}
+function autoStep(dt){
+  S.aw=(S.aw||0)-dt; if(S.aw>0) return; S.aw=.1;
+  if(S.ui==='title'){ newGame(); return; }
+  if(S.ui==='result'){ S.resultWait+=.1; if(S.resultWait>=3) newGame(S.seed+1); return; }
+  if(S.ui!=='play') return;
+  if(S.choice){ autoChoice(); return; }
+  if(S.phase==='declare') return autoDeclare();
+  if(S.phase==='explore') return autoExplore();
+}
+
+/* ===== ループ ===== */
+let lastT=performance.now();
+function loop(now){
+  const dt=Math.min(.1,(now-lastT)/1000); lastT=now;
+  update(dt); if(S.dirty) render(); dlgText(); draw();
+  requestAnimationFrame(loop);
+}
+addEventListener('resize',()=>{ S.dirty=true; });
+function fitMap(){ /* 地図は CSS の aspect-ratio で自動フィット */ }
+
+/* ===== テスト用フック ===== */
+function flush(){ let n=0; while((S.dlg||S.fx||S.walk)&&n++<20000){ if(S.fx){ S.fx.t0=S.fx.dur; S.fx=null; } else if(S.walk){ updateWalk(1); } else advance(); } S.dirty=true; }
+function truthInfo(){
+  const V=S.V; if(!V) return null;
+  return {kind:V.kind,name:V.name,truth:V.truth?{id:V.truth.id,name:V.truth.name,center:V.truth.center}:null,daughter:V.daughter,
+    contras:V.decl.contras.slice(),spots:V.spots.map(s=>({id:s.id,r:s.r,c:s.c,cat:s.cat,site:s.site,title:s.title})),
+    folks:V.folks.map(f=>({id:f.id,role:f.role,r:f.r,c:f.c,cat:f.note&&f.note.cat,site:f.note&&f.note.site})),
+    weather:V.weather,cause:V.cause,L:V.L,D:V.D,K:V.K,Q:V.Q,hidKoku:V.hidKoku,bribe:V.bribe};
+}
+function stateOut(){
+  return {ui:S.ui,phase:S.phase,auto:S.auto,seed:S.seed,vi:S.vi,plan:S.plan.slice(),kind:S.V&&S.V.kind,left:leftH(),used:S.used,pos:S.pos,
+    hyo:S.hyo,ura:S.ura,kob:S.kob,uta:S.uta,bribes:S.bribes,strict:S.strict,mercy:S.mercy,right:S.right,caughtN:S.caughtN,falseAcc:S.falseAcc,
+    notes:S.notes.map(n=>n.id),infers:S.infers.map(i=>i.site),contras:Object.keys(S.cf),caught:S.vcaught,ending:S.ending,result:S.result,score:S.score,
+    vlog:S.vlog,dlg:!!S.dlg,choice:S.choice?{k:S.choice.k,n:S.choice.opts.length}:null,pend:S.pend,akuda:S.akuda,view:S.view,tab:S.tab};
+}
+window.__kenchi={
+  state:stateOut, setAuto, reveal:truthInfo,
+  step(dt,n){ n=n||1; for(let k=0;k<n;k++){ let t=dt; while(t>0){ const d=Math.min(t,.05); update(d); t-=d; } } if(S.dirty) render(); dlgText(); draw(); },
+  newGame(seed,opt){ S.forceDaughter=opt&&opt.daughter?[1,1,1,1,1]:null; newGame(seed); },
+  flush, choose(i){ act('choice',null,i); flush(); },
+  forceEnding(id){ flush(); startEnding(id); },
+  toTitle,
+  startExplore(){ flush(); startExplore(); flush(); },
+  tsuki(c,f){ S.doc={c,f}; tryTsuki(); },
+  goTo(r,c){ return goTo(r,c); },
+  invest(id){ const s=S.V.spots.find(x=>x.id===id); investigate(s); },
+  talk(id){ const f=S.V.folks.find(x=>x.id===id); talk(f); },
+  combine(a,b){ S.selNotes=[]; pickNote(a); pickNote(b); },
+  accuse(r,c){ doAccuse(r,c); }, toJudge, judge(k){ judge(k); }, nextVillage, afterJudge,
+  press(){ pressChief(); },
+  tab:setTab, tap:onTap, lsClear(){ try{ localStorage.removeItem('kenchiBest'); localStorage.removeItem('kenchiEndings'); }catch(e){} book=[]; best={score:0,rank:'-'}; },
+  S, gen(seed,idx,kind,opt){ return genVillage(seed,idx,kind,[],opt); },
+  analyze, bestPair, dijk, genVillage, pairResult, mkRng,
+  setUsed(n){ S.used=n; S.dirty=true; },
+  verify(n){
+    const out={n,bad:[],honestCounts:{},stats:{minCost:[],kinds:{field:0,rice:0,honest:0},contraOk:0,daughter:0,unreachable:0}};
+    for(let seed=1;seed<=n;seed++){
+      resetRun(seed); const h=S.plan.filter(k=>k==='honest').length; out.honestCounts[h]=(out.honestCounts[h]||0)+1;
+      if(h<1) out.bad.push({seed,why:'no honest'});
+      const used=[];
+      for(let i=0;i<5;i++){
+        const V=genVillage(seed*1009+i*7919+13,i,S.plan[i],used,{}); out.stats.kinds[V.kind]++; if(V.daughter) out.stats.daughter++;
+        const truthSite=V.truth?V.truth.id:'honest';
+        const an=analyze(V);
+        if(an.sites.length!==1||an.sites[0]!==truthSite) out.bad.push({seed,i,kind:V.kind,why:'sites',sites:an.sites,truth:truthSite});
+        // 申告の整合
+        if(V.kind==='honest'&&V.decl.contras.length) out.bad.push({seed,i,why:'honest has contra',c:V.decl.contras});
+        if(V.kind!=='honest'&&!V.decl.contras.length) out.bad.push({seed,i,why:'dishonest no contra'});
+        if(V.kind==='field'&&!V.decl.contras.includes('C1:F1a')) out.bad.push({seed,i,why:'field w/o fewer'});
+        if(V.kind==='rice'&&!V.decl.contras.includes('C2:F3b')) out.bad.push({seed,i,why:'rice w/o yield'});
+        // 到達性
+        const d=dijk(V,V.start.r,V.start.c);
+        for(const s of V.spots) if(!approach(V,d,s)) { out.bad.push({seed,i,why:'spot unreachable',s:s.id}); }
+        for(const f of V.folks) if(!approach(V,d,f)) { out.bad.push({seed,i,why:'folk unreachable',f:f.id}); }
+        // 重複マス
+        const seen=new Set(); for(const s of V.spots){ const k=s.r+','+s.c; if(seen.has(k)) out.bad.push({seed,i,why:'dup tile',k}); seen.add(k); if(V.grid[s.r][s.c]==='R') out.bad.push({seed,i,why:'spot on river'}); }
+        for(const f of V.folks){ const k=f.r+','+f.c; if(seen.has(k)) out.bad.push({seed,i,why:'folk overlaps',k}); seen.add(k); }
+        const bp=bestPair(V,V.start); if(!bp) out.bad.push({seed,i,why:'no pair'}); else { out.stats.minCost.push(bp.cost); if(bp.cost>34) out.bad.push({seed,i,why:'too far',cost:bp.cost}); }
+        // 全手がかりを集めた場合の総コスト（全部は調べ切れないこと）
+        let tot=0; V.spots.forEach(()=>tot+=2); V.folks.forEach(()=>tot+=2); out.stats['tot']=(out.stats['tot']||0)+tot;
+      }
+    }
+    return out;
+  }
+};
+
+/* ===== 起動 ===== */
+toTitle(); render(); draw(); requestAnimationFrame(loop);
+})();
+</script>
+<!-- zoom guard: ピンチ・ダブルタップでズームしない -->
+<script>(function(){var p=function(e){e.preventDefault();};['gesturestart','gesturechange','gestureend'].forEach(function(t){document.addEventListener(t,p,{passive:false});});document.addEventListener('touchmove',function(e){if(e.touches&&e.touches.length>1)e.preventDefault();},{passive:false});document.addEventListener('dblclick',function(e){var t=e.target;if(t&&t.closest&&t.closest('input,textarea,select,[contenteditable]'))return;e.preventDefault();},{passive:false});})();</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>
