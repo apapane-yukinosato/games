@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
-<meta name="description" content="ラッコが貝殻のハンドルを回して泡を発射。同じマークの泡を3つそろえてポン！ 壁で反射、切り離して一気に落とす、パズルボブル風のバブルシューター。全36ステージとエンドレス。">
-<title>ラッコのぷかぷかバブル</title>
+<meta name="description" content="コーギーが貝殻のハンドルを回して泡を発射。同じマークの泡を3つそろえてポン！ 壁で反射、切り離して一気に落とす、パズルボブル風のバブルシューター。全36ステージとエンドレス。">
+<title>コーギーのぷかぷかバブル</title>
 <link rel="apple-touch-icon" href="../icon-180.png">
 <link rel="icon" type="image/png" href="../icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -55,12 +55,12 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--acc);outline-offset
 <div id="app">
   <div id="top">
     <a href="../">← 一覧</a>
-    <h1>ラッコのぷかぷかバブル</h1>
+    <h1>コーギーのぷかぷかバブル</h1>
     <button class="mini" id="autoBtn" aria-pressed="false" title="Oキー">🤖 オート</button>
     <button class="mini" id="sndBtn" aria-pressed="false" title="音のON/OFF">🔊</button>
   </div>
   <div id="wrap">
-    <canvas id="cv" width="400" height="660" aria-label="ラッコのぷかぷかバブルのゲーム画面"></canvas>
+    <canvas id="cv" width="400" height="660" aria-label="コーギーのぷかぷかバブルのゲーム画面"></canvas>
     <div class="ov" id="ov"></div>
   </div>
   <div id="ctl">
@@ -602,20 +602,41 @@ const amb=[]; for(let i=0;i<22;i++) amb.push({x:Math.random()*W,y:Math.random()*
 
 /* ================= drawing ================= */
 function ell(g,x,y,rx,ry,col){ g.fillStyle=col; g.beginPath(); g.ellipse(x,y,rx,ry,0,0,7); g.fill(); }
-function drawOtter(g,x,y,sc,mood,t){
+function drawCorgi(g,x,y,sc,mood,t){
+  const FUR='#ff9a4d',DK='#d9702a',LT='#ffc48a',INK='#2a1b1b';
   g.save(); g.translate(x,y); g.scale(sc,sc);
-  ell(g,0,36,27,30,'#7d4f2c'); ell(g,0,40,16,22,'#ecd5ae');
-  ell(g,-19,-16,6.5,6.5,'#6a4023'); ell(g,19,-16,6.5,6.5,'#6a4023'); ell(g,-19,-16,3,3,'#c58b66'); ell(g,19,-16,3,3,'#c58b66');
-  ell(g,0,0,25,23,'#9a6a40'); ell(g,0,9,16,11.5,'#f1dfbd'); ell(g,0,3.5,5,3.4,'#2a1b14');
-  g.strokeStyle='#2a1b14'; g.lineWidth=1.6; g.lineCap='round'; g.beginPath();
-  if(mood==='happy'){ g.moveTo(-6,10); g.quadraticCurveTo(0,19,6,10); } else if(mood==='worry'){ g.moveTo(-5,14); g.quadraticCurveTo(0,10,5,14); } else { g.moveTo(-4,11); g.quadraticCurveTo(0,15,4,11); }
-  g.stroke();
-  g.fillStyle='#2a1b14'; g.strokeStyle='#2a1b14'; g.lineWidth=2.2;
-  if(mood==='happy'){ for(const s of [-1,1]){ g.beginPath(); g.arc(s*10,-4,4,Math.PI*1.1,Math.PI*1.9); g.stroke(); } }
-  else if(mood==='worry'){ for(const s of [-1,1]){ ell(g,s*10,-4,4.6,5.2,'#fff'); ell(g,s*10,-3,2.6,3,'#2a1b14'); g.lineWidth=1.8; g.beginPath(); g.moveTo(s*15,-13); g.lineTo(s*5,-11); g.stroke(); }
-    ell(g,22,-8+Math.sin(t*9)*1.5,2.6,3.8,'#8fe3ff'); }
-  else { for(const s of [-1,1]){ ell(g,s*10,-4,3.4,3.8,'#2a1b14'); ell(g,s*10+1,-5.2,1.1,1.1,'#fff'); } }
-  g.fillStyle='rgba(255,255,255,.8)'; for(const s of [-1,1]) for(let i=0;i<2;i++){ g.beginPath(); g.arc(s*(9+i*3),7+i*2,.9,0,7); g.fill(); }
+  // body, white chest, round bottom hint
+  ell(g,0,38,25,27,FUR); ell(g,0,42,14,21,'#fffdf8');
+  ell(g,-21,52,9,7,'#fffdf8'); ell(g,21,52,9,7,'#fffdf8');
+  // floating ring (stripes)
+  g.lineWidth=9; g.strokeStyle='#ff5d73'; g.beginPath(); g.ellipse(0,40,30,11,0,0,7); g.stroke();
+  g.strokeStyle='#fff'; g.lineWidth=9; for(let i=0;i<6;i++){ g.beginPath(); g.ellipse(0,40,30,11,0,i*1.047+.1,i*1.047+.5); g.stroke(); }
+  // big upright ears
+  for(const k of [-1,1]){
+    g.fillStyle=DK; g.beginPath(); g.moveTo(k*24,-6); g.lineTo(k*20,-37); g.lineTo(k*6,-19); g.closePath(); g.fill();
+    g.fillStyle='#ffc2c7'; g.beginPath(); g.moveTo(k*20,-11); g.lineTo(k*18,-30); g.lineTo(k*9,-19); g.closePath(); g.fill();
+  }
+  // head
+  ell(g,0,0,25,22,FUR); ell(g,-9,-8,9,6,LT);
+  g.fillStyle='#fffdf8'; g.beginPath(); g.moveTo(-3,-21); g.lineTo(3,-21); g.lineTo(6,2); g.lineTo(-6,2); g.closePath(); g.fill();
+  ell(g,0,9,15,11,'#fffdf8');
+  ell(g,-16,7,4,2.6,'rgba(255,120,140,.4)'); ell(g,16,7,4,2.6,'rgba(255,120,140,.4)');
+  // goggles pushed up on the forehead + strap + snorkel
+  g.strokeStyle='#2a74a6'; g.lineWidth=2.4; g.beginPath(); g.moveTo(-25,-9); g.quadraticCurveTo(0,-26,25,-9); g.stroke();
+  for(const k of [-1,1]){ ell(g,k*9,-14,7,5.2,'#8fe3ff'); g.strokeStyle='#2a74a6'; g.lineWidth=2; g.beginPath(); g.ellipse(k*9,-14,7,5.2,0,0,7); g.stroke(); ell(g,k*9-2,-15.5,2,1.4,'rgba(255,255,255,.9)'); }
+  g.strokeStyle='#ffd23f'; g.lineWidth=4; g.lineCap='round'; g.beginPath(); g.moveTo(24,-10); g.lineTo(31,-14); g.lineTo(31,-30); g.stroke();
+  g.strokeStyle='#ff5d73'; g.lineWidth=4; g.beginPath(); g.moveTo(31,-30); g.lineTo(31,-33); g.stroke();
+  // eyes
+  g.fillStyle=INK; g.strokeStyle=INK; g.lineWidth=2.2; g.lineCap='round';
+  if(mood==='happy'){ for(const k of [-1,1]){ g.beginPath(); g.arc(k*10,-1,4,Math.PI*1.1,Math.PI*1.9); g.stroke(); } }
+  else if(mood==='worry'){ for(const k of [-1,1]){ ell(g,k*10,-2,4.6,5.2,'#fff'); ell(g,k*10,-1,2.6,3,INK); g.lineWidth=1.8; g.beginPath(); g.moveTo(k*15,-10); g.lineTo(k*5,-8); g.stroke(); }
+    ell(g,21,-4+Math.sin(t*9)*1.5,2.6,3.8,'#8fe3ff'); }
+  else { for(const k of [-1,1]){ ell(g,k*10,-2,3.4,3.8,INK); ell(g,k*10+1,-3.3,1.1,1.1,'#fff'); } }
+  // nose + mouth
+  ell(g,0,5,4.8,3.3,INK); g.lineWidth=1.6; g.beginPath();
+  if(mood==='happy'){ g.fillStyle='#8b2e3a'; g.moveTo(-6,10); g.quadraticCurveTo(0,22,6,10); g.closePath(); g.fill(); ell(g,0,15,3.2,2.2,'#ff8fa0'); }
+  else if(mood==='worry'){ g.moveTo(-5,14); g.quadraticCurveTo(0,10,5,14); g.stroke(); }
+  else { g.moveTo(0,8); g.lineTo(0,11); g.moveTo(-5,11); g.quadraticCurveTo(-2.5,14,0,11); g.quadraticCurveTo(2.5,14,5,11); g.stroke(); }
   g.restore();
 }
 function drawWheel(g,x,y,rot){
@@ -723,16 +744,16 @@ function drawLauncher(g){
   if(warn){ sx=Math.sin(S.t*70)*2.2; sy=Math.cos(S.t*83)*1.2; }
   g.translate(sx,sy);
   const mood=S.mood==='normal'&&warn?'worry':S.mood;
-  drawOtter(g,LX,H-30,1.0,mood,S.t);
-  drawWheel(g,LX-44,H-36,-(S.angle-Math.PI/2)*2.4);
+  drawCorgi(g,LX,H-20,1.0,mood,S.t);
+  drawWheel(g,LX-44,H-30,-(S.angle-Math.PI/2)*2.4);
   // paws on wheel
-  ell(g,LX-26,H-24,7,7,'#6a4023');
+  ell(g,LX-27,H-18,7,7,'#ffb06b');
   drawShell(g,LX,LY,-(S.angle-Math.PI/2));
   if(S.cur) drawBubble(g,S.cur,LX-Math.cos(S.angle)*(S.fireKick||0)*0,LY+(S.fireKick||0)*6);
   g.restore();
   // companion
   g.save(); g.translate(0,Math.sin(S.t*2)*1.5);
-  drawOtter(g,62,H-26,.78,S.mood==='worry'?'worry':(S.mood==='happy'?'happy':'normal'),S.t);
+  drawCorgi(g,62,H-26,.78,S.mood==='worry'?'worry':(S.mood==='happy'?'happy':'normal'),S.t);
   if(S.next) drawBubble(g,S.next,62,H-84,.82);
   g.fillStyle='#eafcff'; g.font='800 11px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.fillText('NEXT',62,H-114);
   g.restore();
@@ -762,7 +783,7 @@ function fmtT(s){ s=Math.round(s); return Math.floor(s/60)+':'+String(s%60).padS
 function showOv(kind){
   ov.hidden=false; let h='';
   if(kind==='title'){
-    h=`<div class="card"><h2>ラッコの<br><span>ぷかぷかバブル</span></h2>
+    h=`<div class="card"><h2>コーギーの<br><span>ぷかぷかバブル</span></h2>
     <p class="sub">同じマークの泡を3つそろえてポン！<br>画面をなぞってねらい、はなすと発射。<br>ささえをなくして落とすと大ボーナス。</p>
     <div class="stsel"><button data-act="stm" aria-label="ステージを戻す">◀</button><span>ステージ <b id="selN">${S.sel}</b> / ${NST}</span><button data-act="stp" aria-label="ステージを進める">▶</button></div>
     <button class="go" data-act="startStage">${S.sel>1?'つづきから ステージ'+S.sel:'ステージモード'}</button>
