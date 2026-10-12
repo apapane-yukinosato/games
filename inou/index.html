@@ -993,7 +993,7 @@ const DEFLOOK={skin:'#ffd9b8',hair:'#2b2118',style:0};
 function bolt(c,x,y,s,col){ c.fillStyle=col; c.beginPath(); c.moveTo(x+3*s,y-9*s); c.lineTo(x-3*s,y+1*s); c.lineTo(x,y+1*s); c.lineTo(x-3*s,y+10*s); c.lineTo(x+4*s,y-2*s); c.lineTo(x+1*s,y-2*s); c.closePath(); c.fill(); }
 function drawChar(c,x,y,s,o){
   o=o||{}; const L=o.look||DEFLOOK, col=o.col||'#2f8cff', col2=o.col2||'#fff', t=o.t||0;
-  c.save(); c.translate(x,y); c.scale(s*(o.flip?-1:1),s);
+  c.save(); c.translate(x,y); c.scale(s*(o.flip?-1:1),s); if(o.twist) c.transform(1,0,o.twist,1,0,0);
   if(o.alpha!=null) c.globalAlpha=o.alpha;
   // shadow
   if(!o.noShadow){ c.fillStyle='rgba(0,0,0,.3)'; c.beginPath(); c.ellipse(0,0,22,6,0,0,6.3); c.fill(); }
@@ -1017,9 +1017,11 @@ function drawChar(c,x,y,s,o){
     const a=o.bat==null?-2.2:o.bat; const hx=16,hy=-62;
     c.beginPath(); c.moveTo(14,-60); c.lineTo(hx+4,hy+4); c.stroke();
     const bl=o.batLen||70; const ex=hx+Math.cos(a)*bl, ey=hy+Math.sin(a)*bl;
+    if(!o.nobat){
     c.strokeStyle='#e8c27a'; c.lineWidth=6; c.beginPath(); c.moveTo(hx,hy); c.lineTo(ex,ey); c.stroke(); c.strokeStyle='#8a5a2a'; c.lineWidth=3; c.beginPath(); c.moveTo(hx,hy); c.lineTo(hx+Math.cos(a)*14,hy+Math.sin(a)*14); c.stroke();
     if(ab==='magnet'&&(o.deco||on)){ c.strokeStyle='#ff4a5a'; c.lineWidth=5; c.beginPath(); c.arc(ex,ey,7,a+1.57,a+4.7); c.stroke(); c.strokeStyle='#4a8aff'; c.beginPath(); c.arc(ex,ey,7,a-1.57,a+1.57); c.stroke(); }
     if(on&&o.glowBat){ c.strokeStyle='rgba(255,255,255,.8)'; c.lineWidth=2; c.beginPath(); c.moveTo(hx,hy); c.lineTo(ex,ey); c.stroke(); }
+    }
     c.fillStyle=L.skin; c.beginPath(); c.arc(hx,hy,4.5,0,6.3); c.fill();
   } else if(pose==='pitch'){
     const w=o.wind||0; const ex=18+w*10, ey=-60-w*34; c.beginPath(); c.moveTo(14,-60); c.lineTo(ex,ey); c.stroke(); c.fillStyle=L.skin; c.beginPath(); c.arc(ex,ey,4.5,0,6.3); c.fill();
@@ -1218,12 +1220,11 @@ function drawBatView(c){
   c.fillStyle='#fff'; c.beginPath(); const hx=ZC[0], hy=ZC[1]+ZS*1.55; c.moveTo(hx-34,hy-6); c.lineTo(hx+34,hy-6); c.lineTo(hx+34,hy+6); c.lineTo(hx,hy+20); c.lineTo(hx-34,hy+6); c.closePath(); c.fill();
   // batter
   const giantOn=!!B.giant, tinyOn=!!B.tiny;
-  let batAng=-2.2, pose='bat'; let sw=S.swing;
-  if(sw){ const k=clamp(sw.t/0.2,0,1); batAng=lerp(-2.5,0.5,k*k*(3-2*k)); }
-  const bScale=giantOn?4.6:(tinyOn?0.7:1.5), bx=giantOn?42:96, by=giantOn?585:478;
+  const sw=S.swing; const bScale=giantOn?4.6:(tinyOn?0.7:1.5), bx=giantOn?42:96, by=giantOn?585:478, Lc=giantOn?58:70;
   if(giantOn){ c.fillStyle='rgba(0,0,0,.3)'; c.beginPath(); c.ellipse(bx+60,by-90,150,30,0,0,6.3); c.fill(); }
-  drawChar(c,bx,by,bScale,{col:bT.col,col2:bT.col2,look:bt.look,pose,bat:batAng,batLen:giantOn?58:70,ab:bt.ab,deco:true,on:Object.keys(B).some(k=>B[k]),flip:false,t,face:sub==='fly'?'shout':'n',glowBat:!!sw,alpha:1});
-  if(sw&&sw.t<0.26){ c.strokeStyle='rgba(255,255,255,.45)'; c.lineWidth=5; c.lineCap='round'; c.beginPath(); const k=clamp(sw.t/0.2,0,1); c.arc(bx+(giantOn?64:24)*1,by-(giantOn?250:90),(giantOn?200:100)*(1),-2.5+0.0,lerp(-2.5,0.5,k),false); c.stroke(); }
+  const sp=sw?swingPose(sw,bx,by,bScale,Lc):null;
+  drawChar(c,bx,by,bScale,{col:bT.col,col2:bT.col2,look:bt.look,pose:'bat',bat:-1.7,batLen:Lc,ab:bt.ab,deco:true,on:Object.keys(B).some(k=>B[k]),flip:false,t,face:sub==='fly'?'shout':'n',alpha:1,nobat:!!sp,twist:sp?sp.twist:0});
+  if(sp) drawSwingBat(c,sp,bScale,bt,B);
   // zone
   const z0=zp(-1,1), z1=zp(1,-1); const Z=zoneHalf(G); const zz0=zp(-Z,Z), zz1=zp(Z,-Z);
   c.fillStyle='rgba(255,255,255,.08)'; c.fillRect(z0[0],z0[1],z1[0]-z0[0],z1[1]-z0[1]);
@@ -1231,6 +1232,7 @@ function drawBatView(c){
   c.strokeStyle='rgba(255,255,255,.18)'; c.lineWidth=1; for(let i=1;i<3;i++){ const a=zp(-Z+2*Z*i/3,Z), b2=zp(-Z+2*Z*i/3,-Z); c.beginPath(); c.moveTo(a[0],a[1]); c.lineTo(b2[0],b2[1]); c.stroke(); const a2=zp(-Z,Z-2*Z*i/3), b3=zp(Z,Z-2*Z*i/3); c.beginPath(); c.moveTo(a2[0],a2[1]); c.lineTo(b3[0],b3[1]); c.stroke(); }
   // pitching: show batter's weak spot
   if(S.mode==='pit'&&bt.hole){ const h=zp(bt.hole[0],bt.hole[1]); const g=c.createRadialGradient(h[0],h[1],2,h[0],h[1],ZS*0.55); g.addColorStop(0,'rgba(80,160,255,.55)'); g.addColorStop(1,'rgba(80,160,255,0)'); c.fillStyle=g; c.beginPath(); c.arc(h[0],h[1],ZS*0.55,0,6.3); c.fill(); txt(c,'苦手',h[0],h[1],10,'#cfe6ff','center'); }
+  if(S.mode==='bat'&&P&&(sub==='fly'||sub==='tsBat'||sub==='tsPit')) drawArea(c);
   // ball
   if(P&&(sub==='fly'||sub==='tsPit'||sub==='tsBat'||(sub==='ev'&&S.view==='bat'&&!S.hitFly&&S.pc<P.Tarr+0.35))) drawPitchBall(c);
   // hit flash
@@ -1241,6 +1243,62 @@ function drawBatView(c){
   if(sub==='tsPit'&&S.mode==='pit'){ const cp=zp(S.cur.x,S.cur.y); c.strokeStyle='rgba(255,255,255,.9)'; c.lineWidth=2; c.beginPath(); c.arc(cp[0],cp[1],13,0,6.3); c.stroke(); }
 }
 function pitchBallPos(u){ const P=S.P; const p=pitchPosAt(P,u); return projBall(p[0],p[1],u); }
+
+/* ---- level swing (seen from behind the catcher): bat sweeps horizontally from behind the body to the far shoulder ---- */
+function swingPose(sw,bx,by,s,Lc){
+  const dur=sw.power?0.4:0.3, k=sw.t/dur; if(k>1.5) return null;
+  const hx=bx+16*s, hy=by-62*s, L=Lc*s;
+  const planeY=clamp(zp(0,sw.cy||0)[1]+OY*0,hy-70*s/1.5,hy+90*s/1.5);
+  const sm=x=>{ x=clamp(x,0,1); return x*x*(3-2*x); };
+  const phiAt=kk=>{ if(kk<0.2) return Math.PI; const e=Math.pow(sm((kk-0.2)/0.32),1.2); let ph=Math.PI-(Math.PI-0.35)*e; if(kk>0.52){ const f=1-Math.pow(1-clamp((kk-0.52)/0.48,0,1),2); ph=0.35-f*((sw.miss?3.3:(sw.power?2.9:2.3))); } return ph; };
+  const tipAt=kk=>{ const ph=phiAt(kk); const blend=sm((kk-0.1)/0.3)*(1-sm((kk-0.7)/0.3)*0.4); const yb=lerp(hy,planeY,blend);
+    const lift=kk>0.52?clamp((kk-0.52)/0.48,0,1)*L*0.12:0;
+    let tx=hx+L*Math.cos(ph), ty=yb+L*0.3*Math.sin(ph)-lift;
+    if(kk<0.2){ const q=sm(kk/0.2); const ux=hx+Math.cos(-1.7)*L, uy=hy+Math.sin(-1.7)*L; tx=lerp(ux,hx+L*Math.cos(Math.PI),q); ty=lerp(uy,yb+L*0.3*Math.sin(Math.PI)-L*0.25,q); }
+    return [tx,ty,Math.sin(ph)]; };
+  const tw=k<0.2?-0.12*sm(k/0.2):(k<0.55?lerp(-0.12,0.18,sm((k-0.2)/0.35)):lerp(0.18,sw.miss?0.32:0.22,sm((k-0.55)/0.45)));
+  return {k,hx,hy,L,tip:tipAt(Math.min(k,1)),tipAt,twist:tw};
+}
+function drawSwingBat(c,sp,s,bt,B){
+  c.save(); c.lineCap='round';
+  if(sp.k>0.18&&sp.k<1.2){ for(let j=9;j>=1;j--){ const kk=sp.k-j*0.022; if(kk<0.2) continue; const t=sp.tipAt(Math.min(kk,1)); c.strokeStyle='rgba(255,246,200,'+(0.28*(1-j/10))+')'; c.lineWidth=6*s*0.9; c.beginPath(); c.moveTo(sp.hx,sp.hy); c.lineTo(t[0],t[1]); c.stroke(); }
+    c.strokeStyle='rgba(255,255,255,.5)'; c.lineWidth=3; c.beginPath(); let first=true; for(let kk=0.2;kk<=Math.min(sp.k,1);kk+=0.02){ const t=sp.tipAt(kk); first?c.moveTo(t[0],t[1]):c.lineTo(t[0],t[1]); first=false; } c.stroke(); }
+  const t=sp.tip, w=Math.max(3,5.5*s*0.8*(1+0.3*t[2]));
+  c.strokeStyle='#e8c27a'; c.lineWidth=w; c.beginPath(); c.moveTo(sp.hx,sp.hy); c.lineTo(t[0],t[1]); c.stroke();
+  c.strokeStyle='#8a5a2a'; c.lineWidth=w*0.55; c.beginPath(); c.moveTo(sp.hx,sp.hy); c.lineTo(lerp(sp.hx,t[0],0.2),lerp(sp.hy,t[1],0.2)); c.stroke();
+  if(B.magnet||bt.ab==='magnet'){ c.fillStyle='#ff4a5a'; c.beginPath(); c.arc(t[0],t[1],w*0.9,0,6.3); c.fill(); }
+  c.restore();
+}
+/* ---- predicted arrival area (batting only) ---- */
+function drawArea(c){
+  const G=S.G,P=S.P,B=G.cur.b,D=S.disp; if(!P) return; const pt=D.pit;
+  const u=clamp(uOf(P,S.pc),0,1.05); const sight=B.sight&&!P.relocated; const reveal=B.sight||B.time;
+  const strength=(pt.spd+pt.ctl)/2, bm=hyp(P.brk[0],P.brk[1]);
+  const base0=0.42+0.9*(1-pt.ctl)+0.22*bm;
+  const uShow=0.02+0.2*strength+(P.ab==='fire'?0.1:0);
+  const draw1=(cx,cy,r,al,col,crisp)=>{ const q=zp(cx,cy), rx=r*ZS*1.1, ry=r*ZS*0.92; c.save();
+    const g=c.createRadialGradient(q[0],q[1],1,q[0],q[1],rx); g.addColorStop(0,'rgba('+col+','+al*0.8+')'); g.addColorStop(0.7,'rgba('+col+','+al*0.6+')'); g.addColorStop(1,'rgba('+col+',0)'); c.fillStyle=g; c.beginPath(); c.ellipse(q[0],q[1],rx,ry,0,0,6.3); c.fill();
+    c.strokeStyle='rgba(255,255,255,'+Math.min(1,al*1.1)+')'; c.lineWidth=crisp?3:2.5; if(!crisp) c.setLineDash([6,4]); c.beginPath(); c.ellipse(q[0],q[1],rx*0.82,ry*0.82,0,0,6.3); c.stroke(); c.setLineDash([]);
+    if(crisp){ c.beginPath(); c.moveTo(q[0]-6,q[1]); c.lineTo(q[0]+6,q[1]); c.moveTo(q[0],q[1]-6); c.lineTo(q[0],q[1]+6); c.stroke(); } c.restore(); };
+  let w, r0=base0, u0=uShow;
+  if(P.relocated){ u0=P.tsU; r0=0.8; }
+  w=clamp((u-u0)/(1-u0),0,1); if(u<u0) return;
+  const rr=0.16+(r0-0.16)*Math.pow(1-w,1.4); const al=0.4+0.55*w;
+  const e=P.end; const f=-(1-Math.pow(Math.min(u,1),P.bexp));
+  const ctr=P.relocated?e:[e[0]-P.brk[0]*f*(1-w)*0.7*-1*-1, e[1]-P.brk[1]*f*(1-w)*0.7*-1*-1];
+  const cx0=P.relocated?e[0]:e[0]+P.brk[0]*f*(1-w)*0.7, cy0=P.relocated?e[1]:e[1]+P.brk[1]*f*(1-w)*0.7;
+  if(sight){ draw1(e[0],e[1],0.17,0.95,'160,255,230',true); return; }
+  let fade=1; if(P.ab==='vanish'&&!reveal&&u>P.hideU) fade=clamp(1-(u-P.hideU)/0.1,0,1);
+  if(fade<=0) return;
+  const col='255,110,80';
+  if(P.ab==='split'&&u>P.splitU){
+    const ws=clamp((u-P.splitU)/(1-P.splitU),0,1), kk=Math.pow(ws,0.55); let di=0;
+    for(let i=0;i<3;i++){ if(i===P.real) draw1(cx0,cy0,rr,al,col); else { const de=P.decoyEnds[di++]; if(u<0.86) draw1(lerp(cx0,de[0],kk),lerp(cy0,de[1],kk),rr,al,col); } }
+    return;
+  }
+  draw1(cx0,cy0,rr,al*fade,col);
+  if(P.relocated&&u<P.tsU+0.15){ const q=zp(e[0],e[1]); c.strokeStyle='rgba(255,255,255,.8)'; c.lineWidth=3; c.beginPath(); c.arc(q[0],q[1],30*(1-(u-P.tsU)/0.15),0,6.3); c.stroke(); }
+}
 function drawPitchBall(c){
   const G=S.G, P=S.P, B=G.cur.b; const u=S.sub==='res'?Math.min(uOf(P,S.pc),1):uOf(P,S.pc); const sight=B.sight, tf=B.time&&(S.sub==='tsBat'||S.timeFrozen);
   const reveal=sight||tf;
@@ -1484,9 +1542,10 @@ function updateTsBat(dt){
 }
 function fireSwing(sw){
   const G=S.G, P=S.P;
-  if(sw){ S.swing={t:0}; sfx('swing'); }
+  if(sw){ S.swing={t:0,power:!!sw.power,cy:sw.cy,miss:false}; sfx('swing'); }
   S.timeFrozen=false; S.mono=false;
   const out=finishPitch(G,sw);
+  if(S.swing) S.swing.miss=(out.res==='swing');
   handleOut(out,sw);
 }
 function humanSwing(){
@@ -1515,6 +1574,7 @@ function handleOut(out,sw){
    case 'foulout': evs.push(Ex(()=>sfx('foul'))); evs.push(Es(midDisp())); evs.push(Eb('ファウルフライ','アウト','#ff4f6d',0.8,'out',30)); break;
    case 'inplay': {
      const play=out.play; const bt=S.pre.bat;
+     if(sw) evs.push(Ew(0.12));
      evs.push(Ex(()=>{ sfx(play.hr?'hr':'hit'); S.hitFly={t:0,dir:clamp(play.ball.phi/45,-1,1)}; S.hitMissTimer=0; S.flash=0.5; S.shake=Math.max(S.shake,4); }));
      evs.push(Ew(0.38));
      if(play.defUsedId){ const who=(Object.values(fielders(G)).find(f=>f.ab===play.defUsedId))||curPit(G); evs.push(Ec(play.defUsedId,who,1-G.half)); }
@@ -1734,7 +1794,7 @@ function update(dt0){
   const dt=dt0*S.spd; S.time+=dt0;
   updateFx(dt);
   keyMove(dt0);
-  if(S.swing){ S.swing.t+=dt; if(S.swing.t>0.5) S.swing=null; }
+  if(S.swing){ S.swing.t+=dt; if(S.swing.t>0.62) S.swing=null; }
   if(S.hitFly){ S.hitFly.t+=dt; }
   if(S.giantArm>0&&S.sub!=='pre') S.giantArm=Math.max(0,S.giantArm);
   if(S.phase==='play'&&S.G){
