@@ -26,7 +26,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--acc);outline-offset
 #top h1{flex:1;margin:0;text-align:center;font-size:15px;font-weight:800;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:6px 10px;min-height:32px;background:var(--card);cursor:pointer;white-space:nowrap}
 .mini[aria-pressed=true]{background:var(--red);border-color:var(--red);color:#fff}
-#wrap{position:relative;width:min(100%,calc((100dvh - 150px) * .606));min-width:300px;margin:0 auto}
+#wrap{position:relative;width:min(100%,calc((100dvh - 150px) * var(--k,.606)));min-width:300px;margin:0 auto}
 #cv{display:block;width:100%;height:auto;aspect-ratio:400/660;border-radius:12px;background:#06223a;touch-action:none;cursor:crosshair}
 .ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(3,22,40,.72);border-radius:12px;padding:8px;z-index:3}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;width:100%;max-width:340px;max-height:100%;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.5)}
@@ -42,8 +42,8 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--acc);outline-offset
 .stsel{display:flex;align-items:center;justify-content:center;gap:10px;font-weight:800;margin:8px 0 0}
 .stsel button{width:44px;height:36px;border-radius:10px;border:1px solid var(--line);background:#12456b;cursor:pointer;font-weight:800}
 .stsel span{min-width:120px;text-align:center}
-#ctl{display:flex;gap:6px;margin-top:6px;width:min(100%,calc((100dvh - 150px) * .606));min-width:300px;margin-left:auto;margin-right:auto}
-#ctl button{border:0;border-radius:14px;min-height:46px;font-weight:800;font-size:16px;cursor:pointer;background:#2a74a6;box-shadow:0 3px 0 #17476b;touch-action:none}
+#ctl{display:flex;gap:6px;margin-top:6px;width:min(100%,calc((100dvh - 150px) * var(--k,.606)));min-width:300px;margin-left:auto;margin-right:auto}
+#ctl button{border:0;border-radius:14px;min-height:60px;font-weight:800;font-size:18px;cursor:pointer;background:#2a74a6;box-shadow:0 3px 0 #17476b;touch-action:none}
 #ctl button:active{transform:translateY(2px);box-shadow:0 1px 0 #17476b}
 #bL,#bR{width:64px;flex:none}
 #bFire{flex:1;background:#ff6b7f;box-shadow:0 3px 0 #a73a4d}
@@ -74,7 +74,10 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--acc);outline-offset
 (()=>{
 'use strict';
 /* ================= constants ================= */
-const W=400,H=660,R=25,RH=R*Math.sqrt(3),TOP=46,LOSE=11,LX=200,LY=588;
+const W=400,R=25,RH=R*Math.sqrt(3),TOP=46,LOSE=11,LX=200;
+let H=660,LY=588;
+function calcH(){ const aw=Math.min(544,innerWidth-16), ah=innerHeight-150; return Math.max(660,Math.min(840,Math.round(W*ah/Math.max(300,aw)))); }
+function applyH(){ H=calcH(); LY=H-72; cv.width=W*DPR; cv.height=H*DPR; cv.style.aspectRatio=W+'/'+H; document.documentElement.style.setProperty('--k',(W/H).toFixed(4)); }
 const HR=2*R*0.93, SPEED=1500, NST=36;
 const DEG=Math.PI/180, MINA=10*DEG, MAXA=170*DEG;
 const COLS=[
@@ -83,7 +86,7 @@ const COLS=[
 const $=id=>document.getElementById(id);
 const cv=$('cv'), ctx=cv.getContext('2d'), ov=$('ov');
 const DPR=Math.min(2,window.devicePixelRatio||1);
-cv.width=W*DPR; cv.height=H*DPR;
+applyH();
 
 /* ================= storage ================= */
 function lsGet(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(_){ return d; } }
@@ -194,7 +197,7 @@ const SHAPE_ORDER=[0,2,6,1,3,4,12,5,7,10,8,9,11];
 const SHAPE_NAME=['ブロック','ダイヤ','じょうご','ハート','ハシゴ','つりさげ玉','たて縞','くし','リング','ジグザグ','モミの木','じゅうじ','あみ'];
 function stageSpec(n){
   const sh=SHAPE_ORDER[(n-1)%13], cyc=Math.floor((n-1)/13);
-  let N=Math.min(8,4+Math.floor((n-1)/6)+(cyc>0?1:0));
+  let N=Math.min(7,4+Math.floor((n-1)/6)+(cyc>0?1:0));
   if(sh===5) N=Math.min(5,3+Math.floor(n/12));
   if(sh===8) N=Math.min(8,5+cyc+Math.floor(n/20));
   if(sh===1) N=Math.min(9,N+1);
@@ -202,7 +205,7 @@ function stageSpec(n){
   if(sh===11) N=Math.min(8,Math.max(5,N));
   const minN={1:6,3:7,4:7,8:7,9:5,11:6,12:5,10:5,6:5,2:5}; if(minN[sh]) N=Math.max(N,minN[sh]);
   const colors=n<=2?2:n<=6?3:n<=12?4:n<=22?5:6;
-  const limit=Math.max(5,9-Math.floor((n-1)/7));
+  const limit=n<=8?11:Math.max(7,10-Math.floor((n-1)/10));
   return {n,shape:sh,N,colors,limit,name:SHAPE_NAME[sh],seed:1000+n*77};
 }
 function genStage(n){
@@ -347,13 +350,12 @@ function land(){
     // positions use pre-shift coordinates (G unchanged geometry)
     S.fx.push({type:'text',x:px,y:py-10,txt:'+'+pts,t:0,life:.9,col:'#fff'});
     res.pops.forEach((p,i)=>sfx('pop',Math.min(i,10)));
-    if(S.mode==='stage') S.cnt=0;
     setMood('happy',1.2);
   } else {
-    sfx('stick'); S.cnt++;
+    sfx('stick');
     S.fx.push({type:'ripple',x:px,y:py,t:0,life:.3});
   }
-  if(S.mode==='endless'&&np) { /* shot counter keeps running in endless */ S.cnt++; }
+  S.cnt++;
   if(nf){
     const pts=10*Math.pow(2,Math.min(nf,12)); addScore(pts);
     let cx=0,cy=0;
@@ -367,7 +369,7 @@ function land(){
     if(nf>best.maxFall){ best.maxFall=nf; saveBest(); }
     setMood('happy',1.8);
   }
-  if(!np&&S.mode==='stage'&&S.cnt>=S.limit-1) setMood('worry',1.2);
+  if(!np&&S.cnt>=S.limit-1) setMood('worry',1.2);
   S.phase='settle'; S.timer=np||nf?(S.auto?.16:.26):.07;
 }
 function afterShot(){
@@ -483,7 +485,7 @@ function evalMove(G,k,m,cnt,limit,mode){
   let v=0, dead=false;
   const left=countB(G2);
   if(left===0){ return {v:1e5,G2,cnt:0,dead:false,res,left}; }
-  let cnt2=np?(mode==='stage'?0:cnt+1):cnt+1;
+  let cnt2=cnt+1;
   if(np){ v+=np*10+nf*16; }
   else {
     let same=0; for(const p of nbrs(G2,m.r,m.c)) if(get(G2,p[0],p[1])===k) same++;
