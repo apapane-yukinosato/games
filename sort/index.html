@@ -1,0 +1,1104 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="description" content="バブル・クイック・マージ・ヒープなど25種類のソート（並べかえ）アルゴリズムを、棒グラフ・点・色相の円・虹色の帯で眺める可視化ページ。音つき、くらべるモード、オート再生。">
+<title>ソートかんさつ</title>
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-180.png">
+<style>
+html,body{touch-action:manipulation}
+:root{--bg1:#060a18;--bg2:#121a3a;--card:rgba(255,255,255,.06);--line:rgba(255,255,255,.14);--ink:#eef2ff;--mute:#9aa8d6;--cy:#5ee7ff;--mg:#ff5ea8;--grn:#35ff9a;--red:#ff4060;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;overscroll-behavior:none}
+html{background:#0a1028}
+.layout>*,#stage>*,#infoBox,#infoBox>*,.card{min-width:0}
+#stage{grid-template-columns:minmax(0,1fr)}
+body{min-height:100%;color:var(--ink);background:radial-gradient(1200px 700px at 80% -10%,#24215a 0,transparent 60%),linear-gradient(170deg,var(--bg1),var(--bg2)) fixed;font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;font-size:14px;line-height:1.45;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+button,select{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+button{border:0;background:none}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--cy);outline-offset:2px}
+#app{max-width:1240px;margin:0 auto;padding:calc(6px + env(safe-area-inset-top,0px)) 12px calc(20px + env(safe-area-inset-bottom,0px))}
+#top{display:flex;align-items:center;gap:6px;padding:2px 0 8px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;white-space:nowrap;padding:8px 2px}
+#top h1{flex:1;margin:0;text-align:center;font-size:18px;letter-spacing:.08em;white-space:nowrap;background:linear-gradient(90deg,var(--cy),var(--mg));-webkit-background-clip:text;background-clip:text;color:transparent}
+.mini{font-size:12.5px;font-weight:700;border:2px solid var(--line);border-radius:999px;padding:4px 10px;min-height:36px;background:var(--card);white-space:nowrap}
+.mini[aria-pressed=true]{background:rgba(94,231,255,.16);border-color:var(--cy)}
+#autoBtn[aria-pressed=true]{background:#e8503f;border-color:#ffb3a8}
+.layout{display:grid;grid-template-columns:1fr;gap:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px}
+#stage{display:grid;gap:8px;--ch:300px}
+#stage.multi{--ch:128px}
+.panel{background:rgba(6,10,26,.55);border:1px solid var(--line);border-radius:12px;padding:6px 6px 4px;overflow:hidden}
+.ph{display:flex;align-items:center;gap:6px;padding:0 2px 4px;min-height:24px}
+.ph .nm{font-weight:800;font-size:14px;color:var(--cy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ph .rk{margin-left:auto;font-size:13px;font-weight:800;color:var(--grn);white-space:nowrap}
+.panel canvas{display:block;width:100%;height:var(--ch);border-radius:8px;background:#04071a}
+.st{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding-top:5px;font-size:11.5px;color:var(--mute);text-align:center}
+.st b{display:block;color:var(--ink);font-size:14px;font-variant-numeric:tabular-nums;letter-spacing:0}
+#note{min-height:20px;font-size:12px;color:var(--mute);padding:6px 2px 0}
+.transport{display:grid;grid-template-columns:1.4fr .9fr 1.2fr 1fr;gap:6px;margin-top:6px}
+.btn{min-height:44px;border-radius:12px;border:2px solid var(--line);background:var(--card);font-weight:800;font-size:13px;padding:4px 6px}
+.btn.pri{background:linear-gradient(135deg,#1c8bff,#7b4dff);border-color:#9ab8ff}
+.btn:active{transform:translateY(1px)}
+.row{margin-top:10px}
+.row>label,.lab{display:flex;justify-content:space-between;font-size:12px;color:var(--mute);margin-bottom:4px}
+.lab b{color:var(--ink)}
+select{width:100%;min-height:44px;border-radius:12px;border:2px solid var(--line);background:#141c3f;padding:4px 10px;font-size:15px}
+.seg{display:grid;gap:5px}
+.seg.m4{grid-template-columns:repeat(4,1fr)}
+.seg.m5{grid-template-columns:repeat(5,1fr)}
+.seg button{min-height:42px;border-radius:10px;border:2px solid var(--line);background:var(--card);font-size:12.5px;font-weight:700;padding:2px 2px}
+.seg button[aria-pressed=true]{background:rgba(255,94,168,.2);border-color:var(--mg)}
+input[type=range]{width:100%;height:32px;accent-color:var(--cy);margin:0}
+#slots{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+#slots select{min-height:40px;font-size:13px}
+.info{margin-top:0}
+.info h3{margin:0 0 6px;font-size:15px;color:var(--cy)}
+.info+.info{margin-top:8px}
+.cx{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px}
+.cx div{background:rgba(255,255,255,.05);border-radius:8px;padding:4px 8px;font-size:12px;color:var(--mute)}
+.cx b{display:block;color:var(--ink);font-size:13.5px}
+.info p{margin:0;font-size:13.5px}
+.tag{display:inline-block;font-size:11px;border:1px solid var(--mg);color:#ffb0d4;border-radius:999px;padding:0 7px;margin-left:6px;vertical-align:1px}
+.code{margin-top:8px;padding:8px}
+.code summary{cursor:pointer;font-weight:800;color:var(--cy);font-size:13px;min-height:28px;display:flex;align-items:center}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.ch h3{margin:0;font-size:15px;color:var(--cy)}
+.cp{min-height:32px;padding:2px 12px;font-size:12px}
+.pre{margin:0;overflow-x:auto;max-height:420px;overflow-y:auto;background:#050818;border:1px solid var(--line);border-radius:10px;padding:6px 0;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace;-webkit-overflow-scrolling:touch;tab-size:4}
+.pre .ln{display:block;white-space:pre;width:max-content;min-width:100%;padding-right:12px}
+.pre .no{display:inline-block;width:2.4em;margin-right:8px;text-align:right;color:#56608f;user-select:none}
+.pre .ln.hl{background:rgba(255,64,96,.22);box-shadow:inset 3px 0 0 var(--red)}
+.pre .ln.hs{background:rgba(53,255,154,.2);box-shadow:inset 3px 0 0 var(--grn)}
+.tk{color:#ff7ab8}.ts{color:#ffd479}.tn{color:#9fe8ff}.tc{color:#6f7aa8;font-style:italic}.tb{color:#8fd0ff}.tf{color:#a7ffcf}
+footer{margin-top:14px;text-align:center;color:var(--mute);font-size:12px}
+@media (min-width:900px){
+ #app{padding-left:20px;padding-right:20px}
+ .layout{grid-template-columns:minmax(0,1fr) 400px;align-items:start}
+ #stageWrap{position:sticky;top:8px}
+ #stage{--ch:min(58vh,520px)}
+ #stage.multi{--ch:min(26vh,220px);grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+}
+</style>
+</head>
+<body>
+<div id="app">
+<header id="top">
+  <a href="../">← 一覧</a>
+  <h1>ソートかんさつ</h1>
+  <button id="sndBtn" class="mini" aria-pressed="true" aria-label="音">🔊</button>
+  <button id="autoBtn" class="mini" aria-pressed="false" title="Oキーでも切りかえ">🤖 オート</button>
+</header>
+<main class="layout">
+  <section id="stageWrap">
+    <div id="stage" class="single"></div>
+    <div id="note"></div>
+    <div class="transport" id="transport">
+      <button class="btn pri" id="playBtn">⏸ 一時停止</button>
+      <button class="btn" id="stepBtn">⏭ 1手</button>
+      <button class="btn" id="resetBtn">↺ 最初から</button>
+      <button class="btn" id="newBtn">🔀 新配列</button>
+    </div>
+  </section>
+  <aside id="side">
+    <div class="card" id="ctl">
+      <div class="row" style="margin-top:0">
+        <div class="lab"><span id="algLab">アルゴリズム</span><button class="mini" id="cmpBtn" aria-pressed="false" style="min-height:30px;padding:2px 10px">⚔ くらべる</button></div>
+        <select id="algSel" aria-label="アルゴリズム"></select>
+        <div id="slots" hidden></div>
+      </div>
+      <div class="row"><div class="lab"><span>ひょうじ</span></div>
+        <div class="seg m4" id="modeSeg">
+          <button data-m="bars" aria-pressed="true">📊 棒</button><button data-m="dots" aria-pressed="false">✨ 点</button><button data-m="wheel" aria-pressed="false">🎨 円</button><button data-m="rainbow" aria-pressed="false">🌈 帯</button>
+        </div></div>
+      <div class="row"><div class="lab"><span>はじめの並び</span></div>
+        <div class="seg m5" id="initSeg">
+          <button data-i="random" aria-pressed="true">ランダム</button><button data-i="nearly" aria-pressed="false">ほぼ整列</button><button data-i="reversed" aria-pressed="false">逆順</button><button data-i="few" aria-pressed="false">少数の値</button><button data-i="mountain" aria-pressed="false">山型</button>
+        </div></div>
+      <div class="row"><div class="lab"><span>要素の数</span><b id="nVal"></b></div><input type="range" id="nRange" min="0" max="14" step="1" value="8" aria-label="要素の数"></div>
+      <div class="row"><div class="lab"><span>はやさ</span><b id="spVal"></b></div><input type="range" id="spRange" min="0" max="10" step="1" value="6" aria-label="はやさ"></div>
+    </div>
+    <div id="infoBox" style="margin-top:10px"></div>
+  </aside>
+</main>
+<footer>© ゆきの里 ・ <kbd>O</kbd> でオート ・ <kbd>Space</kbd> 再生/停止 ・ <kbd>→</kbd> 1ステップ</footer>
+</div>
+
+<script>
+(()=>{
+'use strict';
+/* ====================== ソートの機械（操作列ジェネレータ） ====================== */
+function rngOf(seed){let s=(seed>>>0)||1;return()=>{s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};}
+class M{
+  constructor(al,init,seed,shift){
+    this.al=al;this.n=init.length;this.a=Int32Array.from(init);this.s=shift||0;
+    this.cmp=0;this.swp=0;this.wr=0;this.steps=0;this.done=false;this.finStep=Infinity;
+    this.hk=new Uint8Array(this.n);this.fn=new Uint8Array(this.n);
+    this.sn=new Int32Array(16);this.sc=0;this.sw=-1;this.op='';this.rng=rngOf((seed||1)*31+7);
+    let mx=1;for(const v of this.a)if(v>mx)mx=v;this.vmax=mx;
+    this.gen=al.fn(this);
+  }
+  mk(i,k){if(this.nomark)return;if(i>=0&&i<this.n){if(this.hk[i]<k)this.hk[i]=k;this.sn[this.sc++&15]=this.a[i];}}
+  fin(i){if(i>=0&&i<this.n)this.fn[i]=1;}
+  finRange(lo,hi){for(let i=lo;i<hi;i++)this.fn[i]=1;}
+  *lt(i,j){const a=this.a,s=this.s,r=(a[i]>>s)<(a[j]>>s);this.cmp++;this.op='c';this.mk(i,1);this.mk(j,1);yield;return r;}
+  *ltv(x,y,i,j){const s=this.s,r=(x>>s)<(y>>s);this.cmp++;this.op='c';this.mk(i,1);this.mk(j,1);yield;return r;}
+  *swap(i,j){if(i===j)return;const a=this.a,t=a[i];a[i]=a[j];a[j]=t;this.swp++;this.op='s';this.mk(i,2);this.mk(j,2);yield;}
+  *set(i,v){this.a[i]=v;this.wr++;this.op='w';this.mk(i,2);yield;}
+  *rd(i){this.mk(i,1);yield;}
+  *tick(){yield;}
+  advance(k){
+    while(k>0&&!this.done){
+      const r=this.gen.next();
+      if(r.done){this.done=true;this.finStep=this.steps;this.fn.fill(1);this.sw=0;break;}
+      this.steps++;k--;
+    }
+  }
+}
+/* ---- 共通部品 ---- */
+function* insRange(m,lo,hi){const a=m.a;for(let i=lo+1;i<hi;i++){const key=a[i];let j=i;while(j>lo&&(yield* m.ltv(key,a[j-1],j-1,-1))){yield* m.set(j,a[j-1]);j--;}if(j!==i)yield* m.set(j,key);}}
+function* mergeRange(m,lo,mid,hi){
+  const a=m.a,L=a.slice(lo,mid),R=a.slice(mid,hi);let i=0,j=0,k=lo;
+  while(i<L.length&&j<R.length){if(yield* m.ltv(R[j],L[i],mid+j,lo+i))yield* m.set(k++,R[j++]);else yield* m.set(k++,L[i++]);}
+  while(i<L.length)yield* m.set(k++,L[i++]);
+  while(j<R.length)yield* m.set(k++,R[j++]);
+}
+function* sift(m,b,i,size){for(;;){const l=2*i+1;if(l>=size)return;let c=l;if(l+1<size&&(yield* m.lt(b+l,b+l+1)))c=l+1;if(yield* m.lt(b+i,b+c)){yield* m.swap(b+i,b+c);i=c;}else return;}}
+function* heapRange(m,b,size){for(let i=(size>>1)-1;i>=0;i--)yield* sift(m,b,i,size);for(let e=size-1;e>0;e--){yield* m.swap(b,b+e);m.fin(b+e);yield* sift(m,b,0,e);}}
+function* partL(m,lo,hi){const a=m.a,mid=(lo+hi)>>1;if(mid!==hi)yield* m.swap(mid,hi);const p=a[hi];let i=lo;for(let j=lo;j<hi;j++){if(yield* m.ltv(a[j],p,j,hi)){if(i!==j)yield* m.swap(i,j);i++;}}if(i!==hi)yield* m.swap(i,hi);return i;}
+function* qsL(m,lo,hi){if(lo>=hi){if(lo===hi)m.fin(lo);return;}const p=yield* partL(m,lo,hi);m.fin(p);yield* qsL(m,lo,p-1);yield* qsL(m,p+1,hi);}
+function* qsH(m,lo,hi){
+  if(lo>=hi){if(lo===hi)m.fin(lo);return;}
+  const a=m.a,p=a[(lo+hi)>>1];let i=lo-1,j=hi+1;
+  for(;;){
+    do{i++;}while(yield* m.ltv(a[i],p,i,-1));
+    do{j--;}while(yield* m.ltv(p,a[j],j,-1));
+    if(i>=j)break;
+    yield* m.swap(i,j);
+  }
+  yield* qsH(m,lo,j);yield* qsH(m,j+1,hi);
+}
+function* introRec(m,lo,hi,d){
+  while(hi-lo+1>16){
+    if(d===0){yield* heapRange(m,lo,hi-lo+1);return;}
+    d--;const p=yield* partL(m,lo,hi);m.fin(p);yield* introRec(m,lo,p-1,d);lo=p+1;
+  }
+  yield* insRange(m,lo,hi+1);
+}
+function* flip(m,k){for(let i=0,j=k;i<j;i++,j--)yield* m.swap(i,j);}
+function* stooge(m,i,j){if(yield* m.lt(j,i))yield* m.swap(i,j);if(j-i+1>2){const t=Math.floor((j-i+1)/3);yield* stooge(m,i,j-t);yield* stooge(m,i+t,j);yield* stooge(m,i,j-t);}}
+function* bce(m,i,j,dir){const g=dir?(yield* m.lt(j,i)):(yield* m.lt(i,j));if(g)yield* m.swap(i,j);}
+function* bmerge(m,lo,n,dir){if(n>1){let k=1;while(k<n)k<<=1;k>>=1;for(let i=lo;i<lo+n-k;i++)yield* bce(m,i,i+k,dir);yield* bmerge(m,lo,k,dir);yield* bmerge(m,lo+k,n-k,dir);}}
+function* bsort(m,lo,n,dir){if(n>1){const k=n>>1;yield* bsort(m,lo,k,!dir);yield* bsort(m,lo+k,n-k,dir);yield* bmerge(m,lo,n,dir);}}
+function* msort(m,lo,hi){if(hi-lo<2)return;const mid=(lo+hi)>>1;yield* msort(m,lo,mid);yield* msort(m,mid,hi);yield* mergeRange(m,lo,mid,hi);}
+
+/* ====================== アルゴリズム一覧 ====================== */
+const ALGS=[];
+const def=o=>ALGS.push(o);
+def({id:'bubble',name:'バブルソート',cap:512,auto:64,avg:'O(n²)',worst:'O(n²)',stable:true,mem:'O(1)',
+ desc:'となりどうしを比べて、大きいほうを右へ送るのをくり返します。大きい数が泡のように右はしへ浮かんでいくので「バブル」。かんたんですが、とても遅いです。',
+ fn:function*(m){const n=m.n;for(let e=n;e>1;e--){let sw=false;for(let i=1;i<e;i++){if(yield* m.lt(i,i-1)){yield* m.swap(i,i-1);sw=true;}}m.fin(e-1);if(!sw){m.finRange(0,e);break;}}}});
+def({id:'cocktail',name:'カクテルシェーカーソート',cap:512,auto:64,avg:'O(n²)',worst:'O(n²)',stable:true,mem:'O(1)',
+ desc:'バブルソートを右向き、左向きと交互にくり返します。シェーカーをふるように往復するので、小さい数も左へ早く届きます。',
+ fn:function*(m){let lo=0,hi=m.n-1,sw=true;while(sw&&lo<hi){sw=false;for(let i=lo;i<hi;i++)if(yield* m.lt(i+1,i)){yield* m.swap(i,i+1);sw=true;}m.fin(hi);hi--;if(!sw)break;sw=false;for(let i=hi;i>lo;i--)if(yield* m.lt(i,i-1)){yield* m.swap(i,i-1);sw=true;}m.fin(lo);lo++;}}});
+def({id:'selection',name:'選択ソート',cap:512,auto:64,avg:'O(n²)',worst:'O(n²)',stable:false,mem:'O(1)',
+ desc:'残りの中から一番小さい数をさがして、左はしの数と入れかえます。交換の回数はとても少ないですが、さがすのに毎回ぜんぶ見るので比較は多いです。',
+ fn:function*(m){const n=m.n;for(let i=0;i<n-1;i++){let mi=i;for(let j=i+1;j<n;j++)if(yield* m.lt(j,mi))mi=j;if(mi!==i)yield* m.swap(i,mi);m.fin(i);}}});
+def({id:'insertion',name:'挿入ソート',cap:512,auto:96,avg:'O(n²)',worst:'O(n²)',stable:true,mem:'O(1)',
+ desc:'トランプを手札にならべるように、1枚ずつ取って、すでに並んだ部分のちょうどよい場所に差しこみます。ほとんど整列ずみのデータではとても速いです。',
+ fn:function*(m){yield* insRange(m,0,m.n);}});
+def({id:'binsert',name:'二分挿入ソート',cap:512,auto:96,avg:'O(n²)',worst:'O(n²)',stable:true,mem:'O(1)',
+ desc:'挿入ソートの「場所さがし」を二分探索にしたものです。比較の回数は減りますが、ずらす作業（書き込み）の数は変わりません。',
+ fn:function*(m){const a=m.a,n=m.n;for(let i=1;i<n;i++){const key=a[i];let lo=0,hi=i;while(lo<hi){const mid=(lo+hi)>>1;if(yield* m.ltv(key,a[mid],mid,-1))hi=mid;else lo=mid+1;}for(let j=i;j>lo;j--)yield* m.set(j,a[j-1]);if(lo!==i)yield* m.set(lo,key);}}});
+def({id:'shell',name:'シェルソート',cap:1024,auto:256,avg:'O(n^1.3) くらい',worst:'O(n²)',stable:false,mem:'O(1)',
+ desc:'はなれた場所どうしで挿入ソートをして、少しずつ間かくをせばめていきます。大づかみに整えてから仕上げるので、挿入ソートよりずっと速くなります。',
+ fn:function*(m){const a=m.a,n=m.n;for(const g of [701,301,132,57,23,10,4,1]){if(g>=n)continue;for(let i=g;i<n;i++){const key=a[i];let j=i;while(j>=g&&(yield* m.ltv(key,a[j-g],j-g,-1))){yield* m.set(j,a[j-g]);j-=g;}if(j!==i)yield* m.set(j,key);}}}});
+def({id:'comb',name:'コムソート',cap:1024,auto:256,avg:'O(n²/2ᵖ)',worst:'O(n²)',stable:false,mem:'O(1)',
+ desc:'バブルソートを、はなれた場所どうしの比べあいから始めて、間かくを1.3分の1ずつちぢめます。「くし」でとかすように整うので、コムソートです。',
+ fn:function*(m){const n=m.n;let gap=n,done=false;while(!done){gap=Math.floor(gap/1.3);if(gap<=1){gap=1;done=true;}for(let i=0;i+gap<n;i++)if(yield* m.lt(i+gap,i)){yield* m.swap(i,i+gap);done=false;}}}});
+def({id:'gnome',name:'ノームソート',cap:512,auto:48,avg:'O(n²)',worst:'O(n²)',stable:true,mem:'O(1)',
+ desc:'庭の小人（ノーム）が植木ばちを並べる方法です。となりと順番がちがったら入れかえて一歩もどり、正しければ一歩すすむだけ。',
+ fn:function*(m){const n=m.n;let i=0;while(i<n){if(i===0||!(yield* m.lt(i,i-1)))i++;else{yield* m.swap(i,i-1);i--;}}}});
+def({id:'quick',name:'クイックソート（ロムート）',cap:1024,auto:256,avg:'O(n log n)',worst:'O(n²)',stable:false,mem:'O(log n)',
+ desc:'基準（ピボット）を1つ決めて、それより小さい数を左、大きい数を右へ分けます。あとは左右それぞれで同じことをくり返します。実際にとてもよく使われる、速い方法です。',
+ fn:function*(m){yield* qsL(m,0,m.n-1);}});
+def({id:'hoare',name:'クイックソート（ホーア）',cap:1024,auto:256,avg:'O(n log n)',worst:'O(n²)',stable:false,mem:'O(log n)',
+ desc:'クイックソートの元祖の分け方です。左右からはさみこむように進み、まちがった側にいる数どうしを入れかえます。交換が少なく、同じ数が多くても強いです。',
+ fn:function*(m){yield* qsH(m,0,m.n-1);}});
+def({id:'merge',name:'マージソート',cap:1024,auto:256,avg:'O(n log n)',worst:'O(n log n)',stable:true,mem:'O(n)',
+ desc:'まん中で半分ずつに分け、それぞれを整列させてから、2つの列を先頭から比べながら1本にまとめます（マージ）。どんなデータでも安定して速いです。',
+ fn:function*(m){yield* msort(m,0,m.n);}});
+def({id:'bumerge',name:'ボトムアップ・マージソート',cap:1024,auto:256,avg:'O(n log n)',worst:'O(n log n)',stable:true,mem:'O(n)',
+ desc:'マージソートを下から積み上げる版です。1個ずつ→2個ずつ→4個ずつ…と、幅を2倍にしながら順番にまとめていきます。',
+ fn:function*(m){const n=m.n;for(let w=1;w<n;w*=2)for(let lo=0;lo+w<n;lo+=2*w)yield* mergeRange(m,lo,lo+w,Math.min(lo+2*w,n));}});
+def({id:'heap',name:'ヒープソート',cap:1024,auto:256,avg:'O(n log n)',worst:'O(n log n)',stable:false,mem:'O(1)',
+ desc:'「親は子より大きい」という木（ヒープ）を配列の中につくり、一番大きい数を取り出して右はしへ置くのをくり返します。追加のメモリがいらないのが強みです。',
+ fn:function*(m){yield* heapRange(m,0,m.n);}});
+def({id:'counting',name:'計数ソート',cap:1024,auto:256,avg:'O(n + k)',worst:'O(n + k)',stable:true,mem:'O(n + k)',
+ desc:'数どうしを比べず、それぞれの値が何個あるかを数えて、その数ぶんだけ順番に並べます。値のはばが小さいときは、ものすごく速いです。比較は 0 回です。',
+ fn:function*(m){const a=m.a,n=m.n,s=m.s;let mn=Infinity,mx=-Infinity;for(let i=0;i<n;i++){const k=a[i]>>s;if(k<mn)mn=k;if(k>mx)mx=k;}
+  const cnt=new Int32Array(mx-mn+2);for(let i=0;i<n;i++){yield* m.rd(i);cnt[(a[i]>>s)-mn+1]++;}
+  for(let i=1;i<cnt.length;i++)cnt[i]+=cnt[i-1];const out=new Int32Array(n);for(let i=0;i<n;i++)out[cnt[(a[i]>>s)-mn]++]=a[i];
+  for(let i=0;i<n;i++)if(a[i]!==out[i])yield* m.set(i,out[i]);}});
+def({id:'radix',name:'基数ソート（LSD）',cap:1024,auto:256,avg:'O(d·n)',worst:'O(d·n)',stable:true,mem:'O(n)',
+ desc:'数を1の位、10の位、100の位…の順に、桁ごとに10個の箱へ振り分けて取り出します。比べずに並べるしくみで、桁数が少なければ速いです。',
+ fn:function*(m){const a=m.a,n=m.n,s=m.s;let mx=0;for(let i=0;i<n;i++)mx=Math.max(mx,a[i]>>s);
+  for(let e=1;Math.floor(mx/e)>0;e*=10){const bk=Array.from({length:10},()=>[]);for(let i=0;i<n;i++){yield* m.rd(i);bk[Math.floor((a[i]>>s)/e)%10].push(a[i]);}
+   let p=0;for(const b of bk)for(const v of b){if(a[p]!==v)yield* m.set(p,v);p++;}}}});
+def({id:'bucket',name:'バケットソート',cap:1024,auto:256,avg:'O(n + k)',worst:'O(n²)',stable:true,mem:'O(n)',
+ desc:'値のはんいをいくつかの「バケツ」に分けて数を放りこみ、バケツの中だけを挿入ソートで整えて、順番につなげます。数が均等にちらばっていると速いです。',
+ fn:function*(m){const a=m.a,n=m.n,s=m.s;let mn=Infinity,mx=-Infinity;for(let i=0;i<n;i++){const k=a[i]>>s;if(k<mn)mn=k;if(k>mx)mx=k;}
+  const nb=Math.max(2,Math.round(Math.sqrt(n))),bk=Array.from({length:nb},()=>[]);
+  for(let i=0;i<n;i++){yield* m.rd(i);bk[Math.min(nb-1,Math.floor(((a[i]>>s)-mn)/(mx-mn+1)*nb))].push(a[i]);}
+  let pos=0;const out=[];for(const b of bk){for(let i=1;i<b.length;i++){const key=b[i];let j=i;while(j>0&&(yield* m.ltv(key,b[j-1],pos+j-1,-1))){b[j]=b[j-1];j--;}b[j]=key;}pos+=b.length;for(const v of b)out.push(v);}
+  for(let i=0;i<n;i++)if(a[i]!==out[i])yield* m.set(i,out[i]);}});
+def({id:'bitonic',name:'バイトニックソート',cap:1024,auto:128,avg:'O(n log² n)',worst:'O(n log² n)',stable:false,mem:'O(1)',
+ desc:'比べる順番があらかじめ決まっている「ソーティングネットワーク」です。上がって下がる列（バイトニック列）をつくってはまとめます。たくさんの計算機で同時に動かすのに向いています。',
+ fn:function*(m){yield* bsort(m,0,m.n,true);}});
+def({id:'oddeven',name:'奇偶転置ソート',cap:512,auto:64,avg:'O(n²)',worst:'O(n²)',stable:true,mem:'O(1)',
+ desc:'「奇数番めと次」「偶数番めと次」のペアを、交互に比べて入れかえます。ペアどうしは重ならないので、同時に処理できるのが特ちょうです。',
+ fn:function*(m){const n=m.n;let again=true;while(again){again=false;for(let ph=1;ph>=0;ph--)for(let i=ph;i+1<n;i+=2)if(yield* m.lt(i+1,i)){yield* m.swap(i,i+1);again=true;}}}});
+def({id:'tim',name:'ティムソート（簡易）',cap:1024,auto:256,avg:'O(n log n)',worst:'O(n log n)',stable:true,mem:'O(n)',
+ desc:'短い区間（16個）を挿入ソートで整えてから、マージでまとめます。すでに順番どおりの部分は飛ばすので、ほぼ整列ずみだと一瞬です。PythonやJavaのソートの元になった方法で、これは簡易版です。',
+ fn:function*(m){const n=m.n,R=16;for(let lo=0;lo<n;lo+=R)yield* insRange(m,lo,Math.min(lo+R,n));
+  for(let w=R;w<n;w*=2)for(let lo=0;lo+w<n;lo+=2*w){if(!(yield* m.lt(lo+w,lo+w-1)))continue;yield* mergeRange(m,lo,lo+w,Math.min(lo+2*w,n));}}});
+def({id:'intro',name:'イントロソート',cap:1024,auto:256,avg:'O(n log n)',worst:'O(n log n)',stable:false,mem:'O(log n)',
+ desc:'基本はクイックソート。でも分け方がかたよって深くなりすぎたらヒープソートに切りかえ、小さい区間は挿入ソートで仕上げます。C++の標準ライブラリで使われています。',
+ fn:function*(m){yield* introRec(m,0,m.n-1,2*Math.floor(Math.log2(Math.max(2,m.n))));}});
+def({id:'cycle',name:'サイクルソート',cap:512,auto:64,avg:'O(n²)',worst:'O(n²)',stable:false,mem:'O(1)',
+ desc:'「この数は最終的にどこへ行く？」を数えて、そこへ直接書きこみます。数の輪（サイクル）をぐるっと回して整えるので、書き込みの回数が最小になります。',
+ fn:function*(m){const a=m.a,n=m.n,s=m.s;
+  for(let cs=0;cs<n-1;cs++){let item=a[cs],pos=cs;
+   for(let i=cs+1;i<n;i++)if(yield* m.ltv(a[i],item,i,cs))pos++;
+   if(pos===cs){m.fin(cs);continue;}
+   while((item>>s)===(a[pos]>>s))pos++;
+   let t=a[pos];yield* m.set(pos,item);item=t;
+   while(pos!==cs){pos=cs;for(let i=cs+1;i<n;i++)if(yield* m.ltv(a[i],item,i,cs))pos++;
+    while((item>>s)===(a[pos]>>s))pos++;
+    t=a[pos];yield* m.set(pos,item);item=t;}
+   m.fin(cs);}}});
+def({id:'pancake',name:'パンケーキソート',cap:512,auto:48,avg:'O(n²)',worst:'O(n²)',stable:false,mem:'O(1)',
+ desc:'使える操作は「上から何枚かをまとめてひっくり返す」だけ。一番大きいパンケーキを上にひっくり返し、さらに底へひっくり返して、積み上げていきます。',
+ fn:function*(m){const n=m.n;for(let sz=n;sz>1;sz--){let mi=0;for(let i=1;i<sz;i++)if(yield* m.lt(mi,i))mi=i;if(mi!==sz-1){if(mi>0)yield* flip(m,mi);yield* flip(m,sz-1);}m.fin(sz-1);}}});
+def({id:'stooge',name:'ストゥージソート',cap:64,auto:32,avg:'O(n^2.71)',worst:'O(n^2.71)',stable:false,mem:'O(log n)',tag:'ネタ',
+ desc:'「前の3分の2を整える→後ろの3分の2を整える→もう一度前の3分の2」をくり返す、わざと遅い方法です。ちゃんと整列しますが、おそろしく手間がかかるので小さい数だけ。',
+ fn:function*(m){yield* stooge(m,0,m.n-1);}});
+def({id:'bogo',name:'ボゴソート',cap:7,auto:6,avg:'O(n·n!)',worst:'終わらないかも',stable:false,mem:'O(1)',tag:'ネタ',
+ desc:'整列しているか調べて、ダメならでたらめにシャッフル、をくり返す「運まかせ」の方法です。いつか偶然そろいます。7個までしか動かしません。',
+ fn:function*(m){const n=m.n,a=m.a;for(let t=0;t<200000;t++){let bad=false;for(let i=1;i<n;i++)if(yield* m.lt(i,i-1)){bad=true;break;}if(!bad)return;
+   for(let i=n-1;i>0;i--)yield* m.swap(i,Math.floor(m.rng()*(i+1)));}
+  const b=Array.from(a).sort((x,y)=>x-y);for(let i=0;i<n;i++)if(a[i]!==b[i])yield* m.set(i,b[i]);}});
+def({id:'sleep',name:'スリープソート（風）',cap:256,auto:100,avg:'O(n + 最大値)',worst:'O(n + 最大値)',stable:false,mem:'O(n)',tag:'ネタ',
+ desc:'数の大きさぶんだけ眠ってから目をさます、という発想のジョーク。小さい数ほど早く起きて、起きた順に左から並びます。ここでは「待つ」ようすだけを演出で見せています。',
+ fn:function*(m){const s=m.s,v=Array.from(m.a).sort((x,y)=>(x>>s)-(y>>s));let last=null,p=0;for(const x of v){if((x>>s)!==last){last=x>>s;yield* m.tick();}yield* m.set(p++,x);}}});
+const PY={
+bubble:`def bubble_sort(a):
+    n = len(a)
+    for end in range(n - 1, 0, -1):
+        swapped = False
+        for j in range(end):
+            # となりと比べる
+            if a[j] > a[j + 1]:
+                # 入れかえる
+                a[j], a[j + 1] = a[j + 1], a[j]
+                swapped = True
+        # 1回も交換がなければ完成
+        if not swapped:
+            break
+    return a`,
+cocktail:`def cocktail_sort(a):
+    lo, hi = 0, len(a) - 1
+    swapped = True
+    while swapped and lo < hi:
+        swapped = False
+        # 右へ
+        for i in range(lo, hi):
+            if a[i] > a[i + 1]:
+                a[i], a[i + 1] = a[i + 1], a[i]
+                swapped = True
+        hi -= 1
+        # 左へ
+        for i in range(hi, lo, -1):
+            if a[i - 1] > a[i]:
+                a[i - 1], a[i] = a[i], a[i - 1]
+                swapped = True
+        lo += 1
+    return a`,
+selection:`def selection_sort(a):
+    n = len(a)
+    for i in range(n - 1):
+        # 一番小さい場所
+        m = i
+        for j in range(i + 1, n):
+            # 比べる
+            if a[j] < a[m]:
+                m = j
+        # 左はしと入れかえる
+        a[i], a[m] = a[m], a[i]
+    return a`,
+insertion:`def insertion_sort(a):
+    for i in range(1, len(a)):
+        # 差しこむ数
+        key = a[i]
+        j = i - 1
+        # 比べる
+        while j >= 0 and a[j] > key:
+            # 右へずらす
+            a[j + 1] = a[j]
+            j -= 1
+        # ちょうどよい場所へ
+        a[j + 1] = key
+    return a`,
+binsert:`def binary_insertion_sort(a):
+    for i in range(1, len(a)):
+        key = a[i]
+        lo, hi = 0, i
+        # 二分探索で場所をさがす
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if key < a[mid]:
+                hi = mid
+            else:
+                lo = mid + 1
+        # ずらす
+        for j in range(i, lo, -1):
+            a[j] = a[j - 1]
+        a[lo] = key
+    return a`,
+shell:`def shell_sort(a):
+    n = len(a)
+    gap = n // 2
+    while gap > 0:
+        # 間かくgapの挿入ソート
+        for i in range(gap, n):
+            key = a[i]
+            j = i
+            while j >= gap and a[j - gap] > key:
+                a[j] = a[j - gap]
+                j -= gap
+            a[j] = key
+        gap //= 2
+    return a`,
+comb:`def comb_sort(a):
+    n = len(a)
+    gap = n
+    done = False
+    while not done:
+        # 間かくをちぢめる
+        gap = int(gap / 1.3)
+        if gap <= 1:
+            gap = 1
+            done = True
+        for i in range(n - gap):
+            if a[i] > a[i + gap]:
+                a[i], a[i + gap] = a[i + gap], a[i]
+                done = False
+    return a`,
+gnome:`def gnome_sort(a):
+    i = 0
+    while i < len(a):
+        # 順番どおりなら進む
+        if i == 0 or a[i - 1] <= a[i]:
+            i += 1
+        else:
+            # ちがったら入れかえて戻る
+            a[i - 1], a[i] = a[i], a[i - 1]
+            i -= 1
+    return a`,
+quick:`def quick_sort(a, lo=0, hi=None):
+    if hi is None:
+        hi = len(a) - 1
+    if lo < hi:
+        mid = (lo + hi) // 2
+        # ピボットを右はしへ
+        a[mid], a[hi] = a[hi], a[mid]
+        pivot = a[hi]
+        i = lo
+        for j in range(lo, hi):
+            # ピボットより小さければ左へ
+            if a[j] < pivot:
+                a[i], a[j] = a[j], a[i]
+                i += 1
+        # ピボットを定位置へ
+        a[i], a[hi] = a[hi], a[i]
+        quick_sort(a, lo, i - 1)
+        quick_sort(a, i + 1, hi)
+    return a`,
+hoare:`def quick_sort_hoare(a, lo=0, hi=None):
+    if hi is None:
+        hi = len(a) - 1
+    if lo < hi:
+        pivot = a[(lo + hi) // 2]
+        i, j = lo - 1, hi + 1
+        # 左右からはさみこむ
+        while True:
+            i += 1
+            while a[i] < pivot:
+                i += 1
+            j -= 1
+            while a[j] > pivot:
+                j -= 1
+            if i >= j:
+                break
+            a[i], a[j] = a[j], a[i]
+        quick_sort_hoare(a, lo, j)
+        quick_sort_hoare(a, j + 1, hi)
+    return a`,
+merge:`def merge_sort(a):
+    if len(a) <= 1:
+        return a
+    mid = len(a) // 2
+    # 半分ずつ整える
+    left = merge_sort(a[:mid])
+    right = merge_sort(a[mid:])
+    i = j = 0
+    k = 0
+    while i < len(left) and j < len(right):
+        # 小さいほうから取る
+        if right[j] < left[i]:
+            a[k] = right[j]
+            j += 1
+        else:
+            a[k] = left[i]
+            i += 1
+        k += 1
+    while i < len(left):
+        a[k] = left[i]
+        i += 1
+        k += 1
+    while j < len(right):
+        a[k] = right[j]
+        j += 1
+        k += 1
+    return a`,
+bumerge:`def bottom_up_merge_sort(a):
+    n = len(a)
+    width = 1
+    # 幅を2倍にしていく
+    while width < n:
+        for lo in range(0, n - width, 2 * width):
+            mid = lo + width
+            hi = min(lo + 2 * width, n)
+            left, right = a[lo:mid], a[mid:hi]
+            i = j = 0
+            k = lo
+            while i < len(left) and j < len(right):
+                if right[j] < left[i]:
+                    a[k] = right[j]
+                    j += 1
+                else:
+                    a[k] = left[i]
+                    i += 1
+                k += 1
+            rest = left[i:] + right[j:]
+            a[k:hi] = rest
+        width *= 2
+    return a`,
+heap:`def heap_sort(a):
+    def sift_down(i, size):
+        while True:
+            l = 2 * i + 1
+            if l >= size:
+                return
+            c = l
+            # 大きいほうの子
+            if l + 1 < size and a[l] < a[l + 1]:
+                c = l + 1
+            if a[i] < a[c]:
+                a[i], a[c] = a[c], a[i]
+                i = c
+            else:
+                return
+    n = len(a)
+    # ヒープをつくる
+    for i in range(n // 2 - 1, -1, -1):
+        sift_down(i, n)
+    for end in range(n - 1, 0, -1):
+        # 最大を右はしへ
+        a[0], a[end] = a[end], a[0]
+        sift_down(0, end)
+    return a`,
+counting:`def counting_sort(a):
+    if not a:
+        return a
+    lo, hi = min(a), max(a)
+    count = [0] * (hi - lo + 2)
+    # 何個あるか数える
+    for v in a:
+        count[v - lo + 1] += 1
+    # 累積和
+    for i in range(1, len(count)):
+        count[i] += count[i - 1]
+    out = [0] * len(a)
+    # 順番を守って置く
+    for v in a:
+        out[count[v - lo]] = v
+        count[v - lo] += 1
+    a[:] = out
+    return a`,
+radix:`def radix_sort(a):
+    if not a:
+        return a
+    exp = 1
+    # 桁ごとに
+    while max(a) // exp > 0:
+        boxes = [[] for _ in range(10)]
+        for v in a:
+            boxes[(v // exp) % 10].append(v)
+        a[:] = [v for box in boxes for v in box]
+        exp *= 10
+    return a`,
+bucket:`def bucket_sort(a):
+    if not a:
+        return a
+    lo, hi = min(a), max(a)
+    nb = max(2, int(len(a) ** 0.5))
+    buckets = [[] for _ in range(nb)]
+    # バケツに振り分け
+    for v in a:
+        buckets[min(nb - 1, (v - lo) * nb // (hi - lo + 1))].append(v)
+    out = []
+    for b in buckets:
+        # バケツの中は挿入ソート
+        for i in range(1, len(b)):
+            key = b[i]
+            j = i - 1
+            while j >= 0 and b[j] > key:
+                b[j + 1] = b[j]
+                j -= 1
+            b[j + 1] = key
+        out += b
+    a[:] = out
+    return a`,
+bitonic:`def bitonic_sort(a):
+    def merge(lo, n, up):
+        if n > 1:
+            k = 1
+            while k < n:
+                k *= 2
+            # nより小さい最大の2のべき
+            k //= 2
+            for i in range(lo, lo + n - k):
+                if (a[i] > a[i + k]) == up:
+                    a[i], a[i + k] = a[i + k], a[i]
+            merge(lo, k, up)
+            merge(lo + k, n - k, up)
+    def sort(lo, n, up):
+        if n > 1:
+            k = n // 2
+            # 前半は下り、後半は上り
+            sort(lo, k, not up)
+            sort(lo + k, n - k, up)
+            merge(lo, n, up)
+    sort(0, len(a), True)
+    return a`,
+oddeven:`def odd_even_sort(a):
+    n = len(a)
+    again = True
+    while again:
+        again = False
+        # 奇数組と偶数組を交互に
+        for start in (1, 0):
+            for i in range(start, n - 1, 2):
+                if a[i] > a[i + 1]:
+                    a[i], a[i + 1] = a[i + 1], a[i]
+                    again = True
+    return a`,
+tim:`def tim_sort(a):
+    n, RUN = len(a), 16
+    # 短い区間を挿入ソート
+    for lo in range(0, n, RUN):
+        for i in range(lo + 1, min(lo + RUN, n)):
+            key = a[i]
+            j = i - 1
+            while j >= lo and a[j] > key:
+                a[j + 1] = a[j]
+                j -= 1
+            a[j + 1] = key
+    width = RUN
+    # マージでまとめる
+    while width < n:
+        for lo in range(0, n - width, 2 * width):
+            mid, hi = lo + width, min(lo + 2 * width, n)
+            # もう順番どおりなら飛ばす
+            if a[mid - 1] <= a[mid]:
+                continue
+            left, right = a[lo:mid], a[mid:hi]
+            i = j = 0
+            k = lo
+            while i < len(left) and j < len(right):
+                if right[j] < left[i]:
+                    a[k] = right[j]
+                    j += 1
+                else:
+                    a[k] = left[i]
+                    i += 1
+                k += 1
+            a[k:hi] = left[i:] + right[j:]
+        width *= 2
+    return a`,
+intro:`import math
+
+def intro_sort(a):
+    def insertion(lo, hi):
+        for i in range(lo + 1, hi + 1):
+            key = a[i]
+            j = i - 1
+            while j >= lo and a[j] > key:
+                a[j + 1] = a[j]
+                j -= 1
+            a[j + 1] = key
+    def heap(lo, hi):
+        size = hi - lo + 1
+        def sift(i, end):
+            while 2 * i + 1 < end:
+                c = 2 * i + 1
+                if c + 1 < end and a[lo + c] < a[lo + c + 1]:
+                    c += 1
+                if a[lo + i] < a[lo + c]:
+                    a[lo + i], a[lo + c] = a[lo + c], a[lo + i]
+                    i = c
+                else:
+                    break
+        for i in range(size // 2 - 1, -1, -1):
+            sift(i, size)
+        for end in range(size - 1, 0, -1):
+            a[lo], a[lo + end] = a[lo + end], a[lo]
+            sift(0, end)
+    def rec(lo, hi, depth):
+        while hi - lo + 1 > 16:
+            # 深すぎたらヒープソート
+            if depth == 0:
+                heap(lo, hi)
+                return
+            depth -= 1
+            mid = (lo + hi) // 2
+            a[mid], a[hi] = a[hi], a[mid]
+            pivot, i = a[hi], lo
+            for j in range(lo, hi):
+                if a[j] < pivot:
+                    a[i], a[j] = a[j], a[i]
+                    i += 1
+            a[i], a[hi] = a[hi], a[i]
+            rec(lo, i - 1, depth)
+            lo = i + 1
+        # 小さい区間は挿入ソート
+        insertion(lo, hi)
+    if len(a) > 1:
+        rec(0, len(a) - 1, 2 * int(math.log2(len(a))))
+    return a`,
+cycle:`def cycle_sort(a):
+    n = len(a)
+    for start in range(n - 1):
+        item = a[start]
+        pos = start + sum(1 for i in range(start + 1, n) if a[i] < item)
+        # もう正しい場所
+        if pos == start:
+            continue
+        while item == a[pos]:
+            pos += 1
+        a[pos], item = item, a[pos]
+        # 輪をぐるっと回す
+        while pos != start:
+            pos = start + sum(1 for i in range(start + 1, n) if a[i] < item)
+            while item == a[pos]:
+                pos += 1
+            a[pos], item = item, a[pos]
+    return a`,
+pancake:`def pancake_sort(a):
+    # 先頭k+1枚をひっくり返す
+    def flip(k):
+        a[:k + 1] = a[:k + 1][::-1]
+    for size in range(len(a), 1, -1):
+        # 一番大きい場所
+        m = a.index(max(a[:size]))
+        if m != size - 1:
+            # 上へ
+            flip(m)
+            # 底へ
+            flip(size - 1)
+    return a`,
+stooge:`def stooge_sort(a, i=0, j=None):
+    if j is None:
+        j = len(a) - 1
+    if j < 0:
+        return a
+    if a[i] > a[j]:
+        a[i], a[j] = a[j], a[i]
+    if j - i + 1 > 2:
+        t = (j - i + 1) // 3
+        # 前の2/3
+        stooge_sort(a, i, j - t)
+        # 後ろの2/3
+        stooge_sort(a, i + t, j)
+        # もう一度前の2/3
+        stooge_sort(a, i, j - t)
+    return a`,
+bogo:`import random
+
+def bogo_sort(a):
+    # 小さい配列だけ！ 大きいと終わりません
+    while any(a[i] > a[i + 1] for i in range(len(a) - 1)):
+        # でたらめに混ぜる
+        random.shuffle(a)
+    return a`,
+sleep:`def sleep_sort(a):
+    # ネタ: 本物は「値に比例して眠ってから出力」するだけ。
+    # time.sleep を使うと本当に待つので、ここでは
+    # 「起きる順番」を時刻ごとの表で再現しています。
+    wake = {}
+    for v in a:
+        # 眠る時間 = 値
+        wake.setdefault(v, []).append(v)
+    out = []
+    # 時間がたつ順に
+    for t in sorted(wake):
+        # 目をさました順に並ぶ
+        out += wake[t]
+    a[:] = out
+    return a`
+};
+
+const PYHL={bubble:{c:'if a[j] > a[j + 1]',s:'a[j], a[j + 1] ='},selection:{c:'if a[j] < a[m]',s:'a[i], a[m] ='},insertion:{c:'while j >= 0 and a[j] > key',w:'a[j + 1] = a[j]'},quick:{c:'if a[j] < pivot',s:'a[i], a[j] ='},merge:{c:'if right[j] < left[i]',w:'a[k] = left[i]'},heap:{c:'if a[i] < a[c]',s:'a[i], a[c] ='},gnome:{c:'a[i - 1] <= a[i]',s:'a[i - 1], a[i] ='},cocktail:{c:'if a[i] > a[i + 1]',s:'a[i], a[i + 1] ='},comb:{c:'if a[i] > a[i + gap]',s:'a[i], a[i + gap] ='},oddeven:{c:'if a[i] > a[i + 1]',s:'a[i], a[i + 1] ='}};
+const BYID={};ALGS.forEach(a=>{BYID[a.id]=a;BYID[a.name]=a;});
+
+/* ====================== はじめの配列 ====================== */
+const INITS=['random','nearly','reversed','few','mountain'];
+const INIT_LABEL={random:'ランダム',nearly:'ほぼ整列',reversed:'逆順',few:'少数の値',mountain:'山型'};
+function makeInit(type,n,seed,stab){
+  const r=rngOf(seed*7919+13);let v;
+  if(type==='reversed')v=Array.from({length:n},(_,i)=>n-i);
+  else if(type==='nearly'){v=Array.from({length:n},(_,i)=>i+1);const k=Math.max(1,Math.round(n*0.06));for(let t=0;t<k;t++){const i=Math.floor(r()*n),j=Math.min(n-1,i+1+Math.floor(r()*Math.max(1,n/16)));const x=v[i];v[i]=v[j];v[j]=x;}}
+  else if(type==='few')v=Array.from({length:n},()=>Math.ceil((1+Math.floor(r()*8))*n/8));
+  else if(type==='mountain'){const od=[],ev=[];for(let i=1;i<=n;i++)(i&1?od:ev).push(i);v=od.concat(ev.reverse());}
+  else{v=Array.from({length:n},(_,i)=>i+1);for(let i=n-1;i>0;i--){const j=Math.floor(r()*(i+1));const x=v[i];v[i]=v[j];v[j]=x;}}
+  const a=new Int32Array(n);
+  for(let i=0;i<n;i++)a[i]=stab?((Math.ceil(v[i]/(type==='few'?1:3))<<12)|i):v[i];
+  return a;
+}
+function clampN(al,n){return Math.max(2,Math.min(n,al.cap));}
+function runSync(name,n,seed,opts){
+  opts=opts||{};const al=BYID[name];if(!al)throw new Error('unknown '+name);
+  n=clampN(al,n);const init=makeInit(opts.init||'random',n,seed||1,!!opts.stab);
+  const m=new M(al,init,seed||1,opts.stab?12:0),lim=opts.limit||60e6;
+  while(!m.done&&m.steps<lim)m.advance(200000);
+  const res=Array.from(m.a),s=m.s;
+  let ok=m.done;for(let i=1;i<n&&ok;i++)if((res[i-1]>>s)>(res[i]>>s))ok=false;
+  const A=Array.from(init).sort((x,y)=>x-y),B=res.slice().sort((x,y)=>x-y);for(let i=0;i<n&&ok;i++)if(A[i]!==B[i])ok=false;
+  let stable=null;if(opts.stab){stable=true;for(let i=1;i<n;i++)if((res[i-1]>>s)===(res[i]>>s)&&(res[i-1]&4095)>(res[i]&4095)){stable=false;break;}}
+  return{name:al.id,n,init:opts.init||'random',ok,stable,done:m.done,cmp:m.cmp,swp:m.swp,wr:m.wr,steps:m.steps,result:res};
+}
+
+/* ====================== 状態・UI ====================== */
+const SIZES=[8,12,16,24,32,48,64,96,128,192,256,384,512,768,1024];
+const SPEEDS=[2,6,15,40,100,250,700,2000,6000,20000,60000];
+const SPNAME=['ゆっくり（1ステップずつ）','とてもゆっくり','ゆっくり','ふつう−','ふつう','はやい−','はやい','かなりはやい','ものすごくはやい','超高速','超高速MAX'];
+const MODES=['bars','dots','wheel','rainbow'];
+const S={alg:'quick',nIdx:8,init:'random',mode:'bars',spd:6,rate:700,seed:1,compare:false,slots:['quick','merge','bubble',''],playing:true,snd:true,auto:false,autoIdx:0,autoRound:0,autoWait:0};
+try{const v=localStorage.getItem('sort.snd');if(v==='0')S.snd=false;}catch(_){}
+let views=[],acc=0,cur=null;
+const $=id=>document.getElementById(id);
+const stage=$('stage');
+function effN(){let cap=1e9;for(const v of views)cap=Math.min(cap,v.al.cap);return cap;}
+function algsInView(){return S.compare?S.slots.filter(Boolean).filter((x,i,ar)=>ar.indexOf(x)===i).slice(0,4):[S.alg];}
+function maxCap(){let c=1e9;for(const id of algsInView())c=Math.min(c,BYID[id].cap);return c;}
+
+const hueTab=[];for(let i=0;i<256;i++)hueTab.push('hsl('+Math.round(i/255*300)+',88%,58%)');
+function hueOf(v,vmax){return hueTab[Math.min(255,Math.floor(v/vmax*255))];}
+
+function buildPanels(){
+  const ids=algsInView();
+  const cap=maxCap(),sizeMax=SIZES.reduce((b,x,i)=>x<=cap?i:b,0);
+  $('nRange').max=sizeMax;if(S.nIdx>sizeMax)S.nIdx=sizeMax;$('nRange').value=S.nIdx;
+  const n=Math.min(SIZES[S.nIdx],cap);
+  const init=makeInit(S.init,n,S.seed,false);
+  views=ids.map(id=>{const al=BYID[id];const m=new M(al,init,S.seed,0);return m;});
+  stage.className=ids.length>1?'multi':'single';
+  stage.innerHTML='';
+  views.forEach((m,i)=>{
+    const p=document.createElement('div');p.className='panel';
+    p.innerHTML='<div class="ph"><span class="nm"></span><span class="rk"></span></div><canvas></canvas><div class="st"><span>比較<b>0</b></span><span>交換<b>0</b></span><span>書き込み<b>0</b></span><span>ステップ<b>0</b></span></div>';
+    p.querySelector('.nm').textContent=m.al.name;
+    stage.appendChild(p);
+    p.dataset.i=i;
+    m.ui={cv:p.querySelector('canvas'),rk:p.querySelector('.rk'),b:p.querySelectorAll('.st b'),txt:['','','',''],rkTxt:''};
+    m.ui.ctx=m.ui.cv.getContext('2d');
+    if(ids.length>1)p.appendChild(codeBlock(m,true));
+  });
+  $('nVal').textContent=n+'こ'+(n<SIZES[S.nIdx]?'（上限）':'');
+  $('note').textContent=(cap<SIZES[S.nIdx]?'このアルゴリズムは重いので最大'+cap+'こに制限しています。':'')+(ids.length>1?'同じ並びで同時スタート。早く終わった順に順位がつきます。':'');
+  renderInfo(ids);if(ids.length===1)$('infoBox').appendChild(codeBlock(views[0],false));acc=0;
+}
+const PYKW=new Set('def return if else elif while for in not and or is import from as break continue pass True False None lambda class'.split(' '));
+const PYBI=new Set('range len min max sum any sorted int list print abs'.split(' '));
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function hiLine(s){
+  const re=/(#.*$)|('[^']*'|"[^"]*")|(\b\d+(?:\.\d+)?\b)|([A-Za-z_][A-Za-z_0-9]*)|(\s+|.)/g;let o='',m,prev='';
+  while((m=re.exec(s))){
+    if(m[1])o+='<span class="tc">'+esc(m[1])+'</span>';
+    else if(m[2])o+='<span class="ts">'+esc(m[2])+'</span>';
+    else if(m[3])o+='<span class="tn">'+m[3]+'</span>';
+    else if(m[4]){const w=m[4];o+=PYKW.has(w)?'<span class="tk">'+w+'</span>':PYBI.has(w)?'<span class="tb">'+w+'</span>':prev==='def'?'<span class="tf">'+w+'</span>':w;prev=w;continue;}
+    else{o+=esc(m[5]);if(m[5].trim())prev='';continue;}
+    prev='';
+  }
+  return o;
+}
+function lineOf(id,key){const hl=PYHL[id];if(!hl||!hl[key])return -1;return PY[id].split('\n').findIndex(l=>l.includes(hl[key]));}
+function copyText(t,btn){
+  const done=()=>{const o=btn.textContent;btn.textContent='コピーした！';setTimeout(()=>{btn.textContent='コピー';},1500);};
+  try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,()=>fb());return;}}catch(_){}
+  fb();
+  function fb(){const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;left:-999px;top:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(_){}ta.remove();done();}
+}
+function codeBlock(m,multi){
+  const id=m.al.id,src=PY[id],box=document.createElement(multi?'details':'div');box.className='card code';
+  const head=document.createElement('div');head.className='ch';
+  head.innerHTML=multi?'<span style="font-size:12px;color:var(--mute)">'+esc(m.al.name)+'</span>':'<h3>🐍 Python のコード</h3>';
+  const cp=document.createElement('button');cp.className='btn cp';cp.textContent='コピー';cp.addEventListener('click',e=>{e.preventDefault();copyText(src,cp);});
+  head.appendChild(cp);
+  const pre=document.createElement('div');pre.className='pre';pre.setAttribute('role','region');pre.setAttribute('aria-label',m.al.name+' の Python コード');pre.tabIndex=0;
+  pre.innerHTML=src.split('\n').map((l,i)=>'<span class="ln"><span class="no">'+(i+1)+'</span>'+hiLine(l)+'</span>').join('');
+  if(multi){const sm=document.createElement('summary');sm.textContent='🐍 Python コード';box.appendChild(sm);}
+  box.appendChild(head);box.appendChild(pre);
+  m.ui.code={lines:pre.children,hl:{c:lineOf(id,'c'),s:lineOf(id,'s'),w:lineOf(id,'w')},cur:-1,pre};
+  return box;
+}
+function updCode(m){
+  const c=m.ui&&m.ui.code;if(!c)return;
+  let want=-1,cls='hl';
+  if(m.op&&!m.done&&m.steps>0){want=c.hl[m.op];if(m.op!=='c')cls='hs';}
+  const key=want+cls;if(c.curKey===key)return;
+  if(c.cur>=0&&c.lines[c.cur])c.lines[c.cur].className='ln';
+  c.cur=want;c.curKey=key;
+  if(want>=0&&c.lines[want]){c.lines[want].className='ln '+cls;
+    const p=c.pre,l=c.lines[want],top=l.offsetTop-p.offsetTop;if(p.scrollHeight>p.clientHeight&&(top<p.scrollTop||top>p.scrollTop+p.clientHeight-30)&&p.offsetParent)p.scrollTop=Math.max(0,top-p.clientHeight/2);}
+}
+function renderInfo(ids){
+  const box=$('infoBox');box.innerHTML='';
+  ids.forEach(id=>{const al=BYID[id];const d=document.createElement('div');d.className='card info';
+    d.innerHTML='<h3></h3><div class="cx"><div>平均<b></b></div><div>最悪<b></b></div><div>安定？<b></b></div><div>追加メモリ<b></b></div></div><p></p>';
+    d.querySelector('h3').textContent=al.name;if(al.tag){const t=document.createElement('span');t.className='tag';t.textContent=al.tag;d.querySelector('h3').appendChild(t);}
+    const b=d.querySelectorAll('b');b[0].textContent=al.avg;b[1].textContent=al.worst;b[2].textContent=al.stable?'安定（同じ値の順番を守る）':'安定ではない';b[3].textContent=al.mem;
+    d.querySelector('p').textContent=al.desc;box.appendChild(d);});
+}
+function syncUI(){
+  $('algSel').value=S.alg;
+  $('algSel').hidden=S.compare;$('slots').hidden=!S.compare;$('algLab').textContent=S.compare?'くらべるアルゴリズム（2〜4つ）':'アルゴリズム';
+  $('cmpBtn').setAttribute('aria-pressed',S.compare);
+  document.querySelectorAll('#modeSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===S.mode));
+  document.querySelectorAll('#initSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.i===S.init));
+  $('spRange').value=S.spd;$('spVal').textContent=S.auto?'オート':SPNAME[S.spd];
+  $('autoBtn').setAttribute('aria-pressed',S.auto);$('sndBtn').setAttribute('aria-pressed',S.snd);$('sndBtn').textContent=S.snd?'🔊':'🔇';
+  const sl=document.querySelectorAll('#slots select');sl.forEach((s,i)=>{s.value=S.slots[i]||'';});
+  updPlay();
+}
+function updPlay(){const d=views.length&&views.every(v=>v.done);$('playBtn').textContent=d?'↻ もういちど':(S.playing?'⏸ 一時停止':'▶ 再生');}
+function rebuild(play){buildPanels();if(play!==undefined)S.playing=play;syncUI();}
+
+/* ---- 描画 ---- */
+function draw(m){
+  const u=m.ui,cv=u.cv,dpr=Math.min(2,window.devicePixelRatio||1);
+  const W=cv.clientWidth,H=cv.clientHeight;if(!W||!H)return;
+  const pw=Math.round(W*dpr),ph=Math.round(H*dpr);
+  if(cv.width!==pw||cv.height!==ph){cv.width=pw;cv.height=ph;}
+  const c=u.ctx;c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
+  const n=m.n,a=m.a,hk=m.hk,fn=m.fn,vm=m.vmax,sweeping=m.sw>=0&&m.sw<n+1,swept=m.done&&m.sw>=n+1,sw=m.sw;
+  const col=i=>{
+    if(sweeping&&i<sw)return'#35ff9a';
+    if(hk[i]===2)return'#35ff9a';if(hk[i]===1)return'#ff4060';
+    if(fn[i]&&!swept&&!m.done)return'#f2f5ff';
+    if(m.done&&!swept)return null;
+    return null;};
+  const mode=S.mode;
+  if(mode==='bars'){
+    const bw=W/n,g=bw>5?1:0;
+    for(let i=0;i<n;i++){
+      const x=Math.floor(i*bw),w=Math.max(1,Math.floor((i+1)*bw)-x-g),h=Math.max(2,a[i]/vm*(H-4));
+      const k=col(i);c.fillStyle=k||hueOf(a[i],vm);c.fillRect(x,H-h,w,h);
+    }
+  }else if(mode==='dots'){
+    const bw=W/n,r=Math.max(1.5,Math.min(6,bw*0.42)),big=n<=256;
+    for(let i=0;i<n;i++){
+      const x=(i+.5)*bw,y=H-6-a[i]/vm*(H-12);const k=col(i);const hot=hk[i]||(sweeping&&i<sw);
+      c.fillStyle=k||hueOf(a[i],vm);const rr=hot?r*1.5:r;
+      if(big){c.beginPath();c.arc(x,y,rr,0,6.2832);c.fill();}else c.fillRect(x-rr,y-rr,rr*2,rr*2);
+    }
+  }else if(mode==='wheel'){
+    const cx=W/2,cy=H/2,R=Math.min(W,H)/2-4,ri=R*0.9,rin=R*0.1;const st=Math.PI*2/n;
+    for(let i=0;i<n;i++){
+      const a0=-Math.PI/2+i*st;c.fillStyle=hueOf(a[i],vm);c.beginPath();c.moveTo(cx+Math.cos(a0)*rin,cy+Math.sin(a0)*rin);c.arc(cx,cy,ri,a0,a0+st+0.006);c.arc(cx,cy,rin,a0+st+0.006,a0,true);c.closePath();c.fill();
+    }
+    for(let i=0;i<n;i++){const k=col(i);if(!k)continue;const a0=-Math.PI/2+i*st;c.fillStyle=k;c.beginPath();c.arc(cx,cy,R,a0,a0+st+0.006);c.arc(cx,cy,ri+2,a0+st+0.006,a0,true);c.closePath();c.fill();}
+  }else{
+    const bw=W/n,hh=H*0.8;
+    for(let i=0;i<n;i++){const x=Math.floor(i*bw),w=Math.max(1,Math.floor((i+1)*bw)-x);c.fillStyle=hueOf(a[i],vm);c.fillRect(x,0,w,hh);
+      const k=col(i);if(k){c.fillStyle=k;c.fillRect(x,hh+3,w,H-hh-3);}}
+  }
+}
+
+/* ---- 音 ---- */
+let AC=null,master=null;
+function audio(){
+  if(!AC){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();const comp=AC.createDynamicsCompressor();master=AC.createGain();master.gain.value=0.5;master.connect(comp);comp.connect(AC.destination);}catch(_){AC=null;return null;}}
+  if(AC.state==='suspended')AC.resume().catch(()=>{});return AC;
+}
+function blip(r){
+  if(!AC||AC.state!=='running')return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();
+  o.type='triangle';o.frequency.value=140+Math.max(0,Math.min(1,r))*1100;
+  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.09,t+0.006);g.gain.exponentialRampToValueAtTime(0.0001,t+0.07);
+  o.connect(g);g.connect(master);o.start(t);o.stop(t+0.08);
+}
+function sound(m,k){
+  if(!S.snd||!AC)return;const cnt=Math.min(m.sc,16);if(!cnt)return;
+  const lim=k<=2?3:k<=40?2:1;const num=Math.min(lim,cnt);
+  for(let q=0;q<num;q++){blip(m.sn[Math.floor((q+0.5)*cnt/num)]/m.vmax);}
+}
+
+/* ---- 実行ループ ---- */
+function runSteps(k){
+  views.forEach((m,vi)=>{
+    if(m.done)return;m.hk.fill(0);m.sc=0;const tail=Math.max(4,Math.min(40,Math.ceil(m.n/24)));
+    let kk=k;if(kk>tail){m.nomark=true;m.advance(kk-tail);m.nomark=false;m.hk.fill(0);m.sc=0;kk=tail;}
+    m.advance(kk);
+    if(m.done)m.hk.fill(0);
+    if(vi===0)sound(m,k);
+  });
+}
+function ranks(){
+  const fs=views.map(v=>v.finStep);return views.map((v,i)=>v.done?1+fs.filter(x=>x<v.finStep).length:0);
+}
+function updStats(){
+  const rk=views.length>1?ranks():null;
+  views.forEach((m,i)=>{
+    const u=m.ui,t=[m.cmp,m.swp,m.wr,m.steps].map(x=>x.toLocaleString('ja-JP'));
+    for(let q=0;q<4;q++)if(u.txt[q]!==t[q]){u.txt[q]=t[q];u.b[q].textContent=t[q];}
+    let r='';if(m.done)r=rk?(['','🥇 1位','🥈 2位','🥉 3位','4位'][rk[i]]||rk[i]+'位'):'✔ 完了';
+    if(u.rkTxt!==r){u.rkTxt=r;u.rk.textContent=r;}
+  });
+}
+let lastT=0;
+function frame(t){
+  const dt=Math.min(0.1,(t-lastT)/1000||0.016);lastT=t;
+  const all=views.length&&views.every(v=>v.done);
+  if(S.playing&&!all){acc+=S.rate*dt;let k=Math.floor(acc);if(k>0){acc-=k;runSteps(Math.min(k,100000));}}
+  let allSwept=views.length>0;
+  views.forEach(m=>{
+    if(m.done&&m.sw<m.n+1){m.sw+=m.n*dt/0.9+0.01;if(S.snd&&AC&&m.ui===views[0].ui&&Math.floor(m.sw)%2===0)blip(Math.min(1,m.sw/m.n));}
+    if(!(m.done&&m.sw>=m.n+1))allSwept=false;
+    draw(m);
+  });
+  views.forEach(updCode);updStats();updPlay();
+  if(S.auto&&allSwept){S.autoWait+=dt;if(S.autoWait>1.0){autoNext();}}
+  requestAnimationFrame(frame);
+}
+
+/* ---- オート ---- */
+const AUTO_INITS=['random','random','nearly','reversed','few','mountain'];
+function autoNext(){
+  S.autoWait=0;const al=ALGS[S.autoIdx%ALGS.length];
+  S.compare=false;S.alg=al.id;
+  S.nIdx=SIZES.reduce((b,x,i)=>x<=al.auto?i:b,0);
+  S.init=AUTO_INITS[S.autoRound%AUTO_INITS.length];
+  S.mode=MODES[S.autoRound%MODES.length];
+  S.seed=S.autoRound+11;
+  S.autoIdx++;S.autoRound++;
+  const n=Math.min(al.auto,al.cap);
+  const dry=runSync(al.id,n,S.seed,{init:S.init});
+  const dur=al.id==='sleep'?7:9;
+  S.rate=Math.max(3,Math.min(60000,dry.steps/dur));
+  let sp=0;for(let i=0;i<SPEEDS.length;i++)if(SPEEDS[i]<=S.rate)sp=i;S.spd=sp;
+  rebuild(true);
+  $('note').textContent='🤖 オート再生中：'+(((S.autoIdx-1)%ALGS.length)+1)+' / '+ALGS.length+'　'+INIT_LABEL[S.init];
+}
+function setAuto(on){
+  on=!!on;if(on===S.auto)return;S.auto=on;
+  if(on){S.autoWait=0;S.autoIdx=Math.max(0,ALGS.findIndex(a=>a.id===S.alg));S.autoIdx=S.autoIdx<0?0:S.autoIdx;autoNext();}
+  else{S.spd=Math.max(0,Math.min(10,S.spd));S.rate=SPEEDS[S.spd];buildNote();}
+  syncUI();
+}
+function buildNote(){const cap=maxCap();$('note').textContent=(cap<SIZES[S.nIdx]?'このアルゴリズムは重いので最大'+cap+'こに制限しています。':'')+(views.length>1?'同じ並びで同時スタート。早く終わった順に順位がつきます。':'');}
+function human(){if(S.auto){S.rate=SPEEDS[S.spd];setAuto(false);}}
+
+/* ---- イベント ---- */
+ALGS.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.textContent=a.name+(a.tag?'（ネタ）':'');$('algSel').appendChild(o);});
+(function(){const box=$('slots');for(let i=0;i<4;i++){const s=document.createElement('select');s.setAttribute('aria-label','くらべる'+(i+1));
+  if(i>=2){const o=document.createElement('option');o.value='';o.textContent='— なし —';s.appendChild(o);}
+  ALGS.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.textContent=a.name;s.appendChild(o);});
+  s.addEventListener('change',()=>{human();S.slots[i]=s.value;if(algsInView().length<2){S.slots[i]=i===0?'quick':'merge';}rebuild(true);});box.appendChild(s);}})();
+$('algSel').addEventListener('change',e=>{human();S.alg=e.target.value;S.slots[0]=S.alg;rebuild(true);});
+$('cmpBtn').addEventListener('click',()=>{human();S.compare=!S.compare;if(S.compare){S.slots[0]=S.alg;const ids=S.slots.filter(Boolean);['quick','merge','bubble','heap'].forEach(x=>{if(S.slots.filter(Boolean).length<3&&!S.slots.includes(x)){const k=S.slots.findIndex((v,i)=>i>0&&!v);if(k>0)S.slots[k]=x;}});}rebuild(true);});
+document.querySelectorAll('#modeSeg button').forEach(b=>b.addEventListener('click',()=>{human();S.mode=b.dataset.m;syncUI();}));
+document.querySelectorAll('#initSeg button').forEach(b=>b.addEventListener('click',()=>{human();S.init=b.dataset.i;rebuild(true);}));
+$('nRange').addEventListener('input',e=>{human();S.nIdx=+e.target.value;rebuild(true);});
+$('spRange').addEventListener('input',e=>{human();S.spd=+e.target.value;S.rate=SPEEDS[S.spd];syncUI();});
+$('playBtn').addEventListener('click',()=>{human();audio();if(views.every(v=>v.done)){rebuild(true);}else S.playing=!S.playing;syncUI();});
+$('stepBtn').addEventListener('click',()=>{human();audio();S.playing=false;if(views.every(v=>v.done))rebuild(false);runSteps(1);syncUI();});
+$('resetBtn').addEventListener('click',()=>{human();rebuild(true);});
+$('newBtn').addEventListener('click',()=>{human();S.seed++;rebuild(true);});
+$('autoBtn').addEventListener('click',()=>{audio();setAuto(!S.auto);});
+$('sndBtn').addEventListener('click',()=>{human();S.snd=!S.snd;try{localStorage.setItem('sort.snd',S.snd?'1':'0');}catch(_){}if(S.snd)audio();syncUI();});
+addEventListener('pointerdown',()=>{if(S.snd)audio();},{passive:true});
+addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  const t=e.target&&e.target.tagName;
+  if(e.key==='o'||e.key==='O'){if(t==='SELECT')return;audio();setAuto(!S.auto);e.preventDefault();return;}
+  if(e.key==='Tab'||e.key==='Shift')return;
+  if(t==='SELECT'||t==='INPUT')return;
+  if(e.key===' '){e.preventDefault();$('playBtn').click();}
+  else if(e.key==='ArrowRight'){e.preventDefault();$('stepBtn').click();}
+});
+
+/* ---- テストフック ---- */
+window.__sort={
+  list:()=>ALGS.map(a=>({id:a.id,name:a.name,cap:a.cap,stable:a.stable})),
+  run:(name,n,seed,opts)=>runSync(name,n,seed,opts),
+  state:()=>{const m=views[0];return{alg:S.alg,algs:views.map(v=>v.al.id),a:Array.from(m.a),n:m.n,cmp:m.cmp,swp:m.swp,wr:m.wr,steps:m.steps,done:m.done,allDone:views.every(v=>v.done),
+    auto:S.auto,compare:S.compare,mode:S.mode,init:S.init,playing:S.playing,rate:S.rate,snd:S.snd,views:views.map(v=>({alg:v.al.id,steps:v.steps,done:v.done,finStep:v.finStep}))};},
+  setAuto:b=>{setAuto(b);return S.auto;},
+  step:k=>{runSteps(Math.max(1,k|0));views.forEach(draw);updStats();return window.__sort.state();},
+  setSpeed:l=>{S.spd=Math.max(0,Math.min(10,l|0));S.rate=SPEEDS[S.spd];syncUI();},
+  select:(id,n,init)=>{S.compare=false;S.alg=id;S.slots[0]=id;if(n){S.nIdx=SIZES.reduce((b,x,i)=>x<=n?i:b,0);}if(init)S.init=init;rebuild(true);},
+  setMode:m=>{S.mode=m;syncUI();},
+  compare:ids=>{S.compare=true;S.slots=ids.concat(['','','','']).slice(0,4);S.alg=ids[0];rebuild(true);},
+  pause:()=>{S.playing=false;syncUI();}
+};
+rebuild(true);S.rate=SPEEDS[S.spd];syncUI();
+requestAnimationFrame(frame);
+})();
+</script>
+<!-- zoom guard: ピンチ・ダブルタップでズームしない -->
+<script>(function(){var p=function(e){e.preventDefault();};['gesturestart','gesturechange','gestureend'].forEach(function(t){document.addEventListener(t,p,{passive:false});});document.addEventListener('touchmove',function(e){if(e.touches&&e.touches.length>1)e.preventDefault();},{passive:false});document.addEventListener('dblclick',function(e){var t=e.target;if(t&&t.closest&&t.closest('input,textarea,select,[contenteditable]'))return;e.preventDefault();},{passive:false});})();</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>
