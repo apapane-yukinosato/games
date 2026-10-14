@@ -222,11 +222,11 @@ function pushRunner(R,r,distOv){
   const T=1/cad(r.v);
   let dist; if(distOv!=null) dist=distOv; else {const f=r.ph-Math.floor(r.ph);dist=Math.min(f,1-f);}
   const j=judgeOf(dist);
-  const cool=clamp(r.since/(0.85*T),0.2,1);
+  const cool=clamp(r.since/(0.85*T),0.35,1);
   r.pace+=1;
-  const over=Math.max(0,(r.pace-PACE_OK)/3);
-  const drain=DRAIN*(j==='perfect'?0.55:j==='nice'?0.65:0.95)*(1+over*over*1.5);
-  const eff=(j==='perfect'?1.08:j==='nice'?1:0.75)*cool*Math.max(0.35,1-0.22*over);
+  const over=Math.max(0,(r.pace-PACE_OK)/3.5);
+  const drain=DRAIN*(0.45+0.55*cool)*({100:0.7,200:0.38,400:1,800:1}[R.ev])*(j==='perfect'?0.55:j==='nice'?0.65:0.95)*(1+over*over*1.5*({100:0,200:0.5,400:1,800:1}[R.ev]));
+  const eff=(j==='perfect'?1.08:j==='nice'?1:0.6)*cool*Math.max(0.35,1-0.3*over);
   const m=0.6+0.4*Math.min(1,r.v/3);
   r.v+=K*eff*(1-r.v/VMAX)*m;
   r.st-=drain;
@@ -249,7 +249,7 @@ function stepRunner(R,r,h){
         pushRunner(R,r,dist);}
     }
   }
-  if(r.exh){r.exT+=h;r.exhTime+=h;r.st=Math.min(100,r.st+1.6*h);if(r.exT>=4.5){r.exh=false;r.st=Math.max(r.st,10);r.pace=0;}}
+  if(r.exh){r.exT+=h;r.exhTime+=h;r.st=Math.min(100,r.st+1.6*h);if(r.exT>=({100:2.0,200:3.5}[R.ev]||4.5)){r.exh=false;r.st=Math.max(r.st,10);r.pace=0;}}
   else if(r.fin===null){r.st=Math.min(100,r.st+REGEN*Math.max(0,1-r.pace/PACE_OK)*h);}
   else r.st=Math.min(100,r.st+3*h);
   let a=C0+C1*r.v*r.v;
@@ -319,7 +319,7 @@ function simRace(pol){
     stepRace(R,h);
     if(kind==='human'&&P.fin===null&&R.t>0.15){
       if(!P._q){P._q=[];P._bph=Math.floor(P.ph);P._cr=0;P._rng=mulberry(seed+99);}
-      if(Math.floor(P.ph)>P._bph){P._bph=Math.floor(P.ph);P._cr+=pol.q;
+      if(Math.floor(P.ph)>P._bph){P._bph=Math.floor(P.ph);P._cr+=(P.d<(pol.s0||0)||P.d>R.D-(pol.e0||0))?1:pol.q;
         if(P._cr>=1){P._cr-=1;const u1=P._rng(),u2=P._rng();const gz=Math.sqrt(-2*Math.log(u1+1e-9))*Math.cos(6.283*u2);
           P._q.push(R.t+Math.max(0,gz*(pol.jit==null?0.12:pol.jit)/cad(P.v)));}}
       while(P._q.length&&P._q[0]<=R.t){P._q.shift();pushRunner(R,P);}
@@ -328,8 +328,8 @@ function simRace(pol){
       if(next===0)next=R.t;
       while(R.t>=next){pushRunner(R,P);next+=1/rate;}
     }
-    if(P.fin!==null&&allFin(R)||R.waitT>=12) finalize(R);
-    else if(R.waitT>=12) finalize(R);
+    if(P.fin!==null&&allFin(R)||R.waitT>=30) finalize(R);
+    else if(R.waitT>=30) finalize(R);
   }
   if(!R.over)finalize(R);
   return {time:P.fin,rank:P.rank,st:+P.st.toFixed(1),exh:P.exhCount,exhTime:+P.exhTime.toFixed(1),topV:+P.topV.toFixed(2),pushes:P.pushes,perfect:P.nP,nice:P.nN,off:P.nO,d:+P.d.toFixed(1),
@@ -525,11 +525,11 @@ function updateGame(dt){
     if(G.phase==='run'){
       G.sessV=Math.max(G.sessV,R.player.v);
       if(R.player.fin!==null){setPhase('finish');G.finT=0;sCrowd(2.2,.5);}
-      else if(R.waitT>=12){setPhase('finish');G.finT=99;}
+      else if(R.waitT>=30){setPhase('finish');G.finT=99;}
     }
     if(G.phase==='finish'){
       G.finT+=h;
-      if((allFin(R)&&G.finT>0.6)||G.finT>5.5||R.waitT>=12&&G.finT>0.5){
+      if((allFin(R)&&G.finT>0.6)||G.finT>5.5||R.waitT>=30&&G.finT>0.5){
         buildResult();setPhase('photo');G.photoT=0;rollUpdate(0,false);
       }
     }
