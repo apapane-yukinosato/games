@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="description" content="日本人のいろいろな統計の割合を、街を行き交う人たちの色で見るページ。性別・年齢・年収・学歴・金融資産など31種類。人数も変えられます。">
+<title>ニッポン統計ストリート</title>
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-180.png">
+<style>
+html,body{touch-action:manipulation}
+:root{--bg:#f4f7fb;--card:#ffffff;--ink:#1d2433;--mute:#5d6882;--line:#dbe2ee;--acc:#0072b2;--acc2:#e69f00;--hot:#d55e00;color-scheme:light}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;overscroll-behavior:none}
+html{background:var(--bg)}
+body{min-height:100%;color:var(--ink);background:linear-gradient(180deg,#e8f3fc 0,#f4f7fb 260px) fixed,var(--bg);font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,system-ui,sans-serif;-webkit-text-size-adjust:100%;line-height:1.5}
+button,input{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+button{border:0;background:none}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+#app{max-width:1200px;margin:0 auto;padding:calc(6px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px))}
+#top{display:flex;align-items:center;gap:6px;padding:2px 0 8px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;white-space:nowrap;padding:8px 2px}
+#top h1{flex:1;min-width:0;margin:0;text-align:center;font-size:clamp(13px,4vw,17px);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#top h1 b{color:var(--acc)}
+.mini{font-size:12px;font-weight:700;border:2px solid var(--line);border-radius:999px;padding:4px 8px;min-height:36px;background:var(--card);white-space:nowrap}
+.mini[aria-pressed=true]{background:#ffe9d6;border-color:var(--hot)}
+#autoBtn[aria-pressed=true]{background:var(--hot);border-color:var(--hot);color:#fff}
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.layout>*{min-width:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:0 2px 10px rgba(30,60,110,.06)}
+#head{position:relative}
+#hTitle{margin:0;font-size:clamp(25px,7.2vw,40px);line-height:1.2;font-weight:900;letter-spacing:.01em}
+#hTitle em{font-style:normal;color:var(--acc)}
+#hLead{margin:6px 0 0;font-size:15px;font-weight:600}
+#hMeta{margin:8px 0 0;font-size:12px;color:var(--mute)}
+#hMeta .tag{display:inline-block;border-radius:999px;padding:0 8px;margin-right:6px;font-size:11px;font-weight:800;color:#fff;background:#009e73;vertical-align:1px}
+#hMeta .tag.approx{background:#c98a00}
+#hMeta .tag.est{background:#d55e00}
+#hNote{margin:4px 0 0;font-size:12px;color:var(--mute)}
+.fade{transition:opacity .35s,transform .35s}
+.fade.out{opacity:0;transform:translateY(4px)}
+#picker{padding:8px 10px}
+#tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:6px}
+#tabs::-webkit-scrollbar,#chips::-webkit-scrollbar{display:none}
+#tabs button{flex:0 0 auto;padding:4px 12px;min-height:32px;border-radius:999px;font-size:13px;font-weight:800;color:var(--mute);background:#eef2f9}
+#tabs button[aria-selected=true]{background:var(--ink);color:#fff}
+#chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0}
+#chips button{flex:0 0 auto;padding:4px 12px;min-height:38px;border-radius:12px;font-size:13.5px;font-weight:700;background:#fff;border:2px solid var(--line);white-space:nowrap}
+#chips button[aria-pressed=true]{border-color:var(--acc);background:#e3f2fc;color:#004b75}
+#stageWrap{position:relative;padding:0;overflow:hidden}
+#cv{display:block;width:100%;height:250px;touch-action:manipulation;cursor:pointer}
+#cvBadge{position:absolute;left:8px;top:8px;background:rgba(255,255,255,.88);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:800;pointer-events:none}
+#cvHint{position:absolute;right:8px;top:8px;background:rgba(255,255,255,.88);border-radius:999px;padding:2px 10px;font-size:11.5px;color:var(--mute);pointer-events:none}
+#ctrl{display:grid;gap:8px}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.row label{font-weight:800;font-size:14px}
+#cnt{font-size:20px;font-weight:900;min-width:3.4em;color:var(--acc)}
+#slider{flex:1 1 140px;min-width:120px;accent-color:var(--acc);height:32px}
+.pre button{padding:2px 10px;min-height:32px;border-radius:999px;border:2px solid var(--line);background:#fff;font-size:12.5px;font-weight:800}
+.pre button[aria-pressed=true]{border-color:var(--acc);background:#e3f2fc}
+#village{font-size:13.5px}
+#village b{color:var(--ink)}
+#village .v{display:inline-block;margin:2px 8px 0 0;white-space:nowrap}
+#villageT{font-weight:800;margin-bottom:2px}
+#legend{display:grid;gap:5px}
+#legend h3{margin:0 0 2px;font-size:14px}
+.lg{display:grid;grid-template-columns:24px minmax(0,1fr) auto auto;align-items:center;gap:8px;width:100%;text-align:left;padding:5px 8px;min-height:40px;border-radius:10px;border:2px solid transparent;background:#f6f8fc}
+.lg:hover{background:#eaf1fb}
+.lg[aria-pressed=true]{border-color:var(--ink);background:#fff;box-shadow:0 0 0 2px #ffd34d}
+.lg .nm{font-size:13.5px;font-weight:700;overflow-wrap:anywhere;line-height:1.3}
+.lg .pc{font-size:14px;font-weight:900;font-variant-numeric:tabular-nums}
+.lg .ct{font-size:12px;color:var(--mute);min-width:4.4em;text-align:right;font-variant-numeric:tabular-nums}
+.lg canvas{width:24px;height:24px;display:block}
+.lg.dim{opacity:.55}
+#legNote{font-size:12px;color:var(--mute);margin:4px 2px 0}
+#about{font-size:12px;color:var(--mute)}
+#about p{margin:4px 0}
+#sheet{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;background:rgba(20,30,50,.45)}
+#sheetBox{position:relative;width:min(520px,100%);max-height:86vh;overflow:auto;background:#fff;border-radius:20px 20px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 30px rgba(0,0,0,.25)}
+@media(min-width:700px){#sheet{align-items:center}#sheetBox{border-radius:20px}}
+#sheetBox h2{margin:0 40px 2px 0;font-size:19px}
+#sheetBox .sub{font-size:13px;color:var(--mute);margin:0 0 8px}
+#sheetClose{position:absolute;right:6px;top:6px;font-size:22px;width:44px;height:44px;color:var(--mute)}
+#pf{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:13px}
+#pf div{display:flex;justify-content:space-between;gap:6px;border-bottom:1px dashed var(--line);padding:3px 0}
+#pf span:first-child{color:var(--mute);flex:0 0 auto}
+#pf span:last-child{font-weight:700;text-align:right;overflow-wrap:anywhere}
+#pf .na span:last-child{color:#9aa3b8;font-weight:500}
+#pfNote{font-size:11.5px;color:var(--mute);margin:8px 0 0}
+@media(min-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr) 380px;align-items:start}
+  #colL{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+  #colR{display:grid;gap:12px;grid-template-columns:minmax(0,1fr);position:sticky;top:8px}
+  #cv{height:400px}
+  #top h1{font-size:20px}
+}
+@media(max-width:899px){#colL,#colR{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){.fade{transition:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>ニッポン<b>統計</b>ストリート</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false" title="統計を8秒ごとに自動で切りかえ（Oキー）">🤖 オート</button>
+    <button class="mini" id="sndBtn" aria-pressed="true" title="音のON/OFF">🔊</button>
+  </div>
+  <div class="layout">
+    <div id="colL">
+      <section class="card" id="head" aria-live="polite">
+        <div class="fade" id="headIn">
+          <h2 id="hTitle"></h2>
+          <p id="hLead"></p>
+          <p id="hMeta"></p>
+          <p id="hNote"></p>
+        </div>
+      </section>
+      <section class="card" id="picker" aria-label="統計をえらぶ">
+        <div id="tabs" role="tablist"></div>
+        <div id="chips"></div>
+      </section>
+      <section class="card" id="stageWrap">
+        <canvas id="cv" aria-label="行き交う人たちの絵。人をタップするとプロフィールが出ます"></canvas>
+        <div id="cvBadge"></div>
+        <div id="cvHint">人をタップ → プロフィール</div>
+      </section>
+      <section class="card" id="ctrl">
+        <div class="row">
+          <label for="slider">人数</label>
+          <span id="cnt">100人</span>
+          <input type="range" id="slider" min="0" max="100" step="1" value="50" aria-label="人数 10人から1000人">
+        </div>
+        <div class="row pre" id="pre"></div>
+        <div id="village"></div>
+      </section>
+    </div>
+    <div id="colR">
+      <section class="card" id="legend">
+        <h3>いろの見かた（タップでそのグループだけ光る）</h3>
+        <div id="lgRows"></div>
+        <div id="legNote"></div>
+      </section>
+      <section class="card" id="about">
+        <p><b>見かた</b>　人の色は、えらんだ統計のグループです。人数が少ないときは「最大剰余法」で、割合にいちばん近い人数に分けています。</p>
+        <p>年齢・性別などの基本の属性は人ごとに持たせてあり、年収は「給与所得者」だけ、学歴は「25歳以上」だけなど、対象の人だけに色がつきます（灰色は対象外）。年齢と関係する統計は年齢に応じて割りあてています（関係が弱いものは独立にランダム）。</p>
+        <p>数値は公表資料にもとづきますが、「概数」「推計」と書いたものは、公表値の組み合わせや目安による試算です。個人のプロフィールはランダムに作った架空の人です。</p>
+      </section>
+    </div>
+  </div>
+</div>
+<div id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetT">
+  <div id="sheetBox" tabindex="-1" style="outline:none">
+    <button id="sheetClose" aria-label="とじる">✕</button>
+    <h2 id="sheetT"></h2>
+    <p class="sub" id="sheetSub"></p>
+    <div id="pf"></div>
+    <p id="pfNote">ランダムに作った架空の人のプロフィールです。実在の誰かではありません。犯罪に関する項目は個人には表示せず、全体の割合だけを見せています。</p>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ====== utilities ====== */
+const $=s=>document.querySelector(s);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+function hash(a,b,c){let h=Math.imul((a|0)^0x9e3779b9,0x85ebca6b);h^=h>>>13;h=Math.imul(h^(b|0),0xc2b2ae35);h^=h>>>16;h=Math.imul(h^(c|0),0x27d4eb2f);h^=h>>>15;h=Math.imul(h,0x165667b1);h^=h>>>13;return (h>>>0)/4294967296;}
+function LR(m,shares){ // largest remainder method
+  const sum=shares.reduce((a,b)=>a+b,0)||1;
+  const ex=shares.map(s=>m*s/sum), base=ex.map(Math.floor);
+  let left=m-base.reduce((a,b)=>a+b,0);
+  const ord=ex.map((e,i)=>[e-base[i],i]).sort((a,b)=>b[0]-a[0]||a[1]-b[1]);
+  for(let k=0;k<left;k++)base[ord[k%ord.length][1]]++;
+  return base;
+}
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const row=(tbl,age)=>{let r=tbl[0];for(const t of tbl){if(age>=t[0])r=t;else break}return r;};
+const gauss=(x,mu,sg)=>Math.exp(-((x-mu)*(x-mu))/(2*sg*sg));
+
+/* ====== statistics data ======
+ conf: 'ok' 公表値(確認済み) / 'approx' 概数 / 'est' 推計(試算)
+ cats: [name, percent]; ord: 順序のある統計(連続色)
+ elig(p): 対象者 / w(p): 属性による重み(相対) / derive(p): 属性から決まる */
+const SEX=p=>p.v.sex, AGE=p=>p.age;
+const STATS=[
+{id:'sex',group:0,chip:'性別',short:'性別',title:'日本人の男女',conf:'ok',
+ lead:'男性は約48.7%、女性は約51.3%。女性のほうが約330万人多く、高齢になるほど女性の割合が高くなります。',
+ src:'総務省統計局 人口推計（確定値）',year:'2024年10月1日現在',
+ note:'男60,233千人・女63,569千人。年齢が高い人ほど女性が多くなるよう割りあて。',
+ cats:[['男性',48.654],['女性',51.346]],
+ w:p=>{const a=p.age;const f=a>=85?2.4:a>=75?1.6:a>=65?1.15:1;return [1,f];}},
+{id:'age4',group:0,chip:'年齢（4区分）',short:'年齢',title:'日本人の年齢',conf:'ok',
+ lead:'65歳以上は約29%（3人に1人弱）、15歳未満は約11%。75歳以上だけでも約17%、6人に1人です。',
+ src:'総務省統計局 人口推計（確定値）',year:'2024年10月1日現在',
+ note:'15歳未満1,383万人、15〜64歳7,373万人（59.6%）、65〜74歳12.5%、75歳以上16.8%。',
+ ord:true,cats:[['0〜14歳',11.2],['15〜64歳',59.5],['65〜74歳',12.5],['75歳以上',16.8]],
+ derive:p=>p.age<15?0:p.age<65?1:p.age<75?2:3},
+{id:'age8',group:0,chip:'年齢（8区分）',short:'年齢層',title:'日本人の年齢層',conf:'est',
+ lead:'いちばん多いのは45〜54歳の約15%。いわゆる団塊ジュニア世代が厚みをつくっています。',
+ src:'総務省統計局 人口推計（4区分は公表値）を元にした試算',year:'2024年10月1日現在',
+ note:'4区分の合計は公表値に合わせ、10歳刻みの内訳は人口ピラミッドから置いた目安（推計）です。',
+ ord:true,cats:[],derive:null},
+{id:'region',group:0,chip:'住んでいる地方',short:'居住地方',title:'日本人の住んでいる地方',conf:'approx',
+ lead:'関東に約35%、3人に1人。北海道は約4%、四国は約3%です。',
+ src:'総務省統計局 令和2年国勢調査の都道府県別人口を地方ごとに合計',year:'2020年10月1日現在',
+ note:'出身地の統計は公的にはないので、いま住んでいる地方別の人口割合で代用しています。中部は北陸・甲信・東海を含みます。',
+ cats:[['北海道',4.1],['東北',6.8],['関東',34.6],['中部',18.2],['近畿',16.3],['中国',5.8],['四国',2.9],['九州・沖縄',11.3]]},
+{id:'foreign',group:0,chip:'外国籍',short:'国籍',title:'日本に住む外国籍の人',conf:'ok',
+ lead:'在留外国人は約377万人で、人口の約3.0%。100人歩いていたら3人くらいです。',
+ src:'出入国在留管理庁 在留外国人統計（令和6年末 376万8,977人）／総人口比',year:'2024年末',
+ note:'人口に占める割合は約3.04%。居住地・年齢とは独立にランダムに配置しています。',
+ cats:[['外国籍',3.04],['日本国籍',96.96]]},
+{id:'blood',group:0,chip:'血液型',short:'血液型',title:'日本人の血液型',conf:'ok',
+ lead:'A型が約4割、O型が約3割、B型が約2割、AB型が約1割。ほぼ4：3：2：1です。',
+ src:'血液型の分布（医療機関・日本赤十字社などで一般に示される目安）',year:'参考値',
+ note:'参考値です。血液型と性格に科学的な関係はありません。',
+ cats:[['A型',40],['O型',30],['B型',20],['AB型',10]]},
+{id:'left',group:0,chip:'左利き',short:'利き手',title:'日本人の利き手',conf:'est',
+ lead:'左利きはおよそ10人に1人。100人いたら10人くらいが左利きです。',
+ src:'各種研究にもとづく目安（国の公式統計はなし）',year:'推計',
+ note:'国の統計はないため、研究で示される約1割という目安を使った推計です。',
+ cats:[['左利き',10],['右利き（両手利き含む）',90]]},
+{id:'glasses',group:0,chip:'メガネ・コンタクト',short:'視力矯正',title:'日本人のメガネ・コンタクト',conf:'est',
+ lead:'視力を矯正している人はおよそ6〜7割。メガネの人がいちばん多い目安です。',
+ src:'各種民間調査をもとにした目安（国の公式統計はなし）',year:'推計',
+ note:'国の統計はなく、民間調査の傾向からの粗い推計です（子どもはなし、高齢者はメガネ中心に偏らせています）。',
+ cats:[['メガネ中心',42],['コンタクト中心',20],['どちらも使わない',38]],
+ w:p=>{const a=p.age;if(a<6)return [.05,.02,1];if(a<15)return [.5,.15,1.4];if(a<30)return [1.1,1.4,.7];if(a<50)return [1,1.3,.8];if(a<65)return [1.2,.7,.7];return [1.1,.2,1];}},
+{id:'marital',group:1,chip:'結婚（配偶関係）',short:'結婚',title:'日本人の結婚',conf:'ok',
+ lead:'15歳以上で結婚している人は約56%、一度も結婚していない人は約30%。女性は死別が男性の4倍以上います。',
+ src:'総務省統計局 令和2年国勢調査（男性：未婚34.6％・有配偶57.4％・死別3.3％・離別4.7％／女性：24.8％・54.0％・14.4％・6.8％を人数比で合成）',year:'2020年10月1日現在',
+ note:'対象は15歳以上。年齢に応じて割りあてています（若い人は未婚、高齢は死別が多い）。',
+ elig:p=>p.age>=15,eligNote:'15歳以上',
+ cats:[['未婚',29.5],['結婚している（有配偶）',55.6],['離別',5.9],['死別',9.0]],
+ w:p=>{const a=p.age,f=p.v.sex===1;
+  const t=[[0,1,.003,.002,.0004],[20,.9,.1,.004,.0004],[25,.6,.35,.02,.001],[30,.36,.58,.04,.002],[35,.26,.64,.08,.005],[45,.2,.66,.11,.02],[55,.1,.7,.1,.06],[65,.06,.7,.07,.17],[75,.04,.55,.04,.37],[85,.03,.27,.02,.68]];
+  const r=row(t,a);return [r[1]*(f?.8:1.2),r[2],r[3]*(f?1.25:.8),r[4]*(f?2.5:.4)];}},
+{id:'alone',group:1,chip:'一人暮らし',short:'世帯',title:'日本人の一人暮らし',conf:'est',
+ lead:'単独世帯は全世帯の約38%。15歳以上の約5人に1人（19%）が一人で暮らしている計算です。',
+ src:'総務省統計局 令和2年国勢調査（単独世帯 21,151,042）を15歳以上人口に換算',year:'2020年10月1日現在',
+ note:'単独世帯数は公表値。人口に対する割合への換算は試算です。対象は15歳以上。',
+ elig:p=>p.age>=15,eligNote:'15歳以上',
+ cats:[['一人暮らし',19.0],['家族などと同居',81.0]],
+ w:p=>{const a=p.age;const m=p.v.marital;let f=a<20?.12:a<30?1.4:a<45?.8:a<65?.85:a<85?1.3:1.1;let a0=f,a1=1;if(m===1)a0*=.12;else if(m===0)a0*=1.6;else if(m>=2)a0*=2;return [a0,a1];}},
+{id:'lifetime',group:1,chip:'生涯未婚率',short:'50歳時の未婚',title:'日本人の「50歳時の未婚率」',conf:'ok',
+ lead:'50歳の時点で一度も結婚していない人は、男性で約28%、女性で約18%（いわゆる生涯未婚率）。',
+ src:'国立社会保障・人口問題研究所 人口統計資料集（国勢調査・不詳補完値）',year:'2020年',
+ note:'男性28.25%・女性17.81%。この統計の対象は45〜54歳です（男女を平均して表示）。',
+ elig:p=>p.age>=45&&p.age<=54,eligNote:'45〜54歳',
+ cats:[['50歳時点で未婚',23.0],['結婚経験あり',77.0]],
+ w:p=>{const m=p.v.marital;let a=p.v.sex===0?28.25:17.81;let b=100-a;if(m===0)a*=30;else b*=1;if(m>0)a*=.04;return [a,b];}},
+{id:'kids',group:1,chip:'子どもの数',short:'子ども',title:'日本人の子どもの数',conf:'approx',
+ lead:'結婚した夫婦の半分は子ども2人。子どもが1人の夫婦は約5組に1組、いない夫婦は約1割です。',
+ src:'国立社会保障・人口問題研究所 出生動向基本調査（夫婦調査）の完結出生児数の分布',year:'2021年（概数）',
+ note:'結婚経験のある40歳以上が対象。夫婦の完結出生児数の分布で、数値は概数です。独立にランダム割りあて。',
+ elig:p=>p.age>=40&&p.v.marital>=1,eligNote:'結婚経験のある40歳以上',
+ cats:[['0人',7.7],['1人',19.7],['2人',50.8],['3人',18.6],['4人以上',3.2]],ord:true},
+{id:'home',group:1,chip:'持ち家',short:'住まい',title:'日本人の持ち家',conf:'ok',
+ lead:'住宅の約61%が持ち家。若い世代ほど借家が多く、高齢になるほど持ち家が増えます。',
+ src:'総務省統計局 住宅・土地統計調査（持ち家住宅率 60.9％）',year:'2023年10月1日現在',
+ note:'居住世帯のある住宅ベースの割合。対象は20歳以上、年齢に応じて割りあて。',
+ elig:p=>p.age>=20,eligNote:'20歳以上',
+ cats:[['持ち家',60.9],['借家など',39.1]],
+ w:p=>{const a=p.age;let f=a<30?.25:a<40?.55:a<50?.8:a<65?1.1:1.3;if(p.v.alone===0)f*=.55;return [f,1];}},
+{id:'pet',group:1,chip:'ペット',short:'ペット',title:'日本人とペット',conf:'approx',
+ lead:'犬か猫を飼っているのはおよそ5〜6人に1人。犬と猫はほぼ同じくらいです。',
+ src:'一般社団法人ペットフード協会 全国犬猫飼育実態調査（飼育率は概数）',year:'2024年（概数）',
+ note:'世帯の飼育率をそのまま人に当てはめた概数。対象は20歳以上、独立にランダム割りあて。',
+ elig:p=>p.age>=20,eligNote:'20歳以上',
+ cats:[['犬を飼っている',9],['猫を飼っている',9],['どちらも飼っていない',82]]},
+{id:'religion',group:1,chip:'信仰',short:'信仰',title:'日本人と信仰',conf:'ok',
+ lead:'「自分は信仰・信心がある」と答える人は約3割。ほとんどの人は初詣やお墓参りはしても、信仰ありとは答えません。',
+ src:'世論調査（国民性調査・NHK意識調査などの紹介資料より、信じている28％）',year:'2013年',
+ note:'調査により2〜3割の幅があります。対象は18歳以上、高齢者でやや多く割りあて。',
+ elig:p=>p.age>=18,eligNote:'18歳以上',
+ cats:[['信仰・信心がある',28],['ない',72]],
+ w:p=>{const a=p.age;return [a<30?.65:a<60?1:1.5,1];}},
+{id:'emp',group:2,chip:'就業状態',short:'就業状態',title:'日本人の働き方',conf:'approx',
+ lead:'15歳以上で働く正規の職員・従業員は約3人に1人。非正規は約5人に1人、仕事についていない人（学生・主婦・高齢者など）は約4割です。',
+ src:'総務省統計局 労働力調査（雇用形態別・自営業主等の人数を15歳以上人口に対する割合に換算）',year:'2024年平均（概数）',
+ note:'対象は15歳以上。概数の組み合わせによる試算。「無職・学生ほか」には失業者・主婦・年金生活者を含みます。',
+ elig:p=>p.age>=15,eligNote:'15歳以上',
+ cats:[['正規の職員・従業員',33.0],['非正規の職員・従業員',19.3],['会社などの役員',3.0],['自営業・家族従業',5.6],['仕事なし（学生・家事・高齢ほか）',39.1]],
+ w:p=>{const f=p.v.sex===1;const t=[[0,[.1,.4,.01,.02,1],[.1,.4,.01,.02,1]],[20,[.5,.4,.01,.03,.35],[.5,.4,.01,.03,.35]],[25,[1,.2,.06,.1,.05],[.5,.5,.02,.06,.35]],[55,[.7,.35,.1,.15,.15],[.3,.5,.02,.08,.5]],[65,[.15,.25,.08,.2,.8],[.05,.2,.02,.08,1]],[75,[.02,.08,.03,.1,3],[.02,.06,.01,.06,3.5]]];
+  const r=row(t,p.age);return f?r[2]:r[1];}},
+{id:'occ',group:2,chip:'職業',short:'職業',title:'日本人の職業',conf:'approx',
+ lead:'もっとも多いのは事務の仕事、次が専門・技術の仕事。農林漁業は約3%と少数派です。',
+ src:'総務省統計局 労働力調査（職業大分類別就業者）の構成比',year:'2024年（概数）',
+ note:'対象は働いている人（正規・非正規・役員・自営）。性別や年齢の偏りは統計の傾向にあわせています。数値は概数。',
+ elig:p=>p.v.emp>=0&&p.v.emp<=3,eligNote:'働いている人',
+ cats:[['管理的職業',2.2],['専門的・技術的',17.8],['事務',18.4],['販売',12.4],['サービス',12.0],['農林漁業',3.0],['生産工程',14.3],['輸送・機械運転',3.4],['建設・採掘',5.1],['運搬・清掃・包装等',6.2],['保安・分類不能など',5.2]],
+ w:p=>{const m=p.v.sex===0,a=p.age;const old=a>=65;return [(m?1.8:.4)*(a<35?.2:1),m?.9:1.15,m?.6:1.6,1,m?.6:1.5,(m?1.2:.7)*(old?3:1),m?1.5:.5,m?2.5:.1,m?2.5:.1,(m?.9:1.1)*(p.v.emp===1?1.6:1)*(old?1.6:1),m?1.2:.7];}},
+{id:'income',group:2,chip:'年収',short:'年収',title:'日本人の年収',conf:'approx',
+ lead:'年収1000万円を超えるのは給与所得者の約5〜6%。100人歩いていたら5人くらいです。いちばん多いのは300〜400万円台。',
+ src:'国税庁 民間給与実態統計調査（令和5年分・男女計の給与階級別）',year:'2023年分',
+ note:'対象は給与所得者（正規・非正規・役員）。300万円超400万円以下16.3%・1000万円超約5.5%などは公表値。他の階級は概数。性別・年齢・就業状態に応じて割りあて。',
+ elig:p=>p.v.emp>=0&&p.v.emp<=2,eligNote:'給与所得者（雇用されている人）',ord:true,
+ cats:[['〜100万円',8.1],['100〜200万円',12.3],['200〜300万円',14.0],['300〜400万円',16.3],['400〜500万円',15.9],['500〜600万円',11.7],['600〜700万円',7.1],['700〜800万円',4.4],['800〜1000万円',4.7],['1000万円超',5.5]],
+ w:p=>{const e=p.v.emp,s=p.v.sex,a=p.age;const base=[[520,390],[260,150],[800,600]][e][s];const af=a<20?.35:a<25?.55:a<30?.8:a<40?.95:a<55?1.15:a<65?1:.65;const mu=Math.log(base*af);
+  const C=[70,150,250,350,450,550,650,750,900,1300];return C.map(c=>gauss(Math.log(c),mu,.6));}},
+{id:'fin2',group:2,chip:'金融資産（二人以上）',short:'金融資産',title:'日本人の金融資産（二人以上世帯）',conf:'est',
+ lead:'二人以上の世帯の約4分の1は、金融資産が「ゼロ」。中央値は350万円前後で、平均よりずっと低くなっています。',
+ src:'金融広報中央委員会／金融経済教育推進機構（J-FLEC） 家計の金融行動に関する世論調査（二人以上世帯）',year:'2024年（階級別は概数）',
+ note:'非保有は約4分の1・中央値約350万円を公表値に合わせた概数です。対象は20歳以上で一人暮らしでない人（世帯の代表として）。',
+ elig:p=>p.age>=20&&p.v.alone===1,eligNote:'20歳以上の同居世帯',ord:true,
+ cats:[['保有なし',23.5],['〜100万円',7.5],['100〜300万円',15.5],['300〜500万円',9.5],['500〜1000万円',14.5],['1000〜2000万円',14.0],['2000万円以上',15.5]],
+ w:p=>finW(p,[1.4,1.1,1,.9,.7,.6],[50,200,400,750,1500,3500])},
+{id:'fin1',group:2,chip:'金融資産（単身）',short:'金融資産(単身)',title:'日本人の金融資産（単身世帯）',conf:'est',
+ lead:'単身世帯では、金融資産が「ゼロ」の人が約3割強。二人以上世帯より、持たない人の割合が高くなります。',
+ src:'金融広報中央委員会／J-FLEC 家計の金融行動に関する世論調査（単身世帯）',year:'2024年（階級別は概数）',
+ note:'非保有が約3割強は公表値、ほかの階級は概数（推計）。対象は20歳以上の一人暮らしの人。',
+ elig:p=>p.age>=20&&p.v.alone===0,eligNote:'20歳以上の一人暮らし',ord:true,
+ cats:[['保有なし',33.6],['〜100万円',12.0],['100〜300万円',13.0],['300〜500万円',7.0],['500〜1000万円',11.0],['1000〜2000万円',10.0],['2000万円以上',13.4]],
+ w:p=>finW(p,[1.6,1.2,1,.9,.7,.6],[50,200,400,750,1500,3500])},
+{id:'edu',group:3,chip:'最終学歴',short:'最終学歴',title:'日本人の最終学歴',conf:'ok',
+ lead:'高校卒がいちばん多く約45%。大学・大学院卒は約26%、4人に1人です。',
+ src:'総務省統計局 令和2年国勢調査（最終卒業学校の種類）',year:'2020年10月1日現在',
+ note:'小学・中学卒（残り）14.1%、高校・旧中44.2%、短大・高専16.2%、大学23.1%、大学院2.4%（卒業者）を正規化。専門学校は国勢調査の区分に従い含まれます。対象は25歳以上。',
+ elig:p=>p.age>=25,eligNote:'25歳以上',ord:true,
+ cats:[['小学・中学卒',14.1],['高校卒',44.2],['短大・高専卒',16.2],['大学卒',23.1],['大学院卒',2.4]],
+ w:p=>{const t=[[25,.1,.9,1,1.5,1.6],[40,.25,1.1,1,1.1,1],[55,.9,1.3,.9,.7,.6],[70,2.2,1.1,.5,.35,.3],[80,4,.9,.3,.2,.15]];const r=row(t,p.age),m=p.v.sex===0;return [r[1],r[2],r[3]*(m?.45:2.2),r[4]*(m?1.3:.75),r[5]*(m?2.2:.45)];}},
+{id:'path',group:3,chip:'高校卒業後の進路',short:'卒業後の進路',title:'高校卒業後の進路',conf:'ok',
+ lead:'高校を卒業した人の約3人に2人が、大学などに進学。就職は約1割です。',
+ src:'文部科学省 学校基本調査（高校卒業者の大学等進学率 65.9％・就職者 9.5％）',year:'2024年度',
+ note:'「専門学校・その他」は残りの割合（専修学校・留学・進路未定など）。対象は18〜24歳で代用しています。',
+ elig:p=>p.age>=18&&p.age<=24,eligNote:'18〜24歳',
+ cats:[['大学・短大などへ進学',65.9],['就職',9.5],['専門学校・その他',24.6]]},
+{id:'hensachi',group:3,chip:'偏差値',short:'偏差値',title:'日本人の偏差値',conf:'ok',
+ lead:'偏差値70以上は約2.3%、60以上は約16%。偏差値は平均50・標準偏差10の正規分布なので、100人なら70以上は2人くらいです。',
+ src:'正規分布（平均50・標準偏差10）から計算',year:'計算値',
+ note:'全国模試の受験生のような母集団を想定した計算です。国民全体の学力分布ではありません。学歴が高い人ほど高めに割りあて。対象は15歳以上。',
+ elig:p=>p.age>=15,eligNote:'15歳以上',ord:true,
+ cats:[['偏差値40未満',15.87],['40〜50',34.13],['50〜60',34.13],['60〜70',13.59],['70以上',2.28]],
+ w:p=>{const e=p.v.edu;const mu=e>=0?[40,46,50,56,63][e]:49;return [34,45,55,65,73].map(c=>gauss(c,mu,8));}},
+{id:'smoke',group:4,chip:'喫煙',short:'喫煙',title:'日本人の喫煙',conf:'ok',
+ lead:'習慣的にたばこを吸う人は約16%。男性は約4人に1人、女性は約14人に1人です。',
+ src:'厚生労働省 国民健康・栄養調査（現在習慣的に喫煙している者 15.7％／男性25.6％・女性6.9％）',year:'2023年',
+ note:'対象は20歳以上。男女差と年齢（若者と高齢者で少なめ）に応じて割りあて。',
+ elig:p=>p.age>=20,eligNote:'20歳以上',
+ cats:[['習慣的に吸う',15.7],['吸わない',84.3]],
+ w:p=>{const a=p.age;const f=a<30?.9:a<70?1.15:.5;return [(p.v.sex===0?25.6:6.9)*f,100];}},
+{id:'drink',group:4,chip:'多量飲酒',short:'飲酒',title:'日本人のお酒の飲みすぎ',conf:'ok',
+ lead:'「生活習慣病のリスクを高める量」を飲酒している人は、男性で約14%、女性で約9.5%。',
+ src:'厚生労働省 国民健康・栄養調査（生活習慣病のリスクを高める量を飲酒している者 男性14.1％・女性9.5％）',year:'2023年',
+ note:'男性は純アルコール40g以上、女性は20g以上が目安。全体の割合は男女の人口比で合成した値。対象は20歳以上。',
+ elig:p=>p.age>=20,eligNote:'20歳以上',
+ cats:[['リスクの高い量を飲酒',11.7],['それ以外',88.3]],
+ w:p=>{const a=p.age;const f=a<25?.5:a<70?1.1:.6;return [(p.v.sex===0?14.1:9.5)*f,100];}},
+{id:'obese',group:4,chip:'肥満（BMI25以上）',short:'肥満',title:'日本人の肥満',conf:'ok',
+ lead:'BMI25以上の「肥満」は20歳以上の男性で約32%、女性で約21%。男性は3人に1人弱です。',
+ src:'厚生労働省 国民健康・栄養調査（肥満者 男性31.5％・女性21.1％）',year:'2023年',
+ note:'対象は20歳以上。全体の割合は男女の人口比で合成。年齢（中高年で多め）に応じて割りあて。',
+ elig:p=>p.age>=20,eligNote:'20歳以上',
+ cats:[['BMI25以上（肥満）',26.1],['BMI25未満',73.9]],
+ w:p=>{const a=p.age;const f=a<30?.6:a<40?.95:a<70?1.2:.7;return [(p.v.sex===0?31.5:21.1)*f,100];}},
+{id:'passport',group:5,chip:'パスポート',short:'パスポート',title:'日本人のパスポート',conf:'ok',
+ lead:'有効なパスポートを持っているのは約6人に1人（約17%）。持っていない人が8割以上です。',
+ src:'外務省 旅券統計（有効旅券数／総人口）',year:'2024年末',
+ note:'有効旅券は約2,077万冊で、保有率は約17%。年齢によって割りあて（20〜50代でやや多め）。',
+ cats:[['持っている',17.0],['持っていない',83.0]],
+ w:p=>{const a=p.age;const f=a<10?.5:a<15?.6:a<20?.7:a<60?1.3:a<70?1:.5;return [f,1];}},
+{id:'license',group:5,chip:'運転免許',short:'運転免許',title:'日本人の運転免許',conf:'ok',
+ lead:'運転免許を持つ人は約8,174万人。16歳以上の4人に3人くらいが持っています。',
+ src:'警察庁 運転免許統計（免許保有者 81,742,303人）／16歳以上人口で割った概算',year:'令和6年末',
+ note:'男性約4,410万人・女性約3,764万人。16歳以上人口に対する割合は概算（約75%）。対象は16歳以上。',
+ elig:p=>p.age>=16,eligNote:'16歳以上',
+ cats:[['免許あり',74.7],['免許なし',25.3]],
+ w:p=>{const a=p.age;const f=a<18?.05:a<20?.5:a<30?.9:a<60?1.15:a<70?1:a<75?.85:a<80?.6:a<85?.4:.2;return [f*(p.v.sex===0?.83:.67),1];}},
+{id:'smart',group:5,chip:'スマホ',short:'スマホ',title:'日本人のスマートフォン',conf:'est',
+ lead:'スマホを持っている人は約8割。世帯では約9割にのぼり、若い世代ではほぼ全員です。',
+ src:'総務省 通信利用動向調査（世帯の保有 90.5％、個人は8割超）',year:'2024年',
+ note:'個人の保有は「8割超」の公表にもとづく概数（約81%）。対象は6歳以上。',
+ elig:p=>p.age>=6,eligNote:'6歳以上',
+ cats:[['持っている',81],['持っていない',19]],
+ w:p=>{const a=p.age;const f=a<10?.25:a<15?.7:a<60?1.15:a<70?1:a<80?.6:.28;return [f,1];}},
+{id:'arrest',group:5,chip:'検挙（年間）',short:'検挙',title:'日本人の「年間の検挙」',conf:'ok',sens:true,
+ lead:'1年間に刑法犯で検挙される人は、人口の約0.15%（人口10万人あたり約148人）。1000人いても1人いるかどうか、100人ならほぼ誰もいません。',
+ src:'法務省 令和6年版犯罪白書（令和5年の刑法犯検挙人員 183,269人）÷ 総務省 人口推計（総人口 123,802千人）',year:'2023年（人口は2024年10月1日）',
+ note:'検挙は有罪を意味しません。人の属性とは無関係にランダムに配置し、個人のプロフィールには出しません。生涯で前科のある人の割合は公的統計がなく、交通違反の罰金も前科になるため推計が難しく、ここでは示しません。',
+ cats:[['その年に検挙された人',0.148],['それ以外',99.852]]},
+{id:'prior',group:5,chip:'検挙者の前科',short:'前科',title:'検挙された人のうち前科がある人',conf:'approx',sens:true,
+ lead:'刑法犯で検挙された成人のうち、道路交通法違反を除く前科のある人は約27%（近年は27〜29%台）。「検挙された人の中での割合」で、国民全体の割合ではありません。',
+ src:'法務省 犯罪白書（有前科者率：20歳以上の刑法犯検挙人員に占める有前科者の比率、道路交通法違反の前科を除く）',year:'近年（概数・令和6年は約26.7%）',
+ note:'対象は「検挙された人」だけなので、ほとんどの人は灰色（対象外）です。人数が少ないと対象者がいません。生涯で前科のある人の割合は公的統計がなく、交通違反の罰金も前科になるため推計が難しく、ここでは示しません。個人には出しません。',
+ elig:p=>p.v.arrest===0&&p.age>=20,eligNote:'その年に検挙された20歳以上の人',
+ cats:[['前科あり（道交法違反を除く）',27],['前科なし',73]]}
+];
+const GROUPS=['ひと','くらし','しごと・お金','まなび','からだ','もの・社会'];
+const BYID={};STATS.forEach(s=>BYID[s.id]=s);
+function finW(p,nz,centers){const a=p.age;const i=a<30?0:a<40?1:a<50?2:a<60?3:a<70?4:5;const mu=[80,250,450,800,1300,1500][i];
+  let adj=1;const inc=p.v.income;if(inc>=0)adj=.7+.12*inc;
+  return [nz[i]].concat(centers.map(c=>gauss(Math.log(c),Math.log(mu*adj),1.1)));}
+/* age8 + 5-year bins */
+const AGE5=[[0,4,3.0],[5,9,3.6],[10,14,4.6],[15,19,4.6],[20,24,4.9],[25,29,4.8],[30,34,4.7],[35,39,5.4],[40,44,5.9],[45,49,8.0],[50,54,7.5],[55,59,6.7],[60,64,7.1],[65,69,5.9],[70,74,6.6],[75,79,7.3],[80,84,5.0],[85,89,3.1],[90,99,1.4]];
+const AGE4=[[0,2],[3,14],[15,16],[17,18]]; // indexes into AGE5 per 4-group
+const AGE8LAB=['0〜14歳','15〜24歳','25〜34歳','35〜44歳','45〜54歳','55〜64歳','65〜74歳','75歳以上'];
+const AGE8IDX=a=>a<15?0:a<25?1:a<35?2:a<45?3:a<55?4:a<65?5:a<75?6:7;
+(function(){const s=BYID.age8;const t=Array(8).fill(0);AGE5.forEach(b=>t[AGE8IDX(b[0])]+=b[2]);const sum=t.reduce((a,b)=>a+b,0);s.cats=AGE8LAB.map((n,i)=>[n,t[i]/sum*100]);s.derive=p=>AGE8IDX(p.age);
+  const s4=BYID.age4;const g=[0,0,0,0];AGE5.forEach(b=>{g[b[0]<15?0:b[0]<65?1:b[0]<75?2:3]+=b[2]});}());
+
+/* ====== colors ====== */
+const NOM=['#0072B2','#E69F00','#009E73','#CC79A7','#D55E00','#56B4E9','#F0E442','#7B4EA3','#8D6E63','#00BFA5','#5C6BC0','#AD1457'];
+const VIR=['#fde725','#b5de2b','#6ece58','#35b779','#1f9e89','#26828e','#31688e','#3e4989','#482878','#440154'];
+const GRAY='#b4b9c4';
+function hex2rgb(h){return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
+function ramp(n){if(n===1)return [VIR[5]];const out=[];for(let i=0;i<n;i++){const t=i/(n-1)*(VIR.length-1);const a=Math.floor(t),b=Math.min(VIR.length-1,a+1),f=t-a;const A=hex2rgb(VIR[a]),B=hex2rgb(VIR[b]);out.push('#'+[0,1,2].map(k=>Math.round(A[k]+(B[k]-A[k])*f).toString(16).padStart(2,'0')).join(''));}return out;}
+STATS.forEach(s=>{s.K=s.cats.length;s.colors=s.ord?ramp(s.K):s.cats.map((_,i)=>NOM[i%NOM.length]);s.rgb=s.colors.map(hex2rgb);
+  const sum=s.cats.reduce((a,c)=>a+c[1],0);s.sum=sum;s.share=s.cats.map(c=>c[1]/sum*100);
+  s.markDark=s.rgb.map(c=>(0.299*c[0]+0.587*c[1]+0.114*c[2])>150);});
+const GRAYRGB=hex2rgb(GRAY);
+const SYM=['●','■','▲','◆','★','✚','▼','⬟','◐','✖','▬','◑'];
+function drawMark(c,k,x,y,r){c.beginPath();switch(k%8){
+ case 0:c.arc(x,y,r,0,6.283);break;
+ case 1:c.rect(x-r*.85,y-r*.85,r*1.7,r*1.7);break;
+ case 2:c.moveTo(x,y-r);c.lineTo(x+r,y+r*.8);c.lineTo(x-r,y+r*.8);c.closePath();break;
+ case 3:c.moveTo(x,y-r*1.1);c.lineTo(x+r*1.1,y);c.lineTo(x,y+r*1.1);c.lineTo(x-r*1.1,y);c.closePath();break;
+ case 4:for(let i=0;i<10;i++){const a=-1.5708+i*.6283,rr=i%2?r*.45:r*1.1;c.lineTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr);}c.closePath();break;
+ case 5:c.moveTo(x-r*.3,y-r);c.lineTo(x+r*.3,y-r);c.lineTo(x+r*.3,y-r*.3);c.lineTo(x+r,y-r*.3);c.lineTo(x+r,y+r*.3);c.lineTo(x+r*.3,y+r*.3);c.lineTo(x+r*.3,y+r);c.lineTo(x-r*.3,y+r);c.lineTo(x-r*.3,y+r*.3);c.lineTo(x-r,y+r*.3);c.lineTo(x-r,y-r*.3);c.lineTo(x-r*.3,y-r*.3);c.closePath();break;
+ case 6:c.moveTo(x,y+r);c.lineTo(x+r,y-r*.8);c.lineTo(x-r,y-r*.8);c.closePath();break;
+ default:c.moveTo(x-r,y-r*.25);c.lineTo(x+r,y-r*.25);c.lineTo(x+r,y+r*.25);c.lineTo(x-r,y+r*.25);c.closePath();break;}
+ c.fill();}
+
+/* ====== population ====== */
+const MAXN=1000;
+const people=[];
+for(let i=0;i<MAXN;i++){people.push({i,x:hash(i,1,2),yr:hash(i,3,4),dir:hash(i,5,6)<.5?-1:1,spd:.7+hash(i,7,8)*.7,ph:hash(i,9,10)*6.28,age:30,v:{},r:180,g:180,b:190,al:1,hair:hash(i,11,12),cane:hash(i,13,14),hat:hash(i,15,16)});}
+let N=100;
+function assignAges(n){
+  // hierarchical largest remainder: 4 official groups -> 10-year bands -> 5-year bins
+  const gs=[0,0,0,0];AGE5.forEach((b,k)=>{gs[k<3?0:k<13?1:k<15?2:3]+=b[2]});
+  const gc=LR(n,gs);const ages=[];
+  const add=(k,c)=>{const b=AGE5[k];for(let j=0;j<c;j++)ages.push(b[0]+Math.floor(hash(k,j,77)*(b[1]-b[0]+1)));};
+  const split=(idx,cnt)=>{const bc=LR(cnt,idx.map(k=>AGE5[k][2]));idx.forEach((k,j)=>add(k,bc[j]));};
+  split([0,1,2],gc[0]);
+  const pairs=[[3,4],[5,6],[7,8],[9,10],[11,12]];
+  const pc=LR(gc[1],pairs.map(q=>AGE5[q[0]][2]+AGE5[q[1]][2]));
+  pairs.forEach((q,j)=>split(q,pc[j]));
+  split([13,14],gc[2]);split([15,16,17,18],gc[3]);
+  const ord=Array.from({length:n},(_,i)=>i).sort((a,b)=>hash(a,31,5)-hash(b,31,5));
+  for(let i=0;i<n;i++)people[ord[i]].age=ages[i];
+}
+function runStat(st,n){
+  const E=[];
+  for(let i=0;i<n;i++){const p=people[i];p.v[st.id]=-1;if(!st.elig||st.elig(p))E.push(i);}
+  st.m=E.length;st.cnt=Array(st.K).fill(0);
+  if(st.derive){E.forEach(i=>{const c=st.derive(people[i]);people[i].v[st.id]=c;st.cnt[c]++;});return;}
+  const m=E.length,K=st.K;if(!m)return;
+  const target=LR(m,st.share);
+  let W=null;
+  if(st.w){W=E.map(i=>st.w(people[i]).map(x=>Math.max(x,1e-6)));
+    const f=Array(K).fill(1);
+    for(let it=0;it<25;it++){const e=Array(K).fill(0);
+      for(let r=0;r<m;r++){const w=W[r];let z=0;for(let c=0;c<K;c++)z+=w[c]*f[c];for(let c=0;c<K;c++)e[c]+=w[c]*f[c]/z;}
+      for(let c=0;c<K;c++)if(target[c]>0&&e[c]>0)f[c]*=target[c]/e[c];}
+    for(let r=0;r<m;r++)for(let c=0;c<K;c++)W[r][c]*=f[c];}
+  const sid=STATS.indexOf(st)+1;
+  const sc=new Float32Array(m*K);
+  for(let r=0;r<m;r++){const i=E[r];for(let c=0;c<K;c++){const u=Math.min(.999999,Math.max(1e-9,hash(i,sid*131+c,9)));const gb=-Math.log(-Math.log(u));sc[r*K+c]=(W?Math.log(W[r][c]):0)+gb;}}
+  const idx=new Uint32Array(m*K);for(let k=0;k<idx.length;k++)idx[k]=k;
+  const arr=Array.from(idx).sort((a,b)=>sc[b]-sc[a]);
+  const left=target.slice(),done=new Uint8Array(m);let rem=m;
+  for(const k of arr){if(!rem)break;const r=(k/K)|0,c=k%K;if(done[r]||left[c]<=0)continue;done[r]=1;left[c]--;rem--;people[E[r]].v[st.id]=c;st.cnt[c]++;}
+}
+function buildPop(n){
+  for(let i=0;i<MAXN;i++)people[i].v={};
+  assignAges(n);
+  for(const st of STATS)runStat(st,n);
+  layoutPeople();
+}
+
+/* ====== state ====== */
+const S={stat:STATS[0],n:100,auto:false,hl:-1,sound:true,tAuto:0,t:0,tab:0,swap:0};
+let audioCtx=null;
+function audio(){if(!S.sound)return null;try{if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();}catch(e){return null;}return audioCtx;}
+function blip(f,d,v,type){const a=audio();if(!a)return;try{const o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f,a.currentTime);o.frequency.exponentialRampToValueAtTime(f*1.5,a.currentTime+d);g.gain.setValueAtTime(v,a.currentTime);g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+d);o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+d+.02);}catch(e){}}
+const sndSelect=()=>{blip(520,.12,.05);setTimeout(()=>blip(780,.14,.04),70);};
+const sndTap=()=>blip(420,.08,.04,'triangle');
+
+/* ====== canvas street ====== */
+const cv=$('#cv'),ctx=cv.getContext('2d');
+let CW=360,CH=250,DPR=1,bg=null,gy0=90,order=[];
+function sizeF(n){return n<=60?1:Math.max(.58,1-.42*Math.log(n/60)/Math.log(1000/60));}
+function resize(){
+  const r=cv.getBoundingClientRect();CW=Math.max(200,Math.round(r.width));CH=Math.max(160,Math.round(r.height));
+  DPR=Math.min(window.devicePixelRatio||1,1.5);
+  cv.width=Math.round(CW*DPR);cv.height=Math.round(CH*DPR);
+  gy0=Math.round(CH*.36);
+  makeBg();layoutPeople();
+}
+function makeBg(){
+  const c=document.createElement('canvas');c.width=Math.round(CW*DPR);c.height=Math.round(CH*DPR);const g=c.getContext('2d');g.scale(DPR,DPR);
+  const sky=g.createLinearGradient(0,0,0,gy0);sky.addColorStop(0,'#bfe3f8');sky.addColorStop(1,'#eaf6fd');g.fillStyle=sky;g.fillRect(0,0,CW,gy0+2);
+  // far buildings
+  const pal=['#c9d6ea','#d8cfe6','#cfe3dc','#e8d9c6','#c6d9ee','#e3d0d0'];
+  let x=-10,k=0;while(x<CW+10){const w=34+hash(k,1,5)*46,h=gy0*(.35+hash(k,2,5)*.6);g.fillStyle=pal[k%pal.length];g.fillRect(x,gy0-h,w,h+2);
+    g.fillStyle='rgba(255,255,255,.65)';for(let yy=gy0-h+7;yy<gy0-8;yy+=11)for(let xx=x+5;xx<x+w-7;xx+=10){if(hash(k,xx|0,yy|0)>.35)g.fillRect(xx,yy,5,6);}
+    x+=w+2+hash(k,3,5)*6;k++;}
+  // sidewalk + crossing
+  const gr=g.createLinearGradient(0,gy0,0,CH);gr.addColorStop(0,'#e5e1d8');gr.addColorStop(1,'#f3f0e8');g.fillStyle=gr;g.fillRect(0,gy0,CW,CH-gy0);
+  g.fillStyle='#d6d2c7';g.fillRect(0,gy0,CW,5);
+  // zebra stripes (scramble crossing)
+  const sw=Math.max(14,CW/22);
+  for(let xx=-sw;xx<CW+sw;xx+=sw*2){g.fillStyle='rgba(255,255,255,.95)';g.beginPath();g.moveTo(xx+sw*.3,gy0+9);g.lineTo(xx+sw*1.3,gy0+9);g.lineTo(xx+sw*1.55,CH);g.lineTo(xx-sw*.15,CH);g.closePath();g.fill();}
+  g.fillStyle='rgba(120,120,130,.12)';g.fillRect(0,gy0+5,CW,4);
+  bg=c;
+}
+function layoutPeople(){
+  const sf=sizeF(N);
+  for(const p of people){
+    p.yy=gy0+14+p.yr*(CH-gy0-18);
+    const t=(p.yy-gy0)/(CH-gy0);
+    p.s=(.52+.78*t)*sf;
+    p.px=p.x*(CW+60)-30;
+  }
+  order=people.slice().sort((a,b)=>a.yy-b.yy);
+}
+function heightScale(a){return a<3?.42:a<6?.52:a<10?.62:a<15?.76:a<19?.93:1;}
+const HAIR=['#2b2623','#3a2f2a','#1d1a1a','#4a3b32','#6b5a52'];
+const SKIN='#f6d7bd';
+function drawPerson(c,p,hl,detail){
+  const sc=p.s*40*heightScale(p.age);
+  const x=p.px,y=p.yy;
+  const sp=Math.sin(p.ph);const bob=Math.abs(sp)*sc*.03;
+  const old=p.age>=75;
+  const R=p.r|0,G=p.g|0,B=p.b|0;
+  const kid=p.age<12;
+  const hr=sc*(kid?.17:.13);
+  const hx=x+(old?p.dir*sc*.05:0),hy=y-sc*.82-bob;
+  if(p.al!==1)c.globalAlpha=p.al;
+  if(detail){c.fillStyle='rgba(60,60,80,.16)';c.beginPath();c.ellipse(x,y,sc*.2,sc*.06,0,0,6.283);c.fill();}
+  if(hl){c.fillStyle='rgba(255,211,77,.55)';c.beginPath();c.ellipse(x,y,sc*.34,sc*.1,0,0,6.283);c.fill();c.strokeStyle='#ffb300';c.lineWidth=2;c.stroke();}
+  // legs
+  c.strokeStyle='#39425a';c.lineWidth=Math.max(1,sc*.07);c.lineCap='round';
+  c.beginPath();c.moveTo(x-sc*.05,y-sc*.3-bob);c.lineTo(x-sc*.05+sp*sc*.13,y);c.moveTo(x+sc*.05,y-sc*.3-bob);c.lineTo(x+sc*.05-sp*sc*.13,y);c.stroke();
+  // arms
+  if(detail){c.strokeStyle='rgba(' + R + ',' + G + ',' + B + ',1)';c.lineWidth=Math.max(1,sc*.06);c.beginPath();c.moveTo(x-sc*.14,y-sc*.62-bob);c.lineTo(x-sc*.14-sp*sc*.09,y-sc*.4);c.moveTo(x+sc*.14,y-sc*.62-bob);c.lineTo(x+sc*.14+sp*sc*.09,y-sc*.4);c.stroke();}
+  if(old&&p.cane>.4){c.strokeStyle='#7a5a3a';c.lineWidth=Math.max(1,sc*.045);c.beginPath();c.moveTo(x+p.dir*sc*.2,y-sc*.38);c.lineTo(x+p.dir*sc*.22,y);c.stroke();}
+  // body
+  c.fillStyle='rgb('+R+','+G+','+B+')';c.strokeStyle='rgba(20,25,40,.45)';c.lineWidth=Math.max(.6,sc*.025);
+  const bw=sc*(kid?.3:.32),bt=y-sc*.66-bob,bh=sc*.4;
+  c.beginPath();c.rect(x-bw/2,bt,bw,bh);c.fill();c.stroke();
+  // head
+  c.fillStyle=SKIN;c.beginPath();c.arc(hx,hy,hr,0,6.283);c.fill();
+  c.fillStyle=HAIR[(p.hair*5)|0];
+  if(old){c.fillStyle='#d9d9df';}
+  c.beginPath();c.arc(hx,hy-hr*.1,hr*1.05,3.14159,6.283);c.fill();
+  if(p.v.sex===1&&p.age>=8){c.beginPath();c.rect(hx-hr*1.05,hy-hr*.15,hr*.45,hr*(old?1.1:1.9));c.rect(hx+hr*.6,hy-hr*.15,hr*.45,hr*(old?1.1:1.9));c.fill();}
+  if(detail&&sc>20){c.fillStyle='#2a2a33';c.beginPath();c.arc(hx+p.dir*hr*.35-hr*.3,hy+hr*.1,hr*.11,0,6.283);c.arc(hx+p.dir*hr*.35+hr*.3,hy+hr*.1,hr*.11,0,6.283);c.fill();}
+  c.globalAlpha=1;
+}
+function colorTarget(p,st){const v=p.v[st.id];return v<0?GRAYRGB:st.rgb[v];}
+function update(dt){
+  S.t+=dt;
+  const st=S.stat,n=S.n,k=1-Math.exp(-dt*4.5);
+  for(let i=0;i<MAXN;i++){const p=people[i];
+    if(i<n){
+      p.px+=p.dir*p.spd*34*p.s*dt;
+      if(p.px>CW+30)p.px=-30;else if(p.px<-30)p.px=CW+30;
+      p.ph+=dt*p.spd*(7+p.s*3)*(p.age<8?1.3:p.age>=75?.6:1);
+      const t=colorTarget(p,st);p.r+=(t[0]-p.r)*k;p.g+=(t[1]-p.g)*k;p.b+=(t[2]-p.b)*k;
+      const v=p.v[st.id];const ta=S.hl===-1?1:(S.hl===-2?(v<0?1:.2):(v===S.hl?1:.2));p.al+=(ta-p.al)*k;
+    }}
+  if(S.auto){S.tAuto+=dt;if(S.tAuto>=8){S.tAuto=0;nextStat();}}
+}
+let lastDrawMs=0;
+function draw(){
+  const t0=performance.now();
+  ctx.setTransform(DPR,0,0,DPR,0,0);ctx.drawImage(bg,0,0,CW,CH);
+  const n=S.n,st=S.stat,detail=n<=400;
+  for(const p of order){if(p.i>=n)continue;
+    const hl=S.hl>=0&&p.v[st.id]===S.hl;
+    drawPerson(ctx,p,hl,detail);
+    if(n<=300&&p.s*40>=24){const v=p.v[st.id];if(v>=0&&p.al>.5){const sc=p.s*40*heightScale(p.age);ctx.fillStyle=st.markDark[v]?'#1b1f2a':'#fff';drawMark(ctx,v,p.px,p.yy-sc*.46,sc*.075);}}
+  }
+  lastDrawMs=performance.now()-t0;
+}
+let lastT=0,raf=0;
+function loop(t){const dt=Math.min(.05,(t-lastT)/1000||0);lastT=t;update(dt);draw();raf=requestAnimationFrame(loop);}
+
+/* ====== UI ====== */
+const fmtPct=v=>v<1?v.toFixed(2).replace(/0$/,''):v<10?v.toFixed(1):v.toFixed(1);
+const pctStr=v=>(v>=10?v.toFixed(1):v>=1?v.toFixed(1):v.toFixed(2).replace(/0+$/,'').replace(/\.$/,''))+'%';
+function mkSwatch(cv2,color,k,gray){const g=cv2.getContext('2d');const d=window.devicePixelRatio>1?2:1;cv2.width=24*d;cv2.height=24*d;g.scale(d,d);g.fillStyle=color;g.beginPath();g.arc(12,12,11,0,6.283);g.fill();g.strokeStyle='rgba(20,25,40,.5)';g.lineWidth=1;g.stroke();
+  if(!gray){const rgb=hex2rgb(color);const dark=(0.299*rgb[0]+0.587*rgb[1]+0.114*rgb[2])>150;g.fillStyle=dark?'#1b1f2a':'#fff';drawMark(g,k,12,12,5);}}
+function renderHead(){
+  const st=S.stat;
+  $('#hTitle').innerHTML=st.title.replace(/^(日本人の|日本に住む|日本人と)/,'<span style="font-size:.62em;font-weight:700;color:var(--mute)">$1</span>');
+  $('#hLead').textContent=st.lead;
+  const tag={ok:['公表値',''],approx:['概数','approx'],est:['推計','est']}[st.conf];
+  $('#hMeta').innerHTML='<span class="tag '+tag[1]+'">'+tag[0]+'</span>出典：'+esc(st.src)+'（'+esc(st.year)+'）';
+  $('#hNote').textContent=(st.eligNote?'対象：'+st.eligNote+'。':'対象：全員。')+(st.note||'');
+}
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function renderTabs(){
+  $('#tabs').innerHTML=GROUPS.map((g,i)=>'<button role="tab" aria-selected="'+(i===S.tab)+'" data-g="'+i+'">'+g+'</button>').join('');
+  $('#chips').innerHTML=STATS.filter(s=>s.group===S.tab).map(s=>'<button data-id="'+s.id+'" aria-pressed="'+(s===S.stat)+'">'+esc(s.chip)+'</button>').join('');
+}
+function renderLegend(){
+  const st=S.stat;let h='';
+  st.cats.forEach((c,i)=>{h+='<button class="lg" data-k="'+i+'" aria-pressed="'+(S.hl===i)+'"><canvas></canvas><span class="nm">'+esc(c[0])+'</span><span class="pc">'+pctStr(st.share[i])+'</span><span class="ct">'+st.cnt[i]+'人</span></button>';});
+  const out=S.n-st.m;
+  if(st.elig||out>0)h+='<button class="lg'+(out?'':' dim')+'" data-k="-2" aria-pressed="'+(S.hl===-2)+'"><canvas></canvas><span class="nm">対象外（'+esc(st.eligNote||'')+'以外）</span><span class="pc">—</span><span class="ct">'+out+'人</span></button>';
+  $('#lgRows').innerHTML=h;
+  const cs=$('#lgRows').querySelectorAll('canvas');
+  st.cats.forEach((c,i)=>mkSwatch(cs[i],st.colors[i],i,false));
+  if(cs[st.cats.length])mkSwatch(cs[st.cats.length],GRAY,0,true);
+  $('#legNote').textContent='対象者 '+st.m+'人 ／ 画面にいる人 '+S.n+'人';
+  $('#cvBadge').textContent='いま '+S.n+'人';
+}
+function updateCounts(){
+  const st=S.stat;const rows=$('#lgRows').querySelectorAll('.lg');
+  st.cats.forEach((c,i)=>{if(rows[i]){rows[i].querySelector('.ct').textContent=st.cnt[i]+'人';rows[i].setAttribute('aria-pressed',S.hl===i);}});
+  const o=rows[st.cats.length];if(o){o.querySelector('.ct').textContent=(S.n-st.m)+'人';o.setAttribute('aria-pressed',S.hl===-2);}
+}
+function renderVillage(){
+  const st=S.stat;const frac=S.n?st.m/S.n:1;const m100=Math.round(100*frac);
+  const cnt=LR(m100,st.share);
+  let h='<div id="villageT">🏘 100人の村なら'+(m100<100?'（対象は'+m100+'人、残り'+(100-m100)+'人は対象外）':'')+'</div>';
+  st.cats.forEach((c,i)=>{if(cnt[i]>0)h+='<span class="v"><b>'+esc(c[0])+'</b> '+cnt[i]+'人</span>';});
+  if(!m100)h+='この人数では対象者がいません';
+  $('#village').innerHTML=h;
+}
+function renderCount(){
+  $('#cnt').textContent=S.n+'人';
+  $('#pre').innerHTML=[10,50,100,300,1000].map(v=>'<button data-n="'+v+'" aria-pressed="'+(v===S.n)+'">'+v+'人</button>').join('');
+}
+const sliderToN=v=>Math.round(10*Math.pow(100,v/100));
+const nToSlider=n=>Math.round(Math.log(n/10)/Math.log(100)*100);
+function refresh(full){
+  if(full){renderHead();renderTabs();renderLegend();renderVillage();}
+  else{updateCounts();renderVillage();$('#legNote').textContent='対象者 '+S.stat.m+'人 ／ 画面にいる人 '+S.n+'人';$('#cvBadge').textContent='いま '+S.n+'人';}
+}
+function setCount(n,silent){
+  n=clamp(Math.round(n),10,MAXN);S.n=n;N=n;
+  buildPop(n);
+  $('#slider').value=nToSlider(n);renderCount();
+  renderLegend();renderVillage();
+  lsSet('toukei_n',String(n));
+}
+function select(id,opts){
+  const st=typeof id==='number'?STATS[id]:BYID[id];if(!st)return false;
+  S.stat=st;S.hl=-1;S.tab=st.group;
+  const hi=$('#headIn');hi.classList.add('out');
+  setTimeout(()=>{renderHead();hi.classList.remove('out');},opts&&opts.instant?0:160);
+  if(opts&&opts.instant)renderHead();
+  renderTabs();renderLegend();renderVillage();
+  if(!(opts&&opts.quiet))sndSelect();
+  lsSet('toukei_stat',st.id);
+  return true;
+}
+function nextStat(){const i=STATS.indexOf(S.stat);select((i+1)%STATS.length,{});}
+function setAuto(b){S.auto=!!b;S.tAuto=0;const bt=$('#autoBtn');bt.setAttribute('aria-pressed',S.auto);bt.textContent=S.auto?'🤖 オート中':'🤖 オート';}
+function manual(){if(S.auto)setAuto(false);}
+function setSound(b,quiet){S.sound=!!b;$('#sndBtn').setAttribute('aria-pressed',S.sound);$('#sndBtn').textContent=S.sound?'🔊':'🔇';lsSet('toukei_snd',S.sound?'1':'0');if(S.sound&&!quiet){audio();blip(600,.1,.04);}}
+function setHl(k){S.hl=(S.hl===k)?-1:k;updateCounts();}
+
+/* profile */
+function profile(i){
+  const p=people[i];if(!p)return null;
+  const items=[];
+  items.push({id:'age',k:'年齢',v:p.age+'歳'});
+  STATS.forEach(st=>{if(st.sens||st.id==='age4'||st.id==='age8')return;const v=p.v[st.id];items.push({id:st.id,k:st.short,v:v<0?null:st.cats[v][0]});});
+  const g=id=>{const st=BYID[id];const v=p.v[id];return v<0?null:st.cats[v][0];};
+  const parts=[p.age+'歳',g('sex'),g('region')+'在住'];
+  const e=g('edu');if(e)parts.push(e.replace('卒','')+'卒');
+  const j=g('emp');if(j&&p.v.emp<4)parts.push(j.replace('の職員・従業員','').replace('会社などの','').replace('自営業・家族従業','自営業'));
+  const inc=g('income');if(inc)parts.push('年収'+inc);
+  const mr=g('marital');if(mr)parts.push(mr.replace('（有配偶）',''));
+  return {index:i,age:p.age,summary:parts.join('・'),items};
+}
+function openProfile(i){
+  const pr=profile(i);if(!pr)return;
+  $('#sheetT').textContent=pr.summary;
+  $('#sheetSub').textContent='だれかさん #'+(i+1)+'（ランダムに作った架空の人）';
+  $('#pf').innerHTML=pr.items.map(it=>'<div class="'+(it.v?'':'na')+'"><span>'+esc(it.k)+'</span><span>'+(it.v?esc(it.v):'対象外')+'</span></div>').join('');
+  $('#sheet').hidden=false;sndTap();$('#sheetBox').focus({preventScroll:true});
+}
+function closeSheet(){$('#sheet').hidden=true;}
+
+/* ====== events ====== */
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-g]');if(!b)return;manual();S.tab=+b.dataset.g;renderTabs();});
+$('#chips').addEventListener('click',e=>{const b=e.target.closest('button[data-id]');if(!b)return;manual();audio();select(b.dataset.id);});
+$('#lgRows').addEventListener('click',e=>{const b=e.target.closest('.lg');if(!b)return;manual();audio();setHl(+b.dataset.k);sndTap();});
+$('#pre').addEventListener('click',e=>{const b=e.target.closest('button[data-n]');if(!b)return;manual();audio();setCount(+b.dataset.n);sndTap();});
+let slT=0;
+$('#slider').addEventListener('input',e=>{manual();const n=sliderToN(+e.target.value);$('#cnt').textContent=n+'人';cancelAnimationFrame(slT);slT=requestAnimationFrame(()=>setCount(n));});
+$('#autoBtn').addEventListener('click',()=>{audio();setAuto(!S.auto);});
+$('#sndBtn').addEventListener('click',()=>setSound(!S.sound));
+$('#sheetClose').addEventListener('click',closeSheet);
+$('#sheet').addEventListener('click',e=>{if(e.target.id==='sheet')closeSheet();});
+function hitTest(px,py){
+  for(let k=order.length-1;k>=0;k--){const p=order[k];if(p.i>=S.n)continue;const sc=p.s*40*heightScale(p.age);
+    const rx=Math.max(sc*.28,9),top=p.yy-sc*1.0-4,bot=p.yy+4;
+    if(Math.abs(px-p.px)<=rx&&py>=top&&py<=bot)return p.i;}
+  return -1;
+}
+cv.addEventListener('click',e=>{const r=cv.getBoundingClientRect();const i=hitTest((e.clientX-r.left)*CW/r.width,(e.clientY-r.top)*CH/r.height);if(i>=0){manual();openProfile(i);}});
+addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeSheet();return;}
+  const t=e.target&&e.target.tagName;if(t==='INPUT'&&e.target.type!=='range')return;
+  if(e.key==='o'||e.key==='O'){audio();setAuto(!S.auto);e.preventDefault();return;}
+});
+addEventListener('resize',resize);
+
+/* ====== hooks ====== */
+function state(){const st=S.stat;return {stat:st.id,title:st.title,count:S.n,eligible:st.m,ineligible:S.n-st.m,cats:st.cats.map((c,i)=>({name:c[0],share:st.share[i],count:st.cnt[i]})),counts:st.cnt.slice(),hl:S.hl,auto:S.auto,sound:S.sound,drawMs:lastDrawMs};}
+function list(){return STATS.map(s=>({id:s.id,title:s.title,group:GROUPS[s.group],cats:s.K,sum:Math.round(s.sum*1000)/1000,sumOk:Math.abs(s.sum-100)<0.6,hasSource:!!(s.src&&s.src.length>3&&s.year),src:s.src,year:s.year,conf:s.conf,elig:s.eligNote||'全員',sens:!!s.sens,shares:s.cats.map(c=>[c[0],c[1]])}));}
+window.__toukei={state,list,select:id=>select(id,{quiet:true,instant:true}),setCount:n=>setCount(n),setAuto,step:dt=>{update(dt);draw();},profile,setHighlight:k=>{S.hl=k;updateCounts();},openProfile,
+  lr:LR,personAt:i=>{const p=people[i];return {x:p.px,y:p.yy,age:p.age,v:Object.assign({},p.v)};},stats:()=>STATS.map(s=>s.id)};
+
+/* ====== init ====== */
+(function init(){
+  const sn=lsGet('toukei_snd');setSound(sn!=='0',true);
+  let n0=parseInt(lsGet('toukei_n')||'100',10);if(!(n0>=10&&n0<=1000))n0=100;
+  const id0=lsGet('toukei_stat');
+  S.stat=BYID[id0]||STATS[0];S.tab=S.stat.group;
+  resize();
+  setCount(n0);
+  renderHead();renderTabs();renderLegend();renderVillage();
+  raf=requestAnimationFrame(loop);
+})();
+</script>
+<!-- zoom guard: ピンチ・ダブルタップでズームしない -->
+<script>(function(){var p=function(e){e.preventDefault();};['gesturestart','gesturechange','gestureend'].forEach(function(t){document.addEventListener(t,p,{passive:false});});document.addEventListener('touchmove',function(e){if(e.touches&&e.touches.length>1)e.preventDefault();},{passive:false});document.addEventListener('dblclick',function(e){var t=e.target;if(t&&t.closest&&t.closest('input,textarea,select,[contenteditable]'))return;e.preventDefault();},{passive:false});})();</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+
+</body>
+</html>
