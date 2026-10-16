@@ -23,8 +23,8 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 #top h1{flex:1;min-width:0;margin:0;text-align:center;font-size:14px;white-space:nowrap;font-family:"Dela Gothic One",sans-serif;color:var(--blood);letter-spacing:.02em;text-shadow:0 0 8px #E0344A66}
 .mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--card);cursor:pointer;white-space:nowrap}
 .mini[aria-pressed=true]{background:var(--red);border-color:var(--red)}
-#wrap{position:relative;width:min(100%,max(300px,calc((100vh - 270px)*.75)));margin:0 auto}
-#cv{display:block;width:100%;aspect-ratio:3/4;border-radius:14px;background:#222;touch-action:none}
+#wrap{position:relative;width:min(100%,max(230px,calc((100vh - 258px)*.6667)));width:min(100%,max(230px,calc((100dvh - 258px)*.6667)));margin:0 auto}
+#cv{display:block;width:100%;aspect-ratio:2/3;border-radius:14px;background:#222;touch-action:none}
 #skipBtn{position:absolute;right:10px;bottom:10px;z-index:4;border:1px solid #fff6;border-radius:999px;background:#0008;color:#fff;font-weight:800;font-size:12px;padding:6px 12px;cursor:pointer}
 #pad{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px}
 #stick{position:relative;width:126px;height:126px;flex:none;border-radius:50%;background:var(--card);border:2px solid var(--line);touch-action:none}
@@ -74,7 +74,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     <button class="mini" id="muteBtn">音 ON</button>
   </div>
   <div id="wrap">
-    <canvas id="cv" width="360" height="480" aria-label="夏の夜。蚊になったダイソンを操作して、人間の血を吸う"></canvas>
+    <canvas id="cv" width="360" height="540" aria-label="夏の夜。蚊になったダイソンを操作して、人間の血を吸う"></canvas>
     <button id="skipBtn" hidden>スキップ ▶▶</button>
     <div class="ov" id="storyOv">
       <div class="card">
@@ -125,7 +125,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 const $=id=>document.getElementById(id);
 let seed=(Date.now()%2147483646)+1; const rnd=()=>{ seed=seed*16807%2147483647; return (seed-1)/2147483646; };
 const clamp=(v,a,b)=>v<a?a:v>b?b:v, rr=(a,b)=>a+(b-a)*rnd(), D=(ax,ay,bx,by)=>Math.hypot(ax-bx,ay-by);
-const W=360,H=480,TOP=44, AREA={x0:20,x1:340,y0:TOP+30,y1:H-24};
+const W=360,H=540,TOP=44, AREA={x0:20,x1:340,y0:TOP+30,y1:H-24};
 
 /* ---------- units: blood in ml ---------- */
 function ml(v){ v=Math.max(0,v||0); if(v<10) return v.toFixed(1)+'ml'; if(v<1000) return Math.floor(v)+'ml';
@@ -180,7 +180,7 @@ const TY={
   singer:{n:'国歌斉唱の歌手',rare:1,sens:.8,pool:260,wu:.9,sp:12,top:'#7A2AB8',bot:'#7A2AB8',hair:'#E8C84A',long:1,ab:[['utahime',1],['song',3]]},
   staff:{n:'会場スタッフ',sens:.9,pool:250,wu:.8,sp:18,hunt:'spray',eye:80,top:'#FF8A2A',bot:'#3A3A4A',hair:'#2A2A2A',hat:'#FF8A2A',ab:[['sta',2]]},
   secur:{n:'警備員',sens:.9,pool:280,wu:.8,sp:18,hunt:'racket',eye:74,top:'#2A3A6A',bot:'#2A3A6A',hair:'#1A1A22',hat:'#2A3A6A',ab:[['pow',2],['luck',1]]},
-  king:{n:'王様',pose:'lie',sz:1.7,rare:1,sens:.45,pool:9000,wu:.9,top:'#B8202A',bot:'#E8C83A',hair:'#E8E8E8',crown:1,ab:[['ouki',1],['pow',3],['brain',3]]},
+  king:{n:'王様',pose:'lie',sz:1.5,rare:1,sens:.45,pool:9000,wu:.9,top:'#B8202A',bot:'#E8C83A',hair:'#E8E8E8',crown:1,ab:[['ouki',1],['pow',3],['brain',3]]},
   maid:{n:'メイド',sens:.9,pool:300,wu:.8,sp:20,hunt:'spray',eye:82,top:'#222230',bot:'#222230',hair:'#5A3A2A',hat:'#FFFFFF',ab:[['dex',2],['luck',1]]},
   guard:{n:'近衛兵',sens:.9,pool:340,wu:.7,sp:20,hunt:'racket',eye:78,top:'#B8202A',bot:'#2A2A3A',hair:'#2A2A2A',hat:'#E8C83A',ab:[['pow',3],['sta',2]]},
 };
@@ -220,6 +220,9 @@ const STAGES=[
   intro:'最終章。夏の夜明け前、とある寝室。\n\n巨大ないびきをかいて眠るのは、あの「王様」。\n（宇宙をつかさどっていた王様は、この宇宙では、ただの人間に生まれ変わっていた）\n\nメイドと近衛兵が、その眠りを守っている。',
   tip:'王様の血には、ありえないほどの力が流れている。王の器を吸えば、ぜんぶの能力が+2。禁忌を使うなら、ここだ。'},
 ];
+/* stage layouts were drawn for a 480px-high field: stretch them to the taller one */
+const KY=(H-TOP)/(480-TOP), SY=y=>TOP+(y-TOP)*KY;
+for(const st of STAGES){ for(const o of [...(st.slots||[]),...(st.coil||[]),...(st.fan||[])]) o.y=SY(o.y); }
 /* ---------- shop ---------- */
 const supOf=l=>5*Math.pow(2.8,l-1), stlOf=l=>Math.pow(.72,l-1), quietOf=l=>Math.pow(.6,l-1), slapR=l=>Math.round(25-2.5*(l-1));
 const SK=[
@@ -262,7 +265,7 @@ const susRate=(n,key)=>.24*n.t.sens*SPOT[key].sus*EF.susM*(n.alert>0?1.35:1);
 const STAGE=()=>STAGES[S.stage];
 
 /* ---------- people ---------- */
-function mkHuman(key,x,y,slot){ const t=TY[key], st=STAGE(), pool=t.pool*st.bm*rr(.85,1.15), sz=t.sz||(t.pose==='lie'?1:1.15);
+function mkHuman(key,x,y,slot){ const t=TY[key], st=STAGE(), pool=t.pool*st.bm*rr(.85,1.15), sz=(t.sz||1)*(t.pose==='lie'?1.3:1.5);
   const sp=['face','neck']; if(!t.longSleeve) sp.push('armL','armR'); sp.push('legL','legR');
   const n={id:nid++,k:key,t,x,y,hx:x,hy:y,tx:x,ty:y,pool,blood:pool,bt:pickBT(),sus:0,alert:0,drained:false,dT:0,leaving:false,slapping:false,idle:rr(0,2),
     ab:t.ab.map(a=>({id:a[0],v:a[1]})),abp:0,dizzy:0,cd:rr(1.5,3.5),life:rr(35,60),ph:rnd()*6.28,slot,sz,aim:0,gone:false,hunt:t.hunt||null,eye:t.eye||0,spots:sp,pop:0};
@@ -612,7 +615,7 @@ function bg(){ const st=STAGE(), t=S.t;
   else if(st.bg==='camp'){ const gr=g.createLinearGradient(0,0,0,TOP+30); gr.addColorStop(0,'#0A1230'); gr.addColorStop(1,'#1A2A4A'); g.fillStyle=gr; g.fillRect(0,0,W,TOP+30);
     g.fillStyle='#fff'; for(let i=0;i<30;i++){ g.globalAlpha=.4+.5*hash(i,3)*Math.abs(Math.sin(t+i)); g.fillRect(hash(i)*W,hash(i,2)*(TOP+20),1.5,1.5); } g.globalAlpha=1;
     for(const [x,y] of [[40,TOP+70],[320,TOP+66],[40,H-60],[322,H-70]]){ g.fillStyle='#C86A3A'; g.beginPath(); g.moveTo(x-22,y+16); g.lineTo(x,y-18); g.lineTo(x+22,y+16); g.fill(); g.fillStyle='#4A2A1A'; g.beginPath(); g.moveTo(x-6,y+16); g.lineTo(x,y-2); g.lineTo(x+6,y+16); g.fill(); }
-    const fx=180, fy=258; const gl=g.createRadialGradient(fx,fy,4,fx,fy,70); gl.addColorStop(0,'rgba(255,170,60,.55)'); gl.addColorStop(1,'rgba(255,120,30,0)'); g.fillStyle=gl; g.fillRect(fx-70,fy-70,140,140);
+    const fx=180, fy=SY(258); const gl=g.createRadialGradient(fx,fy,4,fx,fy,70); gl.addColorStop(0,'rgba(255,170,60,.55)'); gl.addColorStop(1,'rgba(255,120,30,0)'); g.fillStyle=gl; g.fillRect(fx-70,fy-70,140,140);
     g.fillStyle='#5A3A1A'; g.fillRect(fx-12,fy+2,24,5); g.fillStyle='#FF8A2A'; g.beginPath(); g.moveTo(fx-9,fy+3); g.quadraticCurveTo(fx-3+Math.sin(t*9)*2,fy-14,fx,fy-20-Math.sin(t*7)*3); g.quadraticCurveTo(fx+4,fy-10,fx+9,fy+3); g.fill(); g.fillStyle='#FFD84A'; g.beginPath(); g.moveTo(fx-4,fy+3); g.quadraticCurveTo(fx,fy-10,fx+4,fy+3); g.fill(); }
   else if(st.bg==='matsuri'){ g.fillStyle='#14102A'; g.fillRect(0,0,W,TOP+34); g.strokeStyle='#8A6A4A'; g.lineWidth=1.5; g.beginPath(); g.moveTo(0,TOP+4); g.quadraticCurveTo(180,TOP+30,360,TOP+4); g.stroke();
     for(let i=0;i<9;i++){ const x=i*45+8, y=TOP+6+Math.sin(i/8*3.14)*20; g.fillStyle=i%2?'#E0443A':'#F2C23A'; g.beginPath(); g.ellipse(x,y+8,8,10,0,0,7); g.fill(); g.fillStyle='rgba(255,220,120,.18)'; g.beginPath(); g.arc(x,y+8,22,0,7); g.fill(); }
@@ -692,7 +695,7 @@ function drawHuman(n){
   g.restore();
   // exposed spots
   for(const key of n.spots){ const pos=spotPos(n,key); if(drained) continue; const biting=S.p&&S.p.landed&&S.p.landed.n===n&&S.p.landed.key===key;
-    g.fillStyle=biting?'#E0344A':`rgba(255,120,150,${.45+.25*Math.sin(S.t*4+pos.x)})`; g.beginPath(); g.arc(pos.x,pos.y,biting?3.4:2.4,0,7); g.fill(); }
+    g.fillStyle=biting?'#E0344A':`rgba(255,120,150,${.45+.25*Math.sin(S.t*4+pos.x)})`; g.beginPath(); g.arc(pos.x,pos.y,biting?5:3.6,0,7); g.fill(); }
   // gauge + bubble + tags
   const top=y-(lie?24*s:36*s)-2;
   if(n.sus>.02&&!drained){ g.fillStyle='#000a'; g.fillRect(x-14,top-4,28,5); g.fillStyle=n.sus>.8?'#FF3A3A':n.sus>.55?'#FFA02A':'#F2D23A'; g.fillRect(x-13,top-3,26*Math.min(1,n.sus),3); }
@@ -726,16 +729,16 @@ function drawMosq(x,y,sc,face,mode){ // mode: {land:angle} or null. facing +x
 function drawPlayer(){
   const p=S.p; if(p.dead) return; if(p.inv>0&&Math.floor(p.inv*14)%2&&!p.vamp) return;
   let x=p.x, y=p.y; g.save(); if(S.invis>0) g.globalAlpha=.3+.1*Math.sin(S.t*10);
-  const sc=p.vamp>0?2.8:1.2;
+  const sc=p.vamp>0?4.6:2.2;
   if(p.vamp>0){ g.fillStyle='rgba(224,52,74,.12)'; g.beginPath(); g.arc(x,y,105,0,7); g.fill(); g.strokeStyle='rgba(255,120,140,.6)'; g.setLineDash([5,5]); g.lineWidth=2; g.beginPath(); g.arc(x,y,105,0,7); g.stroke(); g.setLineDash([]); }
-  g.fillStyle='rgba(0,0,0,.25)'; if(!p.landed){ g.beginPath(); g.ellipse(x,y+16*sc,7*sc,2.2*sc,0,0,7); g.fill(); }
+  g.fillStyle='rgba(0,0,0,.25)'; if(!p.landed){ g.beginPath(); g.ellipse(x,y+9*sc,7*sc,2.2*sc,0,0,7); g.fill(); }
   p.full=Math.min(1,(S.fullT||0)/Math.max(30,STAGE().bm*10*supOf(S.lv.sup)/5));
-  if(p.landed){ const sp=spotPos(p.landed.n,p.landed.key); const rot=p.face>0?1.0:1.0; const tipx=(Math.cos(rot)*22-Math.sin(rot)*2.6)*1.1/.95, tipy=(Math.sin(rot)*22+Math.cos(rot)*2.6)*1.1/.95; const fc=p.landed.n.x>sp.x?-1:1;
-    const cx=sp.x-(fc>0?tipx:-tipx)*.95, cy=sp.y-tipy*.95; drawMosq(cx,cy-0.5,1.1,fc,{rot:rot}); g.fillStyle='rgba(224,52,74,.35)'; g.beginPath(); g.arc(sp.x,sp.y,6+Math.sin(S.t*20)*1.2,0,7); g.fill(); }
+  if(p.landed){ const sp=spotPos(p.landed.n,p.landed.key); const rot=p.face>0?1.0:1.0; const LS=2.0, tipx=(Math.cos(rot)*22-Math.sin(rot)*2.6)*LS, tipy=(Math.sin(rot)*22+Math.cos(rot)*2.6)*LS; const fc=p.landed.n.x>sp.x?-1:1;
+    const cx=sp.x-(fc>0?tipx:-tipx), cy=sp.y-tipy; drawMosq(cx,cy,LS,fc,{rot:rot}); g.fillStyle='rgba(224,52,74,.35)'; g.beginPath(); g.arc(sp.x,sp.y,8+Math.sin(S.t*20)*1.5,0,7); g.fill(); }
   else { const bob=Math.sin(S.t*14)*1.2; drawMosq(x,y+bob,sc,p.face,{rot:p.stun>0?1.2:0}); }
   g.restore();
   if(p.vamp>0){ g.save(); g.font='800 12px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.fillStyle='#FFB0C0'; g.fillText(`🧛 ${Math.ceil(p.vamp)}秒`,x,y-48); g.restore(); }
-  if(S.bun>0){ g.save(); g.globalAlpha=.55; drawMosq(x-18,y-10,.8,p.face,null); drawMosq(x+18,y+8,.8,p.face,null); g.restore(); }
+  if(S.bun>0){ g.save(); g.globalAlpha=.55; drawMosq(x-34,y-18,1.7,p.face,null); drawMosq(x+34,y+14,1.7,p.face,null); g.restore(); }
   // sucking beam toward victim spot
   if(p.landed&&Math.random()<.5){ }
 }
@@ -788,7 +791,7 @@ function drawHud(){
 }
 
 /* ---------- opening ---------- */
-function drawOpening(){ const t=S.opT; g.fillStyle='#000'; g.fillRect(0,0,W,H); const cx=W/2, cy=H/2-20;
+function drawOpening(){ const t=S.opT; g.fillStyle='#000'; g.fillRect(0,0,W,H); const cx=W/2, cy=240-20; g.save(); g.translate(0,(H-480)/2);
   const stars=(n,sp,al)=>{ g.fillStyle='#fff'; for(let i=0;i<n;i++){ const a=hash(i)*6.283, r=((hash(i,2)*200+t*sp*(1+hash(i,3)))%260); g.globalAlpha=al*Math.min(1,r/60); g.fillRect(cx+Math.cos(a)*r,cy+Math.sin(a)*r*1.3,1.4,1.4); } g.globalAlpha=1; };
   if(t<8.4){ // void & ripples
     const dim=t<4?1:Math.max(0,1-(t-4)/3);
@@ -801,16 +804,16 @@ function drawOpening(){ const t=S.opT; g.fillStyle='#000'; g.fillRect(0,0,W,H); 
     if(t<9.2){ g.fillStyle=`rgba(255,255,255,${1-(t-8.4)/.8})`; g.fillRect(0,0,W,H); }
     stars(120,160+k*200,Math.min(1,k*2));
   } else if(t<16){ // earth appears
-    const k=(t-12.4)/3.6; const gr=g.createLinearGradient(0,0,0,H); gr.addColorStop(0,'#04061A'); gr.addColorStop(1,'#10143A'); g.fillStyle=gr; g.fillRect(0,0,W,H); stars(60,6,.9);
+    const k=(t-12.4)/3.6; const gr=g.createLinearGradient(0,0,0,480); gr.addColorStop(0,'#04061A'); gr.addColorStop(1,'#10143A'); g.fillStyle=gr; g.fillRect(0,0,W,H); stars(60,6,.9);
     const r=20+k*90; g.save(); g.shadowColor='#5AA0FF'; g.shadowBlur=30; g.fillStyle='#1E5AC8'; g.beginPath(); g.arc(cx,cy,r,0,7); g.fill(); g.restore(); g.save(); g.beginPath(); g.arc(cx,cy,r,0,7); g.clip(); g.fillStyle='#3AA85A'; for(let i=0;i<5;i++){ g.beginPath(); g.ellipse(cx+(hash(i)-.5)*r*1.4+Math.sin(t*.3)*10,cy+(hash(i,2)-.5)*r*1.2,r*.3,r*.2,hash(i,3)*3,0,7); g.fill(); } g.fillStyle='rgba(255,255,255,.55)'; for(let i=0;i<6;i++){ g.beginPath(); g.ellipse(cx+(hash(i,7)-.5)*r*1.5-t*4%20,cy+(hash(i,8)-.5)*r*1.4,r*.28,r*.07,0,0,7); g.fill(); } const sh=g.createRadialGradient(cx-r*.4,cy-r*.4,r*.2,cx,cy,r*1.1); sh.addColorStop(0,'rgba(255,255,255,0)'); sh.addColorStop(1,'rgba(0,0,30,.6)'); g.fillStyle=sh; g.fillRect(cx-r,cy-r,r*2,r*2); g.restore();
     g.fillStyle='#ddd'; g.beginPath(); g.arc(cx+r+30,cy-r*.6,5+k*3,0,7); g.fill();
   } else if(t<19.4){ // zoom into the room window
-    const k=(t-16)/3.4; const gr=g.createLinearGradient(0,0,0,H); gr.addColorStop(0,'#0A1230'); gr.addColorStop(1,'#1A1E40'); g.fillStyle=gr; g.fillRect(0,0,W,H);
+    const k=(t-16)/3.4; const gr=g.createLinearGradient(0,0,0,480); gr.addColorStop(0,'#0A1230'); gr.addColorStop(1,'#1A1E40'); g.fillStyle=gr; g.fillRect(0,0,W,H);
     const r=110+k*k*700; g.fillStyle='#1E5AC8'; g.beginPath(); g.arc(cx,cy+r*.4,r,0,7); g.fill(); g.fillStyle='#3AA85A'; g.beginPath(); g.ellipse(cx-r*.1,cy+r*.1,r*.5,r*.2,0,0,7); g.fill();
     for(let i=0;i<30;i++){ g.fillStyle=`rgba(255,220,120,${Math.min(1,k*2)*.9})`; g.fillRect(hash(i)*W,H*.5+hash(i,2)*H*.5,2,2); }
     g.fillStyle=`rgba(20,16,30,${Math.max(0,(k-.6)*2.5)})`; g.fillRect(0,0,W,H);
   } else { // the room, then the mosquito
-    const gr=g.createLinearGradient(0,0,0,H); gr.addColorStop(0,'#14122A'); gr.addColorStop(1,'#2A2038'); g.fillStyle=gr; g.fillRect(0,0,W,H);
+    const gr=g.createLinearGradient(0,0,0,480); gr.addColorStop(0,'#14122A'); gr.addColorStop(1,'#2A2038'); g.fillStyle=gr; g.fillRect(0,0,W,H);
     g.fillStyle='#0A1230'; g.fillRect(70,60,220,190); g.fillStyle='#F6F0C8'; g.shadowColor='#F6F0C8'; g.shadowBlur=24; g.beginPath(); g.arc(230,110,22,0,7); g.fill(); g.shadowBlur=0; g.fillStyle='#fff'; for(let i=0;i<14;i++) g.fillRect(80+hash(i)*200,70+hash(i,2)*120,1.5,1.5);
     g.strokeStyle='#8A6A4A'; g.lineWidth=5; g.strokeRect(70,60,220,190); g.beginPath(); g.moveTo(180,60); g.lineTo(180,250); g.stroke();
     g.fillStyle='#4A3A5A'; g.fillRect(0,330,W,150); g.fillStyle='#E8E0D0'; g.beginPath(); g.roundRect?g.roundRect(40,340,280,110,12):g.rect(40,340,280,110); g.fill(); g.fillStyle='#fff'; g.beginPath(); g.ellipse(90,372,34,18,0,0,7); g.fill(); g.fillStyle='#F4CFA8'; g.beginPath(); g.arc(88,372,13,0,7); g.fill(); g.fillStyle='#4A78C8'; g.fillRect(120,356,170,60);
@@ -818,15 +821,16 @@ function drawOpening(){ const t=S.opT; g.fillStyle='#000'; g.fillRect(0,0,W,H); 
     const k=Math.max(0,(t-19.4)/5.6), mx=380-k*430, my=300-Math.sin(k*5)*60-k*70, sc=.5+k*1.7; drawMosq(mx,my,sc,-1,null);
     if(t>19.6){ g.fillStyle=`rgba(255,255,255,${Math.min(1,(t-19.6))*.9})`; g.font='800 16px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.fillText('ぷーん……',200+Math.sin(t*3)*8,my-30); }
     if(t>22){ const a=Math.min(1,(t-22)/1.2); g.globalAlpha=a; g.fillStyle='#FF5A6E'; g.shadowColor='#E0344A'; g.shadowBlur=18; g.font='800 30px "Dela Gothic One",sans-serif'; g.textAlign='center'; g.fillText('マネーダイソン5',cx,170); g.font='800 22px "Dela Gothic One",sans-serif'; g.fillText('蚊',cx,205); g.shadowBlur=0; g.fillStyle='#fff'; g.font='800 12px "M PLUS Rounded 1c",sans-serif'; g.fillText('吸血転生編',cx,230); g.globalAlpha=1; } }
-  for(const [a,b,tx] of OP_CAP) if(t>=a&&t<b){ const al=Math.min(1,(t-a)*2,(b-t)*2); g.globalAlpha=al; g.fillStyle='#000a'; g.fillRect(0,H-96,W,50); g.fillStyle='#fff'; g.font='800 14px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; const ls=tx.length>17?[tx.slice(0,Math.ceil(tx.length/2)),tx.slice(Math.ceil(tx.length/2))]:[tx]; ls.forEach((l,i)=>g.fillText(l,W/2,H-(ls.length>1?76:68)+i*19)); g.globalAlpha=1; }
+  for(const [a,b,tx] of OP_CAP) if(t>=a&&t<b){ const al=Math.min(1,(t-a)*2,(b-t)*2); g.globalAlpha=al; g.fillStyle='#000a'; g.fillRect(0,480-96,W,50); g.fillStyle='#fff'; g.font='800 14px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; const ls=tx.length>17?[tx.slice(0,Math.ceil(tx.length/2)),tx.slice(Math.ceil(tx.length/2))]:[tx]; ls.forEach((l,i)=>g.fillText(l,W/2,480-(ls.length>1?76:68)+i*19)); g.globalAlpha=1; }
+ g.restore();
 }
 /* ---------- ending ---------- */
 function drawEnding(){ const E=S.ending, t=E.t; const cx=W/2;
   const sky=g.createLinearGradient(0,0,0,H); const k=clamp((t-8)/6,0,1);
   const mix=(a,b)=>a.map((v,i)=>Math.round(v+(b[i]-v)*k)); const c0=mix([10,12,40],[255,170,110]), c1=mix([30,22,56],[255,220,150]);
-  sky.addColorStop(0,`rgb(${c0})`); sky.addColorStop(1,`rgb(${c1})`); g.fillStyle=sky; g.fillRect(0,0,W,H);
+  sky.addColorStop(0,`rgb(${c0})`); sky.addColorStop(1,`rgb(${c1})`); g.fillStyle=sky; g.fillRect(0,0,W,H); g.save(); g.translate(0,(H-480)/2);
   if(k<1){ g.fillStyle=`rgba(255,255,255,${1-k})`; for(let i=0;i<40;i++) g.fillRect(hash(i)*W,hash(i,2)*H*.7,1.6,1.6); }
-  g.fillStyle=`rgb(${mix([10,8,24],[70,40,60])})`; g.fillRect(0,H-90,W,90); // rooftops
+  g.fillStyle=`rgb(${mix([10,8,24],[70,40,60])})`; g.fillRect(0,480-90,W,90); // rooftops
   if(t<8.5){ // the drained king and the glowing mosquito
     g.fillStyle='#4A3A5A'; g.fillRect(0,330,W,150); g.fillStyle='#E8E0D0'; g.beginPath(); g.roundRect?g.roundRect(60,350,240,100,12):g.rect(60,350,240,100); g.fill();
     g.fillStyle='#CFC8D0'; g.beginPath(); g.ellipse(180,400,70,20,0,0,7); g.fill(); g.fillStyle='#F4CFA8'; g.beginPath(); g.arc(120,398,13,0,7); g.fill(); g.fillStyle='#E8C84A'; g.fillRect(110,380,20,6); g.fillStyle='#333'; g.font='800 9px sans-serif'; g.textAlign='center'; g.fillText('@ @',120,400); g.fillStyle='#CFC0E8'; g.font='800 10px "M PLUS Rounded 1c",sans-serif'; g.fillText('「き、きもちよかった…」',200,380);
@@ -834,7 +838,7 @@ function drawEnding(){ const E=S.ending, t=E.t; const cx=W/2;
     g.save(); g.shadowColor='#FFE070'; g.shadowBlur=30; drawMosq(cx,200+Math.sin(t*2)*6,3.2,1,null); g.restore();
   } else { // flying out into the dawn
     const kk=clamp((t-8.5)/5.5,0,1), x=60+kk*300, y=300-kk*180-Math.sin(kk*7)*18;
-    g.fillStyle=`rgba(255,240,170,${.5+.4*k})`; g.shadowColor='#FFF0A0'; g.shadowBlur=40; g.beginPath(); g.arc(250,H-110-k*50,30+k*8,0,7); g.fill(); g.shadowBlur=0;
+    g.fillStyle=`rgba(255,240,170,${.5+.4*k})`; g.shadowColor='#FFF0A0'; g.shadowBlur=40; g.beginPath(); g.arc(250,480-110-k*50,30+k*8,0,7); g.fill(); g.shadowBlur=0;
     for(let i=0;i<6;i++){ g.fillStyle=`rgba(255,255,255,${.4*(1-kk)})`; g.beginPath(); g.arc(x-i*22,y+Math.sin(i+t*4)*5,3-i*.4,0,7); g.fill(); }
     g.save(); g.shadowColor='#FFE070'; g.shadowBlur=22; drawMosq(x,y,2.4-kk*1.2,1,null); g.restore(); }
   const caps=[[0.5,4.5,'王様の血が、すべての力が、ダイソンの中を駆けめぐる。'],[4.8,8.4,'お金も、寿命も、異世界も、「無」さえも吸ったダイソン。'],[9,13.5,'いま吸いたいのは、ただの夏の夜風。']];
@@ -846,6 +850,7 @@ function drawEnding(){ const E=S.ending, t=E.t; const cx=W/2;
     g.fillStyle='#B8F0D0'; g.fillText(`吸った能力：${S.runAb.size}/${Object.keys(AB).length}種類`,cx,254); g.fillStyle='#FFB0B0'; g.fillText(`叩かれた回数：${S.over}回`,cx,278);
     g.fillStyle='#C8B8E0'; g.font='800 11px "M PLUS Rounded 1c",sans-serif'; g.fillText('どこかでまた、ぷーん……と羽音がした。',cx,314); g.fillText('（つづく……かもしれない）',cx,334);
     if(E.done){ g.fillStyle='#fff'; g.fillText('▼ ここをタップでタイトルへ',cx,362); } g.globalAlpha=1; }
+ g.restore();
 }
 function draw(){
   g.setTransform(1,0,0,1,0,0);
