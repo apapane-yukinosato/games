@@ -25,12 +25,29 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .mini[aria-pressed=true]{background:var(--gold);border-color:var(--gold);color:#222}
 #wrap{position:relative}
 #cv{display:block;width:100%;aspect-ratio:360/420;border-radius:14px;background:#000;touch-action:none}
-#pad{display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:auto auto;gap:7px;margin-top:8px}
-#pad button{min-height:52px;border:0;border-radius:14px;font-weight:800;font-size:20px;cursor:pointer;touch-action:none;background:#2A3242;box-shadow:0 4px 0 #161C26}
-#pad button.on{transform:translateY(3px);box-shadow:0 1px 0 #161C26;background:#3A4458}
-#breathBtn{grid-column:1/3;background:linear-gradient(#4A9AE8,#2A62B8)!important;box-shadow:0 4px 0 #163A70!important;font-family:"Dela Gothic One",sans-serif;font-size:18px!important}
-#breathBtn.on{background:linear-gradient(#7AC0FF,#4A8AE0)!important}
-#slashBtn{background:linear-gradient(#E85A4A,#B8302A)!important;box-shadow:0 4px 0 #6A1A10!important}
+#play{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"c c" "l r";gap:8px 10px}
+#wrap{grid-area:c}
+#padL{grid-area:l;display:flex;align-items:stretch}
+#padR{grid-area:r;display:grid;grid-template-columns:1fr 1.15fr;grid-template-rows:1fr 1fr;gap:8px;min-height:140px}
+.pb{border:0;border-radius:16px;font-weight:800;font-size:22px;cursor:pointer;touch-action:none;background:#2A3242;box-shadow:0 4px 0 #161C26;min-width:64px;min-height:64px;padding:0;line-height:1.2}
+.pb.on{transform:translateY(3px);box-shadow:0 1px 0 #161C26;background:#4A5670}
+#lZone{flex:1;display:flex;touch-action:none;min-height:140px;border-radius:16px;background:#1C222E}
+#lZone .pb{flex:1;border-radius:16px;font-size:34px;background:#2A3242;box-shadow:0 4px 0 #161C26}
+#lZone .pb.on{background:#5A6A90}
+#jBtn{grid-column:1;grid-row:1;font-size:24px}
+#breathBtn{grid-column:1;grid-row:2;background:linear-gradient(#4A9AE8,#2A62B8);box-shadow:0 4px 0 #163A70;font-family:"Dela Gothic One",sans-serif;font-size:14px}
+#breathBtn.on{background:linear-gradient(#7AC0FF,#4A8AE0);box-shadow:0 1px 0 #163A70}
+#slashBtn{grid-column:2;grid-row:1/3;background:linear-gradient(#E85A4A,#B8302A);box-shadow:0 4px 0 #6A1A10;font-size:30px}
+#slashBtn.on{background:linear-gradient(#FF8A7A,#D84A3A);box-shadow:0 1px 0 #6A1A10}
+@media (orientation:landscape) and (max-height:520px){
+  #app{max-width:none;padding:4px 8px 6px;padding-left:calc(8px + env(safe-area-inset-left,0px));padding-right:calc(8px + env(safe-area-inset-right,0px))}
+  #top{margin-bottom:4px}
+  #play{grid-template-columns:1fr auto 1fr;grid-template-areas:"l c r";align-items:end;gap:10px}
+  #cv{width:auto;height:calc(100vh - 56px);height:calc(100dvh - 56px)}
+  #padL,#padR{height:calc(100vh - 56px);height:calc(100dvh - 56px);max-height:260px}
+  #lZone,#padR{min-height:0}
+  .help{display:none}
+}
 .ov{position:absolute;inset:0;display:flex;align-items:safe center;justify-content:center;background:rgba(8,10,16,.66);border-radius:14px;padding:10px;z-index:3;overflow-y:auto;overscroll-behavior:contain}
 .card{background:var(--card);color:#2A2010;border-radius:18px;padding:14px;width:100%;max-width:390px;text-align:center;margin:auto 0;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .card h2{margin:0;font-family:"Dela Gothic One","M PLUS Rounded 1c",sans-serif;font-size:32px;line-height:1.25;color:#B8241A;letter-spacing:.06em}
@@ -58,6 +75,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     <button class="mini" id="autoBtn" aria-pressed="false" title="Oキー">🤖 オート</button>
     <button class="mini" id="muteBtn">音 ON</button>
   </div>
+  <div id="play">
   <div id="wrap">
     <canvas id="cv" width="360" height="420" aria-label="風邪をひいた剣士とモンスターの戦い"></canvas>
     <div class="ov" id="titleOv">
@@ -87,11 +105,16 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
       </div>
     </div>
   </div>
-  <div id="pad">
-    <button id="lBtn" aria-label="左へ">◀</button><button id="rBtn" aria-label="右へ">▶</button><button id="jBtn" aria-label="ジャンプ">⤴</button>
-    <button id="breathBtn">👄 呼吸（長押し）</button><button id="slashBtn" aria-label="斬る">🗡 斬る</button>
+  <div id="padL"><div id="lZone" data-k="move">
+    <button class="pb" id="lBtn" aria-label="左へ">◀</button><button class="pb" id="rBtn" aria-label="右へ">▶</button>
+  </div></div>
+  <div id="padR">
+    <button class="pb" id="jBtn" data-k="j" aria-label="ジャンプ">⤴</button>
+    <button class="pb" id="breathBtn" data-k="b">👄 呼吸<br>長押し</button>
+    <button class="pb" id="slashBtn" data-k="s" aria-label="斬る">🗡<br>斬る</button>
   </div>
-  <p class="help">👄を長押しして息を吸い、はなすと型。<span class="pc"><br>PC：←→/AD 移動　↑/W ジャンプ　Z 斬る　X 長押しで呼吸　O オート　M 音</span></p>
+  </div>
+  <p class="help">左手：◀ ▶（指をすべらせて切りかえ）　右手：🗡 斬る・⤴ ジャンプ・👄 長押しで息を吸い、はなすと型。<span class="pc"><br>PC：←→/AD 移動　↑/W ジャンプ　Z 斬る　X 長押しで呼吸　O オート　M 音</span></p>
 </div>
 
 <script>
@@ -145,7 +168,7 @@ const st=()=>STAGES[S.si];
 function startStage(i){
   S.si=i; S.t=0; S.mons=[]; S.shots=[]; S.waves=[]; S.items=[]; S.zones=[]; S.parts=[]; S.pops=[]; S.form=null; S.spawned=0; S.cured=0; S.spawnT=1.2; S.boss=null; S.banner=null; S.winT=-1; S.dropT=10; S.shake=0; S.flash=0;
   S.p={x:70,y:GY,vx:0,vy:0,face:1,ground:true,hp:100,inv:0,slashT:-1,slashCd:0,breath:0,inhaling:false,throat:0,cough:0,nose:0,slow:0,wind:0,run:0,snot:0};
-  ['titleOv','resultOv'].forEach(id=>$(id).hidden=true); S.scene='play';
+  ['titleOv','resultOv'].forEach(id=>$(id).hidden=true); S.scene='play'; resetInput();
   say(`第${i+1}話「${st().n}」`); sfx('start');
 }
 function say(m){ S.msg=m; S.msgT=0; }
@@ -301,7 +324,7 @@ function waveTick(w,dt){ w.t+=dt; w.x+=w.dir*170*dt; const p=S.p; if(!w.hit&&Mat
 function zonesHurt(){ const p=S.p; for(const z of S.zones) if(z.k==='fire'&&z.t>0&&Math.abs(p.x-z.x)<z.r&&!z.hit){ z.hit=true; hurtPlayer(14,z.x); } }
 
 function finish(win){
-  S.scene='result'; S.resT=0; S.lastWin=win; const p=S.p, stars=win?(p.hp>=70?3:p.hp>=35?2:1):0;
+  S.scene='result'; resetInput(); S.resT=0; S.lastWin=win; const p=S.p, stars=win?(p.hp>=70?3:p.hp>=35?2:1):0;
   if(win&&stars>S.best.stars[S.si]){ S.best.stars[S.si]=stars; } saveBest();
   const last=win&&S.si===5;
   $('resTitle').textContent=win?(last?'病気、滅殺！':'完治させた！'):'風邪が悪化した…';
@@ -457,19 +480,33 @@ function draw(){ g.setTransform(1,0,0,1,0,0); const sx=S.shake?(Math.random()-.5
   drawBG(); for(const m of S.mons) drawMon(m); if(S.p) drawHero(S.p); drawThings();
   g.setTransform(1,0,0,1,0,0); if(S.flash>0){ g.fillStyle=`rgba(255,255,255,${S.flash})`; g.fillRect(0,0,W,H); }
   if(S.scene!=='title') drawHUD();
+  if(!ptrs.size&&(S.btn.l||S.btn.r||S.btn.j||S.btn.s||S.btn.b)) S.btn={};
   for(const [id,k] of [['lBtn','l'],['rBtn','r'],['jBtn','j'],['slashBtn','s']]) $(id).classList.toggle('on',!!S.btn[k]);
   $('breathBtn').classList.toggle('on',!!(S.p&&S.p.inhaling)); }
 
 /* ================= UI ================= */
 function renderStages(){ $('stgList').innerHTML=STAGES.map((s,i)=>`<button data-i="${i}" ${i>0&&!S.best.stars[i-1]?'disabled':''}>${i+1}<small>${S.best.stars[i]?'⭐'.repeat(S.best.stars[i]):'—'}</small></button>`).join('');
   $('stgList').querySelectorAll('button').forEach(b=>b.onclick=()=>{ ac(); user(); startStage(+b.dataset.i); }); }
-function toTitle(){ S.scene='title'; S.resT=0; $('resultOv').hidden=true; $('titleOv').hidden=false; renderStages(); }
+function toTitle(){ S.scene='title'; resetInput(); S.resT=0; $('resultOv').hidden=true; $('titleOv').hidden=false; renderStages(); }
 function setAuto(v){ S.auto=!!v; $('autoBtn').setAttribute('aria-pressed',S.auto); S.resT=0; S.ai=null; if(!S.auto&&S.p&&S.p.inhaling) breathIn(false); if(S.auto&&S.scene==='title') startStage(0); }
 function user(){ if(S.auto) setAuto(false); }
-function hold(id,k,down,up){ const el=$(id);
-  el.addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); user(); S.btn[k]=true; try{ el.setPointerCapture(e.pointerId); }catch(_){} if(down) down(); });
-  for(const ev of ['pointerup','pointercancel','lostpointercapture']) el.addEventListener(ev,()=>{ if(S.btn[k]&&up) up(); S.btn[k]=false; }); }
-hold('lBtn','l'); hold('rBtn','r'); hold('jBtn','j',jump); hold('slashBtn','s',slash); hold('breathBtn','b',()=>breathIn(true),()=>breathIn(false));
+/* --- touch input: left thumb = one slide zone (◀ ▶ by finger x), right thumb = 🗡 ⤴ 👄. Every finger is tracked by pointerId at document level --- */
+const ptrs=new Map();
+function syncBtn(){ let l=false,r=false,j=false,s=false,b=false;
+  for(const v of ptrs.values()){ if(v.k==='move'){ if(v.side==='l') l=true; else r=true; } else if(v.k==='j') j=true; else if(v.k==='s') s=true; else if(v.k==='b') b=true; }
+  S.btn={l,r,j,s,b}; }
+function sideOf(e){ const rc=$('lZone').getBoundingClientRect(); return e.clientX<rc.left+rc.width/2?'l':'r'; }
+function resetInput(){ ptrs.clear(); S.btn={}; if(S.p&&S.p.inhaling&&!S.auto){ S.p.inhaling=false; S.p.breath=0; } }
+function releasePtr(id){ const v=ptrs.get(id); if(!v) return; ptrs.delete(id); syncBtn(); if(v.k==='b') breathIn(false); }
+document.addEventListener('pointerdown',e=>{ const t=e.target.closest&&e.target.closest('[data-k]'); if(!t) return;
+  e.preventDefault(); ac(); user(); const k=t.dataset.k;
+  ptrs.set(e.pointerId,k==='move'?{k,side:sideOf(e)}:{k}); syncBtn();
+  if(k==='j') jump(); else if(k==='s') slash(); else if(k==='b') breathIn(true); },true);
+document.addEventListener('pointermove',e=>{ const v=ptrs.get(e.pointerId); if(v&&v.k==='move'){ const sd=sideOf(e); if(sd!==v.side){ v.side=sd; syncBtn(); } } },true);
+for(const ev of ['pointerup','pointercancel']) document.addEventListener(ev,e=>releasePtr(e.pointerId),true);
+function releaseAll(){ for(const id of [...ptrs.keys()]) releasePtr(id); S.btn={}; }
+for(const ev of ['touchend','touchcancel']) document.addEventListener(ev,e=>{ if(!e.touches||e.touches.length===0) releaseAll(); },true);
+document.addEventListener('visibilitychange',releaseAll);
 $('autoBtn').onclick=()=>{ ac(); setAuto(!S.auto); };
 $('autoStartBtn').onclick=()=>{ ac(); setAuto(true); };
 $('muteBtn').onclick=()=>{ ac(); setMute(!muted); };
@@ -482,7 +519,7 @@ addEventListener('keydown',e=>{ const k=e.key.toLowerCase(); if(e.repeat&&k!=='a
   else if(k==='arrowup'||k==='w'||k===' '){ e.preventDefault(); ac(); user(); if(S.scene==='play') jump(); else if(S.scene==='result'&&k===' ') ($('nextBtn').hidden?$('retryBtn'):$('nextBtn')).click(); }
   else if(k==='z'||k==='j'){ e.preventDefault(); ac(); user(); slash(); } else if(k==='x'||k==='k'){ e.preventDefault(); ac(); user(); breathIn(true); } });
 addEventListener('keyup',e=>{ const k=e.key.toLowerCase(); if(k==='arrowleft'||k==='a') S.keys.left=false; if(k==='arrowright'||k==='d') S.keys.right=false; if(k==='x'||k==='k') breathIn(false); });
-addEventListener('blur',()=>{ S.keys={}; S.btn={}; if(S.p&&S.p.inhaling&&!S.auto) breathIn(false); });
+addEventListener('blur',()=>{ S.keys={}; releaseAll(); if(S.p&&S.p.inhaling&&!S.auto) breathIn(false); });
 
 /* ================= sound ================= */
 let AC=null, muted=false; try{ muted=localStorage.getItem('byokiMute')==='1'; }catch(e){}
