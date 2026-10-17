@@ -1,0 +1,1614 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="description" content="MCライム侍が地方から首都へ！ 街でリリックを集めて、ジャッジのロウをかいくぐるラップバトルRPG。">
+<title>メトロポリス アポカリプス</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&family=Dela+Gothic+One&display=swap">
+<style>
+html,body{touch-action:manipulation}
+:root{--bg:#120d1f;--ink:#f3ecff;--card:#201734;--card2:#2b2046;--line:#46346e;--mute:#a899c8;--gold:#ffcf3d;--pink:#ff4f93;--cyan:#3dd6ff;--green:#46d68a;--red:#ee4a4a;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink)}
+body{font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#app{height:100%;max-width:520px;margin:0 auto;padding:6px 8px 8px;padding-top:calc(6px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:5px}
+#top{display:flex;align-items:center;gap:6px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:13px;font-family:"Dela Gothic One",sans-serif;color:var(--gold);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 9px;background:var(--card);cursor:pointer;white-space:nowrap}
+.mini[aria-pressed=true]{background:var(--pink);border-color:var(--pink);color:#fff}
+#stage{position:relative;border-radius:14px;overflow:hidden;background:#000;box-shadow:0 3px 0 #05030c;flex:none}
+#cv{display:block;width:100%;height:auto;aspect-ratio:390/196}
+#fxBanner{position:absolute;left:0;right:0;top:34%;text-align:center;pointer-events:none;font-family:"Dela Gothic One",sans-serif;font-size:40px;color:var(--gold);text-shadow:0 3px 0 #7a1a3a,0 0 14px #ff4f93;opacity:0;white-space:nowrap}
+#fxBanner.show{animation:ban 1.1s ease-out}
+@keyframes ban{0%{opacity:0;transform:scale(.4) rotate(-6deg)}15%{opacity:1;transform:scale(1.25) rotate(2deg)}30%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(1.05)}}
+#info{font-size:11.5px;font-weight:800;color:var(--mute);display:flex;flex-wrap:wrap;gap:2px 10px;padding:0 4px;min-height:16px}
+#info b{color:var(--ink)}
+#panel{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:2px 0 6px;-webkit-overflow-scrolling:touch}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:8px}
+.card h2{margin:0 0 4px;font-family:"Dela Gothic One",sans-serif;font-size:19px;color:var(--gold);line-height:1.3;font-weight:400}
+.card p{margin:4px 0;font-size:12.5px;line-height:1.6;color:var(--mute)}
+.btn{display:block;width:100%;min-height:46px;border:0;border-radius:13px;font-weight:800;font-size:15px;cursor:pointer;margin-top:7px;background:var(--pink);color:#fff;box-shadow:0 4px 0 #9a1f55;padding:6px 10px}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #9a1f55}
+.btn.alt{background:#4a3a86;box-shadow:0 4px 0 #2a2050}
+.btn.gold{background:var(--gold);color:#2a1a40;box-shadow:0 4px 0 #8a6a16}
+.btn.cy{background:var(--cyan);color:#102038;box-shadow:0 4px 0 #1a7a9a}
+.btn.sm{min-height:38px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:default;box-shadow:none}
+.row{display:flex;gap:7px}.row>*{flex:1;min-width:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.spot{border:1px solid var(--line);background:var(--card2);border-radius:12px;padding:8px 6px;text-align:center;cursor:pointer;font-weight:800;font-size:13px;line-height:1.3;min-height:58px}
+.spot i{display:block;font-style:normal;font-size:22px}
+.spot:active{background:#3a2c62}
+.spot.hot{outline:2px solid var(--gold)}
+.who{display:inline-block;font-weight:800;font-size:12px;padding:1px 9px;border-radius:99px;background:var(--pink);color:#fff;margin-bottom:4px}
+.say{font-size:14.5px;line-height:1.75;white-space:pre-line;min-height:84px}
+.back{display:block;margin-top:10px;font-size:13px;font-weight:800;color:var(--mute);text-decoration:none;text-align:center}
+.ly{background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:7px 9px;margin-bottom:6px;font-size:12.5px;line-height:1.5;position:relative}
+.ly .t{font-weight:800;font-size:13px;line-height:1.5}
+.ly .m{display:flex;flex-wrap:wrap;gap:3px 5px;margin-top:3px;align-items:center}
+.tag{font-size:10.5px;font-weight:800;border-radius:99px;padding:0 7px;background:#3a2c62;color:#d8c8ff;white-space:nowrap}
+.tag.atk{background:#7a2a4a;color:#ffd0e0}.tag.cat{background:#24506a;color:#c8f0ff}.tag.rh{background:#4a3a1a;color:#ffe090}.tag.lure{background:#2a5a3a;color:#b8ffd0}.tag.wk{background:#8a1a1a;color:#fff}.tag.bad{background:#a82020;color:#fff}
+.ly.sel{outline:2px solid var(--gold);background:#3a2c62}
+.ly.weak{border-color:#c04040}
+.ly.bad{outline:2px solid var(--red)}
+.ly .px{position:absolute;right:8px;top:6px;font-weight:800;color:var(--gold);font-size:12.5px}
+.tabs{display:flex;gap:6px;margin-bottom:7px}.tabs button{flex:1;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px;font-weight:800;font-size:13px;cursor:pointer}
+.tabs button.on{background:var(--gold);color:#2a1a40;border-color:var(--gold)}
+.bars{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:5px}
+.hb{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:3px 7px}
+.hb small{display:flex;justify-content:space-between;font-size:11px;font-weight:800;color:var(--mute)}
+.hb .tr{height:10px;border-radius:6px;background:#0a0614;overflow:hidden;margin-top:2px}
+.hb .tr i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#46d68a,#c8f060);transition:width .5s}
+.hb.o .tr i{background:linear-gradient(90deg,#ff4f93,#ffa060)}
+.laws{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:5px;align-items:center;min-height:26px}
+.law{font-size:12px;font-weight:800;padding:3px 10px;border-radius:99px;background:#222;border:2px solid #fff;color:#fff}
+.law.ban{background:#7a1a1a;border-color:#ff8a8a}.law.rec{background:#1a5a3a;border-color:#8affb8}.law.rhy{background:#6a1a6a;border-color:#ff9aff}
+.cards{display:inline-flex;gap:3px;font-size:11px;font-weight:800;margin-left:auto}
+.cd{display:inline-block;width:12px;height:16px;border-radius:2px;background:#33264f;border:1px solid #6a5a9a}.cd.y{background:#ffd23d}.cd.r{background:#ee3a3a}
+.bub{background:#fff;color:#241638;border-radius:14px;padding:8px 11px;min-height:66px;font-size:15.5px;font-weight:800;line-height:1.55;position:relative;margin-bottom:6px}
+.bub .nm{font-size:11px;color:#8a5aa8;display:block;margin-bottom:1px}
+.bub .tg{position:absolute;right:8px;top:6px;font-size:11px;background:#ffe090;color:#5a3a00;border-radius:99px;padding:0 8px}
+.bub .c{display:inline-block;opacity:0}
+.bub .c.on{opacity:1;animation:pop .36s ease-out}
+.bub .c.st{animation:none}
+@keyframes pop{0%{transform:translateY(-10px) scale(1.3)}60%{transform:translateY(2px)}100%{transform:none}}
+.hand{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.hc{border:1px solid var(--line);background:var(--card2);border-radius:10px;padding:5px 6px 5px;text-align:left;cursor:pointer;min-height:84px;font-size:11px;line-height:1.35;position:relative;display:flex;flex-direction:column;gap:2px}
+.hc .t{font-weight:800;font-size:11.5px;flex:1}
+.hc:active{background:#3a2c62}
+.hc.bad{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red)}
+.hc.weak{border-color:#ff6a6a;background:#3a1a2a}
+.hc.hit{outline:2px solid var(--gold)}
+.hc .mm{display:flex;flex-wrap:wrap;gap:2px}
+.hc .tag{font-size:9.5px;padding:0 5px}
+.hc:disabled{opacity:.5}
+.modal{position:absolute;left:0;right:0;top:0;bottom:0;background:rgba(10,5,20,.82);display:flex;align-items:center;justify-content:center;padding:14px;z-index:5}
+#panelWrap{position:relative;flex:1;min-height:0;display:flex}
+#panelWrap #panel{flex:1}
+.big{font-size:30px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums}
+.rows{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:13px;margin:8px 0;text-align:left}.rows b{text-align:right}
+.note{font-size:11.5px;color:var(--mute);line-height:1.6}
+.dyl{background:#2a1a4a;border:2px solid #8a5ae0;border-radius:12px;padding:8px 10px;font-size:13.5px;line-height:1.6;margin-bottom:7px;min-height:58px}
+.jgauge{height:34px;border-radius:10px;background:#0a0614;border:2px solid var(--line);position:relative;overflow:hidden;margin:10px 0}
+.jgauge .z{position:absolute;top:0;bottom:0;left:40%;width:20%;background:rgba(70,214,138,.35)}
+.jgauge .z2{position:absolute;top:0;bottom:0;left:47%;width:6%;background:rgba(255,207,61,.6)}
+.jgauge .mk{position:absolute;top:-2px;bottom:-2px;width:6px;margin-left:-3px;background:#fff;border-radius:3px;box-shadow:0 0 8px #fff}
+@media (min-width:700px){#app{padding-top:10px}}
+</style>
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-180.png">
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>メトロポリス アポカリプス</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false" title="Oキー">🤖 オート</button>
+    <button class="mini" id="muteBtn">音 ON</button>
+  </div>
+  <div id="stage">
+    <canvas id="cv" width="390" height="196" aria-label="場面の絵"></canvas>
+    <div id="fxBanner"></div>
+  </div>
+  <div id="info"></div>
+  <div id="panelWrap"><div id="panel"></div></div>
+</div>
+<script>
+(()=>{
+'use strict';
+// ============================================================ DATA
+const CAT={d:'ディス',b:'自慢',l:'地元',s:'社会派',r:'恋愛',w:'言葉遊び'};
+const TGN={'金':'金','田':'田舎','年':'年齢','見':'見た目','仕':'仕事','家':'家族','流':'流行'};
+const LY={}, LIST=[];
+function ly(id,t,atk,cat,rh,tags,lure,src,ch){
+  const o={id,t,atk,cat,rh:rh||'',tags:(tags||'').split('').filter(Boolean).map(c=>TGN[c]),lure:!!lure,src,ch};
+  LY[id]=o; LIST.push(o); return id;
+}
+// starters
+const STARTERS=[
+ ly('s1','俺は侍 ライムの侍 斬られる前に 斬って捨てるぜ',16,'b','','',0,'start',0),
+ ly('s2','緊張してても 足がふるえても 俺のライムは 止まらない',14,'b','あい','',0,'start',0),
+ ly('s3','生まれた町を 背中に背負って 今日も俺は 歌う',14,'l','あう','田',0,'start',0),
+ ly('s4','財布は軽く 心は重く それでも夢は 高い',12,'s','あい','金',0,'start',0),
+ ly('s5','上司の小言は 右から左 俺のビートに ついてこい',16,'s','おい','仕',0,'start',0),
+ ly('s6','お前の韻は 聞き飽きたぜ 踏めるもんなら 踏んでみな',12,'d','','',1,'start',0),
+ ly('s7','親の顔が見たいぜ お前の親の 顔',18,'d','あお','家',0,'start',0),
+ ly('s8','最近流行りの 曲は知らねえ 俺は昔から この路線',12,'w','','流',0,'start',0),
+ ly('s9','年を取ったな 昔の俺なら もっとキレてた',14,'w','','年',0,'start',0)
+];
+// weakness cards (opponent specific, always hit)
+const WK={};
+function wk(id,opp,note,t,atk,rh){ WK[id]=ly(id,t,atk,'d',rh||'','',0,'weak',0); LY[id].weak=opp; LY[id].note=note; }
+// ---- events
+const SPOTS=[
+ [['商店街','🏪'],['駅前','🚉'],['田んぼ道','🌾'],['公民館','🏛'],['スナック','🍸'],['神社','⛩'],['団地','🏢']],
+ [['港','⚓'],['繁華街','🌃'],['市役所前','🏤'],['ショッピングモール','🛍'],['屋台村','🍢'],['大学','🎓'],['高架下','🚇']],
+ [['スクランブル交差点','🚦'],['国会前','🏛'],['タワマン','🏙'],['地下鉄','🚇'],['ネットカフェ','💻'],['ロッポンギ通り','🍸'],['路地裏のレコード屋','💿']]
+];
+const EV=[[],[],[]];
+const L=(id,t,atk,cat,rh,tags,lure,ch)=>({k:'L',id:ly(id,t,atk,cat,rh,tags,lure,'find',ch)});
+const W=id=>({k:'W',id}), M=n=>({k:'M',amt:n}), N=()=>({k:'N'});
+function sp(ch,list){ EV[ch].push(list.map(a=>({s:a[0],sc:a[1],t:a[2],r:a[3]}))); }
+
+// ===== 第1章 ねぎま町
+sp(0,[
+ ['0',['🐟','📣','🧑‍🍳'],'魚屋のおやじが、朝から声を張り上げている。\n「安いよ安いよ！ 今日だけ毎日この値段だ！」',L('e01','安いよ安いよ 叩き売り 俺のライムは 値崩れしない',22,'b','あい','金',0,0)],
+ ['1',['🏪','🪧','🤔'],'シャッターに「閉店セール」の看板。……十年前から出ているらしい。\n「嘘も続ければ商売になるのさ」と店主は笑った。',L('e02','閉店セール 十年目 嘘も続けりゃ 商売になる',26,'w','あう','仕',0,0)],
+ ['2',['🏮','👵','🤫'],'八百屋のおばちゃんが、店じまいをしながら噂話を始めた。\n「ここだけの話ね、稲穂ちゃん……ほんとは都会育ちなのよ」',W('w1a')],
+ ['x',['🗳','🖍','😆'],'選挙ポスターに、ヒゲの落書き。\nよく見ると、ポスターの裏にも何か書いてある。',L('e03','ヒゲを描かれた ポスターの顔 口約束なら 誰でも言える',25,'s','えう','',0,0)]
+]);
+sp(0,[
+ ['0',['🚉','📢','👨‍💼'],'駅前で街頭演説。「この町を変えます！」\n……去年もまったく同じ声を聞いた気がする。',L('e04','この町を変えるという 声は今年も聞いた 変わらねえのは お前の顔',30,'s','あお','仕',0,0)],
+ ['1',['🚃','⏰','😴'],'昼の駅は、一時間に一本の電車を待つ人だけ。\nベンチの老人がつぶやく。「待つ間に、人生が過ぎたよ」',L('e05','一時間に一本の電車 待つ間に書ける 一本の曲',20,'l','おう','田',0,0)],
+ ['2',['🚏','🌙','📻'],'ベンチのラジオから深夜番組。\n「ねぎま町のみなさん、今夜も眠れない？」',L('e06','ラジオが流す 深夜の悩み 俺のライムが 答えを歌う',24,'w','あう','流',0,0)],
+ ['x',['🎙','🚐','😵'],'ウグイス嬢が叫ぶ選挙カー。同じ名前を17回連呼している。',L('e07','名前ばかり連呼する選挙カー 中身を聞かせろ 連呼じゃ届かねえ',28,'s','','仕',0,0)]
+]);
+sp(0,[
+ ['0',['🌾','🐸','🧑‍🌾'],'朝のあぜ道。カエルの大合唱を、農家のおじさんが指揮している。',L('e08','カエルの合唱 朝のライブ 客はゼロでも 声は枯らさない',18,'l','あい','田',0,0)],
+ ['1',['🌤','🧢','🗣'],'かかしに話しかけている男がいる。\n「稲穂のやつ、ステージ衣装は農協の景品なんだよなぁ」',W('w1b')],
+ ['2',['🌌','✨','🐛'],'夜の田んぼ。街灯がないから、星がやたらと近い。',L('e09','街灯ゼロ 星がスポットライト 田んぼのステージ 俺の登場',34,'b','おう','田',0,0)],
+ ['x',['🚜','🌽','👴'],'軽トラの荷台で居眠りする爺さん。「トウモロコシ持ってけ」と、売れ残りの代金を握らされた。',M(90)]
+]);
+sp(0,[
+ ['0',['🏛','🧓','🎤'],'朝の公民館。カラオケ教室のおばあちゃんたちが発声練習中。',L('e10','ばあちゃんの腹式呼吸 八十歳 声量で負けたら 恥ずかしい',30,'d','あい','年',0,0)],
+ ['1',['🧒','🧒','💢'],'集会室で子どもたちが悪口合戦。\n「おまえんちの母ちゃん出べそ！」「お前んち貧乏ー！」',L('e11','出べそ貧乏と はやし立てても 事実を言えば 突き刺さる',22,'d','あう','家',0,0)],
+ ['2',['🗣','🪑','😤'],'町内会の寄り合い。話題は「ヤング長老」のことで持ち切りだ。\n「あの人ね、ヒゲ、取れるのよ。実は十九歳なのよ」',W('w2a')],
+ ['x',['🪧','📌','🧐'],'掲示板の貼り紙に「ゴミは分別」「夜は静かに」。守っている人を見たことがない。',L('e12','ゴミは分別と書く貼り紙 守る人ゼロ 貼り紙だけが 町を見張る',27,'s','あう','',0,0)]
+]);
+sp(0,[
+ ['0',['🍸','🧹','🥱'],'朝のスナックは掃除中。ママが言う。\n「昨夜の客の説教、メモしてあるよ。手間賃くれたらあげる」……逆に駄賃をもらった。',M(120)],
+ ['1',['🎤','🍢','👩'],'昼のスナック。ママが演歌を練習中。',L('e13','こぶしを回して 三十年 苦労の数だけ 声が出る',32,'s','えう','年',0,0)],
+ ['2',['🍺','🥴','🗣'],'酔っ払いが説教を始めた。\n「いいか若造、人生はビールの泡だ！ 消える前に飲め！」',L('e14','人生はビールの泡 消える前に飲め 説教は長いが 名言ではある',28,'w','あう','年',0,0)],
+ ['x',['🍶','🎤','🦆'],'隣の席の居酒屋トーク。「DJ軽トラ？ あいつ、軽トラの免許持ってないらしいぜ」',W('w3a')]
+]);
+sp(0,[
+ ['0',['⛩','🧹','👴'],'朝の神社で、神主が落ち葉を掃いている。\n「神頼みもいいが、最後は自分の喉じゃぞ」',L('e15','神頼みはするが 最後に頼れるのは この喉と この気迫',26,'b','','',0,0)],
+ ['1',['🔮','🧙','🎴'],'境内の占い師。「あなた、近々大きな戦いがある……みんなに言ってるけど」',L('e16','占いなんか 当たるも八卦 俺の未来は 俺が描く',25,'b','あう','',0,0)],
+ ['2',['🌙','🦊','🪔'],'夜の神社。狐の面をつけた子どもが耳打ちしてきた。\n「DJ軽トラのビート、全部ばあちゃんの民謡だよ」',W('w3b')],
+ ['x',['🎴','🎴','🙄'],'おみくじは「大凶」。結ぶ場所はもう満杯だった。',N()]
+]);
+sp(0,[
+ ['0',['🏢','🧺','👩'],'朝の団地。ベランダの洗濯物が旗のように並んでいる。',L('e17','洗濯物の旗 ベランダの国 井戸端会議で 世界が回る',24,'l','あう','家',0,0)],
+ ['1',['🏢','🛒','👵'],'団地のおばあちゃんが世間話。\n「ヤング長老ねぇ、スマホの使い方がわからなくて、孫に聞いてるのよ」',W('w2b')],
+ ['2',['🍲','💢','💔'],'窓越しに夫婦喧嘩。\n「あなた、味噌汁が冷めたわ！」「冷めたのはお前の愛だ！」',L('e18','冷めた味噌汁 冷めた愛 温め直すにはもう遅い',30,'r','おい','家',0,0)],
+ ['x',['🛴','🧒','📢'],'公園で子どもの悪口合戦、第二ラウンド。',L('e19','悪口合戦は 先に笑った方の負け 笑ったら負けは ライムも同じ',21,'w','','',0,0)]
+]);
+// ===== 第2章 湾岸シティ
+sp(1,[
+ ['0',['⚓','🐟','🚢'],'朝の港。汽笛が鳴ると、クレーンが一斉に動き出す。',L('f01','汽笛を合図に 港が目覚める 錆びたクレーンも 俺も目覚める',33,'l','えう','仕',0,1)],
+ ['1',['🏗','😰','🧱'],'クレーンの運転席を見上げて、青ざめている男。\n「内緒だぞ。MC鉄骨はな、実は高所恐怖症なんだ」',W('m1a')],
+ ['2',['🌃','🚢','🎣'],'コンテナ船の灯りを見ながら夜釣りをするおじさん。\n「釣れない夜も、波の音は無料だよ」',L('f02','釣れない夜も 波の音は無料 俺のライムも 今夜は無料',29,'l','おう','金',0,1)],
+ ['x',['📦','📦','👬'],'コンテナの陰で兄弟喧嘩。\n「兄貴！ また俺のプリン食っただろ！」「……食ってない」',W('c1a')]
+]);
+sp(1,[
+ ['0',['🌃','🧹','🐀'],'朝のネオン街。ゴミ袋の山で、ネズミと目が合った。',L('f03','夜の主役は 朝にはゴミ袋 ネオンも夢も 片づけられる',31,'s','えう','',0,1)],
+ ['1',['🛍','📣','🧑‍💼'],'客引きの兄ちゃん。「お兄さん、いい店ありますよ！」\n「ライブハウス？」「……居酒屋です」',L('f04','客引きの声 いい店ありますよ 嘘じゃないけど 本当でもない',27,'d','あい','仕',0,1)],
+ ['2',['💃','🪩','💋'],'巨大看板「クイーン潮風 凱旋ライブ」。写真が明らかに二十年は若い。\n通りすがりの人が笑う。「サバ読みすぎだよね」',W('q1a')],
+ ['x',['🍺','🗣','👔'],'隣の席のサラリーマンが愚痴っている。\n「部長のカラオケ、持ち歌が一曲しかない」',L('f05','持ち歌一曲 部長の十八番 同じ曲で 十年戦う',28,'d','あう','仕年',0,1)]
+]);
+sp(1,[
+ ['0',['🏤','📋','😴'],'朝の窓口。「順番札328番」。呼ばれるのは三時間後らしい。',L('f06','順番札三百二十八番 呼ばれる前に 夜が来る',26,'s','あう','仕',0,1)],
+ ['1',['🎤','📢','👨‍💼'],'市長候補の街頭演説。\n「港を、未来を、そして私を、信じてください！」',L('f07','あなたを信じてと言いながら 信じてほしいのは 自分の票',33,'s','おう','仕',0,1)],
+ ['2',['🏤','🌙','🧑‍✈'],'夜の市役所前。職員が資材課のゴミ箱をあさっている。\n「MC鉄骨？ 先月、事務職の履歴書を出しに来たよ」',W('m1b')],
+ ['x',['🗳','🚐','🔊'],'港を走る選挙カー。「名前を！ 名前を覚えてください！」',L('f09','選挙カーが通る 名前を叫ぶ 俺は叫ばない 歌で名乗る',27,'b','あう','',0,1)]
+]);
+sp(1,[
+ ['0',['🛍','🚪','😪'],'開店前の行列。ただ並んでいたら、前の人に缶コーヒーをもらった。',M(130)],
+ ['1',['🛍','👶','🍦'],'フードコートの席取りは戦争だ、と母親がつぶやく。',L('f10','ハンカチ一枚で席を取る 母は強しと言われる所以',23,'s','','家',0,1)],
+ ['2',['🛒','📢','🎶'],'閉店の音楽「蛍の光」が流れる店内。誰も帰ろうとしない。',L('f11','蛍の光 窓の雪 閉店ソングをBGMに 俺はまだ歌う',30,'w','あう','流',0,1)],
+ ['x',['🪧','🎮','👬'],'ゲームコーナーの看板は「兄弟で遊ぼう！」。店員が教えてくれた。\n「あの兄弟、二人とも船酔いするんだよ。観覧船で青くなってた」',W('c1b')]
+]);
+sp(1,[
+ ['0',['🍢','🧑‍🍳','☀'],'朝の仕込み。おでんの出汁の香りが路地に流れる。',L('f12','出汁の香りで目覚める朝 熱い言葉は煮込んで出す',26,'w','あう','',0,1)],
+ ['1',['🍜','🔥','🤤'],'ラーメン屋台の大将。「うちのスープは企業秘密だ」\nただの塩味に見えるが、黙っておく。',L('f13','企業秘密の一杯のスープ 俺の秘密は一行のバース',31,'b','','金',0,1)],
+ ['2',['🏮','🍺','🧑‍🔧'],'常連のおじさんが酔って教えてくれた。\n「潮風さんの王冠？ あれ、ホームセンターで千円で買ったやつよ」',W('q1b')],
+ ['x',['🔮','🃏','🧙‍♀️'],'占い師「あなたの運勢は……ラップです」\n「それは知ってる」',L('f14','占いで出た運命の一言 でも言葉は 俺が決める',25,'b','','',0,1)]
+]);
+sp(1,[
+ ['0',['🎓','📚','😵'],'朝の大学。レポートの提出期限は今朝だったらしい。',L('f15','前夜のレポート 提出は朝 眠気と戦う 学生の戦い',24,'s','あい','仕',0,1)],
+ ['1',['🧑‍🏫','🧪','🧐'],'「ラップの歴史」の講義。聴講しているのは三人だけ。',L('f16','言葉を並べ 音を重ね 韻の歴史は 長く深い',29,'w','あい','',0,1)],
+ ['2',['🌃','🏫','🎸'],'軽音サークルの部室。「オリジナル曲です」「いつものやつだね」',L('f17','何年目の同じ曲 ライブハウスの満員は部員だけ',23,'d','','',0,1)],
+ ['x',['📰','🖍','🙈'],'サークル勧誘のポスターの裏に、学食の割引券が貼ってあった。',M(100)]
+]);
+sp(1,[
+ ['0',['🚇','🎨','🖌'],'朝の高架下。コンクリートの壁に巨大な落書き。\n「LOVE & PEACE & 家賃」',L('f18','壁に描かれた 愛と平和 そして家賃 払えない愛は 愛じゃない',32,'s','あい','金',0,1)],
+ ['1',['🚃','🔊','🙉'],'ガタンゴトンの轟音。頭上の電車がビートを刻む。',L('f19','頭上を走る 電車のビート 俺のフロウは 乗り遅れない',29,'w','あい','',0,1)],
+ ['2',['🌃','🎤','🧑‍🎤'],'夜の高架下でサイファー中のラッパーたち。\n一人が叫ぶ。「韻なんか踏むな！ 踏んだら負けだ！」',L('f20','韻を踏むのは簡単すぎる 踏んでみせてよ 俺は踏まない',22,'d','','',1,1)],
+ ['x',['🧑‍🎤','💬','🤔'],'老ラッパーが缶コーヒーを差し出す。「若いの、韻より先に、財布を守れ」',M(110)]
+]);
+// ===== 第3章 メトロポリス
+sp(2,[
+ ['0',['🚦','🚶','🚶'],'朝のスクランブル交差点。信号が青になると、千人が一斉に歩き出す。',L('g01','信号が青 千人が歩く 誰も目を合わせない それが都会の挨拶',38,'s','','流',0,2)],
+ ['1',['📺','📱','🤳'],'巨大ビジョンの広告に自分の顔が……というのは気のせいだった。',L('g02','ビジョンに映る 他人の顔 いつか俺が 映ってやる',36,'b','あう','見',0,2)],
+ ['2',['🌃','📣','🧑‍💼'],'首都の街頭演説。「景気を回復させます！」\n……拍手しているのはサクラだけだ。',L('g03','景気回復と叫ぶ声 拍手するのはサクラ 民の声は スルーされる',42,'s','えう','金',0,2)],
+ ['x',['🪧','📸','🤩'],'巨大看板「全品半額（ただし一品のみ）」。',L('g04','半額の看板 ただし一品 小さな文字に 逃げ道がある',37,'d','あう','金',0,2)]
+]);
+sp(2,[
+ ['0',['🏛','📢','🪧'],'朝の国会前。プラカードを持つ人々。\n「増税反対」「勉強したい」「眠い」',L('g05','国会前 叫ぶ声 届く先は 分厚い窓',45,'s','','金',0,2)],
+ ['1',['🏛','🧑‍💼','🗣'],'議員が記者に囲まれ、「記憶にございません」を連呼している。',L('g06','記憶にございませんと 繰り返す 都合の悪い記憶だけ 消える',44,'s','えう','仕',0,2)],
+ ['2',['🌙','🚐','📻'],'深夜の国会前に選挙カー。夜中に叫ぶな、と警備員に怒られていた。\n同情してお茶をおごったら、お礼をもらった。',M(150)],
+ ['x',['📰','🏛','🖨'],'掲示板のポスターの裏に、走り書きのメモ。\n「キング・アポカリプスの本名は田中ヨシオ。経歴書より」',W('k1a')]
+]);
+sp(2,[
+ ['0',['🏙','🛗','😤'],'朝のエレベーター。なかなか来ない。住民たちが一斉に舌打ちする。',L('g07','五十階の景色 ローンは三十五年 見下ろす夜景は 借金の光',48,'s','あい','金',0,2)],
+ ['1',['🏙','😅','📦'],'宅配のお兄さんが汗を拭きながら言う。\n「MCタワマンの部屋？ 五十階じゃなくて、二階の賃貸ですよ。みんな勘違いしてる」',W('t1a')],
+ ['2',['🌃','🍷','🥂'],'パーティーの会話。「夜景が綺麗ね」「金で買った景色だ」',L('g08','夜景は金で買った景色 空は誰のものでもない',46,'s','あい','金',0,2)],
+ ['x',['🐕','👗','🧑‍🍳'],'セレブが犬を散歩させている。犬の服のほうが俺の服より高そうだ。',L('g09','犬の服が俺の服より高い 犬もブランド 俺はノーブランド',40,'d','','金見',0,2)]
+]);
+sp(2,[
+ ['0',['🚇','😫','🚃'],'朝の満員電車。つぶされそうな二人組が話している。\n「定時で帰りたい……それだけが夢だ」',W('b1a')],
+ ['1',['🎻','🎵','🚇'],'駅の通路でストリートミュージシャンが歌っている。',L('g10','地下の通路で歌う声 反響のおかげで 上手く聞こえる',38,'w','えう','流',0,2)],
+ ['2',['🍶','🧑‍💼','🧑‍💼'],'終電前の居酒屋の会話。\n「あのブラザーズ、同期にいつも出世で負けてるんだよな」',W('b1b')],
+ ['x',['🔮','🃏','🧙'],'占い師「あなたは大物になる」……みんなに言っているのだろうが、悪い気はしない。',L('g11','占い師が言う あなたは大物になる みんなに言ってる でも信じる',41,'b','えう','',0,2)]
+]);
+sp(2,[
+ ['0',['💻','😴','🥤'],'朝のネットカフェ。個室の中で、画面の光だけが夜を引きずっている。',L('g12','個室の中の画面の光 ログインしたまま 夜が明ける',39,'w','えう','流',0,2)],
+ ['1',['📱','🔥','💬'],'SNSで炎上している人を見つけた。コメント欄は地獄だ。',L('g13','炎上上等 ネットの海 実名晒しても 俺は燃えない',47,'d','あい','流',0,2)],
+ ['2',['🎧','📻','🎙'],'深夜のネットラジオ。投稿メールが読まれたら勝ちだ。',L('g14','ラジオネーム 俺の名は MCライム侍 採用されたら 即デビュー',36,'b','','流',0,2)],
+ ['x',['🧑‍💻','💬','😏'],'ネット掲示板のレスバトル。「韻なんて古い」というコメントを見つけた。',L('g15','韻なんて古いぜ 今どきはフロウだ 踏んでみろよ 恥をかけ',30,'d','','',1,2)]
+]);
+sp(2,[
+ ['0',['🍸','🧹','🪞'],'朝のロッポンギ通り。昨夜のキラキラが片づけられていく。ゴミ袋の中から小銭を拾った。',M(160)],
+ ['1',['👗','💎','⌚'],'ブランド店員がひそひそ話す。\n「MCタワマンの時計？ あれ、偽物ですよ。秒針が逆回りでした」',W('t1b')],
+ ['2',['🥂','🕺','🧑‍🎤'],'セレブのパーティーに潜入。ゲストリストに名前はないが、声はある。',L('g17','ゲストリストに名前はないが 俺には声がある 勝負する',50,'b','','',0,2)],
+ ['x',['🪧','🔒','🤵'],'会員制クラブの看板。「紹介制」としか書いていない。',L('g16','会員制 紹介制 看板はない 入れたやつだけ 勝ち組気取り',50,'d','','金見',0,2)]
+]);
+sp(2,[
+ ['0',['💿','🧔','☕'],'朝のレコード屋。店主がコーヒーを淹れながら言う。\n「デジタルも便利だが、針が落ちる一瞬は最高なんだ」',L('g18','針が落ちる 一瞬の音 デジタルじゃ出せない 温度がある',52,'w','あう','流',0,2)],
+ ['1',['🎵','💿','🤓'],'試聴コーナー。埃をかぶった名盤の山から、一枚を掘り当てた。',L('g19','埃かぶった名盤の山 掘り当てた一枚が 俺の教科書',55,'w','','',0,2)],
+ ['2',['🌙','🖤','🕶'],'夜のレコード屋。店主が小声でつぶやく。\n「アポカリプス王の王冠？ あれは二つ目だよ。一つ目はカラオケで落としたらしい」',W('k1b')],
+ ['x',['💿','🎤','🔊'],'店の奥で最後の一枚を見つけた。針を落とした瞬間、全部が止まる。',L('g20','最後の一枚 針を落とす 全部が止まる 俺のターン',58,'b','','',0,2)]
+]);
+// weakness cards
+wk('w1a',0,'MC稲穂は実は都会育ち','お前の田舎は設定だろ 実家は駅前 マンション暮らし',32);
+wk('w1b',0,'MC稲穂の衣装は農協の景品','その衣装 農協の景品 ステージの上で 値札が揺れてる',30,'');
+wk('w2a',1,'ヤング長老は実は19歳（つけ髭）','長老のヒゲは接着剤 剥がせば十九の 青い顔',34,'あお');
+wk('w2b',1,'ヤング長老はスマホが使えない','長老よ 孫に聞くな ライムの返事は 自分で打て',32);
+wk('w3a',2,'DJ軽トラは軽トラの免許を持っていない','軽トラ乗りのお前に免許はない 無免許DJ 回すのは皿だけ',36);
+wk('w3b',2,'DJ軽トラのビートは全部ばあちゃんの民謡','そのビートは民謡 ばあちゃんの声 サンプリングじゃない ただの里帰り',36);
+wk('m1a',3,'MC鉄骨は高所恐怖症','鉄骨のお前 高所はダメだろ 足場の上じゃ 子鹿みたいに震える',40);
+wk('m1b',3,'MC鉄骨は本当は事務職志望','ヘルメットの下は履歴書 ホントは事務職 志望だろ',40);
+wk('c1a',4,'コンテナ兄弟の兄は弟のおやつを毎回食べている','兄よ 弟のプリン食っただろ 兄弟愛より 食い気だろ',42);
+wk('c1b',4,'コンテナ兄弟は二人とも船酔いする','港育ちで船に酔う 兄弟そろって 揺れるのはお前らの足',42);
+wk('q1a',5,'クイーン潮風は年齢をサバ読みしている','サバ読む女王 港の魚は サバでも お前は 読みすぎだ',44);
+wk('q1b',5,'クイーン潮風の王冠はホームセンターの千円','その王冠 ホームセンターで千円 女王様の保証期間は 一年',44);
+wk('t1a',6,'MCタワマンは本当は2階の賃貸','五十階って言ってたろ 本当は二階の賃貸暮らし 家賃も遅れてる',48);
+wk('t1b',6,'MCタワマンの腕時計は偽物','ご自慢の腕時計 秒針が逆回り 偽物だろ メッキがはげてる',48);
+wk('b1a',7,'満員電車ブラザーズは定時退社が夢','定時で帰りたいお前らの夢は 五時 ライムは残業しない',48);
+wk('b1b',7,'満員電車ブラザーズは同期に出世で負けている','同期は部長 お前らは平 平社員のライムは 軽い',48);
+wk('k1a',8,'キング・アポカリプスの本名は田中ヨシオ','王様の本名 田中ヨシオ 世界の終わりもヨシオから始まる',52);
+wk('k1b',8,'キングの王冠は二つ目（一つ目はカラオケで紛失）','お前の王冠 カラオケに忘れた 二つ目の王様 気取るな',52);
+
+// ---- shop
+const SHOP=[[],[],[]];
+function sh(ch,id,t,atk,cat,rh,tags,lure){ ly(id,t,atk,cat,rh,tags,lure,'shop',ch); SHOP[ch].push(id); }
+sh(0,'b01','のどかな町で育った俺は 野菜みたいに 新鮮に歌う',24,'l','あう','田');
+sh(0,'b02','冷たい視線 浴びても平気 田舎者の熱さ 見せてやる',28,'b','あう','田');
+sh(0,'b03','財布の中身は風だけど 心は満員 札束より濃い',30,'s','おい','金');
+sh(0,'b04','年の差なんて関係ねえ ライム前では皆平等',26,'s','','年');
+sh(0,'b05','その顔面 近所の神社の狛犬並み 魔除けにはなる',30,'d','あう','見');
+sh(0,'b06','眠くなるぜ お前のバース 子守歌なら 最高だ',26,'d','','');
+sh(0,'b07','韻を踏まずに 勝てるのか 踏まないでいる 勇気はあるか',18,'d','','',1);
+sh(0,'b08','大地に根を張る 俺のフロウ 台風が来ても 倒れない',34,'l','あい','田');
+sh(1,'b09','潮風を浴びて錆びる鉄骨 俺は錆びない 磨きが違う',38,'l','あう','仕');
+sh(1,'b10','港の灯りは俺の勲章 沈む船にも 光はともる',36,'l','おう','');
+sh(1,'b11','借りは利子つきで返す 倍返しだ 俺は取り立てる',40,'b','えう','金');
+sh(1,'b12','見た目で選ぶな 中身を見ろよ ただし俺は 中身も強い',42,'b','','見');
+sh(1,'b13','踏めないなら黙っとけ ライムの無い夜に 光は差さない',20,'d','','',1);
+sh(1,'b14','空っぽの頭 高い鼻 低い声 三拍子そろった迷惑',44,'d','','見');
+sh(1,'b15','夜景をバックに愛を語る でも俺が語るのは 家賃の話',42,'r','','金家');
+sh(2,'b16','満員電車の汗とため息 吸い込んで吐く 俺のラップ',48,'s','','仕');
+sh(2,'b17','年収自慢は聞き飽きた 俺の資産は 韻と魂',50,'b','','金');
+sh(2,'b18','流行りに乗るな 流行りを作れ 乗るだけなら 誰でも乗れる',52,'b','えう','流');
+sh(2,'b19','韻に頼るな 魂で語れ お前の言葉に 熱はあるのか',24,'d','','',1);
+sh(2,'b20','王冠の重さをお前は知らない 載せたことがあるのはヘルメット',54,'d','','見');
+sh(2,'b21','都会の孤独 満員の街 隣に誰もいない 夜が痛い',56,'s','あい','家');
+sh(2,'b22','天井知らずの野心と愛 全部さらって 頂に立つ',60,'b','あう','');
+// ---- jobs
+const JOBS=[
+ [{n:'コンビニ',ic:'🏪',base:240,ly:ly('j01','いらっしゃいませ 温めますか？ 冷めたライムは お取り替え',22,'w','','仕',0,'job',0),tx:'レジ打ち。店長の口癖は「温めますか？」'},
+  {n:'ネギ収穫',ic:'🧅',base:280,ly:ly('j02','根っこから抜く ネギの勢い 抜けない根性 俺の誇り',26,'l','','田',0,'job',0),tx:'朝からネギを引っこ抜く。腰に来る。'},
+  {n:'農協の配達',ic:'🚚',base:300,ly:ly('j03','荷物を運ぶ 朝の坂道 俺の背中が 語る苦労',28,'s','','仕',0,'job',0),tx:'軽トラで野菜を配達する。'}],
+ [{n:'港の荷役',ic:'⚓',base:400,ly:null,tx:'コンテナをトラックに積みかえる。'},
+  {n:'工事現場',ic:'🚧',base:450,ly:ly('j04','ヘルメット被り 現場に立つ 汗が光る 俺の舞台',36,'s','','仕',0,'job',1),tx:'親方「声が小さい！」'},
+  {n:'屋台の手伝い',ic:'🍢',base:380,ly:null,tx:'おでんの鍋をかき混ぜる。'}],
+ [{n:'ティッシュ配り',ic:'🤲',base:500,ly:ly('j05','ティッシュを配る 手が止まる 受け取る人は 誰もいない',40,'s','あい','仕',0,'job',2),tx:'駅前でティッシュを配る。受け取ってもらえるかは気迫次第。'},
+  {n:'デリバリー',ic:'🛵',base:560,ly:null,tx:'配達アプリで首都を駆け抜ける。'},
+  {n:'タワマン清掃',ic:'🧽',base:600,ly:ly('j06','タワマン掃除 床ピカピカ 俺の心は まだ泥だらけ',44,'s','','金',0,'job',2),tx:'五十階のエントランスを磨く。'}]
+];
+// ---- opponents
+// verse: [text, atk, cat, rhyme, tag]
+const OPP=[
+ {id:0,ch:0,name:'MC稲穂',acc:'🌾',col:'#d8a838',hpp:80,pw:0.74,fav:'l',add:.3,tags:['田舎','家族','仕事'],hab:'ban:l',sl:.08,
+  intro:'ここは俺の田んぼだ。足を踏み入れたからには、刈り取らせてもらうぜ。',lose:'俺の稲穂が……刈られた……。都会の風が、冷たいぜ。',
+  v:[['田舎モンは帰りな 終電もうないぜ',22,'d','','田舎'],['米を育てて 韻を育てて 収穫祭だ お前を刈る',24,'b','あう','田舎'],['ばあちゃん直伝 煮物の味 家族の絆は お前にゃ無い',22,'l','あい','家族'],['朝五時起きの農家の根性 夜更かしラッパー 勝てるのか',20,'d','','仕事'],['畑の真ん中 響く俺の声 カカシも踊る 俺のステージ',18,'l','','田舎'],['お前の親父 何してる？ 俺の親父は 米を作る',20,'d','','家族'],['トラクターよりも速いぜ俺は 耕すぜ お前のバースを',26,'b','','仕事'],['土の匂いが染みついた声 洗っても取れない 誇りの色',28,'l','','田舎']]},
+ {id:1,ch:0,name:'ヤング長老',acc:'👴',col:'#8a9ab8',hpp:90,pw:0.82,fav:'s',add:.2,tags:['年齢','家族','流行'],hab:'ban:s',sl:.08,
+  intro:'ほっほっ、わしは齢十九にして長老。若造に負ける気はせんわい。',lose:'ぐぬぬ……ヒゲが取れてしもうた……。',
+  v:[['わしの若い頃は もっと熱かった お前はまだ ひよっこ',20,'d','','年齢'],['年の功とは このこと 年輪が違う 重みが違う',22,'s','あう','年齢'],['最近の若者は とお嘆きだが 嘆く暇があるなら 稽古しろ',24,'s','','年齢'],['孫の笑顔が俺の原動力 家族を守る 声が出る',22,'s','えう','家族'],['スマホも要らん 手紙が好き 筆の勢いで お前を斬る',26,'b','','流行'],['ヒゲを撫でれば風格が出る お前の顔は 子供の顔',22,'d','あお','年齢'],['長生きの秘訣は早寝早起き 夜更かしのお前は 先に逝く',28,'d','','年齢'],['町内の平和はわしが守る お前は黙って 聞いておけ',24,'s','','家族']]},
+ {id:2,ch:0,name:'DJ軽トラ',acc:'🚚',col:'#3aa89a',hpp:110,pw:0.62,fav:'w',add:.5,tags:['仕事','流行','見た目'],hab:'atk',sl:.1,
+  intro:'軽トラで来た！ ビートも荷台も満載だ、覚悟しな！',lose:'ちくしょう、エンストだ……。次は荷台を空けておく。',
+  v:[['軽トラ飛ばして駆けつけるバトル 荷台にビート 満載だ',24,'w','','仕事'],['スクラッチキュキュッと畑を刻む 俺のミックス 秋の味',22,'w','','流行'],['皿を回せば世界が回る お前の脳も 目が回る',26,'w','あう','見た目'],['最新の流行は追わない俺は ビートで流行を 作る側',28,'b','','流行'],['積み荷はビート 運ぶのは魂 配達完了 お前に届け',24,'s','','仕事'],['ヘッドホンの中は俺の聖域 他人の声は 聞こえない',22,'b','あい','見た目'],['ガソリン代が痛いのは本当 でもビート代は 無料だ',20,'s','','金'],['エンジンかけろ 声のエンジン 回転数なら 負けない',26,'b','あい','仕事']]},
+ {id:3,ch:1,name:'MC鉄骨',acc:'⛑',col:'#e08a2a',hpp:120,pw:0.57,fav:'b',add:.4,tags:['仕事','金','見た目'],hab:'ban:b',sl:.1,
+  intro:'ここは港。鉄骨と汗の街だ。お前の薄いライム、へし折ってやる。',lose:'へし折られたのは、俺の方か……。',
+  v:[['鉄骨組んで築いた城 お前の言葉は 砂の城',30,'b','','仕事'],['高いところは慣れっこだぜ 俺の目線は いつも上だ',30,'b','','見た目'],['汗水垂らして稼いだ金は お前の口先より重い',30,'d','おい','金'],['ヘルメット越しに睨むぜ俺は 安全第一 勝つのも第一',32,'b','','仕事'],['日当は安い でも誇りは高い 札束よりも 汗が光る',30,'s','','金'],['現場叩き上げ 学歴ゼロでも 言葉の強度は 世界一',34,'b','','仕事'],['見た目で判断するならしなよ 筋肉の説得力 だぜ',28,'d','','見た目'],['鉄は熱いうちに打て 俺のバース お前はもう 冷めてる',32,'d','えう','仕事']]},
+ {id:4,ch:1,name:'コンテナ兄弟',acc:'📦',col:'#4a7ad8',hpp:130,pw:0.53,fav:'d',add:.5,tags:['家族','見た目','金'],hab:'ban:d',sl:.1,pair:1,
+  intro:'「兄貴！」「弟よ！」「「二人合わせて、コンテナ兄弟！ 二対一で悪いな！」」',lose:'「「……兄貴、弟よ、帰ってプリン食おう。」」',
+  v:[['兄貴と弟 二人で一つ 一人で来るなよ 足りないぜ',34,'d','','家族'],['積み上げるぜ言葉のコンテナ お前のバース 全部ぎゅうぎゅう',30,'w','','仕事'],['双子じゃないけど息ぴったり 二人のフロウ 倍返し',36,'b','','家族'],['見た目は怖いが中身はもっと怖い 殴り合いは 苦手',32,'d','','見た目'],['港の男は酒に強い 口も強くて 財布は弱い',34,'d','','金'],['兄が突っ込み弟がボケる 漫才じゃなく これはバトル',30,'w','','家族'],['潮風浴びて日焼けした肌 お前の青白さ 病院行け',36,'d','','見た目'],['重たい荷物も二人で運ぶ お前の悩みも 二人で聞く',32,'s','','家族']]},
+ {id:5,ch:1,name:'クイーン潮風',acc:'👑',col:'#e85a9a',hpp:135,pw:0.58,fav:'r',add:.6,tags:['見た目','流行','年齢'],hab:'ban:r',sl:.12,
+  intro:'あたしの前でマイクを握るなんて、百年早いわ。ひれ伏しなさい。',lose:'あたしの……王冠が……。千円なのに……。',
+  v:[['鏡よ鏡 世界で一番 美しいのは このあたし',36,'b','','見た目'],['流行りのメイク 流行りの曲 全部あたしが 作ってる',38,'b','','流行'],['あなたの恋は浅瀬の水たまり あたしの愛は 深海',38,'r','','流行'],['年齢？ 聞くなんて野暮 女王に年は 存在しない',34,'d','','年齢'],['王冠の重さ わかるかしら 輝きすぎて 目が痛い',36,'b','あい','見た目'],['潮風になびく髪と共に あなたのプライドも 飛んでいく',38,'d','','見た目'],['お金じゃ買えない気品の差 あなたのは安物 すぐ分かる',40,'d','','金'],['命令に従いなさい 逆らう者は 追放よ',36,'w','','流行']]},
+ {id:6,ch:2,name:'MCタワマン',acc:'🕶',col:'#d8c04a',hpp:150,pw:0.73,fav:'b',add:.6,tags:['金','流行','見た目'],hab:'atk',sl:.12,
+  intro:'五十階から降りてきてやったぜ。お前、家賃いくらだ？ ははっ。',lose:'ばかな……。二階の賃貸に帰る……。',
+  v:[['五十階から見下ろす景色 お前は豆粒 見えやしない',46,'b','あい','金'],['年収は桁違い 利息で食う俺 労働なんて 昭和の遺物',44,'b','','金'],['最新のガジェット最新の流行 時代の先を 歩く男',42,'b','','流行'],['高級スーツに高級時計 お前の服は 量販店',44,'d','','見た目'],['夜景を独り占め ワインを傾け お前は下で 見上げてな',46,'b','','金'],['都会は戦場 勝ち組だけが生き残る お前はもう 脱落',48,'d','','仕事'],['エレベーターの速さは光速 俺の出世も 光速',42,'b','','流行'],['ブランドの靴 ブランドの口 お前の口は ノーブランド',44,'d','','見た目']]},
+ {id:7,ch:2,name:'満員電車ブラザーズ',acc:'🚃',col:'#6a8a6a',hpp:160,pw:0.85,fav:'s',add:.5,tags:['仕事','年齢','家族'],hab:'rep',sl:.1,pair:1,
+  intro:'「「毎朝揉まれて鍛えた声だ。満員電車より濃いバトルにしてやる！」」',lose:'「「……これで、定時で帰れる。」」',
+  v:[['毎朝同じ電車に揺られ 同じ顔した 人の海',44,'s','','仕事'],['つり革握る手に力 バース握る口に力',42,'s','','仕事'],['家族のために通勤戦士 疲れた顔にも 誇りがある',46,'s','あう','家族'],['定年まであと十五年 年金あてにせず ラップで稼ぐ',44,'s','','年齢'],['会議会議また会議 俺たちのバースは 議事録不要',40,'d','','仕事'],['押されて押されて揉まれて育つ お前は温室 そこが違う',46,'d','','年齢'],['残業代は出ないでも韻は出る 無料で出る',42,'w','','仕事'],['ネクタイ緩めて本音を言うぜ 建前なんか もう捨てた',48,'s','','仕事']]},
+ {id:8,ch:2,name:'キング・アポカリプス',acc:'💀',col:'#7a1a3a',hpp:180,pw:0.89,fav:'d',add:.8,tags:['金','見た目','流行','年齢'],hab:'ban:d',sl:.15,boss:1,
+  intro:'よく来たな、MCライム侍。ここがメトロポリスの頂点。世界の終わりを聞かせてやろう。',lose:'ばかな……この俺が、終末を迎えるとは……。……ただのヨシオに戻りたい……。',
+  v:[['世界の終わりに立つのは王 お前は前座 引っ込んでろ',50,'d','','見た目'],['黙示録を刻む俺のライム 聞く者は皆 終末を知る',52,'b','','流行'],['金も名誉も全て手にした 残るはお前の首ひとつ',54,'b','','金'],['若さに価値などない 経験が違う お前の人生まだ序章',52,'d','','年齢'],['王冠の輝き目が潰れるぞ 見た目で既に 勝負あり',54,'b','','見た目'],['流行は俺が作って壊す お前の流行 今日で終了',56,'b','','流行'],['天下のメトロポリス 俺の庭 お前は迷い込んだ 小動物',50,'d','','見た目'],['終末のラッパが鳴り響く 最後の韻を 踏むのは俺',56,'w','','金']]}
+];
+OPP.forEach(o=>{ o.weak=Object.keys(WK).filter(k=>LY[k].weak===o.id); });
+const CHAPT=[
+ {n:'ねぎま町',sub:'地方',hp:100,prize:[150,200,300],col:'#7ac060'},
+ {n:'湾岸シティ',sub:'地方都市',hp:110,prize:[250,300,400],col:'#4aa0e0'},
+ {n:'メトロポリス',sub:'首都',hp:120,prize:[0,0,0],col:'#b060e0'}
+];
+const ROUND_NAMES=['1回戦','準決勝','決勝'];
+// ---- scenes
+const SC_OPEN=[
+ ['','ここは地方の小さな町、ねぎま町。人口は少ないが、ラップバトルの熱気だけは日本一。'],
+ ['侍','拙者、MCライム侍。刀はマイクに持ち替えた。目指すは首都メトロポリスの頂点でござる！'],
+ ['司会','ねぎま町ラップ大会、エントリー受付中だよ！ 優勝すれば湾岸シティの大会に進める！'],
+ ['侍','ふむ。バースを斬るには、まず言葉のネタ――リリックが要る。町を歩いて集めねば。'],
+ ['ダイソン','待ちたまえ、侍くん。リリックは売り買いもできるんだ。私の店でね……。いらないリリックは、吸わせてもらうよ。'],
+ ['ジャッジ','ピーッ！ バトルは毎ラウンド、俺が「ロウ」を決める。破ればイエローカード。二枚でレッドだ。覚えておけ。'],
+ ['侍','承知。5日間で、リリックと金と、相手の弱みを集めるでござる！']
+];
+const SC_CH=[
+ null,
+ [['','優勝トロフィーを手に、侍は港町へ。ここは湾岸シティ。潮風と、鉄と、ネオンの街。'],['司会','湾岸シティ大会、まもなく開幕！ 出るのは猛者ばかりだよ！'],['ダイソン','やあ、また会ったね。この町でも、私は店を開いているよ。吸わせてもらうよ……お代と引き換えにね。'],['侍','5日間、また歩き回るでござる！']],
+ [['','港町を勝ち抜いた侍の前に、高層ビルの森が現れた。ここは首都、メトロポリス。'],['司会','いよいよ、メトロポリス頂上決戦！ 勝ち上がれば、あの「キング・アポカリプス」が待っている！'],['ジャッジ','首都のロウは厳しいぞ。ピーッ！ 覚悟しておけ。'],['侍','頂まで、あと一歩。5日間、魂を磨くでござる。']]
+];
+const SC_END=[
+ ['','キング・アポカリプスが倒れ、メトロポリスの夜空に、割れんばかりの歓声が響き渡った。'],
+ ['司会','勝者――MCライム侍！！ 地方から首都へ、駆け上がった男だ！'],
+ ['侍','拙者は、頂に立った。……いや、ライムの道に終わりはない。'],
+ ['ジャッジ','ピーッ！ 見事なバトルだった。ロウは、すべて守られた……ということにしておこう。'],
+ ['ダイソン','見事だったよ、MCライム侍。……ところで。'],
+ ['ダイソン','君のリリック、いつか全部吸わせてもらうよ。'],
+ ['侍','…………え。']
+];
+window.__metroData={CAT,TGN,LY,LIST,STARTERS,WK,SPOTS,EV,SHOP,JOBS,OPP,CHAPT,ROUND_NAMES,SC_OPEN,SC_CH,SC_END};
+})();
+(()=>{
+'use strict';
+const D=window.__metroData;
+const {CAT,LY,LIST,STARTERS,WK,SPOTS,EV,SHOP,JOBS,OPP,CHAPT,ROUND_NAMES}=D;
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const HITM=2.5,RHYM=1.3,WEAKM=1.5,RECM=1.3,LEADM=1.25,YELP=10,HAND=5,DECKMAX=15,SELLMIN=5;
+// ------------------------------------------------------------ rng
+let rs=12345;
+function seed(s){ rs=(s>>>0)||1; }
+function rnd(){ rs=(rs+0x6D2B79F5)|0; let t=Math.imul(rs^(rs>>>15),1|rs); t=(t+Math.imul(t^(t>>>7),61|t))^t; return ((t^(t>>>14))>>>0)/4294967296; }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function pick(a){ return a[Math.floor(rnd()*a.length)]; }
+// ------------------------------------------------------------ telemetry (for tests)
+const TEL={matches:0,wins:0,oppRed:0,oppYellow:0,myViol:0,myYellow:0,myRed:0,hits:0,verses:0,timeouts:0,byOpp:OPP.map(()=>({m:0,w:0})),vlog:[]};
+// ------------------------------------------------------------ game state
+let G=null;
+function newG(){
+  const g={ch:0,day:1,slot:0,money:300,lib:{},deck:[],fight:0,turns:0,dmg:0,hits:0,snap:null,acts:0,fails:0};
+  STARTERS.forEach(s=>g.lib[s]=1);
+  g.deck=autoDeckFor(g,null);
+  return g;
+}
+const owned=id=>!!G.lib[id];
+const ownedList=(g)=>Object.keys((g||G).lib).map(k=>LY[k]);
+function lyricsOwned(g){ return ownedList(g).filter(l=>l.weak===undefined); }
+function weakOwned(g){ return ownedList(g).filter(l=>l.weak!==undefined); }
+function takeSnap(){ G.snap=JSON.stringify({money:G.money,lib:G.lib,deck:G.deck,ch:G.ch}); }
+function restoreSnap(){
+  if(!G.snap) return;
+  const s=JSON.parse(G.snap); G.money=s.money; G.lib=s.lib; G.deck=s.deck; G.ch=s.ch; G.day=5; G.slot=0; G.fight=0;
+}
+// ------------------------------------------------------------ explore
+function evFor(ch,spot,day,slot){
+  const arr=EV[ch][spot]; const x=arr.find(e=>e.s==='x');
+  if(x && day%2===0 && slot===((day/2)%3)) return x;
+  return arr.find(e=>e.s===String(slot));
+}
+function evResolve(e){ // what would happen now (no side effects)
+  const r=e.r;
+  if((r.k==='L'||r.k==='W') && owned(r.id)) return {k:'M',amt:40,dup:true,id:r.id};
+  return r;
+}
+function evValue(e){
+  const r=evResolve(e);
+  if(r.k==='W'){ const l=LY[r.id]; return 400+l.atk; }
+  if(r.k==='L'){ const l=LY[r.id]; return l.atk*(l.lure?1.6:1)+(l.atk>=40?30:0); }
+  if(r.k==='M') return r.amt*0.02;
+  return 0;
+}
+function doExplore(spot){
+  const e=evFor(G.ch,spot,G.day,G.slot); const r=evResolve(e);
+  if(r.k==='L'||r.k==='W') G.lib[r.id]=1;
+  else if(r.k==='M') G.money+=r.amt;
+  return {e,r};
+}
+// advance time; returns true if the tournament starts now
+function advance(){
+  G.acts++; G.turns++; G.slot++;
+  if(G.slot>2){ G.slot=0; G.day++; if(G.day===5) takeSnap(); }
+  if(G.day>5){ G.day=5; G.slot=2; return true; }
+  return false;
+}
+function leaveEarly(){ if(G.day<5){ G.day=5; G.slot=0; takeSnap(); } }
+function jobMult(avg){ return 0.5+clamp(avg,0,1); }
+function doJob(ji,mult){
+  const j=JOBS[G.ch][ji]; const pay=Math.round(j.base*mult); G.money+=pay;
+  let got=null; if(j.ly && !owned(j.ly) && rnd()<0.45){ G.lib[j.ly]=1; got=j.ly; }
+  return {pay,got,j};
+}
+// ------------------------------------------------------------ shop
+const priceOf=l=>l.atk*10, sellOf=l=>Math.floor(l.atk*5);
+function shopStock(){ const out=[]; for(let c=0;c<=G.ch;c++) SHOP[c].forEach(id=>{ if(!owned(id)) out.push(LY[id]); }); return out; }
+function canBuy(l){ return G.money>=priceOf(l) && !owned(l.id); }
+function buyL(id){ const l=LY[id]; if(!canBuy(l)) return false; G.money-=priceOf(l); G.lib[id]=1; return true; }
+function canSell(l){ return l.weak===undefined && owned(l.id) && lyricsOwned(G).length>SELLMIN; }
+function sellL(id){ const l=LY[id]; if(!canSell(l)) return false; G.money+=sellOf(l); delete G.lib[id]; G.deck=G.deck.filter(x=>x!==id); return true; }
+// ------------------------------------------------------------ deck
+function autoDeckFor(g,oi){
+  const o=oi==null?null:OPP[oi];
+  const pool=Object.keys(g.lib).map(k=>LY[k]).filter(l=>l.weak===undefined);
+  const sc=l=>{
+    let s=l.atk; if(o){ s+=6*l.tags.filter(t=>o.tags.includes(t)).length; }
+    if(l.rh) s+=3; return s;
+  };
+  pool.sort((a,b)=>sc(b)-sc(a));
+  const out=[], cc={};
+  pool.filter(l=>l.lure).slice(0,3).forEach(l=>{ out.push(l.id); cc[l.cat]=(cc[l.cat]||0)+1; });
+  // keep a few cards that stay legal under "ATK40以上禁止" and "韻踏み禁止"
+  pool.filter(l=>!l.lure&&l.atk<40&&!l.rh).slice(0,3).forEach(l=>{ if(!out.includes(l.id)){ out.push(l.id); cc[l.cat]=(cc[l.cat]||0)+1; } });
+  for(const l of pool){ if(out.length>=DECKMAX) break; if(out.includes(l.id)) continue; if((cc[l.cat]||0)>=5) continue; out.push(l.id); cc[l.cat]=(cc[l.cat]||0)+1; }
+  for(const l of pool){ if(out.length>=DECKMAX) break; if(!out.includes(l.id)) out.push(l.id); }
+  return out;
+}
+// ------------------------------------------------------------ laws
+const lawLabel=L=>L.t==='ban'?`${CAT[L.cat]}禁止`:L.t==='rec'?`${CAT[L.cat]}推奨`:L.t==='atk'?`ATK${L.v}以上禁止`:L.t==='rep'?'同じカテゴリ連続禁止':'韻踏み禁止';
+const lawKind=L=>L.t==='rec'?'rec':L.t==='rhy'?'rhy':'ban';
+function genLaws(bt){
+  const ch=bt.ch;
+  const n=rnd()<(bt.o.boss?0.75:[0.12,0.25,0.4][ch])?2:1;
+  const wts=[['ban',4],['rec',3],['atk',ch===0?1:2],['rep',0.5+ch],['rhy',[1.3,2.2,3][ch]]];
+  const laws=[]; const used={};
+  for(let k=0;k<n;k++){
+    const av=wts.filter(w=>!used[w[0]]); const tot=av.reduce((a,w)=>a+w[1],0); let r=rnd()*tot, t=av[0][0];
+    for(const w of av){ r-=w[1]; if(r<=0){ t=w[0]; break; } }
+    used[t]=1;
+    const cats=Object.keys(CAT);
+    if(t==='ban'||t==='rec'){
+      let cat=pick(cats); const other=laws.find(l=>l.t==='ban'||l.t==='rec');
+      while(other&&other.cat===cat) cat=pick(cats);
+      laws.push({t,cat});
+    } else if(t==='atk') laws.push({t,v:40});
+    else laws.push({t});
+  }
+  return laws;
+}
+// ------------------------------------------------------------ battle core
+function mkOppCard(v,i){ return {id:'o'+i,t:v[0],atk:v[1],cat:v[2],rh:v[3],tags:[v[4]],lure:false,opp:true}; }
+function newBattle(oi){
+  const o=OPP[oi];
+  const bt={oi,o,ch:o.ch,hp:{p:CHAPT[o.ch].hp,o:o.hpp},max:{p:CHAPT[o.ch].hp,o:o.hpp},y:{p:0,o:0},round:0,laws:[],first:'p',seq:0,prev:null,lastCat:{p:null,o:null},
+    pDeck:shuffle(G.deck.filter(id=>LY[id]&&owned(id)).map(id=>LY[id])),pDisc:[],pHand:[],oDeck:shuffle(o.v.map(mkOppCard)),oDisc:[],oHand:[],phase:'start',winner:null,why:'',cheer:0,verses:0};
+  o.weak.forEach(w=>{ if(owned(w)) bt.pHand.push(LY[w]); });
+  while(bt.pHand.length<HAND && drawP(bt));
+  while(bt.oHand.length<HAND && drawO(bt));
+  return bt;
+}
+function drawP(bt){ if(!bt.pDeck.length){ bt.pDeck=shuffle(bt.pDisc); bt.pDisc=[]; } if(!bt.pDeck.length) return false; bt.pHand.push(bt.pDeck.pop()); return true; }
+function drawO(bt){ if(!bt.oDeck.length){ bt.oDeck=shuffle(bt.oDisc); bt.oDisc=[]; } if(!bt.oDeck.length) return false; bt.oHand.push(bt.oDeck.pop()); return true; }
+function btStartRound(bt){ bt.round++; bt.laws=genLaws(bt); bt.seq=0; bt.prev=null; bt.lastCat={p:null,o:null}; bt.phase='choose'; }
+function btSetFirst(bt,side){ bt.first=side; bt.phase='turn'; }
+const btSide=bt=>bt.seq%2===0?bt.first:(bt.first==='p'?'o':'p');
+function lawViol(bt,side,c,forceRh){
+  const v=[];
+  for(const L of bt.laws){
+    if(L.t==='ban'&&c.cat===L.cat) v.push(L);
+    else if(L.t==='atk'&&c.atk>=L.v) v.push(L);
+    else if(L.t==='rep'&&bt.lastCat[side]===c.cat) v.push(L);
+    else if(L.t==='rhy'&&(c.rh||forceRh)) v.push(L);
+  }
+  return v;
+}
+function calc(bt,side,c){
+  const prev=bt.prev, lead=!prev, isW=side==='p'&&c.weak===bt.oi;
+  let hit=false;
+  if(isW) hit=true; else if(!lead && c.tags.some(t=>prev.card.tags.includes(t))) hit=true;
+  let m=c.atk*0.5;
+  if(hit) m*=HITM; if(lead&&!isW) m*=LEADM;
+  const rh=!!(c.rh && prev && prev.rh && c.rh===prev.rh); if(rh) m*=RHYM;
+  if(isW) m*=WEAKM;
+  const rec=bt.laws.some(L=>L.t==='rec'&&L.cat===c.cat); if(rec) m*=RECM;
+  if(side==='o') m*=bt.o.pw;
+  return {dmg:Math.max(1,Math.round(m)),hit,rh,weak:isW,rec,lead};
+}
+function btApply(bt,side,c,forceRh){
+  const oth=side==='p'?'o':'p';
+  const viol=lawViol(bt,side,c,forceRh);
+  const cr=calc(bt,side,c);
+  const res={side,card:c,viol:viol.length?viol:null,dmg:0,hit:cr.hit,rh:cr.rh,weak:cr.weak,rec:cr.rec,lead:cr.lead,flag:null,self:0,over:null,forced:!!forceRh,oldPrev:bt.prev};
+  if(viol.length){
+    bt.y[side]++; res.self=YELP; bt.hp[side]=Math.max(0,bt.hp[side]-YELP); res.flag=bt.y[side]>=2?'red':'yellow';
+    if(res.flag==='red') res.over=oth;
+  } else { res.dmg=cr.dmg; bt.hp[oth]=Math.max(0,bt.hp[oth]-cr.dmg); }
+  if(!res.over){ if(bt.hp.p<=0) res.over='o'; else if(bt.hp.o<=0) res.over='p'; }
+  bt.lastCat[side]=c.cat; bt.prev={side,card:c,rh:forceRh?'*':c.rh}; bt.seq++; bt.verses++;
+  bt.cheer=Math.min(1,bt.cheer+res.dmg/70+(res.hit&&!res.viol?0.25:0));
+  // telemetry
+  TEL.verses++;
+  if(side==='p'){ G.turns++; if(!res.viol){ G.dmg+=res.dmg; if(res.hit){ G.hits++; TEL.hits++; } } else { TEL.myViol++; if(res.flag==='yellow') TEL.myYellow++; else TEL.myRed++; } }
+  else if(res.viol){ if(res.flag==='yellow') TEL.oppYellow++; else TEL.oppRed++; }
+  if(res.over){ bt.winner=res.over; bt.phase='over'; bt.why=res.flag==='red'?'red':'hp'; }
+  else if(bt.seq>=4){
+    if(bt.round>=3){ const rp=bt.hp.p/bt.max.p, ro=bt.hp.o/bt.max.o; bt.winner=rp>=ro?'p':'o'; bt.why='judge'; bt.phase='over'; res.over=bt.winner; res.judged=true; }
+    else bt.phase='roundEnd';
+  }
+  return res;
+}
+function btPlayP(bt,idx){
+  const nl=bt.pHand.filter(x=>!lawViol(bt,'p',x,false).length).length;
+  const c=bt.pHand.splice(idx,1)[0];
+  const res=btApply(bt,'p',c,false);
+  if(res.viol&&TEL.vlog.length<300) TEL.vlog.push({nl,laws:bt.laws.map(lawLabel),card:c.t,cat:c.cat,round:bt.round,seq:bt.seq});
+  if(c.weak===undefined) bt.pDisc.push(c);
+  if(bt.phase!=='over') drawP(bt);
+  return res;
+}
+// if no card in hand obeys the laws, the judge makes the player redraw (never forces a violation)
+function btEnsureLegal(bt){
+  const legal=()=>bt.pHand.some(c=>!lawViol(bt,'p',c,false).length);
+  if(legal()) return false;
+  for(let k=0;k<8;k++){
+    const keep=bt.pHand.filter(c=>c.weak!==undefined); const out=bt.pHand.filter(c=>c.weak===undefined);
+    bt.pDisc.push(...out); bt.pHand=keep;
+    while(bt.pHand.length<HAND && drawP(bt));
+    if(legal()) return true;
+  }
+  return true;
+}
+function oppPick(bt){
+  const o=bt.o, pool=bt.oHand, prev=bt.prev;
+  const rhy=bt.laws.find(L=>L.t==='rhy');
+  const val=c=>calc(bt,'o',c).dmg+rnd()*0.01;
+  const best=(arr)=>arr.reduce((a,c)=>(!a||val(c)>val(a))?c:a,null);
+  let c=null, forced=false;
+  if(rhy){
+    let p; if(!prev) p=o.add; else if(prev.side==='p'&&prev.card.lure) p=Math.min(0.95,o.add*1.5); else p=o.add*0.35;
+    if(rnd()<p){
+      forced=true;
+      const ok=pool.filter(x=>!bt.laws.some(L=>L.t!=='rhy'&&lawViol({laws:[L],lastCat:bt.lastCat},'o',x,false).length));
+      c=best(ok.length?ok:pool);
+    }
+  }
+  if(!c){
+    let pv=o.sl;
+    const h=o.hab.split(':');
+    const hl=bt.laws.find(L=>(h[0]==='ban'&&L.t==='ban'&&L.cat===h[1])||(h[0]==='atk'&&L.t==='atk')||(h[0]==='rep'&&L.t==='rep'));
+    if(hl) pv=0.5;
+    if(rnd()<pv) c=best(pool);
+    else { const legal=pool.filter(x=>!lawViol(bt,'o',x,false).length); c=best(legal.length?legal:pool); }
+  }
+  return {c,forced};
+}
+function btPlayO(bt){
+  const {c,forced}=oppPick(bt);
+  const i=bt.oHand.indexOf(c); bt.oHand.splice(i,1); bt.oDisc.push(c);
+  const res=btApply(bt,'o',c,forced);
+  if(bt.phase!=='over') drawO(bt);
+  return res;
+}
+function btEnd(bt){ // record result in G/TEL
+  TEL.matches++; TEL.byOpp[bt.oi].m++;
+  if(bt.winner==='p'){ TEL.wins++; TEL.byOpp[bt.oi].w++; }
+}
+// ------------------------------------------------------------ AI policies
+function oppBestReply(bt,c){
+  const sv=bt.prev; bt.prev={side:'p',card:c,rh:c.rh};
+  let m=0; for(const oc of bt.oHand){ const d=calc(bt,'o',oc).dmg; if(d>m) m=d; }
+  bt.prev=sv; return m;
+}
+function tasFirst(bt){ return 'o'; }
+function tasPick(bt){
+  const hand=bt.pHand; const rhy=bt.laws.some(L=>L.t==='rhy');
+  let best=-1e9, bi=0, anyLegal=hand.some(c=>!lawViol(bt,'p',c,false).length);
+  hand.forEach((c,i)=>{
+    const v=lawViol(bt,'p',c,false);
+    if(anyLegal&&v.length) return;
+    const cr=calc(bt,'p',c);
+    let s=cr.dmg;
+    if(bt.seq<3) s-=0.9*oppBestReply(bt,c);
+    if(!cr.hit&&!cr.weak) s-=0.12*c.atk;
+    if(rhy&&c.lure&&bt.seq<3) s+=22+55*bt.o.add;
+    if(!anyLegal) s-=100*v.length;
+    if(s>best){ best=s; bi=i; }
+  });
+  return bi;
+}
+function humanFirst(bt){ return rnd()<0.5?'p':'o'; }
+function humanPick(bt){
+  const hand=bt.pHand; const legal=hand.map((c,i)=>i).filter(i=>!lawViol(bt,'p',hand[i],false).length);
+  return legal.length?pick(legal):Math.floor(rnd()*hand.length);
+}
+function runBattle(bt,fFirst,fPick){
+  while(bt.phase!=='over'){
+    btStartRound(bt); btSetFirst(bt,fFirst(bt));
+    while(bt.phase==='turn'){
+      if(btSide(bt)==='p') btEnsureLegal(bt);
+      const res=btSide(bt)==='p'?btPlayP(bt,fPick(bt)):btPlayO(bt);
+      void res;
+    }
+    if(bt.phase==='roundEnd') bt.phase='next';
+  }
+  btEnd(bt); return bt;
+}
+// ------------------------------------------------------------ headless playthrough helpers (used by tests)
+function autoShopping(){
+  // sell weakest while buying stronger
+  let changed=true, guard=0;
+  while(changed&&guard++<40){
+    changed=false;
+    const stock=shopStock().sort((a,b)=>b.atk-a.atk);
+    for(const l of stock){
+      if(canBuy(l)){ const mine=lyricsOwned(G); if(l.atk> Math.min(...mine.map(m=>m.atk))+4 || mine.length<DECKMAX){ buyL(l.id); changed=true; break; } }
+      else {
+        // try selling the weakest to afford
+        const mine=lyricsOwned(G).filter(m=>canSell(m)&&m.atk<l.atk-8).sort((a,b)=>a.atk-b.atk);
+        let m=G.money, k=0; while(k<mine.length&&m<priceOf(l)){ m+=sellOf(mine[k]); k++; }
+        if(m>=priceOf(l)&&k>0&&k<=2){ for(let q=0;q<k;q++) sellL(mine[q].id); buyL(l.id); changed=true; break; }
+      }
+    }
+  }
+}
+function humanShopping(){
+  const stock=shopStock().sort((a,b)=>b.atk-a.atk);
+  for(const l of stock) if(canBuy(l)) buyL(l.id);
+}
+function simChapter(mode){ // run one chapter exploration (mode 'human'|'tas'), returns after day>5
+  G.day=1; G.slot=0;
+  if(mode==='human'){
+    for(let i=0;i<15;i++){
+      const r=rnd();
+      if(r<0.7) doExplore(Math.floor(rnd()*7)); else doJob(Math.floor(rnd()*3),jobMult(rnd()));
+      advance();
+    }
+    humanShopping();
+  }
+  G.day=5; G.slot=0; // not used further
+}
+function exploreTAS(){
+  G.day=1; G.slot=0;
+  while(true){
+    let bs=-1,bv=-1;
+    for(let s=0;s<7;s++){ const v=evValue(evFor(G.ch,s,G.day,G.slot)); if(v>bv){bv=v;bs=s;} }
+    if(bv>=[28,32,40][G.ch]) doExplore(bs); else doJob(2,1.5);
+    if(G.slot===2&&G.day===4) { /* shop before last day handled by UI/auto */ }
+    if(advance()) break;
+  }
+}
+function simRun(mode,maxCh){
+  G=newG(); let firstTry=[null,null,null], matchRes=[];
+  for(let ch=0;ch<=maxCh;ch++){
+    G.ch=ch; G.fight=0;
+    let attempts=0;
+    // exploration
+    if(mode==='human'){ simChapter('human'); } else { exploreTAS(); autoShopping(); }
+    G.day=5; takeSnap();
+    while(attempts<8){
+      attempts++;
+      let ok=true;
+      for(let f=0;f<3;f++){
+        const oi=ch*3+f;
+        if(mode==='tas'){ G.deck=autoDeckFor(G,oi); } else G.deck=autoDeckFor(G,oi);
+        const bt=newBattle(oi); runBattle(bt,mode==='tas'?tasFirst:humanFirst,mode==='tas'?tasPick:humanPick);
+        matchRes.push([oi,bt.winner==='p',bt.why,attempts]);
+        if(bt.winner!=='p'){ ok=false; break; }
+      }
+      if(firstTry[ch]===null) firstTry[ch]=ok;
+      if(ok) break;
+      restoreSnap();
+      if(mode==='human'){ for(let i=0;i<3;i++){ const r=rnd(); if(r<0.7) doExplore(Math.floor(rnd()*7)); else doJob(Math.floor(rnd()*3),jobMult(rnd())); } humanShopping(); }
+      else { /* tas */ autoShopping(); }
+      takeSnap();
+    }
+    if(!matchRes.length||matchRes[matchRes.length-1][1]===false&&attempts>=8) break;
+  }
+  return {firstTry,matchRes};
+}
+// ------------------------------------------------------------ audio
+let AC=null, master=null, noiseBuf=null, muted=false, ttsOn=false;
+try{ muted=localStorage.getItem('metro_mute')==='1'; ttsOn=localStorage.getItem('metro_tts')==='1'; }catch(e){}
+function ac(){
+  if(!AC){
+    try{
+      AC=new (window.AudioContext||window.webkitAudioContext)(); master=AC.createGain(); master.gain.value=muted?0:0.65; master.connect(AC.destination);
+      noiseBuf=AC.createBuffer(1,AC.sampleRate,AC.sampleRate); const d=noiseBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+    }catch(e){ AC=null; }
+  }
+  if(AC&&AC.state==='suspended'){ try{ AC.resume(); }catch(e){} }
+  return AC;
+}
+function tone(f,t0,dur,type,vol,f2){
+  if(!AC||muted) return; const o=AC.createOscillator(), g=AC.createGain();
+  o.type=type||'sine'; o.frequency.setValueAtTime(f,t0); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t0+dur);
+  g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(vol||0.2,t0+0.008); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  o.connect(g); g.connect(master); o.start(t0); o.stop(t0+dur+0.02);
+}
+function noise(t0,dur,vol,hp,lp,sweepTo){
+  if(!AC||muted||!noiseBuf) return; const s=AC.createBufferSource(); s.buffer=noiseBuf; s.loop=true;
+  const g=AC.createGain(), f=AC.createBiquadFilter(); f.type=hp?'highpass':'lowpass'; f.frequency.setValueAtTime(hp||lp||2000,t0);
+  if(sweepTo) f.frequency.exponentialRampToValueAtTime(sweepTo,t0+dur);
+  g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(vol,t0+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  s.connect(f); f.connect(g); g.connect(master); s.start(t0); s.stop(t0+dur+0.02);
+}
+function sfx(n){
+  if(!ac()||muted) return; const t=AC.currentTime;
+  switch(n){
+    case 'tap': tone(660,t,.07,'square',.07); break;
+    case 'ok': tone(523,t,.08,'triangle',.15); tone(784,t+.07,.12,'triangle',.15); break;
+    case 'coin': tone(988,t,.07,'square',.1); tone(1319,t+.07,.2,'square',.1); break;
+    case 'buy': tone(659,t,.08,'triangle',.18); tone(880,t+.08,.08,'triangle',.18); tone(1175,t+.16,.2,'triangle',.18); break;
+    case 'suck': noise(t,.9,.3,0,3000,300); tone(300,t,.9,'sawtooth',.12,60); tone(90,t,.9,'sine',.2,40); break;
+    case 'hit': noise(t,.15,.3,800); tone(110,t,.2,'sine',.4,50); tone(440,t,.15,'square',.1); break;
+    case 'smash': noise(t,.35,.4,500); tone(90,t,.4,'sine',.5,35); tone(880,t,.3,'sawtooth',.1,220); tone(1320,t+.05,.3,'triangle',.1); break;
+    case 'whistle': { for(let i=0;i<2;i++){ const o=AC.createOscillator(), g=AC.createGain(), l=AC.createOscillator(), lg=AC.createGain(); o.type='sine'; o.frequency.value=2900; l.frequency.value=38; lg.gain.value=160; l.connect(lg); lg.connect(o.frequency); g.gain.setValueAtTime(0.0001,t+i*.32); g.gain.exponentialRampToValueAtTime(.16,t+i*.32+.02); g.gain.exponentialRampToValueAtTime(0.0001,t+i*.32+.28); o.connect(g); g.connect(master); o.start(t+i*.32); l.start(t+i*.32); o.stop(t+i*.32+.3); l.stop(t+i*.32+.3); } break; }
+    case 'cheer': noise(t,.9,.22,0,1800,800); noise(t+.05,.9,.12,1200); break;
+    case 'boo': tone(180,t,.5,'sawtooth',.14,120); noise(t,.5,.1,0,500); break;
+    case 'win': [523,659,784,1047].forEach((f,i)=>tone(f,t+i*.11,.3,'triangle',.18)); break;
+    case 'lose': [392,330,262].forEach((f,i)=>tone(f,t+i*.2,.4,'sawtooth',.1)); break;
+    case 'bad': tone(200,t,.18,'square',.12); tone(150,t+.12,.25,'square',.12); break;
+    case 'flip': noise(t,.05,.12,3000); break;
+    case 'stop': tone(880,t,.06,'square',.14); break;
+  }
+}
+// beat (90 BPM boom-bap)
+let beatOn=false, beatTimer=0, nextStep=0, stepNo=0;
+const BPM=90, STEP=60/BPM/4;
+const BASS=[55,0,0,55,0,0,65.4,0, 0,0,73.4,0, 55,0,49,0];
+function beatStep(n,t){
+  const s=n%16, bar=Math.floor(n/16)%4;
+  if(s===0||s===7||(s===10&&bar%2===1)||(s===14&&bar===3)){ tone(130,t,.2,'sine',.55,42); }
+  if(s===4||s===12){ noise(t,.14,.28,1200); tone(190,t,.1,'triangle',.2,120); }
+  if(s%2===0) noise(t,.04,.07+(s%4===0?.03:0),7000);
+  if(s===15&&bar%2===0) noise(t,.03,.06,7000);
+  const b=BASS[s]; if(b) tone(b*(bar>=2?1.122:1),t,STEP*2.2,'triangle',.4);
+  if(s===8&&bar%2===0){ [220,262,330].forEach(f=>tone(f,t,STEP*3,'sine',.07)); }
+}
+function beatTick(){
+  if(!beatOn||!AC) return;
+  while(nextStep<AC.currentTime+0.18){ beatStep(stepNo,nextStep); stepNo++; nextStep+=STEP; }
+}
+function beat(on){
+  if(on===beatOn) return; beatOn=on;
+  if(on){ if(!ac()) return; nextStep=AC.currentTime+0.05; stepNo=0; clearInterval(beatTimer); beatTimer=setInterval(beatTick,40); }
+  else clearInterval(beatTimer);
+}
+function speak(text){
+  if(!ttsOn||muted||!window.speechSynthesis) return;
+  try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text.replace(/\s+/g,'、')); u.lang='ja-JP'; u.rate=1.15; speechSynthesis.speak(u); }catch(e){}
+}
+// ------------------------------------------------------------ drawing
+const cv=$('cv'), g=cv.getContext('2d'), W=390, H=196;
+const SKY=[['#ff9d7a','#ffe3b0'],['#4fa8f0','#d6f0ff'],['#120c36','#4a2f86']];
+const bgCache={};
+function lcg(s){ let x=s; return ()=>{ x=x*16807%2147483647; return (x-1)/2147483646; }; }
+function skyline(c,ch,slot){
+  const r=lcg(ch*97+slot*13+5), night=slot===2;
+  if(ch===0){
+    c.fillStyle=night?'#1a2a3a':'#7fbf6a'; c.beginPath(); c.moveTo(0,H); c.lineTo(0,120); for(let x=0;x<=W;x+=10) c.lineTo(x,112+Math.sin(x/55)*16); c.lineTo(W,H); c.fill();
+    c.fillStyle=night?'#102030':'#5aa24a'; c.beginPath(); c.moveTo(0,H); c.lineTo(0,142); for(let x=0;x<=W;x+=10) c.lineTo(x,140+Math.sin(x/38+1)*9); c.lineTo(W,H); c.fill();
+    for(let i=0;i<6;i++){ const x=20+i*66+r()*20, y=118+r()*14; c.fillStyle=night?'#2a2038':'#c8b090'; c.fillRect(x,y,26,16); c.fillStyle=night?'#40283a':'#b0503a'; c.beginPath(); c.moveTo(x-3,y); c.lineTo(x+13,y-11); c.lineTo(x+29,y); c.fill(); if(night){ c.fillStyle='#ffd870'; c.fillRect(x+8,y+5,6,6); } }
+    c.fillStyle=night?'#0a1520':'#3e8a3a'; for(let y=156;y<H;y+=10){ c.fillRect(0,y,W,3); }
+    c.fillStyle='#3a2a20'; c.fillRect(330,90,3,60); c.fillRect(320,96,23,2);
+  } else if(ch===1){
+    c.fillStyle=night?'#0c2a5a':'#3a8ad0'; c.fillRect(0,128,W,H-128);
+    c.fillStyle=night?'#183a7a':'#6ab0f0'; for(let y=134;y<H;y+=10){ c.fillRect(0,y,W,2); }
+    for(let i=0;i<5;i++){ const x=14+i*80+r()*30; c.fillStyle=night?'#2a2a44':'#b05a30'; c.fillRect(x,70,5,60); c.fillRect(x-20,70,48,4); c.fillRect(x+20,70,3,22); }
+    c.fillStyle=night?'#2a3050':'#8a8a98'; c.fillRect(250,104,80,24); c.fillStyle=night?'#40507a':'#c04a3a'; for(let k=0;k<4;k++) c.fillRect(256+k*19,96,17,10);
+    c.fillStyle=night?'#1a1a2e':'#4a4a5a'; c.fillRect(0,126,W,4);
+    for(let i=0;i<9;i++){ const x=i*46+r()*10, h=30+r()*34; c.fillStyle=night?'#1e1a3e':'#9aa6b8'; c.fillRect(x,126-h,28,h); if(night){ c.fillStyle='#ffd870'; for(let k=0;k<h-6;k+=8) c.fillRect(x+4,126-h+4+k,4,3), c.fillRect(x+16,126-h+4+k,4,3); } }
+  } else {
+    for(let layer=0;layer<2;layer++){
+      let x=-10; while(x<W){ const w=22+r()*26, h=(layer?50:80)+r()*(layer?50:90);
+        c.fillStyle=night?(layer?'#1b1440':'#251c5a'):(layer?'#8a94b4':'#6a7494'); c.fillRect(x,150-h,w,h);
+        if(night){ c.fillStyle=layer?'#d8c060':'#ffe080'; for(let yy=150-h+6;yy<146;yy+=8) for(let xx=x+4;xx<x+w-4;xx+=7) if(r()>0.45) c.fillRect(xx,yy,3,4); }
+        else { c.fillStyle='rgba(255,255,255,.25)'; for(let yy=150-h+6;yy<146;yy+=9) c.fillRect(x+3,yy,w-6,2); }
+        x+=w+2+r()*4; }
+    }
+    c.fillStyle=night?'#0e0a26':'#555a6a'; c.fillRect(0,150,W,H-150);
+    c.fillStyle=night?'#2a2050':'#777c8c'; for(let x=0;x<W;x+=40) c.fillRect(x,168,22,4);
+  }
+}
+function bgFor(ch,slot){
+  const k=ch*3+slot; if(bgCache[k]) return bgCache[k];
+  const o=document.createElement('canvas'); o.width=W; o.height=H; const c=o.getContext('2d');
+  const gr=c.createLinearGradient(0,0,0,H); gr.addColorStop(0,SKY[slot][0]); gr.addColorStop(1,SKY[slot][1]); c.fillStyle=gr; c.fillRect(0,0,W,H);
+  if(slot===2){ const r=lcg(7+ch); c.fillStyle='#fff'; for(let i=0;i<40;i++) c.fillRect(r()*W,r()*90,1.5,1.5); c.fillStyle='#fff6c8'; c.beginPath(); c.arc(330,30,13,0,7); c.fill(); c.fillStyle=SKY[2][0]; c.beginPath(); c.arc(336,26,11,0,7); c.fill(); }
+  else { c.fillStyle=slot===0?'#ffd0a0':'#fff8c8'; c.beginPath(); c.arc(slot===0?60:300,slot===0?84:26,16,0,7); c.fill(); }
+  skyline(c,ch,slot); bgCache[k]=o; return o;
+}
+const SK='#f2d2b0';
+function ell(x,y,rx,ry,col){ g.fillStyle=col; g.beginPath(); g.ellipse(x,y,rx,ry,0,0,7); g.fill(); }
+function drawSamurai(x,y,s,o){
+  o=o||{}; const t=o.t||0, rap=o.rap;
+  g.save(); g.translate(x,y); g.scale(s*(o.flip?-1:1),s);
+  ell(0,0,16,4,'rgba(0,0,0,.3)');
+  g.fillStyle='#1c2a5a'; g.beginPath(); g.moveTo(-11,-22); g.lineTo(11,-22); g.lineTo(14,0); g.lineTo(-14,0); g.fill();
+  g.fillStyle='#10183a'; g.fillRect(-1,-22,2,22);
+  g.fillStyle='#2a3c7a'; g.fillRect(-10,-42,20,22);
+  g.fillStyle='#f4f0e8'; g.beginPath(); g.moveTo(-4,-42); g.lineTo(4,-42); g.lineTo(0,-32); g.fill();
+  g.fillStyle='#ffcf3d'; g.fillRect(-10,-26,20,5);
+  g.strokeStyle='#ffcf3d'; g.lineWidth=1.6; g.beginPath(); g.arc(0,-41,6,0.1,Math.PI-0.1); g.stroke();
+  const up=rap? -8+Math.sin(t*10)*3 : 0;
+  g.strokeStyle='#2a3c7a'; g.lineWidth=5; g.lineCap='round'; g.beginPath(); g.moveTo(8,-38); g.lineTo(16,-44+up); g.stroke();
+  g.beginPath(); g.moveTo(-8,-38); g.lineTo(-13,-26); g.stroke();
+  g.fillStyle=SK; g.beginPath(); g.arc(16,-45+up,3.3,0,7); g.fill();
+  g.strokeStyle='#cfd6e6'; g.lineWidth=2.4; g.beginPath(); g.moveTo(14,-42+up); g.lineTo(23,-66+up); g.stroke();
+  g.fillStyle='#222'; g.beginPath(); g.arc(23.8,-68+up,3.8,0,7); g.fill(); g.fillStyle='#ff4f93'; g.fillRect(21.5,-68.5+up,4.6,1.4);
+  g.fillStyle=SK; g.beginPath(); g.arc(0,-52,9.5,0,7); g.fill();
+  g.fillStyle='#0c0c14'; g.beginPath(); g.arc(0,-55,9.8,Math.PI,0); g.fill(); g.fillRect(-9.8,-55,3,5);
+  g.beginPath(); g.ellipse(-1,-65.5,3.6,5,-0.2,0,7); g.fill();
+  g.fillStyle='#e0303a'; g.fillRect(-4.6,-62,7,2.4);
+  g.fillStyle='#000'; g.fillRect(-8,-54,16,4.4); g.fillStyle='rgba(255,255,255,.7)'; g.fillRect(-6,-53.4,4,1.4);
+  g.fillStyle=o.hurt?'#e05050':'#8a3a3a'; if(rap) { g.beginPath(); g.ellipse(2,-46,2.6,1.2+Math.abs(Math.sin(t*14))*1.8,0,0,7); g.fill(); } else g.fillRect(-1,-47,5,1.3);
+  g.restore();
+}
+function drawDyson(x,y,s,o){
+  o=o||{}; const t=o.t||0;
+  g.save(); g.translate(x,y); g.scale(s*(o.flip?-1:1),s);
+  ell(0,0,17,4,'rgba(0,0,0,.35)');
+  g.fillStyle='#5a2a9a'; g.beginPath(); g.moveTo(-15,-4); g.lineTo(0,-46); g.lineTo(15,-4); g.fill();
+  g.fillStyle='#1e1a2a'; g.fillRect(-11,-42,22,28); g.fillRect(-9,-16,7,16); g.fillRect(2,-16,7,16);
+  g.fillStyle='#f4eee2'; g.beginPath(); g.moveTo(-4,-42); g.lineTo(4,-42); g.lineTo(0,-34); g.fill();
+  g.fillStyle='#f2c23a'; g.fillRect(-1.5,-37,3,15);
+  g.fillStyle=SK; g.beginPath(); g.arc(0,-52,9,0,7); g.fill();
+  g.fillStyle='#1e1a2a'; g.fillRect(-12,-60,24,4.5); g.fillRect(-7.5,-76,15,17);
+  g.fillStyle='#f2c23a'; g.font='800 10px sans-serif'; g.textAlign='center'; g.fillText('¥',0,-64);
+  g.fillStyle='#111'; g.fillRect(-6,-53,4,2); g.fillRect(2,-53,4,2);
+  g.fillStyle='#8a3a3a'; g.fillRect(-3,-47,6,1.6);
+  // vacuum arm toward -x
+  g.strokeStyle='#1e1a2a'; g.lineWidth=6; g.lineCap='round'; g.beginPath(); g.moveTo(-9,-38); g.lineTo(-24,-30); g.stroke();
+  g.fillStyle='#8a5ae0'; g.beginPath(); g.moveTo(-23,-36); g.lineTo(-38,-44); g.lineTo(-38,-18); g.lineTo(-23,-24); g.fill();
+  g.fillStyle='#220e48'; g.beginPath(); g.ellipse(-38,-31,4,13,0,0,7); g.fill();
+  g.strokeStyle='#b08af8'; g.lineWidth=2; g.beginPath(); g.moveTo(-23,-30); g.bezierCurveTo(-10,-10,10,-14,12,-30); g.stroke();
+  if(o.suck){ g.strokeStyle='rgba(190,150,255,.8)'; g.lineWidth=2; for(let k=0;k<4;k++){ const ph=((t*2.6+k/4)%1); const r=34*(1-ph); g.globalAlpha=Math.min(1,ph*2)*0.9; g.beginPath(); g.arc(-38,-31,5+r,Math.PI*0.62,Math.PI*1.38); g.stroke(); } g.globalAlpha=1; }
+  g.restore();
+}
+function drawJudge(x,y,s,o){
+  o=o||{}; const t=o.t||0;
+  g.save(); g.translate(x,y); g.scale(s,s);
+  ell(0,0,15,3.5,'rgba(0,0,0,.3)');
+  g.fillStyle='#111'; g.fillRect(-8,-18,7,18); g.fillRect(1,-18,7,18);
+  for(let i=0;i<8;i++){ g.fillStyle=i%2?'#fff':'#111'; g.fillRect(-12+i*3,-44,3,28); }
+  g.fillStyle='#fff'; g.beginPath(); g.arc(0,-52,8.4,0,7); g.fill(); g.fillStyle='#000'; g.fillRect(-4,-53,2,2); g.fillRect(2,-53,2,2);
+  g.fillStyle='#111'; g.fillRect(-9,-62,18,5); g.fillRect(-9,-58,22,2);
+  g.fillStyle='#ffcf3d'; g.beginPath(); g.arc(0,-47,2.6,0,7); g.fill();
+  if(o.whistle){ g.strokeStyle='#ffcf3d'; g.lineWidth=1.6; for(let k=0;k<3;k++){ g.beginPath(); g.arc(3,-47,7+k*5,-0.6,0.6); g.stroke(); } }
+  g.strokeStyle='#fff'; g.lineWidth=5; g.lineCap='round';
+  g.beginPath(); g.moveTo(-11,-40); g.lineTo(-17,-26); g.stroke();
+  const raise=o.card?1:0;
+  g.strokeStyle='#eee'; g.beginPath(); g.moveTo(11,-40); g.lineTo(18,raise?-58:-27); g.stroke();
+  if(o.card){ g.fillStyle=o.card==='red'?'#ee2a2a':'#ffd23d'; g.fillRect(14,-82+Math.sin(t*20)*1.2,12,17); g.strokeStyle='#000'; g.lineWidth=1; g.strokeRect(14,-82,12,17); }
+  g.restore();
+}
+function drawOpp(op,x,y,s,o){
+  o=o||{}; const t=o.t||0;
+  const one=(dx,sc)=>{
+    g.save(); g.translate(x+dx,y+(o.hop?-Math.abs(Math.sin(t*9))*4:0)); g.scale(sc*s,sc*s);
+    ell(0,0,14,3.5,'rgba(0,0,0,.3)');
+    g.fillStyle='#262034'; g.fillRect(-8,-20,7,20); g.fillRect(1,-20,7,20);
+    g.fillStyle=op.col; g.fillRect(-11,-44,22,26);
+    g.fillStyle='rgba(255,255,255,.2)'; g.fillRect(-11,-44,22,5);
+    g.fillStyle=SK; g.beginPath(); g.arc(0,-52,9,0,7); g.fill();
+    g.strokeStyle=op.col; g.lineWidth=5; g.lineCap='round'; g.beginPath(); g.moveTo(-10,-40); g.lineTo(-17,-28+(o.rap?-12:0)); g.stroke(); g.beginPath(); g.moveTo(10,-40); g.lineTo(15,-28); g.stroke();
+    if(o.lose){ g.strokeStyle='#222'; g.lineWidth=1.6; for(const ex of [-4,4]){ g.beginPath(); g.moveTo(ex-2,-55); g.lineTo(ex+2,-51); g.moveTo(ex+2,-55); g.lineTo(ex-2,-51); g.stroke(); } }
+    else { g.fillStyle='#111'; g.fillRect(-5,-54,3,3); g.fillRect(2,-54,3,3); }
+    g.fillStyle=o.rap?'#7a2a2a':'#8a3a3a'; if(o.rap){ g.beginPath(); g.ellipse(0,-47,2.6,1.2+Math.abs(Math.sin(t*14))*1.8,0,0,7); g.fill(); } else g.fillRect(-2.5,-47,5,1.4);
+    g.font='20px sans-serif'; g.textAlign='center'; g.fillStyle='#fff'; g.fillText(op.acc,0,-61);
+    g.restore();
+  };
+  if(op.pair){ one(-16,0.88); one(15,0.95); } else one(0,1);
+}
+function drawCrowd(cheer,t,dark){
+  const r=lcg(11);
+  for(let i=0;i<16;i++){
+    const x=i*25+r()*8, ph=r()*6, hv=Math.sin(t*(4+cheer*6)+ph)*(1.5+cheer*5);
+    const y=H-6+hv-cheer*8*(i%2);
+    g.fillStyle=dark?`hsl(${(i*37)%360},38%,26%)`:`hsl(${(i*37)%360},25%,30%)`; g.beginPath(); g.arc(x,y,9,0,7); g.fill();
+    g.fillRect(x-7,y+4,14,12);
+    if(cheer>0.45&&i%3===0){ g.strokeStyle=g.fillStyle; g.lineWidth=3; g.beginPath(); g.moveTo(x+6,y+6); g.lineTo(x+10,y-12+hv); g.stroke(); }
+  }
+}
+let T=0;
+const V={kind:'title',ch:0,slot:2,cast:null,rap:0,cheer:0,card:null,whistle:0,oppLose:false,oppRap:false,shake:0,hop:0,sucking:0,text:'',emo:[],job:'',oi:0,hurt:0};
+const FX=[];
+function fxChars(str,x,y,tx,ty,dur){
+  [...str].forEach((c,i)=>FX.push({k:'chr',c,x:x+(i%9)*13-50,y:y+Math.floor(i/9)*16,tx,ty,t:-i*0.03,dur,rot:(i%2?1:-1)*(3+i%4)}));
+}
+function fxNum(txt,x,y,col){ FX.push({k:'num',txt,x,y,t:0,dur:1.1,col}); }
+function fxBurst(x,y,col){ for(let i=0;i<14;i++){ const a=i/14*Math.PI*2; FX.push({k:'sp',x,y,vx:Math.cos(a)*(60+Math.random()*60),vy:Math.sin(a)*(60+Math.random()*60),t:0,dur:.6,col}); } }
+function updateFX(dt){
+  for(const f of FX) f.t+=dt;
+  for(let i=FX.length-1;i>=0;i--) if(FX[i].t>=FX[i].dur) FX.splice(i,1);
+}
+function drawFX(){
+  for(const f of FX){
+    if(f.t<0) continue; const k=f.t/f.dur;
+    if(f.k==='chr'){ const e=k*k; const x=f.x+(f.tx-f.x)*e + Math.sin(k*9)*10*(1-k), y=f.y+(f.ty-f.y)*e - Math.sin(k*Math.PI)*24;
+      g.save(); g.translate(x,y); g.rotate(f.rot*k*3); g.scale(1-k*.8,1-k*.8); g.globalAlpha=1-k*.3; g.fillStyle='#ffe9a8'; g.font='800 15px "M PLUS Rounded 1c",sans-serif'; g.textAlign='center'; g.strokeStyle='#5a2ab0'; g.lineWidth=3; g.strokeText(f.c,0,0); g.fillText(f.c,0,0); g.restore(); }
+    else if(f.k==='num'){ g.save(); g.globalAlpha=1-Math.max(0,k-.6)/.4; g.font='800 26px "Dela Gothic One",sans-serif'; g.textAlign='center'; g.strokeStyle='#000'; g.lineWidth=5; g.lineJoin='round'; g.strokeText(f.txt,f.x,f.y-k*34); g.fillStyle=f.col||'#fff'; g.fillText(f.txt,f.x,f.y-k*34); g.restore(); }
+    else if(f.k==='sp'){ g.fillStyle=f.col; g.globalAlpha=1-k; g.beginPath(); g.arc(f.x+f.vx*f.t,f.y+f.vy*f.t,3,0,7); g.fill(); g.globalAlpha=1; }
+  }
+}
+function drawBubble(txt,x,y,w){
+  g.save(); g.font='800 12px "M PLUS Rounded 1c",sans-serif'; const tw=Math.min(w||200,g.measureText(txt).width+16);
+  g.fillStyle='#fff'; g.strokeStyle='#241638'; g.lineWidth=2; const bx=x-tw/2, by=y-24;
+  g.beginPath(); g.roundRect?g.roundRect(bx,by,tw,22,8):g.rect(bx,by,tw,22); g.fill(); g.stroke();
+  g.beginPath(); g.moveTo(x-5,by+22); g.lineTo(x,by+30); g.lineTo(x+5,by+22); g.fill();
+  g.fillStyle='#241638'; g.textAlign='center'; g.fillText(txt,x,by+15); g.restore();
+}
+function drawScene(){
+  const k=V.kind; g.save();
+  if(V.shake>0) g.translate((Math.random()-.5)*V.shake*8,(Math.random()-.5)*V.shake*6);
+  const ch=V.ch, slot=V.slot;
+  if(k==='title'){
+    g.drawImage(bgFor(2,2),0,0); g.fillStyle='rgba(10,5,30,.35)'; g.fillRect(0,0,W,H);
+    g.textAlign='center'; g.font='400 31px "Dela Gothic One",sans-serif'; g.lineJoin='round'; g.strokeStyle='#5a0a3a'; g.lineWidth=6; g.strokeText('メトロポリス',W/2,50); g.fillStyle='#ffcf3d'; g.fillText('メトロポリス',W/2,50);
+    g.font='400 24px "Dela Gothic One",sans-serif'; g.strokeText('アポカリプス',W/2,80); g.fillStyle='#ff4f93'; g.fillText('アポカリプス',W/2,80);
+    g.fillStyle='#fff'; g.font='800 12px "M PLUS Rounded 1c",sans-serif'; g.fillText('MCライム侍 ラップバトルRPG',W/2,100);
+    drawSamurai(96,186,1.4,{t:T,rap:true});
+  } else if(k==='battle'){
+    g.drawImage(bgFor(ch,2),0,0); g.fillStyle='rgba(20,5,40,.5)'; g.fillRect(0,0,W,H);
+    // spot lights
+    const gl=g.createRadialGradient(W/2,0,10,W/2,0,200); gl.addColorStop(0,'rgba(255,230,160,.35)'); gl.addColorStop(1,'rgba(255,230,160,0)'); g.fillStyle=gl; g.fillRect(0,0,W,H);
+    g.fillStyle='#2a1a40'; g.fillRect(0,150,W,H-150); g.fillStyle='#46347a'; g.fillRect(0,150,W,3);
+    const op=OPP[V.oi];
+    drawJudge(W/2,142,1.0,{t:T,card:V.card,whistle:V.whistle>0});
+    drawSamurai(84,170,1.05,{t:T,rap:V.rap>0,hurt:V.hurt>0});
+    drawOpp(op,306,170,1.05,{t:T,rap:V.oppRap,lose:V.oppLose,hop:V.hop>0});
+    drawCrowd(V.cheer,T,true);
+    // cheer meter
+    g.fillStyle='rgba(0,0,0,.5)'; g.fillRect(366,24,14,100); g.fillStyle=V.cheer>.66?'#ffcf3d':'#ff4f93'; g.fillRect(367,24+98*(1-V.cheer),12,98*V.cheer);
+    g.fillStyle='#fff'; g.font='800 9px sans-serif'; g.textAlign='center'; g.fillText('歓声',373,18);
+  } else if(k==='shop'){
+    g.fillStyle='#2a1844'; g.fillRect(0,0,W,H); g.fillStyle='#3a2460'; for(let i=0;i<4;i++) g.fillRect(14,24+i*34,150,4);
+    for(let i=0;i<4;i++) for(let j=0;j<5;j++){ g.fillStyle=`hsl(${(i*5+j)*43%360},40%,55%)`; g.fillRect(18+j*30,10+i*34+(j%2)*2,22,14); }
+    g.fillStyle='#f2c23a'; g.font='400 15px "Dela Gothic One",sans-serif'; g.textAlign='right'; g.fillText('マネーダイソン商店',W-12,22);
+    g.fillStyle='#1a1030'; g.fillRect(0,164,W,H-164);
+    drawSamurai(70,186,1.1,{t:T});
+    drawDyson(298,186,1.25,{t:T,suck:V.sucking>0,flip:false});
+    if(V.sucking>0){ g.fillStyle='#d8c0ff'; g.font='400 20px "Dela Gothic One",sans-serif'; g.textAlign='center'; g.fillText('ズゴゴゴゴ！',200,30+Math.sin(T*30)*2); }
+  } else if(k==='job'){
+    g.drawImage(bgFor(ch,1),0,0); g.fillStyle='rgba(0,0,0,.18)'; g.fillRect(0,0,W,H);
+    drawSamurai(110,186,1.35,{t:T,rap:false});
+    g.fillStyle='#fff'; g.font='64px sans-serif'; g.textAlign='center'; g.fillText(V.job,270,120+Math.sin(T*6)*4);
+  } else if(k==='event'){
+    g.drawImage(bgFor(ch,slot),0,0); g.fillStyle='rgba(0,0,0,.28)'; g.fillRect(0,0,W,H);
+    drawSamurai(46,188,.85,{t:T});
+    const em=V.emo, n=em.length; g.textAlign='center'; g.textBaseline='alphabetic'; g.fillStyle='#fff';
+    em.forEach((e,i)=>{ const x=130+i*(250/Math.max(1,n))+(250/Math.max(1,n))/2-20, bob=Math.sin(T*4+i*1.7)*4; g.font='50px sans-serif'; g.fillText(e,x,138+bob); });
+    if(V.text) drawBubble(V.text,215,74,230);
+  } else {
+    // town / dialog / book / deck / result
+    g.drawImage(bgFor(ch,slot),0,0);
+    if(k==='dialog'||k==='result'){ g.fillStyle='rgba(0,0,0,.2)'; g.fillRect(0,0,W,H); }
+    drawSamurai(k==='town'?W/2-30+Math.sin(T*.7)*50:84,186,1.25,{t:T,rap:k==='result',flip:k==='town'&&Math.cos(T*.7)<0});
+    const c=V.cast;
+    if(c==='dyson') drawDyson(300,186,1.25,{t:T,suck:true});
+    else if(c==='judge') drawJudge(300,184,1.4,{t:T,whistle:V.whistle>0});
+    else if(c==='mc'){ drawOpp({col:'#ff4f93',acc:'🎤'},300,186,1.25,{t:T,rap:true}); }
+    else if(c&&c.startsWith('opp')) drawOpp(OPP[+c.slice(3)],300,186,1.25,{t:T,lose:V.oppLose});
+    if(k==='town'){ g.fillStyle='rgba(0,0,0,.55)'; g.fillRect(0,0,150,32); g.fillStyle='#fff'; g.font='800 13px "M PLUS Rounded 1c",sans-serif'; g.textAlign='left'; g.fillText(CHAPT[ch].n+'（'+CHAPT[ch].sub+'）',8,14); g.fillStyle='#ffcf3d'; g.fillText(`${Math.min(G.day,5)}日目 ${['朝','昼','夜'][slot]}`,8,28); }
+  }
+  drawFX();
+  g.restore();
+}
+// ------------------------------------------------------------ UI
+const panel=$('panel'), infoEl=$('info');
+const SLOTN=['朝','昼','夜'];
+let auto=false, autoCool=0, scr='title', sd={}, Q=[], bt=null;
+let best={turns:0,dmg:0,hits:0,clears:0};
+try{ const b=JSON.parse(localStorage.getItem('metro_best')||'null'); if(b) best=Object.assign(best,b); }catch(e){}
+const SAVEKEY='metro_save_v1';
+const sp=()=>auto?0.22:1;
+const later=(sec,fn)=>{ Q.push({t:sec,fn,s:scr}); };
+const busy=()=>Q.length>0||(sd.rev&&!sd.rev.done)||(sd.anim>0);
+function esc(s){ return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function banner(txt,col){ const b=$('fxBanner'); b.textContent=txt; b.style.color=col||''; b.classList.remove('show'); void b.offsetWidth; b.classList.add('show'); }
+function save(){ try{ if(G) localStorage.setItem(SAVEKEY,JSON.stringify({G,mode:G.mode||'explore'})); }catch(e){} }
+function loadSave(){ try{ const s=JSON.parse(localStorage.getItem(SAVEKEY)||'null'); return s&&s.G?s:null; }catch(e){ return null; } }
+function clearSave(){ try{ localStorage.removeItem(SAVEKEY); }catch(e){} }
+function setPanel(html){ panel.innerHTML=html; panel.scrollTop=0; }
+function tagsHtml(l){ return l.tags.map(t=>`<span class="tag">${t}</span>`).join(''); }
+function lyHtml(l,o){
+  o=o||{}; const w=l.weak!==undefined;
+  const px=o.price!=null?`<span class="px">¥${o.price}</span>`:'';
+  return `<div class="ly ${w?'weak':''} ${o.sel?'sel':''}" ${o.a?`data-a="${o.a}" data-id="${l.id}"`:''}>${px}<div class="t" ${o.price!=null?'style="padding-right:56px"':''}>${w?'⚡ ':''}${esc(l.t)}</div>`+
+   `<div class="m"><span class="tag atk">ATK ${l.atk}</span><span class="tag cat">${CAT[l.cat]}</span>${l.rh?`<span class="tag rh">韻:${l.rh}</span>`:''}${tagsHtml(l)}${l.lure?'<span class="tag lure">誘い</span>':''}${w?`<span class="tag wk">${esc(OPP[l.weak].name)}の弱み</span>`:''}</div>${w&&o.note?`<div class="note">${esc(l.note)}</div>`:''}</div>`;
+}
+function setInfo(){
+  if(!G||scr==='title'){ infoEl.innerHTML=''; return; }
+  const lc=lyricsOwned(G).length, wc=weakOwned(G).length;
+  if(G.mode==='tourney'){
+    const o=OPP[G.ch*3+Math.min(2,G.fight)];
+    infoEl.innerHTML=`<span><b>第${G.ch+1}章</b> ${CHAPT[G.ch].n} 大会 ${ROUND_NAMES[Math.min(2,G.fight)]}</span><span>vs <b>${esc(o.name)}</b></span><span>💴<b>${G.money}</b></span>`;
+  } else infoEl.innerHTML=`<span><b>第${G.ch+1}章</b> ${CHAPT[G.ch].n}</span><span><b>${Math.min(G.day,5)}</b>日目 <b>${SLOTN[G.slot]}</b></span><span>💴<b>${G.money}</b></span><span>📜<b>${lc}</b></span><span>⚡<b>${wc}</b>/6</span>`;
+}
+// ------- screens
+function go(name,data,html){ scr=name; sd=data||{}; setPanel(html||''); setInfo(); }
+function speakerCast(who){
+  if(who==='ダイソン') return 'dyson'; if(who==='ジャッジ') return 'judge'; if(who==='司会') return 'mc';
+  if(/^opp\d$/.test(who)) return who; return undefined;
+}
+function dialog(lines,then,opt){
+  opt=opt||{};
+  V.kind='dialog'; V.ch=opt.ch!=null?opt.ch:(G?G.ch:0); V.slot=opt.slot!=null?opt.slot:2; V.cast=null; V.oppLose=!!opt.lose;
+  sd={}; scr='dialog'; sd={lines,i:0,then}; renderDialog();
+}
+function renderDialog(){
+  const [who,txt]=sd.lines[sd.i];
+  const c=speakerCast(who); if(c!==undefined) V.cast=c; else if(who==='') V.cast=null;
+  const nm=/^opp\d$/.test(who)?OPP[+who.slice(3)].name:(who==='侍'?'MCライム侍':who);
+  setPanel(`<div class="card"><div class="who">${who?esc(nm):'ナレーション'}</div><div class="say">${esc(txt)}</div>`+
+    `<button class="btn" data-a="dnext">つぎへ ▶</button><button class="btn alt sm" data-a="dskip">スキップ</button></div>`);
+  setInfo(); V.whistle=who==='ジャッジ'?0.6:0; if(who==='ジャッジ') sfx('whistle');
+}
+function dnext(){ sfx('tap'); sd.i++; if(sd.i>=sd.lines.length){ const f=sd.then; sd={}; f&&f(); } else renderDialog(); }
+function title(){
+  V.kind='title'; V.cast=null; Q=[]; beat(false);
+  const sv=loadSave();
+  scr='title'; sd={};
+  setPanel(`<div class="card"><h2>MCライム侍、首都をめざす</h2><p>街を歩いてリリックを集め、ジャッジの「ロウ」をかいくぐって、3つの町の大会を勝ち抜け。ラップバトルRPG。</p>`+
+    `<button class="btn" data-a="new">はじめから</button>`+
+    `<button class="btn alt" data-a="cont" ${sv?'':'disabled'}>つづきから${sv?`（第${sv.G.ch+1}章 ${sv.G.mode==='tourney'?'大会':sv.G.day+'日目'}）`:''}</button>`+
+    `<button class="btn alt sm" data-a="how">あそびかた</button>`+
+    `<button class="btn alt sm" data-a="tts">声の読み上げ（ja-JP）：${ttsOn?'ON':'OFF'}</button></div>`+
+    `<div class="card"><div class="rows"><span>ベスト 合計ターン数</span><b>${best.turns?best.turns+'ターン':'-'}</b><span>ベスト 総ダメージ</span><b>${best.dmg||'-'}</b><span>ベスト「ハマった！」</span><b>${best.hits||'-'}回</b><span>クリア回数</span><b>${best.clears}回</b></div><p>🤖 オート（Oキー）をオンにしてから始めると、そのままオートで進みます。</p></div>`);
+  infoEl.innerHTML='';
+}
+function howto(){
+  setPanel(`<div class="card"><h2>あそびかた</h2><p>① 5日間、街を<b>散策</b>してリリックや相手の<b>弱み</b>を集める。バイトでお金も稼ごう。<br>② <b>マネーダイソンの店</b>でリリックを売り買い。売ったリリックは吸い取られて、記憶から消える。<br>③ 大会は3連戦。バトルは3ラウンド、1ラウンドは2往復（4バース）。<br>④ 相手のバースの<b>〈返しタグ〉</b>と同じタグのリリックを返すと<b>ハマった！</b>（×2.5）。同じ母音の<b>韻</b>は×1.3。<br>⑤ ラウンドごとにジャッジが<b>ロウ</b>を決める。破るとイエローカード（ダメージ0、自分のHPP−10）、2枚でレッド＝敗北。<br>⑥ <b>韻踏み禁止</b>のときは先攻を譲って、〈誘い〉のリリックで相手に韻を踏ませよう。</p><button class="btn" data-a="back">もどる</button></div>`);
+}
+// ---- new game / continue
+function newGame(){
+  seed((Date.now()&0x7fffffff)^0x5bd1e995); G=newG(); G.mode='explore'; G.t0=0;
+  dialog(D.SC_OPEN,()=>{ town(); save(); },{ch:0,slot:1});
+}
+function continueGame(){
+  const sv=loadSave(); if(!sv) return newGame(); G=sv.G; seed(Date.now()&0x7fffffff);
+  if(G.mode==='tourney') deckScreen(); else town();
+}
+// ---- town
+function town(){
+  V.kind='town'; V.ch=G.ch; V.slot=G.slot; V.cast=null; beat(false);
+  const sps=SPOTS[G.ch];
+  const left=15-G.acts%15; void left;
+  const done=(G.day-1)*3+G.slot;
+  go('town',{},`<div class="card" style="padding:8px 10px"><div class="grid2">`+
+    sps.map((s,i)=>`<button class="spot" data-a="spot" data-i="${i}"><i>${s[1]}</i>${esc(s[0])}</button>`).join('')+
+    `<button class="spot" data-a="jobs"><i>💪</i>バイト</button></div></div>`+
+    `<div class="row"><button class="btn gold sm" data-a="shop">💴 ダイソンの店<br><small>（行動なし）</small></button><button class="btn alt sm" data-a="book">📖 リリック帳</button></div>`+
+    `<button class="btn cy sm" data-a="tourney">⚔ 大会へ（残り${15-done}行動）</button>`);
+}
+function afterAction(){
+  if(advance()){ startTournament(); return; }
+  save(); town();
+}
+function spotGo(i){
+  const r=doExplore(i); const e=r.e, res=r.r; const sp_=SPOTS[G.ch][i];
+  V.kind='event'; V.emo=e.sc; V.text=''; V.ch=G.ch; V.slot=G.slot;
+  let box='';
+  if(res.k==='L'){ const l=LY[res.id]; box=`<div class="note" style="color:var(--gold);font-weight:800">📜 リリックを手に入れた！</div>`+lyHtml(l); sfx('ok'); fxBurst(215,120,'#ffcf3d'); }
+  else if(res.k==='W'){ const l=LY[res.id]; box=`<div class="note" style="color:#ff8a8a;font-weight:800">⚡ 相手の弱みをつかんだ！ 〈${esc(OPP[l.weak].name)}〉</div>`+lyHtml(l,{note:1}); sfx('smash'); fxBurst(215,120,'#ff4f4f'); banner('弱みゲット！','#ff8a8a'); }
+  else if(res.k==='M'){ box=`<div class="note" style="color:var(--gold);font-weight:800">${res.dup?'このネタはもう持っている……。代わりに ':''}💴 ${res.amt}円 ゲット</div>`; sfx('coin'); }
+  else { box=`<div class="note">……特に何も得られなかった。</div>`; sfx('bad'); }
+  const t=`${SLOTN[G.slot]}の${sp_[0]}`;
+  go('event',{r:res},`<div class="card"><div class="who">${sp_[1]} ${esc(t)}</div><div class="say" style="min-height:0">${esc(e.t)}</div>${box}<button class="btn" data-a="evnext">つぎへ ▶</button></div>`);
+}
+// ---- jobs
+function jobsMenu(){
+  V.kind='town'; 
+  const js=JOBS[G.ch];
+  go('jobs',{},`<div class="card"><h2>バイトをえらぶ</h2><p>1行動を使います。ゲージの<b>ちょうどいい所</b>で3回止めると、報酬が0.5〜1.5倍。</p>`+
+    js.map((j,i)=>`<button class="btn alt" data-a="job" data-i="${i}" style="text-align:left">${j.ic} ${esc(j.n)} <small style="float:right">基本 ${j.base}円</small><br><small style="font-weight:500">${esc(j.tx)}</small></button>`).join('')+
+    `<button class="btn alt sm" data-a="back">もどる</button></div>`);
+}
+function jobStart(i){
+  const j=JOBS[G.ch][i]; V.kind='job'; V.job=j.ic; V.ch=G.ch;
+  go('job',{i,ph:-Math.PI/2,stops:[],sc:[],phase:'play',spd:3.4,lastP:0,pause:0},
+   `<div class="card"><h2>${j.ic} ${esc(j.n)}</h2><p>${esc(j.tx)}<br>光る線が<b>まんなか</b>に来たら、ストップ！（スペースキーも可）</p>`+
+   `<div class="jgauge" id="jg" data-a="stop"><div class="z"></div><div class="z2"></div><div class="mk" id="mk" style="left:0%"></div></div>`+
+   `<div class="row" id="jsc" style="justify-content:center;font-size:22px"><span>◯</span><span>◯</span><span>◯</span></div>`+
+   `<button class="btn" data-a="stop" id="jstop" style="min-height:64px;font-size:20px">ストップ！</button></div>`);
+}
+function jobPos(){ return 0.5+0.5*Math.sin(sd.ph); }
+function jobStop(p){
+  if(scr!=='job'||sd.phase!=='play'||sd.pause>0) return;
+  if(p==null) p=jobPos(); const d=Math.abs(p-0.5); const sc=d<0.04?1:Math.max(0,1-(d-0.04)/0.4);
+  sd.sc.push(sc); sd.stops.push(p); sd.pause=0.35; sfx('stop');
+  const el=$('jsc'); if(el){ const sp2=el.children; sp2[sd.sc.length-1].textContent=sc>=.97?'◎':sc>0.6?'○':sc>0.2?'△':'×'; }
+  if(sd.sc.length>=3){ sd.phase='done'; later(0.5*sp(),jobFinish); }
+  else sd.spd+=0.9;
+}
+function jobFinish(){
+  const avg=sd.sc.reduce((a,b)=>a+b,0)/3, mult=jobMult(avg);
+  const r=doJob(sd.i,mult); const lab=avg>=.95?'パーフェクト！':avg>.7?'いい調子！':avg>.4?'まあまあ':'ぼちぼち';
+  sfx('coin'); if(avg>=.95) banner('PERFECT!','#ffcf3d');
+  let extra=''; if(r.got) extra=`<div class="note" style="color:var(--gold);font-weight:800">📜 バイト中にネタを拾った！</div>`+lyHtml(LY[r.got]);
+  const j=r.j;
+  go('jobres',{},`<div class="card"><h2>${lab}</h2><div class="rows"><span>基本</span><b>${j.base}円</b><span>成績</span><b>×${mult.toFixed(2)}</b><span>報酬</span><b style="color:var(--gold)">${r.pay}円</b></div>${extra}<button class="btn" data-a="evnext">つぎへ ▶</button></div>`);
+}
+// ---- shop
+const DY={
+ greet:'いらっしゃい。マネーダイソンの店へようこそ。……吸わせてもらうよ、君のいらないリリックを。',
+ buy:['いい買い物だ。与える喜びを知ってしまったよ。','さあ、受け取りたまえ。このリリックは今日から君のものだ。','どんどん与えよう。……お代は忘れずにね。'],
+ sell:['君の記憶から、このリリックを吸わせてもらうよ…… ズゴゴゴゴ！','ふふ、いい味だ。もう思い出せないだろう？ 代金はこれだ。','吸い取ったよ。……ああ、旨い。'],
+ weak:'それは吸えないなぁ、君だけのものだ。',
+ poor:'お金が足りないねぇ。バイトしてきたまえ。',
+ empty:'それ以上吸うと、君の頭が空っぽになってしまう。もう勘弁してやろう。'
+};
+function shop(tab,line){
+  V.kind='shop'; V.ch=G.ch; V.sucking=0;
+  sd={tab:tab||'buy',line:line||DY.greet}; scr='shop'; renderShop();
+}
+function renderShop(){
+  const y0=panel.scrollTop; let list='';
+  if(sd.tab==='buy'){
+    const st=shopStock();
+    list=st.length?st.sort((a,b)=>a.atk-b.atk).map(l=>`<div class="${canBuy(l)?'':'dim'}" style="${canBuy(l)?'':'opacity:.55'}">${lyHtml(l,{a:'buy',price:priceOf(l)})}</div>`).join(''):'<p class="note">品ぞろえは売り切れだ。</p>';
+  } else {
+    const mine=ownedList(G).sort((a,b)=>(a.weak!==undefined)-(b.weak!==undefined)||b.atk-a.atk);
+    list=mine.map(l=>`<div>${lyHtml(l,{a:'sell',price:l.weak!==undefined?'売れない':sellOf(l)})}</div>`).join('');
+  }
+  setPanel(`<div class="dyl"><b style="color:#d8b8ff">ダイソン</b><br>${esc(sd.line)}</div>`+
+   `<div class="tabs"><button class="${sd.tab==='buy'?'on':''}" data-a="tab" data-t="buy">買う（与える）</button><button class="${sd.tab==='sell'?'on':''}" data-a="tab" data-t="sell">売る（吸わせる）</button></div>`+
+   `<div style="text-align:right;font-weight:800;margin:-2px 0 6px;color:var(--gold)">所持金 💴 ${G.money}</div>${list}<button class="btn alt" data-a="back">店を出る</button>`);
+  panel.scrollTop=y0; setInfo();
+}
+function shopBuy(id){
+  if(busy()) return;
+  const l=LY[id]; if(!canBuy(l)){ sd.line=DY.poor; sfx('bad'); renderShop(); return; }
+  buyL(id); sfx('buy'); sd.line=pick(DY.buy);
+  fxChars(l.t.slice(0,18),262,128,80,110,0.9); V.sucking=0; sd.anim=0.9; later(0.9*sp(),()=>{ sd.anim=0; renderShop(); }); save(); renderShop();
+}
+function shopSell(id){
+  if(busy()) return; const l=LY[id];
+  if(l.weak!==undefined){ sd.line=DY.weak; sfx('bad'); renderShop(); return; }
+  if(!canSell(l)){ sd.line=DY.empty; sfx('bad'); renderShop(); return; }
+  sfx('suck'); V.sucking=1; sd.line=DY.sell[0]; sd.anim=1.2; renderShop();
+  fxChars(l.t.slice(0,24),30,60,262,130,1.0*Math.max(sp(),0.4));
+  later(1.15*Math.max(sp(),.4),()=>{ sellL(id); V.sucking=0; sd.anim=0; sd.line=pick(DY.sell.slice(1))+`（+${sellOf(l)}円）`; sfx('coin'); renderShop(); save(); });
+}
+// shop plan for auto (TAS): returns next op
+function shopPlanNext(){
+  const stock=shopStock().sort((a,b)=>b.atk-a.atk);
+  const mine=lyricsOwned(G);
+  const minAtk=Math.min(...mine.map(m=>m.atk));
+  for(const l of stock){
+    if(l.lure&&mine.filter(m=>m.lure).length>=3) continue;
+    if(!(l.atk>minAtk+4||mine.length<DECKMAX)) continue;
+    if(canBuy(l)) return {op:'buy',id:l.id};
+    const sellable=mine.filter(m=>canSell(m)&&m.atk<l.atk-8).sort((a,b)=>a.atk-b.atk);
+    let m=G.money,k=0; while(k<sellable.length&&m<priceOf(l)){ m+=sellable[k].atk*5|0; k++; }
+    if(m>=priceOf(l)&&k>0&&k<=2) return {op:'sell',id:sellable[0].id};
+  }
+  return null;
+}
+// ---- book
+function book(){
+  const w=weakOwned(G), ls=lyricsOwned(G).sort((a,b)=>b.atk-a.atk);
+  const ws=OPP.filter(o=>o.ch<=G.ch);
+  const prev=scr;
+  go('book',{prev},`<div class="card"><h2>リリック帳</h2><p>⚡弱み ${w.length}／${ws.length*2}　📜リリック ${ls.length}枚　デッキ ${G.deck.length}/15</p>`+
+   (w.length?w.map(l=>lyHtml(l,{note:1})).join(''):'<p class="note">弱みはまだない。街の噂話やポスターの裏をさがそう。</p>')+ls.map(l=>lyHtml(l,{sel:G.deck.includes(l.id)})).join('')+`<button class="btn alt" data-a="back">とじる</button></div>`);
+}
+// ---- tournament
+function startTournament(){
+  G.mode='tourney'; G.fight=0; save();
+  const oi=G.ch*3; V.kind='dialog';
+  dialog([['司会',`${CHAPT[G.ch].n}ラップ大会、いよいよ開幕！ 1回戦の相手は「${OPP[oi].name}」だ！`]],()=>deckScreen(),{slot:2});
+}
+function deckScreen(){
+  const oi=G.ch*3+G.fight, o=OPP[oi];
+  G.deck=G.deck.filter(id=>owned(id)&&LY[id].weak===undefined);
+  if(G.deck.length<Math.min(5,lyricsOwned(G).length)) G.deck=autoDeckFor(G,oi);
+  V.kind='dialog'; V.cast='opp'+oi; V.ch=G.ch; V.slot=2; V.oppLose=false; beat(false);
+  scr='deck'; sd={oi}; renderDeck();
+}
+function renderDeck(){
+  const oi=sd.oi, o=OPP[oi];
+  const ls=lyricsOwned(G).sort((a,b)=>b.atk-a.atk); const w=o.weak.filter(owned);
+  setPanel(`<div class="card" style="padding:8px 10px"><div class="who">${ROUND_NAMES[G.fight]} vs ${esc(o.name)}</div>`+
+   `<div class="rows" style="margin:4px 0"><span>HPP</span><b>${o.hpp}</b><span>得意</span><b>${CAT[o.fav]}</b><span>返しタグの傾向</span><b>${o.tags.join('・')}</b><span>ライム好き度</span><b>${'★'.repeat(Math.round(o.add*5))}${'☆'.repeat(5-Math.round(o.add*5))}</b><span>手に入れた弱み</span><b style="color:${w.length?'#ff8a8a':'inherit'}">${w.length}/2（手札に入る）</b></div></div>`+
+   `<div class="row"><button class="btn alt sm" data-a="adeck">おまかせ編成</button><button class="btn alt sm" data-a="cdeck">全部はずす</button></div>`+
+   `<div class="card" style="padding:6px 10px;margin-top:8px;margin-bottom:6px"><b>デッキ ${G.deck.length}/${DECKMAX}</b>　<span class="note">タップで入れ替え。誘い（緑）は韻踏み禁止の切り札。</span></div>`+
+   ls.map(l=>lyHtml(l,{a:'dk',sel:G.deck.includes(l.id)})).join('')+
+   `<button class="btn" data-a="fight" ${G.deck.length<Math.min(5,ls.length)?'disabled':''}>バトル開始 ▶</button>`);
+  setInfo();
+}
+// ---- battle
+function startBattle(){
+  const oi=sd.oi, o=OPP[oi];
+  bt=newBattle(oi); bt.forcedLaws=(window.__metro&&window.__metro.pendingLaws||[]).slice(); if(window.__metro) window.__metro.pendingLaws=null;
+  V.kind='dialog'; 
+  dialog([[`opp${oi}`,o.intro],['侍','いざ、勝負でござる！']],()=>battleBegin(),{slot:2});
+}
+function battleBegin(){
+  V.kind='battle'; V.ch=G.ch; V.oi=bt.oi; V.oppLose=false; V.cheer=0; V.card=null; V.cast=null; FX.length=0;
+  scr='battle'; sd={st:'idle',shownHp:{p:bt.hp.p,o:bt.hp.o},bub:{nm:'ジャッジ',tag:'',text:'バトル開始！ ビートに乗れ！',shown:999}}; setInfo(); beat(true);
+  later(0.4*sp(),()=>bRound());
+}
+function bRound(){
+  btStartRound(bt);
+  if(bt.forcedLaws&&bt.forcedLaws.length){ bt.laws=bt.forcedLaws.shift(); }
+  V.whistle=1.2; sfx('whistle');
+  const ls=bt.laws.map(lawLabel).join('」「');
+  sd.st='law'; sd.bub={nm:'ジャッジ',tag:'',text:`第${bt.round}ラウンド！ このラウンドのロウは「${ls}」だ！ ピーッ！`,shown:999};
+  banner(`ROUND ${bt.round}`,'#ffcf3d'); renderBattle();
+  later(1.7*sp(),()=>{ sd.st='choose'; renderBattle(); });
+}
+function bChoose(side){
+  if(sd.st!=='choose') return; sfx('tap');
+  btSetFirst(bt,side); sd.st='idle'; sd.bub={nm:'ジャッジ',tag:'',text:side==='p'?'先攻はMCライム侍！':`先攻は ${bt.o.name}！`,shown:999}; renderBattle();
+  later(0.5*sp(),bNext);
+}
+function bNext(){
+  if(bt.phase==='over'){ bEnd(); return; }
+  if(bt.phase==='roundEnd'){ sd.st='idle'; sd.bub={nm:'ジャッジ',tag:'',text:'ラウンド終了！',shown:999}; renderBattle(); later(0.9*sp(),()=>bRound()); return; }
+  const side=btSide(bt);
+  if(side==='o'){ sd.st='idle'; renderBattle(); later(0.55*sp(),oppTurn); }
+  else { sd.st='hand'; if(btEnsureLegal(bt)){ banner('手札ひき直し！','#7ae0ff'); sfx('flip'); sd.bub={nm:'ジャッジ',tag:'',text:'手札がロウに合わない！ 引き直しだ。',shown:999}; } renderBattle(); }
+}
+function oppTurn(){ const res=btPlayO(bt); showVerse(res); }
+function playCard(i){
+  if(sd.st!=='hand') return; const c=bt.pHand[i]; if(!c) return;
+  if(lawViol(bt,'p',c,false).length && !auto && !sd.confirmed){ sd.warn=i; sd.st='warn'; renderBattle(); return; }
+  sd.confirmed=false; sd.warn=null;
+  const res=btPlayP(bt,i); showVerse(res);
+}
+function showVerse(res){
+  const side=res.side, c=res.card;
+  const nm=side==='p'?'MCライム侍':bt.o.name;
+  sd.st='show'; sd.bub={nm,tag:c.tags.length?'〈'+c.tags.join('・')+'〉':'',text:c.t,shown:0};
+  sd.rev={res,t:0,done:false,chars:[...c.t],times:[]};
+  // timings by chunk (one beat per chunk)
+  const beatT=60/BPM*sp(); const chunks=c.t.split(' ').filter(Boolean); let idx=0;
+  chunks.forEach((ch,ci)=>{ const cs=[...ch]; cs.forEach((_,k)=>{ sd.rev.times.push(ci*beatT+(k/cs.length)*beatT*0.75); }); idx+=cs.length; });
+  sd.rev.chunkTimes=chunks.length*beatT;
+  if(side==='p') V.rap=chunks.length*beatT+0.5; else V.oppRap=true;
+  speak(c.t);
+  renderBattle();
+}
+function tickReveal(dt){
+  const r=sd.rev; if(!r||r.done) return;
+  r.t+=dt; const spans=panel.querySelectorAll('.bub .c');
+  // spans only contain non-space chars; map times by char order excluding spaces
+  let n=0; const T_=r.times; while(n<T_.length&&T_[n]<=r.t) n++;
+  sd.bub.shown=n;
+  for(let k=0;k<spans.length;k++) if(k<n&&!spans[k].classList.contains('on')) spans[k].classList.add('on');
+  if(n>=T_.length&&r.t>r.chunkTimes){ r.done=true; V.oppRap=false; later(0.12*sp(),()=>resolveVerse(r.res)); }
+}
+function updateBars(){
+  const bp=$('hbp'), bo=$('hbo'); if(!bp||!bo) return; sd.shownHp={p:bt.hp.p,o:bt.hp.o};
+  bp.style.width=Math.max(0,bt.hp.p/bt.max.p*100)+'%'; bo.style.width=Math.max(0,bt.hp.o/bt.max.o*100)+'%';
+  $('hvp').textContent=bt.hp.p; $('hvo').textContent=bt.hp.o;
+  const cp=$('cdp'), co=$('cdo'); if(cp) cp.innerHTML=cardIcons(bt.y.p); if(co) co.innerHTML=cardIcons(bt.y.o);
+}
+const cardIcons=n=>`<span class="cd ${n>=1?(n>=2?'r':'y'):''}"></span><span class="cd ${n>=2?'r':''}"></span>`;
+function resolveVerse(res){
+  const side=res.side, vx=side==='p'?306:84;
+  const sidenm=side==='p'?'MCライム侍':bt.o.name;
+  let wait=0.9;
+  if(res.viol){
+    V.whistle=1.4; V.card=res.flag; sfx('whistle'); later(0.5*sp(),()=>sfx('bad'));
+    const lw=res.viol.map(lawLabel).join('・');
+    banner(res.flag==='red'?'レッドカード！退場':'イエローカード！',res.flag==='red'?'#ff5a5a':'#ffe14d');
+    fxNum(`-${res.self} HPP`,side==='p'?84:306,110,'#ff9a9a'); V.shake=.6;
+    sd.bub.tag='⚠ロウ違反'; sd.bub.note=`ジャッジ「${lw} 違反！ ${res.flag==='red'?'レッドカードで退場だ！':'イエローカード。ダメージ0、HPP-10！'}」`;
+    if(side==='o'&&res.flag==='red') V.oppLose=true;
+    if(side==='o') sfx('cheer');
+    wait=1.9;
+    if(side==='p') V.hurt=1;
+  } else {
+    const parts=[]; if(res.hit) parts.push('ハマった！ ×2.5'); if(res.weak) parts.push('弱み突き ×1.5'); if(res.rh) parts.push('韻ボーナス ×1.3'); if(res.rec) parts.push('推奨ロウ ×1.3'); if(res.lead&&!res.weak) parts.push('先手の勢い ×1.25');
+    sd.bub.note=parts.join('　');
+    sfx(res.hit?'smash':'hit'); V.shake=res.hit?1:.4; if(res.hit){ banner('ハマった！','#ffcf3d'); sfx('cheer'); V.hop=1; } else if(res.rh) banner('韻ボーナス！','#7ae0ff');
+    fxNum(`-${res.dmg}`,side==='p'?306:84,110,res.hit?'#ffcf3d':'#fff'); fxBurst(side==='p'?306:84,120,res.hit?'#ffcf3d':'#ff4f93');
+    if(side==='p'&&res.hit) fxNum('ドッ！！',200,70,'#ff4f93');
+    wait=res.hit?1.4:0.95;
+  }
+  void vx;
+  renderBattle(true); updateBars();
+  later(wait*sp(),()=>{ V.card=null; if(res.over){ bEnd(); } else bNext(); });
+}
+function bEnd(){
+  beat(false); btEnd(bt);
+  const win=bt.winner==='p';
+  sd.st='end'; V.card=null;
+  if(win){ V.oppLose=true; sfx('win'); sfx('cheer'); banner('勝利！','#ffcf3d'); }
+  else { sfx('lose'); sfx('boo'); banner('敗北……','#8a9ae0'); }
+  const why=bt.why==='red'?(win?'相手がレッドカードで退場！':'レッドカードで退場……'):bt.why==='judge'?'判定へ。残りHPPの割合で決着！':'HPPが0になった！';
+  sd.bub={nm:'ジャッジ',tag:'',text:(win?'勝者、MCライム侍！ ':`勝者、${bt.o.name}！ `)+why,shown:999};
+  renderBattle();
+  later(2.2*sp(),()=>{ if(win) matchWon(); else matchLost(); });
+}
+function matchWon(){
+  const o=bt.o, f=G.fight; G.money+=CHAPT[G.ch].prize[f]; G.fight++;
+  const prize=CHAPT[G.ch].prize[f];
+  const lines=[[`opp${bt.oi}`,o.lose]]; if(prize) lines.push(['司会',`賞金 ${prize}円をゲット！`]);
+  V.kind='dialog';
+  dialog(lines,()=>{
+    if(G.fight>=3){ chapterClear(); } else { save(); startNextFight(); }
+  },{lose:true});
+}
+function startNextFight(){
+  const oi=G.ch*3+G.fight;
+  dialog([['司会',`${ROUND_NAMES[G.fight]}、次の相手は「${OPP[oi].name}」だ！`]],()=>deckScreen(),{slot:2});
+}
+function chapterClear(){
+  if(G.ch>=2){ ending(); return; }
+  G.ch++; G.day=1; G.slot=0; G.fight=0; G.mode='explore'; G.snap=null; save();
+  dialog(D.SC_CH[G.ch],()=>{ town(); save(); },{ch:G.ch,slot:1});
+}
+function matchLost(){
+  G.fails++;
+  dialog([['ジャッジ','ピーッ！ 試合終了。……だが、ここで終わりじゃない。最終日の朝からやり直しだ。'],['侍','無念……！ 次こそ、ネタを磨いて出直すでござる。']],()=>{
+    restoreSnap(); G.mode='explore'; save(); town();
+  },{slot:2});
+}
+function ending(){
+  clearSave();
+  dialog(D.SC_END,()=>resultScreen(),{ch:2,slot:2});
+}
+function resultScreen(){
+  V.kind='result'; V.ch=2; V.slot=2; V.cast=null; beat(false);
+  const nb=[]; 
+  if(!best.turns||G.turns<best.turns){ best.turns=G.turns; nb.push('ターン数'); }
+  if(G.dmg>best.dmg){ best.dmg=G.dmg; nb.push('総ダメージ'); }
+  if(G.hits>best.hits){ best.hits=G.hits; nb.push('ハマった！'); }
+  best.clears++; try{ localStorage.setItem('metro_best',JSON.stringify(best)); }catch(e){}
+  sfx('win'); banner('全章クリア！','#ffcf3d');
+  go('result',{t:0},`<div class="card"><h2>メトロポリスの頂点！</h2><p>MCライム侍は、地方から首都の頂点へ駆け上がった。</p>`+
+   `<div class="rows"><span>合計ターン数</span><b>${G.turns}</b><span>総ダメージ</span><b>${G.dmg}</b><span>「ハマった！」</span><b>${G.hits}回</b><span>負けた回数</span><b>${G.fails}回</b></div>`+
+   (nb.length?`<p style="color:var(--gold);font-weight:800">🎉 ベスト更新：${nb.join('・')}</p>`:'')+
+   `<button class="btn" data-a="again">もう一度あそぶ</button><a class="back" href="../">← ゲーム一覧にもどる</a></div>`);
+  G.mode='done';
+}
+// ---- battle rendering
+function renderBattle(light){
+  const o=bt.o, st=sd.st, b=sd.bub||{}; const sh=sd.shownHp||bt.hp;
+  const laws=bt.laws.length?bt.laws.map(L=>`<span class="law ${lawKind(L)}">${L.t==='rec'?'★':L.t==='rhy'?'🚫':'⛔'} ${lawLabel(L)}</span>`).join(''):'<span class="note">ロウ未発表</span>';
+  let chars='';
+  if(b.shown<999){ let n=0; chars=[...b.text].map(ch=>{ if(ch===' ') return ' '; const on=n<b.shown; n++; return `<span class="c ${on?'on st':''}">${esc(ch)}</span>`; }).join(''); }
+  else chars=esc(b.text);
+  const pv=bt.prev&&bt.prev.side==='o'?bt.prev.card:null;
+  let hand='';
+  if(st==='hand'||st==='warn'||st==='show'||st==='idle'||st==='law'||st==='choose'||st==='end'){
+    hand=`<div class="hand">`+bt.pHand.map((c,i)=>{
+      const bad=lawViol(bt,'p',c,false).length>0, hit=(pv&&c.tags.some(t=>pv.tags.includes(t)))||c.weak===bt.oi;
+      const rec=bt.laws.some(L=>L.t==='rec'&&L.cat===c.cat);
+      const dis=st!=='hand'?'disabled':'';
+      return `<button class="hc ${bad?'bad':''} ${c.weak!==undefined?'weak':''} ${hit&&st==='hand'?'hit':''}" data-a="card" data-i="${i}" ${dis}><div class="t">${c.weak!==undefined?'⚡':''}${esc(c.t)}</div><div class="mm"><span class="tag atk">${c.atk}</span><span class="tag cat">${CAT[c.cat]}</span>${c.rh?`<span class="tag rh">${c.rh}</span>`:''}${tagsHtml(c)}${c.lure?'<span class="tag lure">誘い</span>':''}${rec?'<span class="tag lure">★推奨</span>':''}${bad?'<span class="tag bad">⚠ロウ違反</span>':''}${hit&&st==='hand'&&!bad?'<span class="tag atk">◎ハマる</span>':''}</div></button>`;
+    }).join('')+`</div>`;
+  }
+  let ctrl='';
+  if(st==='choose'){
+    const rhy=bt.laws.some(L=>L.t==='rhy');
+    ctrl=`<div class="card" style="padding:8px 10px"><b>先攻をどうする？</b>${rhy?'<br><span class="note" style="color:#ff9aff">韻踏み禁止！ 先攻を譲って、相手に韻を踏ませよう（〈誘い〉も有効）。</span>':'<br><span class="note">後攻はバースが必ず「返し」になる（ハマると×2.5）。先攻は先手の勢い×1.25。</span>'}<div class="row"><button class="btn" data-a="first" data-s="p">先攻をとる</button><button class="btn cy" data-a="first" data-s="o">先攻を譲る</button></div></div>`;
+  } else if(st==='hand'){
+    ctrl=`<div class="note" style="margin-bottom:4px">${pv?`相手の〈${pv.tags[0]}〉に同じタグで返すと「ハマった！」`:'先攻のバース：仕掛けの一発をえらぼう'}　残りのこり山札 ${bt.pDeck.length+bt.pDisc.length}</div>`;
+  }
+  const warn=st==='warn'?`<div class="modal"><div class="card" style="max-width:340px;margin:0"><h2 style="color:#ff8a8a">⚠ ロウ違反！</h2><p>このリリックを出すと<b>イエローカード</b>です。ダメージは0で、自分のHPPが−10されます（2枚でレッド＝敗北）。<br>それでも出しますか？</p><div class="row"><button class="btn alt" data-a="wno">やめる</button><button class="btn" data-a="wyes">それでも出す</button></div></div></div>`:'';
+  panel.innerHTML=
+   `<div class="laws">${laws}<span class="cards" title="イエロー/レッドカード">侍${`<span id="cdp">${cardIcons(bt.y.p)}</span>`} 相手${`<span id="cdo">${cardIcons(bt.y.o)}</span>`}</span></div>`+
+   `<div class="bars"><div class="hb"><small><span>MCライム侍 HPP</span><b id="hvp">${sh.p}</b></small><div class="tr"><i id="hbp" style="width:${sh.p/bt.max.p*100}%"></i></div></div>`+
+   `<div class="hb o"><small><span>${esc(o.name)}</span><b id="hvo">${sh.o}</b></small><div class="tr"><i id="hbo" style="width:${sh.o/bt.max.o*100}%"></i></div></div></div>`+
+   `<div class="bub"><span class="nm">${esc(b.nm||'')}</span>${b.tag?`<span class="tg">${esc(b.tag)}</span>`:''}${chars}${b.note?`<div style="font-size:11.5px;color:#a8325a;margin-top:3px">${esc(b.note)}</div>`:''}</div>`+ctrl+hand+warn;
+  setInfo();
+  if(sd.shownHp){ void panel.offsetWidth; updateBars(); }
+  if(!light) panel.scrollTop=0;
+}
+// ------------------------------------------------------------ actions
+const ACT={
+  new(){ unlock(); newGame(); },
+  cont(){ unlock(); continueGame(); },
+  how(){ howto(); },
+  back(){ if(scr==='shop'&&busy()) return; sfx('tap'); if(scr==='title'||scr==='how') title(); else if(scr==='book'&&G.mode==='tourney') deckScreen(); else town(); },
+  tts(){ ttsOn=!ttsOn; try{ localStorage.setItem('metro_tts',ttsOn?'1':'0'); }catch(e){} title(); },
+  dnext, dskip(){ sd.i=sd.lines.length-1; renderDialog(); },
+  spot(d){ sfx('tap'); spotGo(+d.i); },
+  jobs(){ sfx('tap'); jobsMenu(); },
+  job(d){ sfx('tap'); jobStart(+d.i); },
+  stop(){ jobStop(); },
+  evnext(){ sfx('tap'); afterAction(); },
+  shop(){ sfx('tap'); shop(); },
+  tab(d){ if(busy()) return; sfx('tap'); sd.tab=d.t; renderShop(); },
+  buy(d){ shopBuy(d.id); },
+  sell(d){ shopSell(d.id); },
+  book(){ sfx('tap'); book(); },
+  tourney(){ sfx('tap'); leaveEarly(); startTournament(); },
+  adeck(){ sfx('ok'); G.deck=autoDeckFor(G,sd.oi); renderDeck(); },
+  cdeck(){ sfx('tap'); G.deck=[]; renderDeck(); },
+  dk(d){ const i=G.deck.indexOf(d.id); if(i>=0) G.deck.splice(i,1); else if(G.deck.length<DECKMAX) G.deck.push(d.id); else { banner('デッキは15枚まで','#ff8a8a'); sfx('bad'); } sfx('flip'); const y=panel.scrollTop; renderDeck(); panel.scrollTop=y; },
+  fight(){ sfx('ok'); save(); startBattle(); },
+  first(d){ bChoose(d.s); },
+  card(d){ playCard(+d.i); },
+  wyes(){ sd.st='hand'; sd.confirmed=true; const i=sd.warn; playCard(i); },
+  wno(){ sd.st='hand'; sd.warn=null; renderBattle(); },
+  again(){ unlock(); newGame(); }
+};
+function manual(){ if(auto) setAuto(false); }
+panel.addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]'); if(!b||b.disabled) return;
+  const f=ACT[b.dataset.a]; if(!f) return;
+  manual(); unlock(); f(b.dataset);
+});
+let unlocked=false; function unlock(){ if(unlocked) return; unlocked=true; ac(); }
+function setAuto(v){
+  auto=!!v; $('autoBtn').setAttribute('aria-pressed',auto?'true':'false'); autoCool=0.3;
+}
+$('autoBtn').addEventListener('click',()=>{ unlock(); setAuto(!auto); $('autoBtn').blur(); });
+function setMute(m){ muted=m; try{ localStorage.setItem('metro_mute',m?'1':'0'); }catch(e){} $('muteBtn').textContent=m?'音 OFF':'音 ON'; if(master) master.gain.value=m?0:0.65; if(m&&window.speechSynthesis){ try{ speechSynthesis.cancel(); }catch(e){} } }
+$('muteBtn').addEventListener('click',()=>{ unlock(); setMute(!muted); $('muteBtn').blur(); });
+addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  const k=e.key;
+  if(k==='o'||k==='O'){ unlock(); setAuto(!auto); return; }
+  if(auto) setAuto(false);
+  if(k===' '||k==='Enter'){
+    if(scr==='job'){ e.preventDefault(); jobStop(); }
+    else if(scr==='dialog'){ e.preventDefault(); dnext(); }
+  } else if(/^[1-5]$/.test(k)&&scr==='battle'&&sd.st==='hand'){ playCard(+k-1); }
+});
+// ------------------------------------------------------------ auto brain
+function bestJob(){ const js=JOBS[G.ch]; let bi=0; js.forEach((j,i)=>{ if(j.base>js[bi].base) bi=i; }); return bi; }
+function autoAct(){
+  switch(scr){
+    case 'title': { ACT.new(); break; }
+    case 'dialog': dnext(); return 0.42;
+    case 'town': {
+      if(shopPlanNext()){ shop(); return 0.35; }
+      let bs=-1,bv=-1; for(let s=0;s<7;s++){ const v=evValue(evFor(G.ch,s,G.day,G.slot)); if(v>bv){ bv=v; bs=s; } }
+      if(bv>=[28,32,40][G.ch]) spotGo(bs); else jobsMenu();
+      return 0.3; }
+    case 'event': case 'jobres': afterAction(); return 0.75;
+    case 'jobs': jobStart(bestJob()); return 0.2;
+    case 'job': break;
+    case 'shop': {
+      const p=shopPlanNext();
+      if(p){ const want=p.op==='buy'?'buy':'sell'; if(sd.tab!==want){ sd.tab=want; renderShop(); } if(p.op==='buy') shopBuy(p.id); else shopSell(p.id); }
+      else { sd.autoLeave=1; town(); }
+      return 0.4; }
+    case 'book': town(); break;
+    case 'deck': { G.deck=autoDeckFor(G,sd.oi); ACT.fight(); return 0.6; }
+    case 'battle': {
+      if(sd.st==='choose') bChoose(tasFirst(bt));
+      else if(sd.st==='hand') playCard(tasPick(bt));
+      break; }
+    case 'result': { if(sd.t>=1.0) { newGame(); } break; }
+  }
+}
+// ------------------------------------------------------------ main loop
+function tick(dt){
+  T+=dt;
+  V.shake=Math.max(0,V.shake-dt*2.4); V.whistle=Math.max(0,V.whistle-dt); V.rap=Math.max(0,V.rap-dt); V.hop=Math.max(0,V.hop-dt*1.3); V.hurt=Math.max(0,V.hurt-dt);
+  if(bt&&scr==='battle'){ bt.cheer=Math.max(0,bt.cheer-dt*0.1); V.cheer+=(bt.cheer-V.cheer)*Math.min(1,dt*4); }
+  else V.cheer=Math.max(0,V.cheer-dt*.5);
+  for(let i=0;i<Q.length;i++) Q[i].t-=dt;
+  if(Q.length){ const due=Q.filter(q=>q.t<=0); if(due.length){ Q=Q.filter(q=>q.t>0); due.forEach(q=>{ if(q.s===scr) q.fn(); }); } }
+  if(scr==='battle') tickReveal(dt);
+  if(scr==='job'&&sd.phase==='play'){
+    if(sd.pause>0) sd.pause-=dt;
+    else {
+      const prev=jobPos(); sd.ph+=dt*sd.spd*(auto?1.5:1); const cur=jobPos();
+      if(auto&&((prev-0.5)*(cur-0.5)<=0)){ sd.ph=Math.round(sd.ph/Math.PI)*Math.PI; jobStop(0.5); }
+    }
+    const mk=$('mk'); if(mk) mk.style.left=(jobPos()*100)+'%';
+  }
+  if(scr==='result') sd.t+=dt;
+  updateFX(dt);
+  autoCool-=dt;
+  if(auto&&autoCool<=0&&!busy()){ const gp=autoAct(); autoCool=gp||0.12; }
+}
+function frame(){ drawScene(); }
+let last=0;
+function loop(ts){
+  if(!last) last=ts; const dt=Math.min(0.05,(ts-last)/1000); last=ts;
+  tick(dt); frame(); requestAnimationFrame(loop);
+}
+// ------------------------------------------------------------ boot
+setMute(muted);
+title(); frame();
+requestAnimationFrame(loop);
+// ------------------------------------------------------------ test hook
+const dbg={
+  forceLaws(arr){ if(bt) bt.forcedLaws=arr; },
+  go:{ title, town, shop:()=>shop(), book, deck:()=>{ G.mode='tourney'; deckScreen(); } },
+  evAt(ch,spot,day,slot){ G.ch=ch; G.day=day; G.slot=slot; spotGo(spot); },
+  jobAt(ch,i){ G.ch=ch; jobStart(i); },
+  startBattleAt(oi,laws){ G.ch=OPP[oi].ch; G.fight=oi%3; G.mode='tourney'; deckScreen(); G.deck=autoDeckFor(G,oi); window.__metro.pendingLaws=laws||null; startBattle(); },
+  skipDialog(){ while(scr==='dialog') dnext(); },
+  setLib(ids){ ids.forEach(id=>G.lib[id]=1); },
+  setMoney(n){ G.money=n; setInfo(); },
+  ending(){ ending(); },
+  ACT, LY, OPP, D
+};
+window.__metro={
+  get scr(){ return scr; }, get sd(){ return sd; }, get G(){ return G; }, get bt(){ return bt; }, get auto(){ return auto; }, get TEL(){ return TEL; }, get best(){ return best; }, get T(){ return T; },
+  get muted(){ return muted; },
+  step(sec){ let n=Math.max(1,Math.round(sec*30)); for(let i=0;i<n;i++) tick(1/30); frame(); },
+  setAuto, setMute, seed, rnd, simRun, newG, autoDeckFor, tasPick, tasFirst, humanPick, humanFirst, newBattle, runBattle, lawViol, calc,
+  setG(g){ G=g; }, dbg, pendingLaws:null
+};
+})();
+</script>
+<!-- zoom guard: ピンチ・ダブルタップでズームしない -->
+<script>(function(){var p=function(e){e.preventDefault();};['gesturestart','gesturechange','gestureend'].forEach(function(t){document.addEventListener(t,p,{passive:false});});document.addEventListener('touchmove',function(e){if(e.touches&&e.touches.length>1)e.preventDefault();},{passive:false});document.addEventListener('dblclick',function(e){var t=e.target;if(t&&t.closest&&t.closest('input,textarea,select,[contenteditable]'))return;e.preventDefault();},{passive:false});})();</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>
