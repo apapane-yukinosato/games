@@ -753,16 +753,28 @@ function renderPortrait(id,outfit,expr,opt){
 }
 /* ---- 差し替え用イラスト（透過WebP）：PORTRAIT_IMG[キャラ][衣装][表情]。無い表情はその衣装の normal、衣装が無ければ canvas 描画 ---- */
 let PORTRAIT_IMG={}; /* 画像データ本体は </body> 直前の別 script から渡す（本体を軽くして先に動かすため） */
-const PIMG={}; let pimgLoading=0, ART_IMG_MS=0;
-window.__loadPortraits=function(d){ try{ PORTRAIT_IMG=d;
-for(const id in PORTRAIT_IMG) for(const o in PORTRAIT_IMG[id]) for(const e in PORTRAIT_IMG[id][o]){
-  const im=new Image(); pimgLoading++; const done=()=>{ if(--pimgLoading===0){ cache.clear(); ART_IMG_MS=Math.round(performance.now()); } };
-  im.onload=()=>{ ((PIMG[id]=PIMG[id]||{})[o]=PIMG[id][o]||{})[e]=im; done(); }; im.onerror=done; im.src=PORTRAIT_IMG[id][o][e];
+/* 立ち絵は遅延読み込み：portrait() で要求された1枚だけ Image を作り、最大 PIMG_MAX 枚の LRU で持つ（iOS Safari のメモリ対策）。読めるまでは canvas 絵（読めていれば normal）で代用し、読めたらその絵のキャッシュを捨てて次のフレームから画像にする */
+const PIMG=new Map(), PIMG_MAX=20; let pimgLoading=0, ART_IMG_MS=0;
+window.__loadPortraits=function(d){ PORTRAIT_IMG=d||{}; };
+function pimgGet(id,o,e){
+  const k=id+'|'+o+'|'+e; let en=PIMG.get(k);
+  if(en){ PIMG.delete(k); PIMG.set(k,en); return en.ok?en.im:null; }
+  const src=PORTRAIT_IMG[id]&&PORTRAIT_IMG[id][o]&&PORTRAIT_IMG[id][o][e]; if(!src) return null;
+  try{
+    const im=new Image(); en={im,ok:false}; pimgLoading++; let fin=false;
+    const done=ok=>{ if(fin) return; fin=true; pimgLoading--; if(ok){ en.ok=true; for(const ck of Array.from(cache.keys())) if(ck.indexOf(id+'|'+o+'|')===0) cache.delete(ck); } else if(PIMG.get(k)===en) PIMG.delete(k); if(pimgLoading===0) ART_IMG_MS=Math.round(performance.now()); };
+    im.onload=()=>done(true); im.onerror=()=>done(false);
+    PIMG.set(k,en); while(PIMG.size>PIMG_MAX){ const ok=PIMG.keys().next().value; if(ok===k) break; PIMG.delete(ok); }
+    im.src=src;
+  }catch(err){ return null; }
+  return null;
 }
-}catch(e){ if(window.console) console.warn(e); } };
 function imgPortrait(id,outfit,expr){
-  const o=PIMG[id]&&PIMG[id][outfit]; if(!o) return null;
-  const im=o[expr]||o.normal; if(!im) return null;
+  const o=PORTRAIT_IMG[id]&&PORTRAIT_IMG[id][outfit]; if(!o) return null;
+  const ek=o[expr]?expr:'normal'; if(!o[ek]) return null;
+  let im=pimgGet(id,outfit,ek);
+  if(ek!=='normal'){ const nm=pimgGet(id,outfit,'normal'); if(!im) im=nm; }
+  if(!im) return null;
   const cv=mk(PW*RS,PH*RS), g=cv.getContext('2d'); g.imageSmoothingQuality='high';
   const h=PH*RS, w=h*im.width/im.height; g.drawImage(im,(cv.width-w)/2,0,w,h); return cv;
 }
@@ -785,7 +797,7 @@ function meSil(h){
   return cv;
 }
 const sil={}; function meSilhouette(){ return sil.a||(sil.a=meSil(PH)); }
-return {PW,PH,RS,CHR,CH_ORDER,EXPR,EXPR_LIST,portrait,meSilhouette,mk,lg,rg,rgba,mix,dk,lt,hx,TAU,renderPortrait,cache,imgLoaded:()=>pimgLoading===0,imgMs:()=>ART_IMG_MS};
+return {PW,PH,RS,CHR,CH_ORDER,EXPR,EXPR_LIST,portrait,meSilhouette,mk,lg,rg,rgba,mix,dk,lt,hx,TAU,renderPortrait,cache,imgLoaded:()=>pimgLoading===0,imgMs:()=>ART_IMG_MS,imgCount:()=>{let n=0;PIMG.forEach(e=>{if(e.ok)n++;});return n;}};
 })();
 /* ================= ART: backgrounds & effects ================= */
 const BGART=(()=>{
@@ -2363,9 +2375,12 @@ function cgThumb(type,who,w,h){
   try{ drawCG(g,w,h,CGSPEC(type,who),who,1.3); }catch(e){} return cv;
 }
 function faceCanvas(id,size,outfit,expr){
-  const cv=document.createElement('canvas'); cv.width=size*2; cv.height=size*2; const g=cv.getContext('2d');
-  const img=ART.portrait(id,outfit||'winter',expr||'normal'); const sx=img.width*(60/420), sy=img.height*(60/640), sw=img.width*(300/420);
-  g.fillStyle='#FFE8F0'; g.fillRect(0,0,size*2,size*2); g.drawImage(img,sx,sy,sw,sw,0,0,size*2,size*2); return cv;
+  const cv=document.createElement('canvas'); cv.width=size*2; cv.height=size*2; const g=cv.getContext('2d'); let last=null;
+  const draw=()=>{ const img=ART.portrait(id,outfit||'winter',expr||'normal'); if(img===last) return; last=img; const sx=img.width*(60/420), sy=img.height*(60/640), sw=img.width*(300/420);
+    g.fillStyle='#FFE8F0'; g.fillRect(0,0,size*2,size*2); g.drawImage(img,sx,sy,sw,sw,0,0,size*2,size*2); };
+  draw(); /* 立ち絵は遅延読み込みなので、読めたら顔アイコンも画像に描き直す */
+  if(!ART.imgLoaded()){ let n=0; const iv=setInterval(()=>{ draw(); if(++n>40||ART.imgLoaded()){ draw(); clearInterval(iv); } },150); }
+  return cv;
 }
 /* ================= UI 2: flows & overlays ================= */
 const U={auto:false,skip:false,adv:false,cont:null,full:'',pos:0,speed:46,pending:null,cgPause:0,choiceCb:null,ov:[],mode:'title',hidden:false,seen:false,toastT:0,cmdCb:null};
