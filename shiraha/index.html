@@ -62,7 +62,7 @@ body{background:var(--bg);color:var(--ink);
         <p>宇宙から<b>バンジージャンプ</b>で落ちてくる侍が、刀を振り下ろしてくる！ 頭の上に刀が来た瞬間に<b>両手をパンッ</b>と合わせて、刀を挟み取れ。</p>
         <ul>
           <li><b>画面のどこをタップ</b>（スペース／Enter）で両手をパンッ。1回だけ！</li>
-          <li>落ちてくるまで約10秒。残りの距離は<b>光年</b>でカウントダウン</li>
+          <li>落ちてくるまで約10秒。画面は<b>上＝斬る侍</b>／<b>下＝受ける人</b>に分かれ、残りの距離は<b>光年</b>でカウントダウン</li>
           <li>刀が来る少し前に、縮んでいく<b>輪</b>が出る。輪が小さくなりきった瞬間が合図</li>
           <li>早すぎると空振り、遅いと<b>ちょんまげ</b>がスパッ。ライフはちょんまげ3本</li>
           <li>月 → ケンタウルス座α星 → シリウス → ベテルギウス → アンドロメダ → 宇宙の果て</li>
@@ -107,14 +107,15 @@ const TF_DEFAULT=10; // seconds from jump to the judging moment T
 
 // keys: [fraction of TF, progress u (0..1 on a log-distance scale), 'l' = linear segment (otherwise smooth)]
 const K_LINE=[[0,0],[1,1,'l']];
-const K_FEINT=[[0,0],[.35,.36,'l'],[.5,.28],[.62,.62],[.8,.8,'l'],[1,1,'l']];
-const K_BOUNCE=[[0,0],[.4,.6,'l'],[.5,.64],[.62,.30],[.74,.66],[.86,.86,'l'],[1,1,'l']];
-const K_ALL=[[0,0],[.25,.3,'l'],[.33,.32],[.45,.12],[.6,.62],[.7,.57],[.78,.82],[1,1,'l']];
+// every profile is strictly decreasing in distance (all segments linear, slope > 0): the samurai never goes back up and never stops
+const K_SIRIUS=[[0,0],[.82,.46,'l'],[.88,.56,'l'],[1,1,'l']]; // late surge, the last ~1.5s
+const K_BETEL=[[0,0],[.40,.50,'l'],[.50,.53,'l'],[.58,.575,'l'],[.80,.70,'l'],[.90,.84,'l'],[1,1,'l']]; // brief slow-down (still falling), then a surge
+const K_ALL=[[0,0],[.30,.40,'l'],[.40,.43,'l'],[.50,.50,'l'],[.82,.72,'l'],[.90,.84,'l'],[1,1,'l']];
 const STAGES=[
  {nm:'月',from:'月',dly:4.063e-8,txt:'約0.00000004光年（38万km）',kind:'moon',keys:K_LINE,n:1,suit:'#e9edf5',blade:'#dfe8f5',sword:'月光の刀',col:'#cfd6e4',note:'練習。ほぼ等速'},
  {nm:'ケンタウルス座α星',from:'ケンタウルス座α星',dly:4.37,txt:'4.37光年',kind:'star',kc:'#ffe28a',keys:K_LINE,n:1,suit:'#fff3c9',blade:'#fff0b8',sword:'アルファ丸',col:'#ffd45a',note:'いちばん近い恒星'},
- {nm:'シリウス',from:'シリウス',dly:8.6,txt:'8.6光年',kind:'star',kc:'#bfe0ff',keys:K_FEINT,n:1,suit:'#d4ecff',blade:'#cfe9ff',sword:'天狼剣',col:'#7ec8ff',note:'途中でひもが伸び縮み'},
- {nm:'ベテルギウス',from:'ベテルギウス',dly:550,txt:'約550光年',kind:'giant',keys:K_BOUNCE,n:1,suit:'#ffd9c4',blade:'#ffd2b8',sword:'ベテル丸',col:'#ff7a45',note:'二段バンジー'},
+ {nm:'シリウス',from:'シリウス',dly:8.6,txt:'8.6光年',kind:'star',kc:'#bfe0ff',keys:K_SIRIUS,n:1,suit:'#d4ecff',blade:'#cfe9ff',sword:'天狼剣',col:'#7ec8ff',note:'終盤に急加速'},
+ {nm:'ベテルギウス',from:'ベテルギウス',dly:550,txt:'約550光年',kind:'giant',keys:K_BETEL,n:1,suit:'#ffd9c4',blade:'#ffd2b8',sword:'ベテル丸',col:'#ff7a45',note:'途中で一瞬減速、そのあと急加速'},
  {nm:'アンドロメダ銀河',from:'アンドロメダ銀河',dly:2.5e6,txt:'約250万光年',kind:'galaxy',keys:K_LINE,n:2,suit:'#e6dcff',blade:'#e0d4ff',sword:'星雲刀',col:'#b99cff',note:'二刀流'},
  {nm:'宇宙の果て',from:'宇宙の果て',dly:4.65e10,txt:'約465億光年',kind:'edge',keys:K_ALL,n:2,suit:'#ffe9f6',blade:'#ffd7f0',sword:'万象無双',col:'#ff7ad9',note:'ラスボス'}
 ];
@@ -162,6 +163,7 @@ function fmtDist(dm){
   if(dm>=10) return 'あと '+dm.toFixed(1)+'m';
   return 'あと '+dm.toFixed(2)+'m';
 }
+const unitOf=dm=>dm/LY_M>=1e-3?0:dm>=1000?1:2;
 function fmtSpeed(v){ // v in m/s
   const c=v/C_MS;
   if(c>=1) return '光速の '+jp(c)+'倍！';
@@ -214,7 +216,9 @@ const SFX={
     gn.gain.setValueAtTime(.0001,t); gn.gain.linearRampToValueAtTime(.3,t+.03); gn.gain.exponentialRampToValueAtTime(.0001,t+.85); o.connect(gn); gn.connect(master); o.start(t); o.stop(t+.9); },
   over(){ [392,330,262,196].forEach((f,i)=>tone(f,.4,'triangle',.18,null,i*.18)); },
   fanfare(){ [523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,.36,'triangle',.15,null,i*.11)); },
-  whoosh(){ noise(.45,'bandpass',300,.3,2500,.7); }
+  whoosh(){ noise(.45,'bandpass',300,.3,2500,.7); },
+  beat(v=1){ tone(70,.2,'sine',.5*v,38); tone(60,.2,'sine',.36*v,34,.15); },
+  don(){ noise(.5,'lowpass',420,.8,60,1.2); tone(62,.55,'sine',.7,28); tone(1500,.08,'square',.05,300); }
 };
 
 // ---------- state ----------
@@ -228,13 +232,15 @@ function saveBest(){ try{localStorage.setItem('shirahaBest',JSON.stringify(best)
 const stats={perfect:0,good:0,early:0,late:0,clears:0,rounds:0,fails:0};
 let fxq=[], parts=[], pops=[], flashA=0, shakeA=0, holdUntil=0, holdRt=0, punch=0, slashT=-9;
 let prevL=0, starOff=0, dLdt=0, curL=8, curU=0, lastWindV=-1;
+let heatV=0, flow=0, hb=0, lastRem0=99, lastUnit=-1, trem=0, sweatN=0;
+const MERGE=.3, SWING=.12;
 const cfgNow=()=>endless?round&&round.cfg||STAGES[0]:STAGES[stageIdx]||STAGES[0];
 
 function makeRound(cfg,TF){ return {cfg,TF:TF||TF_DEFAULT,n:cfg.n,T:[],t0:0,next:0,res:[],caught:[],claps:[],failAt:0,failIdx:-1,failKind:'',cutRt:null,success:null,outAt:0,outLen:1,L0:Math.log10(cfg.dly*LY_M)}; }
 function endlessCfg(){
   const k=endlessN; const b=BODIES[Math.floor(Math.random()*BODIES.length)];
   const feint=Math.random()<Math.min(.6,.12+.06*k), bounce=Math.random()<Math.min(.5,.08+.05*k), dual=Math.random()<Math.min(.6,.05*k);
-  const keys=feint&&bounce?K_ALL:bounce?K_BOUNCE:feint?K_FEINT:K_LINE;
+  const keys=feint&&bounce?K_ALL:bounce?K_BETEL:feint?K_SIRIUS:K_LINE;
   const si=Math.floor(Math.random()*SUITS.length);
   return {nm:b[0],from:b[0],dly:b[1],txt:b[2],kind:b[3],kc:b[4]||'#ffe28a',keys,n:dual?2:1,suit:SUITS[si],blade:STAGES[si].blade,sword:b[0]+'の刀',col:STAGES[si].col,note:'エンドレス'};
 }
@@ -264,7 +270,7 @@ function beginIntro(){
 function introLen(){ return auto?.4:1.15; }
 function startFall(at){
   const r=round; r.t0=at; for(let i=0;i<r.n;i++) r.T[i]=at+(r.TF+i*DUAL_GAP/1000)*1000;
-  setMode('fall',at); stats.rounds++; SFX.jump(); lastWindV=-1;
+  setMode('fall',at); stats.rounds++; SFX.jump(); lastWindV=-1; hb=0; heatV=0; lastRem0=99; lastUnit=unitOf(Math.pow(10,r.L0));
 }
 function tap(ts){
   if(mode!=='fall'||round.failAt) return false;
@@ -284,7 +290,6 @@ function failSword(i,kind){
   r.failIdx=i; r.failKind=kind; r.failAt=r.T[i]+CUT_DELAY; r.res[i]=kind; if(kind==='late') stats.late++;
   r.cutRt=(r.failAt-r.t0)/1000; combo=0;
 }
-function swordS(r,i,rtv){ const Ti=(r.T[i]-r.t0)/1000; const ts0=Ti-.9; if(rtv<=Ti) return Math.pow(Math.max(0,(rtv-ts0)/.9),1.5); return 1+(1.5/.9)*(rtv-Ti); }
 function catchSword(i,ts,d){
   const r=round; const perfect=Math.abs(d)<=WIN_P; const eff=Math.max(r.T[i],ts);
   r.res[i]=perfect?'perfect':'good';
@@ -304,7 +309,7 @@ function catchSword(i,ts,d){
   });
 }
 function beginOut(success,at){
-  const r=round; r.success=success; r.outAt=at; r.outLen=success?(auto?.8:1.45):(auto?1.1:1.8);
+  const r=round; pops=pops.filter(q=>!q.text.startsWith('ドンッ')); r.success=success; r.outAt=at; r.outLen=success?(auto?.8:1.45):(auto?1.1:1.8);
   setMode('out',at); SFX.boing();
   if(success){
     if(!endless){ const dl=r.cfg.dly; if(dl>best.ly){ best.ly=dl; saveBest(); } }
@@ -380,6 +385,15 @@ function tick(dt){
     if(auto&&!r.failAt&&r.next<r.n&&simT>=r.T[r.next]) tap(r.T[r.next]);
     if(!r.failAt&&r.next<r.n&&simT>r.T[r.next]+WIN_G) failSword(r.next,'late');
     const rt=(simT-r.t0)/1000;
+    const rem0=(r.T[0]-simT)/1000, ff=clamp(rt/r.TF,0,1);
+    heatV=Math.max(heatOf(curL),heatV-dt*1.4);
+    if(lastRem0>MERGE&&rem0<=MERGE){ flashA=Math.max(flashA,.6); shakeA=Math.max(shakeA,12); SFX.whoosh(); }
+    lastRem0=rem0;
+    if(rem0<=0&&pops.some(q=>q.text.startsWith('ドンッ'))) pops=pops.filter(q=>!q.text.startsWith('ドンッ'));
+    if(!hold){
+      flow+=dt*(320+1500*ff*ff+160*Math.min(8,Math.abs(dLdt)));
+      const hz=.9+3.3*ff*ff, h0=hb; hb+=hz*dt; if(Math.floor(hb)>Math.floor(h0)&&ff>.3) SFX.beat(.3+.7*ff);
+    }
     // marker tick sound & shakin
     for(let i=0;i<r.n;i++){ const Ti=(r.T[i]-r.t0)/1000; const a=rt-dt, b=rt; if(a<Ti-1.7&&b>=Ti-1.7) SFX.shakin(); if(a<Ti-.6&&b>=Ti-.6&&!r.res[i]) SFX.mark(); }
     if(r.failAt&&simT>=r.failAt&&mode==='fall') doCut(r.failAt);
@@ -398,10 +412,11 @@ function tick(dt){
     if(dt>0){ dLdt=(Lnew-prevL)/dt; }
     if(!hold){ starOff+=-(Lnew-prevL)*95; }
     prevL=Lnew; curL=Lnew; curU=mode==='fall'?clamp(rtv/r.TF,0,1):0;
+    if(mode==='fall'){ const un=unitOf(Math.pow(10,Lnew)); if(lastUnit>=0&&un>lastUnit&&(r.T[0]-simT)/1000>.25){ shakeA=Math.max(shakeA,18); flashA=Math.max(flashA,.3); SFX.don(); pop(un===1?'ドンッ！ km':'ドンッ！ m',200,HUDY+120,'#ff6a5a',44,.8); } lastUnit=un; } else lastUnit=-1;
   }
   // continuous sound
   if(AC){
-    if(mode==='fall'){ const r2=round; const f=clamp((simT-r2.t0)/1000/r2.TF,0,1); const v=.015+.16*f*f*f; loopSet(wind,v,300+1700*f); const heat=heatOf(curL); loopSet(reen,heat*.3,260+300*heat); }
+    if(mode==='fall'){ const r2=round; const f=clamp((simT-r2.t0)/1000/r2.TF,0,1); const pr=1-clamp((curL-LEND)/Math.max(.1,r2.L0-LEND),0,1); const v=.02+.22*pr*pr+.06*f; loopSet(wind,v,300+2200*pr); const heat=heatOf(curL); loopSet(reen,heat*.3,260+300*heat); }
     else { loopSet(wind,0); loopSet(reen,0); }
   }
   // particles
@@ -411,8 +426,6 @@ function tick(dt){
     for(const q of pops){ q.life-=dt; }
     pops=pops.filter(q=>q.life>0);
     flashA=Math.max(0,flashA-dt*2.6); shakeA=Math.max(0,shakeA-dt*40); punch=Math.max(0,punch-dt*5);
-    // heat sparks
-    if(mode==='fall'){ const h=heatOf(curL); if(h>.1&&Math.random()<h*.9){ const e=enemyPos(); parts.push({t:'dot',x:e.x+rnd(-18,18),y:e.y+rnd(-10,30)*e.sc,vx:rnd(-30,30),vy:-rnd(80,220),life:rnd(.2,.5),max:.5,col:Math.random()<.5?'#ffb030':'#ff5a20',sz:rnd(2,5)*e.sc+1}); } }
   }
 }
 function advanceTo(target){
@@ -429,33 +442,33 @@ function frame(){
 
 // ---------- scene geometry ----------
 function heatOf(L){ return sm((5.7-L)/.6)*(1-sm((4.8-L)/.8)); }
+// the samurai holds the sword overhead (daijodan) from the jump; the only motion is one straight cut in the last SWING seconds
 function swordPose(r,i,rtv){
-  const Ti=(r.T[i]-r.t0)/1000; const tw0=Ti-1.7, tw1=Ti-1.0, ts0=Ti-.9;
-  const hyRaw=s=>45*s+320*Math.max(0,s-.8)*Math.max(0,s-.8);
-  const hy0=LINE-SWL-hyRaw(1);
-  let a,hy,s=0;
-  if(rtv<tw0){ a=-60*DEG; hy=hy0+34; }
-  else if(rtv<ts0){ const k=clamp((rtv-tw0)/(tw1-tw0),0,1); const e=1-Math.pow(1-k,3); a=lerp(-60,140,e)*DEG; hy=lerp(hy0+34,hy0,e); if(k>=1){ a+=Math.sin(rtv*60)*1.2*DEG; } }
-  else { s=swordS(r,i,rtv); a=140*DEG*Math.max(0,1-s); hy=hy0+hyRaw(s); }
-  return {a,hy,s};
+  const rem=(r.T.length?(r.T[i]-r.t0)/1000:99)-rtv; const k=clamp(1-rem/SWING,0,1), e=k*k;
+  const sg=(r.n===2&&i===1)?-1:1;
+  return {a:sg*175*DEG*(1-e), rel:lerp(-75,40,e), rem};
 }
 function swordRt(r,i,rt){ // time used to pose sword i (frozen when caught / cut)
   const c=r.caught.find(c=>c.i===i); if(c) return c.rt; if(r.cutRt!==null) return Math.min(rt,r.cutRt); return rt;
 }
 function curRt(){ return round&&(mode==='fall'||mode==='out')?(simT-round.t0)/1000:-1; }
+// layout of the two panels (virtual coordinates). yb = bottom edge of the upper panel, tilt = slope of the divider
+function panelGeo(rem0){
+  const yS=Math.min(vy0+(vy1-vy0)*.5,300), mb=yS+.55*(vy1-yS);
+  const e=rem0>1?0:sm((1-rem0)/.7);
+  return {yS,yb:lerp(yS,mb,e),e,mb,tilt:26,sY:lerp(vy0+(yS-vy0)*.56,Math.min(105,vy0+(mb-vy0)*.56),e)};
+}
 function enemyPos(){
   const r=round; const L=curL; const rt=curRt();
-  const sc=0.2+.8*sm((3.8-L)/3.2);
-  let x=200, y=127;
-  if(rt>=0&&r.T.length){
-    let sum=0; for(let i=0;i<r.n;i++){ const p=swordPose(r,i,swordRt(r,i,rt)); sum+=(p.hy-(LINE-SWL-(45+320*.04))); }
-    y=127+sum/r.n;
-    x=200+Math.sin(rt*2.3)*7*(1-sm((rt-(r.TF-1.5))/1));
-  } else { x=200+Math.sin(simT/700)*5; }
-  const e0=y;
+  const sc0=0.2+.8*sm((3.8-L)/3.2);
+  if(rt<0||!r.T.length) return {x:200+Math.sin(simT/700)*5,y:127,sc:sc0,dy:0,base:127};
+  const rem=(r.T[0]-r.t0)/1000-swordRt(r,0,rt); const yp=panelGeo(1).sY, yE=105;
+  let y,sc;
+  if(rem>=0){ const k=clamp(rem/MERGE,0,1); y=lerp(yE,yp,k); sc=1.5+.4*k*k; }
+  else { y=yE+Math.min(-rem,.1)*300; sc=1.5; }
   let dy=0;
   if(mode==='out'){ const ot=(simT-round.outAt)/1000; dy=ot<.1?ot*120:12-2600*Math.pow(Math.max(0,ot-.1),2); }
-  return {x,y:e0+dy,sc,dy,base:e0};
+  return {x:200,y:y+dy,sc,dy,base:y};
 }
 
 // ---------- rendering ----------
@@ -513,6 +526,24 @@ function drawOrigin(cfg,x,y,sz,a){
 }
 function cloudPuff(x,y,r,a){ g.globalAlpha=a; g.fillStyle='#fff'; [[0,0,1],[-.7,.2,.7],[.7,.15,.75],[.25,-.35,.7],[-.3,-.3,.6]].forEach(c=>{ g.beginPath(); g.arc(x+c[0]*r,y+c[1]*r,c[2]*r*.7,0,PI2); g.fill(); }); g.globalAlpha=1; }
 
+function drawTown(gy){
+  const W=vx1-vx0, H=vy1-vy0;
+  {
+    const hz=gy-26;
+    // far mountain
+    g.fillStyle='#8fb4dc'; g.beginPath(); g.moveTo(vx0-50,hz); g.lineTo(vx0+W*.62-60,hz); g.lineTo(vx0+W*.62,hz-110); g.lineTo(vx0+W*.62+60,hz); g.lineTo(vx1+50,hz); g.lineTo(vx1+50,hz+60); g.lineTo(vx0-50,hz+60); g.closePath(); g.fill();
+    g.fillStyle='#fff'; g.beginPath(); g.moveTo(vx0+W*.62-24,hz-80); g.lineTo(vx0+W*.62,hz-110); g.lineTo(vx0+W*.62+24,hz-80); g.lineTo(vx0+W*.62+12,hz-72); g.lineTo(vx0+W*.62,hz-82); g.lineTo(vx0+W*.62-12,hz-72); g.closePath(); g.fill();
+    // houses
+    for(let i=0,x=vx0-30;x<vx1+40;i++){ const w=40+hash(i)*36, h=26+hash(i+9)*34; const col=['#e9d6b6','#d9c3a0','#c6a98a','#f0e2c6'][i%4];
+      g.fillStyle=col; g.fillRect(x,hz-h,w,h+8); g.fillStyle=['#5a4a6a','#44546a','#6a4a44'][i%3]; g.beginPath(); g.moveTo(x-5,hz-h); g.lineTo(x+w/2,hz-h-18); g.lineTo(x+w+5,hz-h); g.closePath(); g.fill();
+      g.fillStyle='rgba(60,50,40,.55)'; g.fillRect(x+w*.2,hz-h*.6,w*.16,h*.3); g.fillRect(x+w*.6,hz-h*.6,w*.16,h*.3); x+=w+3; }
+    g.fillStyle='#6bbf59'; g.fillRect(vx0-400,gy-14,W+800,16);
+    g.fillStyle='#caa468'; g.fillRect(vx0-400,gy,W+800,H+400);
+    g.fillStyle='rgba(120,80,40,.25)'; for(let i=0;i<14;i++){ g.fillRect(vx0+hash(i+3)*W,gy+8+hash(i+30)*30,26,3); }
+    // fence
+    g.fillStyle='#8a5a30'; for(let x=vx0-10;x<vx1+10;x+=34){ g.fillRect(x,gy-34,8,30); } g.fillRect(vx0-10,gy-28,W+20,5);
+    }
+}
 function drawBG(cfg,L,rt){
   const W=vx1-vx0, H=vy1-vy0;
   const top=skyCol(L+.9), bot=skyCol(L-.5);
@@ -574,21 +605,7 @@ function drawBG(cfg,L,rt){
   // town + ground
   const slide=1-sm((3.3-L)/1.6);
   const gy=G0+300*slide;
-  if(slide<1){
-    const hz=gy-26;
-    // far mountain
-    g.fillStyle='#8fb4dc'; g.beginPath(); g.moveTo(vx0-50,hz); g.lineTo(vx0+W*.62-60,hz); g.lineTo(vx0+W*.62,hz-110); g.lineTo(vx0+W*.62+60,hz); g.lineTo(vx1+50,hz); g.lineTo(vx1+50,hz+60); g.lineTo(vx0-50,hz+60); g.closePath(); g.fill();
-    g.fillStyle='#fff'; g.beginPath(); g.moveTo(vx0+W*.62-24,hz-80); g.lineTo(vx0+W*.62,hz-110); g.lineTo(vx0+W*.62+24,hz-80); g.lineTo(vx0+W*.62+12,hz-72); g.lineTo(vx0+W*.62,hz-82); g.lineTo(vx0+W*.62-12,hz-72); g.closePath(); g.fill();
-    // houses
-    for(let i=0,x=vx0-30;x<vx1+40;i++){ const w=40+hash(i)*36, h=26+hash(i+9)*34; const col=['#e9d6b6','#d9c3a0','#c6a98a','#f0e2c6'][i%4];
-      g.fillStyle=col; g.fillRect(x,hz-h,w,h+8); g.fillStyle=['#5a4a6a','#44546a','#6a4a44'][i%3]; g.beginPath(); g.moveTo(x-5,hz-h); g.lineTo(x+w/2,hz-h-18); g.lineTo(x+w+5,hz-h); g.closePath(); g.fill();
-      g.fillStyle='rgba(60,50,40,.55)'; g.fillRect(x+w*.2,hz-h*.6,w*.16,h*.3); g.fillRect(x+w*.6,hz-h*.6,w*.16,h*.3); x+=w+3; }
-    g.fillStyle='#6bbf59'; g.fillRect(vx0-400,gy-14,W+800,16);
-    g.fillStyle='#caa468'; g.fillRect(vx0-400,gy,W+800,H+400);
-    g.fillStyle='rgba(120,80,40,.25)'; for(let i=0;i<14;i++){ g.fillRect(vx0+hash(i+3)*W,gy+8+hash(i+30)*30,26,3); }
-    // fence
-    g.fillStyle='#8a5a30'; for(let x=vx0-10;x<vx1+10;x+=34){ g.fillRect(x,gy-34,8,30); } g.fillRect(vx0-10,gy-28,W+20,5);
-  }
+  if(slide<1) drawTown(gy);
   return gy;
 }
 
@@ -689,9 +706,11 @@ function drawPlayer(gy,sep,handLY,md,mid){
   g.fillStyle='#c0392b'; g.fillRect(-28,-66,56,8);
   // arms
   const hy=handLY-gy; g.lineCap='round';
+  const tr=[-1,1].map(sd=>[trem*Math.sin(simT/17+sd*1.7),trem*Math.cos(simT/13+sd)]);
   for(const sd of [-1,1]){
-    const hx=sd*sep, sx=sd*24, sy=-92;
-    g.strokeStyle='#f4efe2'; g.lineWidth=14; g.beginPath(); g.moveTo(sx,sy); g.quadraticCurveTo(sd*(sep+34),(sy+hy)/2,hx,hy+16); g.stroke();
+    const [tx,ty]=tr[sd<0?0:1];
+    const hx=sd*sep+tx, sx=sd*24, sy=-92;
+    g.strokeStyle='#f4efe2'; g.lineWidth=14; g.beginPath(); g.moveTo(sx,sy); g.quadraticCurveTo(sd*(sep+34),(sy+hy)/2,hx,hy+16+ty); g.stroke();
     g.strokeStyle='#e0d8c4'; g.lineWidth=2; g.stroke();
   }
   // head
@@ -706,26 +725,219 @@ function drawPlayer(gy,sep,handLY,md,mid){
   else if(md==='grin'){ g.strokeStyle='#15151c'; g.lineWidth=3; [-13,13].forEach(x=>{ g.beginPath(); g.arc(x,ey+3,6,PI*1.1,PI*1.9); g.stroke(); }); g.beginPath(); g.arc(0,-112,10,.1,PI-.1); g.closePath(); g.fillStyle='#8a1f1f'; g.fill(); }
   else { [-13,13].forEach(x=>{ g.beginPath(); g.arc(x,ey-3,3.8,0,PI2); g.fill(); }); g.strokeStyle='#15151c'; g.lineWidth=3; g.beginPath(); g.moveTo(-5,-108); g.lineTo(5,-108); g.stroke(); }
   g.strokeStyle='#15151c'; g.lineWidth=3.4; g.beginPath(); g.moveTo(-23,ey-14); g.lineTo(-6,ey-10); g.moveTo(23,ey-14); g.lineTo(6,ey-10); g.stroke();
+  // sweat drops (more and faster as the moment nears)
+  for(let k=0;k<sweatN;k++){ const ph=(simT/1000*(.7+sweatN*.35)+k*.37)%1, sd=k%2?1:-1, x=sd*(31+(k*5)%8), y=-150+ph*80;
+    g.globalAlpha=1-ph*ph*ph; g.fillStyle='#bfe6ff'; g.strokeStyle='#5aa0d8'; g.lineWidth=1.2; g.beginPath(); g.moveTo(x,y-7); g.quadraticCurveTo(x+5,y+1,x,y+5); g.quadraticCurveTo(x-5,y+1,x,y-7); g.fill(); g.stroke(); g.globalAlpha=1; }
   if(mid) mid();
   // hands
-  for(const sd of [-1,1]){ g.fillStyle='#ffd9b0'; g.beginPath(); g.ellipse(sd*sep,hy+2,6.5,13,0,0,PI2); g.fill(); g.strokeStyle='#d4a878'; g.lineWidth=1.5; g.stroke(); }
+  for(const sd of [-1,1]){ const [tx,ty]=tr[sd<0?0:1]; g.fillStyle='#ffd9b0'; g.beginPath(); g.ellipse(sd*sep+tx,hy+2+ty,6.5,13,0,0,PI2); g.fill(); g.strokeStyle='#d4a878'; g.lineWidth=1.5; g.stroke(); }
   g.restore();
 }
 
-function drawMarkers(r,rt){
+function drawMarkers(r,rt,cx=200,cy=HANDY,k0=1){
   for(let i=0;i<r.n;i++){
     const Ti=(r.T[i]-r.t0)/1000; if(r.res[i]&&r.res[i]!=='early') continue; if(r.res[i]==='early'&&rt>Ti) continue;
     const rem=Ti-rt; const col=i===0?'#ffe066':'#7ee8ff';
     // fixed target ring appears during the final second
     if(rem<1.3&&rem>-.15){
-      g.strokeStyle=col; g.globalAlpha=clamp((1.3-rem)*1.5,0,.7); g.lineWidth=2.5; g.setLineDash([5,5]); g.beginPath(); g.arc(200,HANDY,15,0,PI2); g.stroke(); g.setLineDash([]); g.globalAlpha=1;
+      g.strokeStyle=col; g.globalAlpha=clamp((1.3-rem)*1.5,0,.7); g.lineWidth=2.5; g.setLineDash([5,5]); g.beginPath(); g.arc(cx,cy,15*k0,0,PI2); g.stroke(); g.setLineDash([]); g.globalAlpha=1;
     }
     if(rem<=.6&&rem>-.05){
-      const k=clamp(rem/.6,0,1), rr=15+k*62;
-      g.strokeStyle=col; g.lineWidth=3+ (1-k)*3; g.globalAlpha=.45+.55*(1-k); g.beginPath(); g.arc(200,HANDY,rr,0,PI2); g.stroke();
-      g.fillStyle=col; g.globalAlpha=.12*(1-k); g.beginPath(); g.arc(200,HANDY,rr,0,PI2); g.fill(); g.globalAlpha=1;
+      const k=clamp(rem/.6,0,1), rr=(15+k*62)*k0;
+      g.strokeStyle=col; g.lineWidth=3+ (1-k)*3; g.globalAlpha=.45+.55*(1-k); g.beginPath(); g.arc(cx,cy,rr,0,PI2); g.stroke();
+      g.fillStyle=col; g.globalAlpha=.12*(1-k); g.beginPath(); g.arc(cx,cy,rr,0,PI2); g.fill(); g.globalAlpha=1;
     }
   }
+}
+
+// ---------- two-panel fall view (upper: the slashing samurai / lower: the person who catches) ----------
+const PAL=['#7fb8ff','#f0d28a','#e8b27a','#c46b4a','#9be0b0','#b99cff'];
+const PASS=Array.from({length:72},(_,i)=>({Lp:5.2+i*.31+hash(i+300)*.2,sx:hash(i+330)<.5?-1:1,off:70+hash(i+360)*170,r:12+hash(i+390)*34,hue:Math.floor(hash(i+420)*6),ring:hash(i+450)<.3}));
+const CLOUDS2=Array.from({length:30},(_,i)=>({nx:hash(i+510)*1.2-.1,Lp:2.5+hash(i+540)*2.4,r:50+hash(i+570)*90}));
+const beatShape=p=>Math.max(Math.exp(-p*12),p>.25?.6*Math.exp(-(p-.25)*14):0);
+function clapSep(r){
+  let sep=40;
+  for(const cl of r.claps){ if(simT>=cl.ts){ const el=(simT-cl.ts)/1000; if(el<cl.hold){ sep=Math.min(sep,lerp(40,4,clamp(el/.035,0,1))); } else if(el<cl.hold+.12) sep=Math.min(sep,lerp(4,40,(el-cl.hold)/.12)); } }
+  return sep;
+}
+function rig(r,e,rt){ // hands and swords of the samurai (swords stay overhead until the final cut)
+  const hands=[],swords=[];
+  for(let i=0;i<r.n;i++){
+    const p=swordPose(r,i,swordRt(r,i,rt));
+    const hox=r.n===1?0:(i===0?15:-15); const hx=e.x+hox*e.sc;
+    const c=r.caught.find(c=>c.i===i);
+    const hyy=e.y+p.rel*e.sc, hyS=e.base+p.rel*e.sc;
+    const dirx=Math.sin(p.a)*e.sc, diry=-Math.cos(p.a)*e.sc;
+    swords.push({i,hx:c?200+hox*e.sc:hx,hy:c?hyS:hyy,a:p.a,c,sc:e.sc});
+    if(r.n===1){ hands.push({x:hx+dirx*8,y:hyy+diry*8,side:-1}); hands.push({x:hx+dirx*30,y:hyy+diry*30,side:1}); }
+    else hands.push({x:hx+dirx*10,y:hyy+diry*10,side:i===0?1:-1});
+  }
+  return {hands,swords};
+}
+function dividerPts(geo){
+  const n=9, x0=vx0-30, x1=vx1+30, seed=geo.e>0?Math.floor(simT/70):0, amp=7+geo.e*30+curU*5, pts=[];
+  for(let i=0;i<=n;i++){ const t=i/n; let y=lerp(geo.yb+geo.tilt,geo.yb-geo.tilt,t); if(i>0&&i<n) y+=(i%2?-1:1)*amp*(.35+hash(i*13+seed)); pts.push([lerp(x0,x1,t),y]); }
+  return pts;
+}
+function pathPanel(pts,up){
+  g.beginPath(); const e=up?vy0-60:vy1+60; g.moveTo(pts[0][0],e); for(const p of pts) g.lineTo(p[0],p[1]); g.lineTo(pts[pts.length-1][0],e); g.closePath();
+}
+function drawFlame(cx,cy,sc,h){
+  if(h<.02) return;
+  drawGlow(cx,cy,260*sc*(.6+h),'rgba(255,120,30,.9)',Math.min(1,h*.9));
+  drawGlow(cx,cy-30*sc,150*sc,'rgba(255,230,140,.9)',Math.min(1,h*.7));
+  for(let k=0;k<16;k++){
+    const ph=(simT/1000*(2.5+hash(k)*2)+hash(k+5))%1, bx=cx+(hash(k+9)-.5)*190*sc, len=(130+hash(k+13)*240)*sc*h, w=(14+hash(k+17)*24)*sc, by=cy+70*sc-ph*70;
+    g.globalAlpha=Math.min(1,h)*(.35+.5*(1-ph)); g.fillStyle=k%2?'#ffa030':'#ff5a28';
+    g.beginPath(); g.moveTo(bx-w,by); g.quadraticCurveTo(bx-w*.4,by-len*.6,bx+(hash(k+21)-.5)*34,by-len); g.quadraticCurveTo(bx+w*.4,by-len*.5,bx+w,by); g.closePath(); g.fill();
+  }
+  g.globalAlpha=1;
+}
+function drawFocus(cx,cy,f,heat){
+  const n=44, seed=Math.floor(simT/55), ri=lerp(170,70,f), al=.1+.5*f;
+  g.fillStyle=`rgba(255,${255-heat*110|0},${255-heat*170|0},${al})`;
+  for(let i=0;i<n;i++){
+    const ang=(i+hash(i+seed*7))/n*PI2, w=.01+hash(i*3+seed)*.03*(.5+f), rin=ri*(1+hash(i+seed*3)*.9), ro=900;
+    g.beginPath(); g.moveTo(cx+Math.cos(ang)*rin,cy+Math.sin(ang)*rin); g.lineTo(cx+Math.cos(ang-w)*ro,cy+Math.sin(ang-w)*ro); g.lineTo(cx+Math.cos(ang+w)*ro,cy+Math.sin(ang+w)*ro); g.closePath(); g.fill();
+  }
+}
+function drawPlanetBall(x,y,r,col,ring){
+  g.save(); g.translate(x,y);
+  if(ring){ g.strokeStyle='rgba(230,205,150,.8)'; g.lineWidth=Math.max(2,r*.12); g.beginPath(); g.ellipse(0,0,r*1.9,r*.5,-.3,0,PI2); g.stroke(); }
+  const gr=g.createRadialGradient(-r*.35,-r*.35,r*.1,0,0,r); gr.addColorStop(0,'#fff'); gr.addColorStop(.25,col); gr.addColorStop(1,'rgba(10,10,30,.95)');
+  g.fillStyle=gr; g.beginPath(); g.arc(0,0,r,0,PI2); g.fill();
+  if(ring){ g.strokeStyle='rgba(230,205,150,.85)'; g.lineWidth=Math.max(2,r*.12); g.beginPath(); g.ellipse(0,0,r*1.9,r*.5,-.3,.15,PI-.15); g.stroke(); }
+  g.restore();
+}
+function drawTopPanel(cfg,r,L,rt,geo){
+  const W=vx1-vx0, top=vy0, yb=geo.yb, f=curU, ref=top+(geo.yS-top)*.55, K=300, L0=r.L0, sY=geo.sY, heat=heatV;
+  const Hs=(vy1-vy0)*.8;
+  const gr=g.createLinearGradient(0,top,0,yb); gr.addColorStop(0,rgb(skyCol(L+.9))); gr.addColorStop(1,rgb(skyCol(L-.5)));
+  g.fillStyle=gr; g.fillRect(vx0-60,top-60,W+120,yb-top+120);
+  // stars flow upward as streaks
+  const sa=clamp((L-4.4)/1.4,0,1), spd=320+1500*f*f+160*Math.min(8,Math.abs(dLdt));
+  if(sa>0){
+    for(const st of STARS){
+      const x=vx0+st.nx*W, sp=.4+st.r*.5, y=((st.ny*Hs-flow*sp)%Hs+Hs)%Hs+top-30, len=clamp(spd*.05*(.4+st.r*.5),3,170);
+      g.globalAlpha=sa*(.5+.4*Math.sin(simT/90+st.ph)); g.strokeStyle=st.ph>3.5?'#bfe0ff':'#fff'; g.lineWidth=st.r*.9;
+      g.beginPath(); g.moveTo(x,y); g.lineTo(x,y+len); g.stroke();
+    }
+    g.globalAlpha=1;
+  }
+  // origin body recedes upward
+  { const oy=ref+(L-L0)*K, oa=clamp(1-(L0-L)/2.2,0,1)*clamp((L-4)/1.5,0,1); if(oa>0&&oy>top-200) drawOrigin(cfg,200,oy,cfg.kind==='moon'?70:54,oa); }
+  // planets flash past on both sides
+  if(L>4.8){
+    const al=clamp((L-4.8)/.8,0,1);
+    for(const o of PASS){
+      if(o.Lp>=L0-.3) continue; const dl=L-o.Lp, y=ref+dl*K; if(y<top-150||y>yb+150) continue;
+      const near=clamp(1-Math.abs(dl)/.8,0,1), rr=o.r*(.5+2.6*near*near), x=200+o.sx*o.off*(1+.9*near);
+      g.globalAlpha=al; drawPlanetBall(x,y,rr,PAL[o.hue],o.ring); g.globalAlpha=1;
+    }
+    for(const it of SOLAR){
+      if(it[0]>=L0-.1) continue; const y=ref+(L-it[0])*K; if(y<top-120||y>yb+120) continue;
+      g.globalAlpha=al; if(it[1]==='太陽'){ drawGlow(it[4],y,it[3]*5,'#ffcf50',.9); drawPlanetBall(it[4],y,it[3]*1.4,'#fff4b8',false); } else drawPlanetBall(it[4]>200?it[4]+40:it[4]-40,y,it[3]*2,it[2],it[1]==='土星');
+      txt(it[1],it[4]>200?it[4]+40:it[4]-40,y+it[3]*2+14,12,'#cfe0ff'); g.globalAlpha=1;
+    }
+  }
+  // Earth grows from below, then the ocean and land fly past
+  const d=Math.pow(10,L), rho=3000*6.4e6/(d+6.4e6);
+  if(L<9.3&&L>4.7){
+    const ea=1-sm((5.6-L)/.8); g.save(); g.globalAlpha=ea;
+    if(L>7.3){
+      const E=rho*.5, R=Math.max(E,14), cy=geo.yS-.8*E+R;
+      drawGlow(200,cy,R*1.12,'rgba(120,190,255,.55)',.9);
+      g.beginPath(); g.arc(200,cy,R,0,PI2); g.clip();
+      const eg=g.createRadialGradient(200-R*.3,cy-R*.4,R*.1,200,cy,R); eg.addColorStop(0,'#4ea0ff'); eg.addColorStop(1,'#123c8c');
+      g.fillStyle=eg; g.fillRect(200-R,cy-R,R*2,R*2);
+      g.fillStyle='#3fa35b'; [[-.4,-.7,.3,.18],[.35,-.6,.25,.15],[0,-.85,.4,.1],[-.1,-.5,.2,.12]].forEach(c=>{ g.beginPath(); g.ellipse(200+c[0]*R,cy+c[1]*R,c[2]*R,c[3]*R,.3,0,PI2); g.fill(); });
+      g.fillStyle='rgba(255,255,255,.65)'; [[.1,-.75,.35,.05],[-.5,-.55,.28,.04],[.5,-.45,.3,.05],[-.2,-.3,.4,.06]].forEach(c=>{ g.beginPath(); g.ellipse(200+c[0]*R,cy+c[1]*R,c[2]*R,c[3]*R,-.2,0,PI2); g.fill(); });
+    } else {
+      const eg=g.createLinearGradient(0,top,0,yb); eg.addColorStop(0,'#173f9a'); eg.addColorStop(1,'#2b78d6'); g.fillStyle=eg; g.fillRect(vx0-60,top-60,W+120,yb-top+120);
+      const sc=(7.3-L)*.6+1, HH=yb-top;
+      for(let k=0;k<12;k++){ const px=vx0+hash(k+200)*W, py=(((hash(k+210)*HH-flow*(.7+k*.08)*sc)%(HH+300))+(HH+300))%(HH+300)+top-150, rr=(60+hash(k+220)*120)*sc;
+        g.fillStyle=k%3===0?'#3f9a52':'rgba(255,255,255,.55)'; g.beginPath(); g.ellipse(px,py,rr,rr*.38,hash(k+230)-.5,0,PI2); g.fill(); }
+    }
+    g.restore();
+  }
+  // clouds rush past
+  if(L<5.2&&L>2.2){
+    const ca=clamp((5.2-L)/.4,0,1)*.9;
+    for(const c of CLOUDS.concat(CLOUDS2)){ const y=ref+(L-c.Lp)*K*1.2; if(y<top-160||y>yb+170) continue; cloudPuff(vx0+c.nx*W,y,c.r*1.5,ca); }
+    g.strokeStyle='rgba(255,255,255,.5)'; g.lineWidth=2;
+    for(let k=0;k<14;k++){ const x=vx0+hash(k+600)*W, y=((hash(k+620)*Hs-flow*(1+hash(k+640)))%Hs+Hs)%Hs+top-30; g.globalAlpha=ca*.8; g.beginPath(); g.moveTo(x,y); g.lineTo(x,y+90+hash(k+660)*120); g.stroke(); }
+    g.globalAlpha=1;
+  }
+  // town rises from below
+  if(L<3.3){ const gT=sY+60+(L-.9)*95; if(gT<yb+40){ g.save(); g.translate(200,gT); g.scale(1.5,1.5); g.translate(-200,-gT); drawTown(gT+0); g.restore(); } }
+  // heat aura
+  if(heat>.02){ drawFlame(200,sY,1.25,heat); g.fillStyle=`rgba(255,70,30,${heat*.28})`; g.fillRect(vx0-60,top-60,W+120,yb-top+120); }
+  // focus lines (behind the samurai)
+  drawFocus(200,sY,f,heat);
+  // the samurai: sword overhead from the very start, glaring at us
+  const jit=.3+3.6*f*f, SC=1.9;
+  const ex=200+rnd(-jit,jit), ey=sY+rnd(-jit,jit), e={x:ex,y:ey,sc:SC,dy:0,base:ey};
+  g.strokeStyle='rgba(255,210,90,.9)'; g.lineWidth=3; g.beginPath(); g.moveTo(ex,ey+20); g.lineTo(200,top-60); g.stroke();
+  drawGlow(ex,ey,170,cfg.col,.25+.3*f);
+  const {hands,swords}=rig(r,e,rt);
+  if(f>.15){ // motion-blur ghost trailing above
+    g.save(); g.globalAlpha=.2*f; g.translate(0,-(8+30*f)); drawEnemy(cfg,{x:ex,y:ey,sc:SC,dy:0,base:ey},hands.map(h=>({x:h.x,y:h.y,side:h.side})),0,'fight'); for(const s2 of swords) drawSword(s2.hx,s2.hy,s2.a,SC,cfg.blade,0); g.restore();
+  }
+  drawEnemy(cfg,e,hands,heat,'fight');
+  for(const s2 of swords) drawSword(s2.hx,s2.hy,s2.a,SC,cfg.blade,0);
+  // glaring eyes
+  g.fillStyle=`rgba(255,40,30,${.25+.5*f})`; [-11,11].forEach(x=>{ g.beginPath(); g.arc(ex+x*SC,ey+4*SC,3.6*SC,0,PI2); g.fill(); });
+  // foreground speed streaks
+  const ns=10+Math.floor(36*f);
+  for(let k=0;k<ns;k++){ const x=vx0+hash(k+700)*W, sp=.6+hash(k+720), len=60+hash(k+740)*220*(.4+f), y=((hash(k+760)*Hs-flow*sp*1.3)%Hs+Hs)%Hs+top-40;
+    g.strokeStyle=`rgba(255,255,255,${.12+.28*f})`; g.lineWidth=1+hash(k+780)*2.2; g.beginPath(); g.moveTo(x,y); g.lineTo(x,y+len); g.stroke(); }
+  // red vignette that closes in
+  const vg=g.createRadialGradient(200,sY,100,200,sY,Math.max(W,yb-top)*.75); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,`rgba(${heat>.1?'120,10,0':'0,0,20'},${.15+.45*f})`);
+  g.fillStyle=vg; g.fillRect(vx0-60,top-60,W+120,yb-top+120);
+}
+function drawBottomPanel(cfg,r,rt,geo){
+  const f=curU, pU=1-clamp((curL-LEND)/Math.max(.1,r.L0-LEND),0,1);
+  drawBG(cfg,.45,rt);
+  const gt=g.createLinearGradient(0,geo.yS-60,0,vy1); gt.addColorStop(0,`rgba(20,0,40,${.2+.4*f})`); gt.addColorStop(1,'rgba(20,0,20,0)'); g.fillStyle=gt; g.fillRect(vx0-60,geo.yS-60,vx1-vx0+120,vy1-geo.yS+120);
+  // the enemy: a tiny point of light far above that grows
+  { const lx=200+Math.sin(rt*.8)*8*(1-pU), ly=geo.yS+72+34*pU*pU, rp=1.3+24*Math.pow(pU,2.6), col=cfg.kc||cfg.col, h=heatV;
+    if(h>.05){ g.strokeStyle=`rgba(255,120,40,${h*.8})`; g.lineWidth=rp*.8; g.beginPath(); g.moveTo(lx,ly); g.lineTo(lx,ly-30-rp*5*h); g.stroke(); }
+    drawGlow(lx,ly,rp*4+4,h>.1?'#ff7a30':col,.9); g.fillStyle='#fff'; g.beginPath(); g.arc(lx,ly,Math.max(1.2,rp*.6),0,PI2); g.fill();
+    if(rp>4){ g.strokeStyle='rgba(255,255,255,.7)'; g.lineWidth=1.5; g.beginPath(); g.moveTo(lx-rp*2.2,ly); g.lineTo(lx+rp*2.2,ly); g.moveTo(lx,ly-rp*2.2); g.lineTo(lx,ly+rp*2.2); g.stroke(); } }
+  // the catcher: crouched, hands up, looking skyward
+  const ps=lerp(.85,1,geo.e), cr=1-geo.e;
+  g.save(); g.translate(200,G0); g.scale(ps*(1+.12*cr),ps*(1-.14*cr)); g.translate(-200,-G0);
+  drawPlayer(G0,clapSep(r),HANDY,mood==='shock'?'shock':'fight',null);
+  g.restore();
+  // warning ring above the head
+  drawMarkers(r,rt,200,G0-(G0-HANDY)*ps*(1-.14*cr),ps);
+}
+function renderSplit(cfg,r,L,rt){
+  const geo=panelGeo((r.T[0]-simT)/1000), f=curU, beat=beatShape(((hb%1)+1)%1), pts=dividerPts(geo);
+  // lower panel
+  g.save(); pathPanel(pts,false); g.clip();
+  const pul=1+beat*.012*(.3+f); g.translate(200,vy1); g.scale(pul,pul); g.translate(-200,-vy1);
+  drawBottomPanel(cfg,r,rt,geo);
+  g.restore();
+  g.save(); pathPanel(pts,false); g.clip();
+  const bw=(5+30*beat)*(.4+f);
+  g.strokeStyle=`rgba(255,40,60,${.25+.6*beat})`; g.lineWidth=bw*2; g.strokeRect(vx0,geo.yS-4,vx1-vx0,vy1-geo.yS+4);
+  const hv=g.createRadialGradient(200,(geo.yS+vy1)/2,40,200,(geo.yS+vy1)/2,Math.max(vx1-vx0,vy1-geo.yS)*.7); hv.addColorStop(0,'rgba(255,0,40,0)'); hv.addColorStop(1,`rgba(255,0,40,${beat*(.15+.3*f)})`);
+  g.fillStyle=hv; g.fillRect(vx0-60,geo.yS-60,vx1-vx0+120,vy1-geo.yS+120);
+  g.restore();
+  // upper panel
+  g.save(); pathPanel(pts,true); g.clip();
+  const sh=.4+4*f*f; g.translate(rnd(-sh,sh),rnd(-sh,sh));
+  drawTopPanel(cfg,r,L,rt,geo);
+  g.restore();
+  // comic-style divider (slash / lightning), it splits open as the panels merge
+  g.lineJoin='miter'; g.lineCap='round';
+  g.beginPath(); pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));
+  g.strokeStyle='#05060f'; g.lineWidth=14+10*geo.e; g.stroke();
+  g.strokeStyle='#fff'; g.lineWidth=5; g.stroke();
+  g.strokeStyle=`rgba(255,${200-120*f|0},60,.9)`; g.lineWidth=1.6; g.stroke();
+  if(geo.e>0){ const seed=Math.floor(simT/70); g.strokeStyle='#fff'; g.lineWidth=2.5;
+    for(let i=1;i<pts.length-1;i++){ const p=pts[i], dir=hash(i+seed)<.5?1:-1, len=(30+hash(i*5+seed)*60)*geo.e; g.beginPath(); g.moveTo(p[0],p[1]); g.lineTo(p[0]+(hash(i+9)-.5)*40,p[1]+dir*len*.5); g.lineTo(p[0]+(hash(i+19)-.5)*60,p[1]+dir*len); g.stroke(); } }
 }
 
 function render(){
@@ -736,16 +948,19 @@ function render(){
   const rtD=hold?holdRt:rt;
   let L=curL; if(mode==='title'||mode==='intro'||!r) L=r?r.L0:STAGES[0].dly&&Math.log10(STAGES[0].dly*LY_M);
   // camera
-  let zoom=1;
-  if(r&&mode==='fall'){ const last=r.T[r.n-1]; const rem=(last-simT)/1000; if(rem<.9&&rem>-.3) zoom=1+.07*sm(1-rem/.9); }
-  zoom+=punch*.1;
+  const split=!!(r&&mode==='fall'&&(r.T[0]-simT)/1000>MERGE);
+  trem=mode==='fall'?.4+3.4*curU*curU:0; sweatN=mode==='fall'?2+Math.floor(5*curU):0;
+  let zoom=1+punch*.1;
+  if(r&&mode==='fall'&&!split) zoom*=1+.25*sm(1-clamp((r.T[0]-simT)/1000/MERGE,0,1));
+  else if(r&&mode==='out') zoom*=1+.25*(1-sm((simT-r.outAt)/1000/.5));
   const shx=shakeA?rnd(-shakeA,shakeA)*.5:0, shy=shakeA?rnd(-shakeA,shakeA)*.5:0;
   g.save(); g.translate(200+shx,330+shy); g.scale(zoom,zoom); g.translate(-200,-330);
-  const gy=drawBG(cfg,L,rt);
+  const gy=split?G0:drawBG(cfg,L,rt);
   // enemy + rope
   const showEnemy=r&&mode!=='ending'&&mode!=='over'&&mode!=='title'||mode==='title';
   const heat=heatOf(L)*(mode==='fall'?1:0);
-  if(mode==='ending'){ drawEnding(); }
+  if(split){ renderSplit(cfg,r,L,rt); }
+  else if(mode==='ending'){ drawEnding(); }
   else if(mode==='over'){ drawPlayer(G0,40,HANDY,'shock'); }
   else if(r||mode==='title'){
     const e=r?enemyPos():{x:200,y:127,sc:.2,dy:0,base:127};
@@ -755,19 +970,7 @@ function render(){
     g.beginPath(); g.moveTo(e.x-3.5*sc0-1,e.y+14); g.lineTo(ropeTopX-.5,vy0-30); g.lineTo(ropeTopX+.5,vy0-30); g.lineTo(e.x+3.5*sc0+1,e.y+14); g.closePath(); g.fill();
     g.strokeStyle='rgba(255,120,40,.9)'; g.lineWidth=1; g.beginPath(); g.moveTo(e.x,e.y+14); g.lineTo(ropeTopX,vy0-30); g.stroke();
     // swords + hands
-    const hands=[], swords=[];
-    if(r&&r.T.length&&rt>=0){
-      for(let i=0;i<r.n;i++){
-        const p=swordPose(r,i,swordRt(r,i,rt));
-        const hox=r.n===1?0:(i===0?15:-15); const hx=e.x+hox*e.sc;
-        const c=r.caught.find(c=>c.i===i);
-        const rel=p.hy-e.base; const hyy=e.y+rel*e.sc;
-        const dirx=Math.sin(p.a)*e.sc, diry=-Math.cos(p.a)*e.sc;
-        swords.push({i,hx:c?200+hox:hx,hy:c?p.hy:hyy,a:p.a,c,s:p.s});
-        if(r.n===1){ hands.push({x:hx+dirx*8,y:hyy+diry*8,side:-1}); hands.push({x:hx+dirx*30,y:hyy+diry*30,side:1}); }
-        else hands.push({x:hx+dirx*10,y:hyy+diry*10,side:i===0?1:-1});
-      }
-    }
+    const {hands,swords}=r?rig(r,e,rt):{hands:[],swords:[]};
     let md=mood; if(mode==='out'){ md=r.success?'sweat':'smug'; } else if(mode==='fall') md='fight';
     drawEnemy(cfg,e,hands,heat,md);
     // swords not caught (still in the enemy's hands)
@@ -787,9 +990,9 @@ function render(){
       const mid=()=>{ // caught swords are drawn behind the hands
         g.translate(-200,-gy);
         for(const s2 of swords){ if(!s2.c) continue; const c=s2.c;
-          let px=s2.hx, py=s2.hy+off, a=0, sc2=1;
+          let px=s2.hx, py=s2.hy+off, a=0, sc2=s2.sc;
           const wob=c.perfect?0:Math.sin(simT/35)*Math.max(0,1-(simT-c.eff)/400)*.18;
-          if(simT>=c.flyAt){ const k=sm(((simT-c.flyAt)/1000)/.35); const slot=endless?(loot.length%6):stageIdx; const tx=16+slot*22, ty=vy1-26; px=lerp(px,tx,k); py=lerp(py,ty,k); a=lerp(0,-.6,k); sc2=lerp(1,.3,k); if(k>=1) continue; }
+          if(simT>=c.flyAt){ const k=sm(((simT-c.flyAt)/1000)/.35); const slot=endless?(loot.length%6):stageIdx; const tx=16+slot*22, ty=vy1-26; px=lerp(px,tx,k); py=lerp(py,ty,k); a=lerp(0,-.6,k); sc2=lerp(s2.sc,.3,k); if(k>=1) continue; }
           drawSword(px,py,a+wob,sc2,cfg.blade,c.perfect&&simT-c.eff<400?1-(simT-c.eff)/400:0);
         }
         g.translate(200,gy);
@@ -811,10 +1014,10 @@ function render(){
   g.restore();
 
   // vignette in the last second (slow motion feel)
-  if(r&&mode==='fall'){ const rem=(r.T[0]-simT)/1000; if(rem<1&&rem>-.2){ const a=.45*sm(1-rem/1); const vg=g.createRadialGradient(200,360,120,200,360,420); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,`rgba(0,0,20,${a})`); g.fillStyle=vg; g.fillRect(vx0-100,vy0-100,vx1-vx0+200,vy1-vy0+200); } }
-  if(heat>.05){ g.fillStyle=`rgba(255,80,30,${heat*.22})`; g.fillRect(vx0-100,vy0-100,vx1-vx0+200,vy1-vy0+200); }
+  if(r&&mode==='fall'&&!split){ const rem=(r.T[0]-simT)/1000; if(rem<1&&rem>-.2){ const a=.45*sm(1-rem/1); const vg=g.createRadialGradient(200,360,120,200,360,420); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,`rgba(0,0,20,${a})`); g.fillStyle=vg; g.fillRect(vx0-100,vy0-100,vx1-vx0+200,vy1-vy0+200); } }
+  if(heat>.05&&!split){ g.fillStyle=`rgba(255,80,30,${heat*.22})`; g.fillRect(vx0-100,vy0-100,vx1-vx0+200,vy1-vy0+200); }
   if(flashA>0){ g.fillStyle=`rgba(255,255,255,${Math.min(1,flashA)})`; g.fillRect(vx0-100,vy0-100,vx1-vx0+200,vy1-vy0+200); }
-  drawHUD(cfg,r,L,rt);
+  HUDY=split?vy0+4:Math.max(vy0,-70); drawHUD(cfg,r,L,rt);
   // popups
   for(const q of pops){ const k=q.life/q.max; const pk=Math.min(1,(1-k)*7); g.globalAlpha=Math.min(1,k*3); g.save(); g.translate(q.x,q.y-(1-k)*26); g.scale(.6+.4*pk,.6+.4*pk); txt(q.text,0,0,q.size,q.col,'#10163a'); g.restore(); g.globalAlpha=1; }
 }
@@ -844,12 +1047,12 @@ function drawHUD(cfg,r,L,rt){
     g.globalAlpha=a; txt(cfg.from+'から',200,288,26,'#fff','#10163a'); txt(cfg.txt,200,338,cfg.txt.length>14?20:32,'#ffe066','#10163a'); txt(cfg.note,200,378,13,'#cfe0ff'); g.globalAlpha=1;
   } else {
     const dm=Math.pow(10,L);
-    let s=fmtDist(dm); let px=30; g.font=`800 ${px}px ${FONT}`; const w=g.measureText(s).width; if(w>372) px=Math.floor(px*372/w);
+    let s=fmtDist(dm); if(mode==='fall'&&dm/LY_M>=1e-3&&simT>=holdUntil){ let c=0; s=s.replace(/\d/g,ch=>++c<=2?ch:String((Math.random()*10)|0)); } // digits spin in the early, light-year part
+    let px=mode==='fall'?36:30; g.font=`800 ${px}px ${FONT}`; const w=g.measureText(s).width; if(w>372) px=Math.floor(px*372/w);
     txt(s,200,HUDY+48,px,'#fff','rgba(0,0,40,.8)');
     // speed from distance / time
-    const v=Math.abs(dLdt)*Math.LN10*dm; const up=dLdt>.05;
-    const sp=(up?'↑ ひもが戻る！ ':'')+fmtSpeed(v);
-    txt(sp,200,HUDY+74,14,up?'#ff9ec0':'#ffd34d','rgba(0,0,40,.8)');
+    const v=Math.abs(dLdt)*Math.LN10*dm;
+    txt(mode==='out'||(mode==='fall'&&r&&r.T[0]<=simT)?'着弾！':fmtSpeed(v),200,HUDY+80,mode==='fall'||mode==='out'?20:14,'#ffd34d','rgba(0,0,40,.8)');
   }
   drawLifeScore();
   // loot row
@@ -909,6 +1112,7 @@ window.__shiraha={
   get dist(){ return Math.pow(10,curL)/LY_M; }, get distM(){ return Math.pow(10,curL); },
   get hitT(){ return round&&mode==='fall'&&!round.failAt&&round.next<round.n?round.T[round.next]:0; },
   get allT(){ return round?round.T.slice():[]; }, get fallStart(){ return round?round.t0:0; }, get TF(){ return round?round.TF:0; },
+  get rem(){ return round&&mode==='fall'?(round.T[0]-simT)/1000:99; }, get split(){ return !!(round&&mode==='fall'&&(round.T[0]-simT)/1000>MERGE); }, get lDist(){ return curL; },
   get now(){ return simT; }, get auto(){ return auto; }, get best(){ return best; }, get stats(){ return stats; }, get loot(){ return loot.length; },
   get results(){ return round?round.res.slice():[]; }, get endless(){ return endless; }, get endlessN(){ return endlessN; }, get hair(){ return hair; },
   get speedText(){ const dm=Math.pow(10,curL); return fmtSpeed(Math.abs(dLdt)*Math.LN10*dm); }, get distText(){ return fmtDist(Math.pow(10,curL)); },
