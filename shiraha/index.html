@@ -309,7 +309,7 @@ function catchSword(i,ts,d){
   });
 }
 function beginOut(success,at){
-  const r=round; r.success=success; r.outAt=at; r.outLen=success?(auto?.8:1.45):(auto?1.1:1.8);
+  const r=round; pops=pops.filter(q=>!q.text.startsWith('ドンッ')); r.success=success; r.outAt=at; r.outLen=success?(auto?.8:1.45):(auto?1.1:1.8);
   setMode('out',at); SFX.boing();
   if(success){
     if(!endless){ const dl=r.cfg.dly; if(dl>best.ly){ best.ly=dl; saveBest(); } }
@@ -389,6 +389,7 @@ function tick(dt){
     heatV=Math.max(heatOf(curL),heatV-dt*1.4);
     if(lastRem0>MERGE&&rem0<=MERGE){ flashA=Math.max(flashA,.6); shakeA=Math.max(shakeA,12); SFX.whoosh(); }
     lastRem0=rem0;
+    if(rem0<=0&&pops.some(q=>q.text.startsWith('ドンッ'))) pops=pops.filter(q=>!q.text.startsWith('ドンッ'));
     if(!hold){
       flow+=dt*(320+1500*ff*ff+160*Math.min(8,Math.abs(dLdt)));
       const hz=.9+3.3*ff*ff, h0=hb; hb+=hz*dt; if(Math.floor(hb)>Math.floor(h0)&&ff>.3) SFX.beat(.3+.7*ff);
@@ -411,7 +412,7 @@ function tick(dt){
     if(dt>0){ dLdt=(Lnew-prevL)/dt; }
     if(!hold){ starOff+=-(Lnew-prevL)*95; }
     prevL=Lnew; curL=Lnew; curU=mode==='fall'?clamp(rtv/r.TF,0,1):0;
-    if(mode==='fall'){ const un=unitOf(Math.pow(10,Lnew)); if(lastUnit>=0&&un>lastUnit){ shakeA=Math.max(shakeA,18); flashA=Math.max(flashA,.3); SFX.don(); pop(un===1?'ドンッ！ km':'ドンッ！ m',200,HUDY+120,'#ff6a5a',44,.8); } lastUnit=un; } else lastUnit=-1;
+    if(mode==='fall'){ const un=unitOf(Math.pow(10,Lnew)); if(lastUnit>=0&&un>lastUnit&&(r.T[0]-simT)/1000>.25){ shakeA=Math.max(shakeA,18); flashA=Math.max(flashA,.3); SFX.don(); pop(un===1?'ドンッ！ km':'ドンッ！ m',200,HUDY+120,'#ff6a5a',44,.8); } lastUnit=un; } else lastUnit=-1;
   }
   // continuous sound
   if(AC){
@@ -455,16 +456,16 @@ function curRt(){ return round&&(mode==='fall'||mode==='out')?(simT-round.t0)/10
 function panelGeo(rem0){
   const yS=Math.min(vy0+(vy1-vy0)*.5,300), mb=yS+.55*(vy1-yS);
   const e=rem0>1?0:sm((1-rem0)/.7);
-  return {yS,yb:lerp(yS,mb,e),e,mb,tilt:26,sY:lerp(vy0+(yS-vy0)*.56,Math.min(190,vy0+(mb-vy0)*.56),e)};
+  return {yS,yb:lerp(yS,mb,e),e,mb,tilt:26,sY:lerp(vy0+(yS-vy0)*.56,Math.min(105,vy0+(mb-vy0)*.56),e)};
 }
 function enemyPos(){
   const r=round; const L=curL; const rt=curRt();
   const sc0=0.2+.8*sm((3.8-L)/3.2);
   if(rt<0||!r.T.length) return {x:200+Math.sin(simT/700)*5,y:127,sc:sc0,dy:0,base:127};
-  const rem=(r.T[0]-r.t0)/1000-swordRt(r,0,rt); const yp=panelGeo(1).sY;
+  const rem=(r.T[0]-r.t0)/1000-swordRt(r,0,rt); const yp=panelGeo(1).sY, yE=105;
   let y,sc;
-  if(rem>=0){ const k=clamp(rem/MERGE,0,1); y=lerp(200,yp,k); sc=1+.5*k*k; }
-  else { y=200+Math.min(-rem,.1)*300; sc=1; }
+  if(rem>=0){ const k=clamp(rem/MERGE,0,1); y=lerp(yE,yp,k); sc=1.5+.4*k*k; }
+  else { y=yE+Math.min(-rem,.1)*300; sc=1.5; }
   let dy=0;
   if(mode==='out'){ const ot=(simT-round.outAt)/1000; dy=ot<.1?ot*120:12-2600*Math.pow(Math.max(0,ot-.1),2); }
   return {x:200,y:y+dy,sc,dy,base:y};
@@ -767,7 +768,7 @@ function rig(r,e,rt){ // hands and swords of the samurai (swords stay overhead u
     const c=r.caught.find(c=>c.i===i);
     const hyy=e.y+p.rel*e.sc, hyS=e.base+p.rel*e.sc;
     const dirx=Math.sin(p.a)*e.sc, diry=-Math.cos(p.a)*e.sc;
-    swords.push({i,hx:c?200+hox:hx,hy:c?hyS:hyy,a:p.a,c});
+    swords.push({i,hx:c?200+hox*e.sc:hx,hy:c?hyS:hyy,a:p.a,c,sc:e.sc});
     if(r.n===1){ hands.push({x:hx+dirx*8,y:hyy+diry*8,side:-1}); hands.push({x:hx+dirx*30,y:hyy+diry*30,side:1}); }
     else hands.push({x:hx+dirx*10,y:hyy+diry*10,side:i===0?1:-1});
   }
@@ -874,7 +875,7 @@ function drawTopPanel(cfg,r,L,rt,geo){
   // focus lines (behind the samurai)
   drawFocus(200,sY,f,heat);
   // the samurai: sword overhead from the very start, glaring at us
-  const jit=.3+3.6*f*f, SC=lerp(1.9,1.5,geo.e);
+  const jit=.3+3.6*f*f, SC=1.9;
   const ex=200+rnd(-jit,jit), ey=sY+rnd(-jit,jit), e={x:ex,y:ey,sc:SC,dy:0,base:ey};
   g.strokeStyle='rgba(255,210,90,.9)'; g.lineWidth=3; g.beginPath(); g.moveTo(ex,ey+20); g.lineTo(200,top-60); g.stroke();
   drawGlow(ex,ey,170,cfg.col,.25+.3*f);
@@ -950,6 +951,8 @@ function render(){
   const split=!!(r&&mode==='fall'&&(r.T[0]-simT)/1000>MERGE);
   trem=mode==='fall'?.4+3.4*curU*curU:0; sweatN=mode==='fall'?2+Math.floor(5*curU):0;
   let zoom=1+punch*.1;
+  if(r&&mode==='fall'&&!split) zoom*=1+.25*sm(1-clamp((r.T[0]-simT)/1000/MERGE,0,1));
+  else if(r&&mode==='out') zoom*=1+.25*(1-sm((simT-r.outAt)/1000/.5));
   const shx=shakeA?rnd(-shakeA,shakeA)*.5:0, shy=shakeA?rnd(-shakeA,shakeA)*.5:0;
   g.save(); g.translate(200+shx,330+shy); g.scale(zoom,zoom); g.translate(-200,-330);
   const gy=split?G0:drawBG(cfg,L,rt);
@@ -987,9 +990,9 @@ function render(){
       const mid=()=>{ // caught swords are drawn behind the hands
         g.translate(-200,-gy);
         for(const s2 of swords){ if(!s2.c) continue; const c=s2.c;
-          let px=s2.hx, py=s2.hy+off, a=0, sc2=1;
+          let px=s2.hx, py=s2.hy+off, a=0, sc2=s2.sc;
           const wob=c.perfect?0:Math.sin(simT/35)*Math.max(0,1-(simT-c.eff)/400)*.18;
-          if(simT>=c.flyAt){ const k=sm(((simT-c.flyAt)/1000)/.35); const slot=endless?(loot.length%6):stageIdx; const tx=16+slot*22, ty=vy1-26; px=lerp(px,tx,k); py=lerp(py,ty,k); a=lerp(0,-.6,k); sc2=lerp(1,.3,k); if(k>=1) continue; }
+          if(simT>=c.flyAt){ const k=sm(((simT-c.flyAt)/1000)/.35); const slot=endless?(loot.length%6):stageIdx; const tx=16+slot*22, ty=vy1-26; px=lerp(px,tx,k); py=lerp(py,ty,k); a=lerp(0,-.6,k); sc2=lerp(s2.sc,.3,k); if(k>=1) continue; }
           drawSword(px,py,a+wob,sc2,cfg.blade,c.perfect&&simT-c.eff<400?1-(simT-c.eff)/400:0);
         }
         g.translate(200,gy);
@@ -1049,7 +1052,7 @@ function drawHUD(cfg,r,L,rt){
     txt(s,200,HUDY+48,px,'#fff','rgba(0,0,40,.8)');
     // speed from distance / time
     const v=Math.abs(dLdt)*Math.LN10*dm;
-    txt(fmtSpeed(v),200,HUDY+80,mode==='fall'?20:14,'#ffd34d','rgba(0,0,40,.8)');
+    txt(mode==='out'||(mode==='fall'&&r&&r.T[0]<=simT)?'着弾！':fmtSpeed(v),200,HUDY+80,mode==='fall'||mode==='out'?20:14,'#ffd34d','rgba(0,0,40,.8)');
   }
   drawLifeScore();
   // loot row
