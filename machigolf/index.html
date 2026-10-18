@@ -573,6 +573,8 @@ const view={overview:false,free:false,fx:0,fy:0,fz:1,tOv:0};
 const aim={on:false,ang:0,pw:.6,drag:false,px:0,py:0};
 let bubbles=[], animT=0, holeT=0, scatterT=-1, swingT=-9, policeT=0, cupT=0, shotFlash=0, tipT=0, hintT=0;
 let maxGauge=0;
+// ゴルファー（ボールとは別。打った場所に残り、止まったら次の位置へ歩く）
+const G={x:0,y:0,ang:0,sw:false,walk:false,fx:0,fy:0,t:0,dur:.35};
 
 function resize(){
   const r=cv.getBoundingClientRect(); dpr=Math.min(2,window.devicePixelRatio||1);
@@ -663,10 +665,10 @@ function drawPerson(c,x,y,col,r,big){
   c.fillStyle='#f5cfa6'; c.beginPath(); c.arc(x,y-r*.1,r*.62,0,7); c.fill();
   c.fillStyle='#3a2a20'; c.beginPath(); c.arc(x,y-r*.22,r*.64,3.3,6.1); c.fill();
 }
-function drawPlayer(c,x,y,ang){
+function drawPlayer(c,x,y,ang,follow){
   const r=11, bx=x-Math.cos(ang)*20, by=y-Math.sin(ang)*20;
   const sw=animT-swingT; let ca=ang;
-  if(sw<.35&&sw>=0) ca=ang+(1-sw/.35)*-2.2;
+  if(follow){ ca=sw<.35&&sw>=0?ang+(1-sw/.35)*-2.2:ang-.9; }
   c.save(); c.translate(bx,by);
   c.fillStyle='rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(2,3,r*1.1,r*.8,0,0,7); c.fill();
   c.strokeStyle='#cfd6e4'; c.lineWidth=2.4; c.lineCap='round'; c.beginPath(); c.moveTo(0,0); c.lineTo(Math.cos(ca)*34,Math.sin(ca)*34); c.stroke();
@@ -839,7 +841,7 @@ function drawFrame(){
   if(W.h.signals) drawSignals(c);
   for(const m of W.mv){ if(m.k!=='train') drawMover(c,m); }
   // プレイヤー
-  if(mode==='aim'||(animT-swingT<.6&&mode==='fly')){ const a=aim.on||animT-swingT<.6?aim.ang:Math.atan2(W.cup.y-S.y,W.cup.x-S.x); drawPlayer(c,S.x,S.y,a); }
+  if(mode!=='title'&&mode!=='card'){ drawPlayer(c,G.x,G.y,(mode==='aim'&&!G.sw)||G.walk?aim.ang:G.ang,G.sw&&!G.walk); }
   // 高いもの
   for(let i=0;i<so.length;i++){ const ob=so[i]; if(ob.top<900) continue; if(ob.x1<vx0||ob.x0>vx1||ob.y1<vy0||ob.y0>vy1) continue; drawObs(c,ob,ob.cx,ob.cy,null,i); }
   drawFlag(c);
@@ -988,6 +990,7 @@ function loadHole(i){
   strokes=0; gauge=0; holeMaxG=0; hitCount=0; inc={glass:0,angry:new Set(),water:0,oob:0,police:0};
   bubbles=[]; holeT=0; scatterT=-1; pen=null; autoPlan=null; autoAimT=0;
   mode='aim'; aim.on=false; aim.drag=false; aim.pw=.6; aim.ang=Math.atan2(h.cup[1]-h.tee[1],h.cup[0]-h.tee[0]);
+  G.x=S.x; G.y=S.y; G.ang=aim.ang; G.sw=false; G.walk=false;
   view.free=false; view.overview=true; view.tOv=auto?.35:1.5; $('viewBtn').setAttribute('aria-pressed','true');
   const z=fitZoom(); cam.x=W.w/2; cam.y=W.hh/2; cam.z=z;
   $('resOv').hidden=true; $('cardOv').hidden=true; $('titleOv').hidden=true;
@@ -1002,6 +1005,7 @@ function doShoot(ang,pw,cl){
   if(mode!=='aim'||!S.rest||S.cup) return false;
   if(cl!=null&&cl!==club) setClub(cl);
   strokes++; S.px=S.x; S.py=S.y;
+  G.x=S.x; G.y=S.y; G.ang=ang; G.sw=true; G.walk=false;
   S.cdId=''; S.evq.length=0;
   launch(S,ang,clamp(pw,.02,1),club);
   mode='fly'; swingT=animT; aim.ang=ang; aim.pw=pw; aim.drag=false; aim.on=false;
@@ -1049,6 +1053,8 @@ function onRest(){
 function settleAim(){
   mode='aim'; const g=groundAt(S.x,S.y); S.sand=g.t==='sand'?1:0; S.gr=g;
   aim.on=false; aim.drag=false; aim.ang=angTo(S.x,S.y); view.free=false; autoPlan=null; autoAimT=0;
+  if(Math.hypot(S.x-G.x,S.y-G.y)>2){ G.walk=true; G.fx=G.x; G.fy=G.y; G.t=0; G.dur=auto?.15:.35; }
+  else { G.x=S.x; G.y=S.y; G.sw=false; G.walk=false; }
 }
 function diffName(strokes,par){
   const d=strokes-par;
@@ -1129,6 +1135,7 @@ function update(dtReal){
   let dt=dtReal;
   if(auto){ if(mode==='fly'){ const sp=Math.hypot(S.vx,S.vy); dt*=(sp<220&&S.z<=0)?4:1.6; } else if(mode==='police'||mode==='cup'||mode==='pen') dt*=2; }
   animT+=dt; holeT+=dt;
+  if(G.walk&&S){ G.t+=dt; const u=Math.min(1,G.t/G.dur), e=u*u*(3-2*u); G.x=G.fx+(S.x-G.fx)*e; G.y=G.fy+(S.y-G.fy)*e; if(u>=1){ G.walk=false; G.sw=false; G.x=S.x; G.y=S.y; } }
   if(view.overview&&view.tOv>0&&!view.userOv){ view.tOv-=dt; if(view.tOv<=0){ view.overview=false; $('viewBtn').setAttribute('aria-pressed','false'); } }
   acc+=dt; let n=0;
   while(acc>=DT&&n<60){ acc-=DT; n++; simTick(); }
@@ -1411,6 +1418,7 @@ window.__machigolf={
   setHole(n){ if(mode==='title'||mode==='card'){ score=[]; curRound={holes:[]}; } loadHole(clamp(n-1,0,HOLES.length-1)); view.overview=false; view.tOv=0; cam.x=S.x; cam.y=S.y; cam.z=baseZoom(); },
   startRound, nextHole, toggleOverview, botShot, plan(){ return planShot(S); }, setOverview(b){ view.overview=!!b; view.free=false; view.userOv=!!b; },
   get cam(){return {x:cam.x,y:cam.y,z:cam.z};}, ballScreen(){ const r=cv.getBoundingClientRect(); const b=ballScreen(); return [b[0]+r.left,b[1]+r.top]; }, get aimState(){return {on:aim.on,ang:aim.ang,pw:aim.pw};},
+  get golfer(){return {x:G.x,y:G.y,sw:G.sw,walk:G.walk};},
   rnd:mulberry, draw:drawFrame
 };
 })();
