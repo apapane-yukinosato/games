@@ -478,13 +478,12 @@ const HOLES=[
 // 4 スーパーの中
 {n:'スーパーの中',par:4,w:900,h:560,base:'floor',tee:[50,490],cup:[830,70],cupStyle:'basket',indoor:1,tip:'通路をまがって進もう。つるつる床はよく転がる！',
  zones:[],
- obs:[O('shelf',0,330,280,70,{c:'#cfd6e4',lb:'おかし'}),O('low',280,330,140,70,{c:'#9ad4ff',lb:'れいとう'}),O('shelf',420,330,340,70,{c:'#cfd6e4',lb:'ドリンク'}),
-  O('shelf',140,120,330,70,{c:'#cfd6e4',lb:'やさい'}),O('glass',470,120,120,70,{gl:true,lb:'おさかな'}),O('shelf',590,120,310,70,{c:'#cfd6e4',lb:'おにく'}),
-  O('cart',200,440,52,32,{c:'#c0c8d8'}),O('cart',600,222,52,32,{c:'#c0c8d8'}),
-  O('reg',700,22,100,34,{c:'#8a6b4a',lb:'レジ'}),C('person',690,86,9,{c:'#e07a5f'}),C('person',700,112,9,{c:'#6a8fd9'}),C('person',720,86,9,{c:'#7ac26a'}),
+ obs:[O('shelf',0,340,160,50,{c:'#cfd6e4',lb:'おかし'}),O('low',160,340,400,50,{c:'#9ad4ff',lb:'れいとう'}),O('shelf',560,340,200,50,{c:'#cfd6e4',lb:'ドリンク'}),
+  O('shelf',140,130,330,50,{c:'#cfd6e4',lb:'やさい'}),O('glass',470,130,120,50,{gl:true,lb:'おさかな'}),O('low',590,130,170,50,{c:'#ffd6d6',lb:'おにく'}),O('shelf',760,130,140,50,{c:'#cfd6e4',lb:'おにく'}),
+  
+  O('reg',700,22,100,34,{c:'#8a6b4a',lb:'レジ'}),C('person',640,112,9,{c:'#e07a5f'}),C('person',690,114,9,{c:'#6a8fd9'}),
   C('person',812,34,9,{c:'#fff',lb:'店員'})],
- mov:[M('person',0,0,12,[[0,260,296],[6,560,296],[12,260,296]],{c:'#d96a8f'}),M('cart',34,26,12,[[0,290,296],[6,590,296],[12,290,296]],{c:'#c0c8d8'}),
-  WALKER(10,150,220,150,160,'#b36bd1'),WALKER(14,500,520,300,520,'#e0a940',4)],
+ mov:[WALKER(14,500,520,300,520,'#e0a940',4)],
  dec:[['tiles',0,0,900,560,40],['text',90,470,'いりぐち',16,'rgba(0,0,0,.25)'],['text',430,68,'レジ前',14,'rgba(0,0,0,.25)']]},
 
 // 5 立体駐車場の屋上
@@ -552,7 +551,7 @@ const HOLES=[
  obs:[O('bld',0,0,300,100,{c:'#6aa0d8',lb:'ようふく'}),O('bld',330,0,300,100,{c:'#d88a6a',lb:'ほんや'}),O('bld',0,700,300,100,{c:'#7ac26a',lb:'ゲーム'}),O('bld',330,700,300,100,{c:'#b36bd1',lb:'くつや'}),
   C('pole',200,300,14,{c:'#e8e2d2',pillar:1}),C('pole',200,500,14,{c:'#e8e2d2',pillar:1}),C('pole',450,260,14,{c:'#e8e2d2',pillar:1}),C('pole',450,540,14,{c:'#e8e2d2',pillar:1}),
   O('vend',330,380,100,50,{c:'#f2c230',lb:'クレープ',k2:1}),C('bush',620,140,13),C('bush',620,660,13),
-  O('fence',690,0,10,335,{c:'#aab',top:999}),O('fence',690,405,10,395,{c:'#aab',top:999}),
+  O('fence',690,0,10,335,{c:'#aab'}),O('fence',690,405,10,395,{c:'#aab'}),
   O('glass',780,0,8,335,{gl:true,top:36}),O('glass',780,405,8,395,{gl:true,top:36}),
   O('bld',820,0,160,90,{c:'#e07a5f',lb:'カフェ'}),O('bld',1000,0,480,60,{c:'#e0a940',lb:'フードコート'}),O('bld',820,710,300,90,{c:'#4fb5b0',lb:'ショップ'}),O('bld',1140,740,340,60,{c:'#d9534f'}),
   C('table',1070,180,26),C('table',1070,320,26),C('table',1070,460,26),C('table',1070,600,26),C('table',1200,250,26),C('table',1200,390,26),C('table',1200,530,26),C('table',1200,660,26),C('table',1320,330,26),C('table',1320,470,26),C('table',1320,600,26),
@@ -1121,7 +1120,8 @@ function camTarget(dt){
   let tx,ty,tz;
   if(view.overview){ tx=W.w/2; ty=W.hh/2; tz=fitZoom(); }
   else if(view.free){ tx=view.fx; ty=view.fy; tz=view.fz; }
-  else { tx=S.x; ty=S.y; tz=baseZoom(); if(mode==='fly'){ tx+=S.vx*.12; ty+=S.vy*.12; } }
+  else { tx=S.x; ty=S.y; tz=baseZoom(); tz=Math.min(Math.max(tz,Math.max(cw/W.w,ch/W.hh)),tz*1.5); if(mode==='fly'){ tx+=S.vx*.12; ty+=S.vy*.12; } }
+  if(!view.overview){ const hw=cw/2/tz, hh=ch/2/tz; tx=W.w<=2*hw?W.w/2:clamp(tx,hw,W.w-hw); ty=W.hh<=2*hh?W.hh/2:clamp(ty,hh,W.hh-hh); }
   const k=1-Math.exp(-dt*(mode==='fly'?9:6));
   cam.x+=(tx-cam.x)*k; cam.y+=(ty-cam.y)*k; cam.z*=Math.exp(Math.log(tz/cam.z)*k);
 }
