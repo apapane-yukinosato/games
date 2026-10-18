@@ -1,0 +1,2019 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="description" content="芋の女神イモ姫が、リアルなサツマイモ栽培と妖怪退治で島を救う！ 温湯処理・伏せ込み・植え付け・収穫・貯蔵まで本格栽培、育てた芋で強くなって横スクロールで妖怪退治。">
+<title>天芋のイモ姫</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&display=swap">
+<style>
+html,body{touch-action:manipulation}
+:root{ --bg:#2b1d33; --ink:#fff6e8; --mute:#c9b3c9; --card:#42304a; --card2:#53395c; --gold:#ffcf5a; --pink:#ff8ab4; --green:#69c978; --red:#ee5a48; --imo:#9a4a8a; color-scheme:dark; }
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);
+  font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#app{height:100%;box-sizing:border-box;max-width:1280px;margin:0 auto;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:5px;position:relative}
+#top{display:flex;align-items:center;gap:6px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mini{font:inherit;font-size:12px;font-weight:800;border:0;border-radius:999px;padding:6px 10px;background:#5b4066;color:var(--ink);box-shadow:0 2px 0 #1d1224;cursor:pointer;white-space:nowrap}
+.mini[aria-pressed=true]{background:#d4458a;color:#fff}
+button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#main{flex:1;min-height:0;display:flex;flex-direction:column;gap:5px}
+#stage{position:relative;flex:0 0 46%;min-height:0;border-radius:14px;overflow:hidden;box-shadow:0 4px 0 #130b18;background:#1a1220}
+#cv{display:block;width:100%;height:100%;touch-action:none}
+#hud{position:absolute;left:6px;right:6px;top:5px;display:flex;justify-content:space-between;gap:6px;pointer-events:none;font-size:12px;font-weight:800;text-shadow:0 1px 2px #000}
+#hud .pill{background:rgba(20,10,28,.62);border-radius:999px;padding:3px 9px;white-space:nowrap}
+#tabs{position:absolute;left:6px;bottom:6px;display:flex;gap:4px}
+#tabs button{font:inherit;font-size:11px;font-weight:800;border:0;border-radius:999px;padding:4px 9px;background:rgba(20,10,28,.7);color:var(--ink);cursor:pointer;min-height:26px}
+#tabs button.on{background:var(--gold);color:#3a2300}
+#panel{flex:1;min-height:0;display:flex;flex-direction:column;gap:5px}
+#info{background:var(--card);border-radius:12px;padding:6px 8px;font-size:12px;line-height:1.45}
+#info .row{display:flex;flex-wrap:wrap;gap:2px 8px;align-items:center}
+#info .row.sp{justify-content:space-between}
+#info b{color:var(--gold)}
+.g{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--mute)}
+.g i{display:inline-block;width:34px;height:7px;border-radius:4px;background:#2a1b30;overflow:hidden;vertical-align:middle}
+.g i u{display:block;height:100%;background:var(--green);text-decoration:none}
+.g.bad i u{background:var(--red)}
+.ap{letter-spacing:1px;color:var(--gold);font-size:14px}
+#tasks{flex:1;min-height:0;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:5px;align-content:start;grid-auto-rows:max-content;padding:1px;-webkit-overflow-scrolling:touch}
+.tk{display:block;height:auto;font:inherit;text-align:left;border:0;border-radius:11px;padding:6px 8px;background:var(--card2);color:var(--ink);box-shadow:0 3px 0 #1d1224;cursor:pointer;min-height:48px}
+.tk b{display:flex;justify-content:space-between;gap:4px;font-size:13px}
+.tk b em{font-style:normal;color:var(--gold);font-size:11px;white-space:nowrap}
+.tk small{display:block;font-size:10.5px;color:var(--mute);line-height:1.3;margin-top:1px}
+.tk:disabled{opacity:.45;box-shadow:none;cursor:default}
+.tk.hot{outline:2px solid var(--pink)}
+#bar{display:flex;gap:6px}
+.big{flex:1;font:inherit;font-size:14px;font-weight:800;border:0;border-radius:13px;padding:10px 6px;min-height:46px;background:#d4458a;color:#fff;box-shadow:0 3px 0 #6d1d46;cursor:pointer}
+.big.alt{background:#5b4066;box-shadow:0 3px 0 #1d1224}
+.big.gold{background:var(--gold);color:#3a2300;box-shadow:0 3px 0 #8a5a00}
+.big:disabled{opacity:.5}
+body[data-mode=action] #panel,body[data-mode=title] #panel,body[data-mode=title] #hud,body[data-mode=title] #tabs{display:none}
+body[data-mode=action] #stage,body[data-mode=title] #stage{flex:1}
+body[data-mode=action] #tabs,body[data-mode=action] #hud{display:none}
+#tc{position:absolute;inset:0;pointer-events:none;display:none}
+body[data-mode=action] #tc{display:block}
+@media (hover:hover) and (pointer:fine){ #tc{opacity:.35} }
+#tc button{position:absolute;pointer-events:auto;border:0;border-radius:50%;font:inherit;font-weight:800;color:#fff;background:rgba(40,20,50,.55);border:2px solid rgba(255,255,255,.4);touch-action:none;-webkit-user-select:none;width:58px;height:58px;font-size:12px;padding:0}
+#tc button.on{background:rgba(255,140,190,.75)}
+#bL{left:8px;bottom:14px;width:64px!important;height:64px!important;font-size:26px!important}
+#bR{left:80px;bottom:14px;width:64px!important;height:64px!important;font-size:26px!important}
+#bJ{right:78px;bottom:12px}
+#bA{right:8px;bottom:42px;width:64px!important;height:64px!important;font-size:14px!important;background:rgba(214,70,110,.65)!important}
+#bW{right:8px;bottom:112px;background:rgba(80,160,90,.65)!important}
+#bX{right:8px;top:8px;width:auto!important;height:auto!important;border-radius:999px!important;padding:5px 10px!important;font-size:11px!important;pointer-events:auto}
+#dlg{position:absolute;left:6px;right:6px;bottom:6px;background:rgba(24,12,30,.92);border:2px solid var(--pink);border-radius:14px;padding:8px 12px 10px;font-size:14px;line-height:1.55;cursor:pointer;z-index:5;min-height:64px}
+#dlg .nm{font-size:12px;font-weight:800;color:var(--gold);margin-bottom:2px}
+#dlg .nx{position:absolute;right:10px;bottom:4px;color:var(--pink);font-size:12px}
+#modal{position:absolute;inset:0;background:rgba(14,6,20,.78);z-index:20;display:flex;align-items:center;justify-content:center;padding:10px}
+#modal .box{background:var(--card);border-radius:16px;padding:14px;max-width:560px;width:100%;max-height:100%;overflow-y:auto;box-shadow:0 6px 0 #130b18;-webkit-overflow-scrolling:touch}
+#modal h2{margin:0 0 6px;font-size:18px;color:var(--gold)}
+#modal p{margin:4px 0;font-size:13.5px;line-height:1.55}
+#modal .src{font-size:11px;color:var(--mute)}
+#modal .opts{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+#modal .opts.row{flex-direction:row;flex-wrap:wrap}
+#modal .opts.row .tk{flex:1 1 30%}
+#modal table{width:100%;border-collapse:collapse;font-size:13px}
+#modal td,#modal th{padding:3px 4px;border-bottom:1px solid #5d4668;text-align:left}
+#modal td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.bk{padding:6px 8px;border-radius:9px;background:var(--card2);margin:5px 0}
+.bk.lock{opacity:.5}
+.bk h3{margin:0 0 2px;font-size:13px;color:var(--gold)}
+.bk p{margin:0;font-size:12px}
+input[type=range]{width:100%;accent-color:#ff8ab4}
+.sl{margin:8px 0;font-size:13px}
+.sl b{color:var(--gold)}
+#title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:16px;background:linear-gradient(#3b2150,#6b2f5a 55%,#c0605a);border-radius:14px}
+#title h2{margin:0;font-size:34px;letter-spacing:2px;text-shadow:0 3px 0 #2a1030,0 0 16px #ff8ab4}
+#title p{margin:0;font-size:13px;color:#ffe6f0;max-width:420px;line-height:1.6}
+#title canvas{width:min(280px,70%);height:auto;max-height:36%}
+#title .btns{display:flex;flex-direction:column;gap:8px;width:min(280px,90%)}
+#title .best{font-size:11.5px;color:#ffd9e8}
+@media (min-width:900px){
+  #main{flex-direction:row}
+  body[data-mode=morning] #stage,body[data-mode=night] #stage{flex:1 1 60%}
+  body[data-mode=morning] #panel,body[data-mode=night] #panel{flex:0 0 400px}
+  #top h1{font-size:17px}
+}
+</style>
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-180.png">
+</head>
+<body data-mode="title">
+<div id="app">
+  <div id="top">
+    <a href="../">← 一覧</a>
+    <h1>🍠 天芋のイモ姫</h1>
+    <button class="mini" id="bookBtn" title="芋の書">📖</button>
+    <button class="mini" id="autoBtn" aria-pressed="false">🤖 オート</button>
+    <button class="mini" id="muteBtn">音 ON</button>
+  </div>
+  <div id="main">
+    <div id="stage">
+      <canvas id="cv"></canvas>
+      <div id="hud"><span class="pill" id="hudL"></span><span class="pill" id="hudR"></span></div>
+      <div id="tabs"><button data-v="field" class="on">畑</button><button data-v="bed">温床</button><button data-v="cellar">貯蔵庫</button></div>
+      <div id="tc">
+        <button id="bL" aria-label="左">◀</button><button id="bR" aria-label="右">▶</button>
+        <button id="bJ">ジャンプ</button><button id="bA">攻撃</button><button id="bW">芋づる</button>
+        <button id="bX">やめる</button>
+      </div>
+      <div id="dlg" hidden></div>
+      <div id="title">
+        <h2>天芋のイモ姫</h2>
+        <canvas id="tcv" width="280" height="150"></canvas>
+        <p>天上の蔵の芋を食べつくして地上に落とされた芋の女神。<br>リアルなサツマイモ栽培で強くなって、島の妖怪を退治しよう！</p>
+        <div class="btns">
+          <button class="big" id="bStart">はじめから</button>
+          <button class="big alt" id="bCont" hidden>つづきから</button>
+          <button class="big alt" id="bHow">あそびかた</button>
+        </div>
+        <div class="best" id="bestTxt"></div>
+      </div>
+    </div>
+    <div id="panel">
+      <div id="info"></div>
+      <div id="tasks"></div>
+      <div id="bar"></div>
+    </div>
+  </div>
+  <div id="modal" hidden></div>
+</div>
+<script>
+'use strict';
+(()=>{
+const $=s=>document.querySelector(s);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const lerp=(a,b,t)=>a+(b-a)*t;
+const tz=(T,lo,hi,w)=>clamp(1-Math.max(lo-T,T-hi,0)/w,0,1);   // trapezoid score
+const fx=(v,n=0)=>(+v).toFixed(n);
+const pct=v=>Math.round(clamp(v,0,1)*100);
+function R(G){ let a=(G.rs=(G.rs+0x6D2B79F5)|0); let t=Math.imul(a^a>>>15,1|a); t=(t+Math.imul(t^t>>>7,61|t))^t; return ((t^t>>>14)>>>0)/4294967296; }
+function mkRng(seed){ let a=seed|0; return ()=>{ a=(a+0x6D2B79F5)|0; let t=Math.imul(a^a>>>15,1|a); t=(t+Math.imul(t^t>>>7,61|t))^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+const store={
+  get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(_){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(_){} }
+};
+
+/* ---------- audio ---------- */
+let AC=null, muted=store.get('imohime.mute',false);
+function unlock(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(_){} } if(AC&&AC.state==='suspended') AC.resume(); }
+function tone(f,d,type='square',vol=.06,slide=0,delay=0){
+  if(muted||!AC||W_sim) return;
+  try{ const t=AC.currentTime+delay, o=AC.createOscillator(), g=AC.createGain();
+    o.type=type; o.frequency.setValueAtTime(f,t); if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(30,f+slide),t+d);
+    g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+d+.02);
+  }catch(_){}
+}
+function noise(d,vol=.05,hp=800,delay=0){
+  if(muted||!AC||W_sim) return;
+  try{ const t=AC.currentTime+delay, n=Math.floor(AC.sampleRate*d), b=AC.createBuffer(1,n,AC.sampleRate), c=b.getChannelData(0);
+    for(let i=0;i<n;i++) c[i]=(Math.random()*2-1)*(1-i/n);
+    const s=AC.createBufferSource(), g=AC.createGain(), f=AC.createBiquadFilter(); f.type='highpass'; f.frequency.value=hp;
+    s.buffer=b; g.gain.value=vol; s.connect(f); f.connect(g); g.connect(AC.destination); s.start(t);
+  }catch(_){}
+}
+let W_sim=false;
+const SFX={
+  ok(){ tone(660,.08,'triangle',.07); tone(990,.1,'triangle',.06,0,.07); },
+  tap(){ tone(520,.05,'triangle',.05); },
+  dig(){ noise(.12,.06,300); tone(110,.1,'sine',.08,-40); },
+  water(){ noise(.3,.04,2000); },
+  hit(){ noise(.08,.07,600); tone(180,.08,'square',.06,-80); },
+  slash(){ noise(.07,.04,2500); },
+  hurt(){ tone(220,.2,'sawtooth',.08,-140); },
+  whip(){ tone(900,.1,'sawtooth',.04,-500); },
+  zip(){ tone(400,.18,'triangle',.05,600); },
+  jump(){ tone(300,.12,'square',.04,260); },
+  coin(){ tone(1200,.06,'square',.04); tone(1600,.1,'square',.04,0,.05); },
+  kill(){ tone(300,.12,'square',.06,-200); noise(.1,.05,1200); },
+  boss(){ tone(80,.5,'sawtooth',.1,-30); noise(.4,.08,200); },
+  fanfare(){ [523,659,784,1047].forEach((f,i)=>tone(f,.18,'triangle',.08,0,i*.12)); },
+  bad(){ tone(200,.25,'sawtooth',.07,-100); }
+};
+const sfx=n=>{ try{ SFX[n]&&SFX[n](); }catch(_){} };
+
+/* ---------- data ---------- */
+const MONTH=['','','','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const PART=['上旬','中旬','下旬'];
+const junName=j=>MONTH[3+Math.floor(j/3)]+PART[j%3];
+const VAR=[
+ {id:'azuma',n:'紅あずま',d:'ホクホク。作りやすい',y:1.00,b0:26,b1:31,rp:.8,ts:.8,nem:1.0,heat:0,root:.05,sand:0,col:'#a8343c'},
+ {id:'haruka',n:'紅はるか',d:'熟成で甘くなる。収穫直後は粉質',y:1.00,b0:19,b1:38,rp:1.0,ts:1.0,nem:.8,heat:0,root:0,sand:0,col:'#b24a58'},
+ {id:'silk',n:'シルクスイート',d:'なめらか。肥料に敏感',y:.95,b0:24,b1:34,rp:.9,ts:1.15,nem:.9,heat:0,root:0,sand:0,col:'#c1807e'},
+ {id:'annou',n:'安納芋',d:'ねっとり高糖度。暑さを好む',y:.85,b0:29,b1:42,rp:.9,ts:.9,nem:.8,heat:1,root:-.02,sand:0,col:'#d9a75a'},
+ {id:'naruto',n:'鳴門金時',d:'砂地向き。水はけがよいと◎',y:1.0,b0:24,b1:33,rp:.9,ts:1.0,nem:.7,heat:0,root:0,sand:1,col:'#d4623a'}
+];
+const VAR_UNLOCK=[[0],[1,2],[3,4]];     // 年のはじめに商人から解放
+const METH={
+ h:{n:'水平植え',d:'浅い位置(2〜3cm)に5節ほどを水平に。イモの数が多く形がそろう。乾燥しやすく活着しにくい。',root:.80,cnt:1.25,size:.92,shape:.13,dr:1.0},
+ o:{n:'斜め植え',d:'中くらいの性質。バランスがよい。',root:.88,cnt:1.0,size:1.0,shape:.05,dr:.6},
+ b:{n:'船底植え',d:'水平植えと斜め植えの中間。',root:.85,cnt:1.1,size:.96,shape:.09,dr:.8},
+ v:{n:'垂直植え',d:'イモの数は少ないが大きくなる。乾燥に強い。',root:.90,cnt:.8,size:1.15,shape:-.03,dr:.2}
+};
+const STAGES=[
+ {id:1,n:'竹林',sub:'ヨトウの子鬼・コガネ甲鬼',col:'#5aa86a'},
+ {id:2,n:'湿地',sub:'センチュウ蛇・黒斑の怨霊',col:'#4f8a8c'},
+ {id:3,n:'洞窟',sub:'天井の芋づるでぶら下がれ',col:'#6a5a8a'},
+ {id:4,n:'火山の斜面',sub:'狸の芋泥棒・溶岩',col:'#c8603a'},
+ {id:5,n:'霜の峰',sub:'ボス：霜枯れの大妖・クサレガミ',col:'#8ab6e8'}
+];
+const BOOK=[
+ {id:'story',t:'島のならい',x:'ヒノモト芋島では、芋を育てて食べる者が強くなる。畑でできた芋の量・糖度・品質が、そのままイモ姫の力になる。',s:'ゲームの説明',open:1},
+ {id:'onsen',t:'種いもの温湯処理',x:'黒斑病の対策。種いもは47〜48℃の湯に40分、苗は同じ温度で15分つける。高すぎると種いもが傷み、低すぎると効果がない。',s:'愛知県 防除資料'},
+ {id:'fuse',t:'伏せ込み（育苗）',x:'3月に温床へ種いもを伏せる。伏せ込み直後から芽が出るまでの床温は28〜33℃。萌芽後は昼25〜30℃、夜15℃くらい。',s:'鹿児島県 資料'},
+ {id:'bedcold',t:'床温が低いと',x:'床温が低いと種いもが腐りやすい。温度は毎旬、わら・米ぬかの追加（発酵熱）、換気、ビニールの開け閉めで管理する。',s:'鹿児島県 資料'},
+ {id:'cut',t:'採苗',x:'5月ごろ、伸びたつるを切って苗にする。苗の質（節の数・太さ）が、活着と収量に影響する。',s:'各県の栽培資料より（要約）'},
+ {id:'plow',t:'畑づくり：耕す・堆肥',x:'深く耕すと土の通気がよくなる。堆肥を入れると土がふかふかになる。',s:'各県の栽培資料より（要約）'},
+ {id:'tsuru',t:'つるぼけ',x:'つるばかり茂ってイモが太らない状態。原因は、窒素肥料の多すぎ、土の水分の多すぎ、土の通気の悪さ。',s:'旭川市 資料'},
+ {id:'kali',t:'カリ肥料',x:'カリはイモの肥大を助ける。窒素は控えめに、カリは多めに。木や草を燃やした灰にもカリが含まれる。',s:'各県の栽培資料より（要約）'},
+ {id:'ridge',t:'畝立て',x:'畝幅の目安は90〜100cm、株間は35〜40cm。高い畝は水はけがよく、地温も上がりやすい。',s:'ヤンマー 資料'},
+ {id:'mulch',t:'マルチと植え付け適期',x:'平均気温が20℃前後になったころが植え付けの適期。マルチで地温を上げてから植える。雑草も抑えられる。',s:'ヤンマー 資料'},
+ {id:'plant',t:'植え方の4種類',x:'水平植え：浅い位置（2〜3cm）に5節ほどを水平に植える。イモの数が多く形がそろうが、乾燥しやすく活着しにくい。／ 斜め植え：中くらい。／ 船底植え：水平と斜めの中間。／ 垂直植え：イモの数は少ないが大きくなる。乾燥に強い。',s:'佐賀県 資料'},
+ {id:'estab',t:'活着',x:'植え付けの後に晴天が続くと活着が下がる。水やりで補える。',s:'各県の栽培資料より（要約）'},
+ {id:'turn',t:'つる返し',x:'つるの節から根が出ると、イモが分散して太りにくくなる。つるを返して防ぐ。',s:'各県の栽培資料より（要約）'},
+ {id:'yotou',t:'ハスモンヨトウ',x:'若い幼虫は集団で葉を食べ、白っぽい葉ができる。見回って卵塊や若い幼虫のついた葉を摘み取るのが有効。大きくなると薬が効きにくい。',s:'鹿児島県 資料'},
+ {id:'grub',t:'コガネムシの幼虫・ハリガネムシ',x:'土の中でイモをかじる。食べ跡から黒斑病に感染することがある。',s:'愛知県 資料'},
+ {id:'nem',t:'ネコブセンチュウ',x:'同じ畑での連作で増える。輪作（緑肥など）と抵抗性品種で防ぐ。',s:'各県の栽培資料より（要約）'},
+ {id:'bs',t:'黒斑病',x:'種いもの温湯処理と輪作で防ぐ。虫の食べ跡や水はけの悪い畑で広がる。',s:'愛知県 資料'},
+ {id:'kusare',t:'基腐病',x:'収穫後のくずイモや藷梗（イモとつるをつなぐ部分）を畑の外に持ち出して処分する。畑に残すと翌年の発病リスクが上がる。',s:'鹿児島県 資料'},
+ {id:'harv',t:'収穫のタイミング',x:'葉や茎が黄ばみはじめたら収穫どき。霜が降りる前に終える。',s:'Honda 資料'},
+ {id:'harv2',t:'晴れの日に掘る',x:'晴れの日を選んで掘る。傷のないイモだけを貯蔵に回す。',s:'滋賀県 資料'},
+ {id:'days',t:'収穫までの日数（目安）',x:'植え付けから収穫までは、およそ110〜150日が適期（ゲームでの目安）。早すぎると小さく、遅すぎると割れる。霜にあたると品質が大きく下がる。',s:'目安（ゲーム内の参考値）'},
+ {id:'cure',t:'キュアリング',x:'温度33℃前後、湿度90〜95%で約4日保つ。傷が治り、腐りにくくなる。',s:'愛知県 資料'},
+ {id:'store',t:'貯蔵の条件',x:'好適な条件は温度13〜16℃、湿度90〜95%。11℃の長期貯蔵は腐敗、18℃では芽が出る、湿度70%程度では皮が黒ずむ。',s:'千葉県 資料'},
+ {id:'ripe',t:'熟成',x:'紅はるかは収穫直後は甘みが弱く粉質だが、2か月以上貯蔵すると甘くなり粘質になる。糖度は貯蔵期間で上がる。',s:'千葉県 資料'},
+ {id:'weather',t:'島の天気',x:'梅雨（6〜7月）、夏の干ばつ、台風（8〜9月）、初霜（11月下旬ごろ）。気温・地温・土の水分は毎旬計算されて、芋の育ちに響く。',s:'ゲーム内のしくみ'},
+ {id:'vars',t:'品種',x:'紅あずま（ホクホク・作りやすい）／紅はるか（熟成で甘い）／シルクスイート（なめらか）／安納芋（ねっとり・暑さを好む）／鳴門金時（砂地向き）。性質の差はゲーム用のデフォルメ。',s:'ゲーム内のしくみ'}
+];
+
+/* ---------- weather ---------- */
+const CLIM=[10.5,15.5,19.5,22.8,27,28.3,24.5,18.5,12.5,7.5];
+function climT(i){ const x=(i+.5)/3-.5, k=Math.floor(x); const a=CLIM[clamp(k,0,8)], b=CLIM[clamp(k+1,1,9)]; return a+(b-a)*(x-clamp(k,0,8)); }
+const RAIN=[60,80,90,120,150,130,100,50,45,50,70,95,75,50,55,60,60,70,95,100,80,60,50,45,40,40,35,35,35,30];
+function genWeather(G){
+  const r=mkRng(G.seed*7919+G.year*104729), out=[];
+  const droughtYear=r()<.55, ff=[25,26,26,27][Math.floor(r()*4)];
+  const typh=new Set(); if(r()<.9) typh.add(16+Math.floor(r()*6)); if(r()<.3) typh.add(18+Math.floor(r()*4));
+  const warm=(r()-.5)*1.6;
+  for(let i=0;i<30;i++){
+    let temp=climT(i)+warm+(r()-.5)*2.6, rain=RAIN[i]*(.45+r()*1.2), dr=false, ty=false;
+    if(droughtYear&&i>=14&&i<=19){ rain*=.2; temp+=1.5; dr=true; }
+    if(typh.has(i)){ ty=true; rain+=130+r()*60; }
+    const fr=i>=ff;
+    if(fr) temp=Math.min(temp,6.5);
+    const sun=clamp(1.05-rain/170+(r()-.5)*.2,.08,1);
+    let lb=ty?'台風':fr?'霜':dr?'干ばつ':rain>=120?'大雨・長雨':rain>=75?'雨がち':rain<30?'好天つづき':sun>.55?'晴れがち':'くもり';
+    if(i>=9&&i<=14&&rain>=90&&!ty) lb='梅雨';
+    out.push({temp,rain,sun,typhoon:ty,frost:fr,drought:dr,label:lb});
+  }
+  const rr=mkRng(G.seed*31+G.year*977);
+  out.forEach((w,i)=>{
+    const wrong=rr()<.22; const fr=wrong?w.rain*(rr()<.5?.45:1.7):w.rain;
+    w.fc={temp:w.temp+(rr()-.5)*1.2,rain:fr,label:(w.typhoon&&rr()<.85)?'台風':w.frost?'霜':fr>=120?'大雨・長雨':fr>=75?'雨がち':fr<30?'好天つづき':w.sun>.55?'晴れがち':'くもり'};
+  });
+  G.ff=ff;
+  return out;
+}
+
+/* ================= 農耕モデル ================= */
+let G=null;
+const PL=f=>Math.round(420*38/f.spacing);
+const BEST_AGE=[11,15];
+function carryDefault(){ return {N:.25,K:.25,P:.2,comp:.2,nem:.12,grub:.12,kusRisk:.15,bsSoil:.1,yBase:.15,tanuki:.1}; }
+function makeField(c){
+  return {N:c.N,K:c.K,P:c.P,comp:c.comp,moist:.5,aer:.42,soilT:8,weed:.15,depth:.35,
+    ridged:false,ridgeH:0,ridgeW:95,spacing:38,mulch:false,rotated:false,drug:false,
+    nem:c.nem,grub:c.grub,kusRisk:c.kusRisk,bsSoil:c.bsSoil,yBase:c.yBase,tanuki:c.tanuki,frostWard:0,
+    variety:null,planted:-1,method:null,stand:0,vine:0,leaf:1,yellow:0,nodeRoot:0,tN:0,tW:0,
+    dmg:0,bs:0,kus:0,egg:0,young:0,big:0,crack:0,frostHit:0,tsuru:0,typhGuard:0,watered:false,
+    harvested:false,harvJun:-1,crop:null,sorted:false,residue:false,probeInfo:null,avail:1,sumT:0,nT:0,seen:{}};
+}
+function makeBed(){ return {on:false,variety:0,treated:false,q:0,dmgT:0,dis:.5,heat:0,vinyl:'open',vent:false,T:10,sprout:0,rot:0,sLen:0,sThick:.3,leggy:0,cut:false}; }
+function newGame(seed){
+  seed=seed==null?(Math.random()*1e9|0):seed|0;
+  G={v:1,seed,rs:(seed*2654435761)|0,year:1,jun:0,ap:6,
+    stats:{hp:60,atk:5,def:0,range:110},mats:{leaf:0,bone:0,ash:0},pantry:6,cleared:[false,false,false,false,false],
+    book:{story:1},hist:[],buff:null,carry:carryDefault(),rep:[],hits:0,deaths:0,playT:0,jouns:0,done:false,ending:false,
+    unlocked:[0],st:null,seed2:null,exploredThisJun:false,kills:{},stat:{}};
+  newYear(false); return G;
+}
+function newYear(carry){
+  if(carry) G.year++;
+  G.jun=0; G.ap=6; G.weather=genWeather(G);
+  const u=VAR_UNLOCK[Math.min(G.year-1,2)]; u.forEach(i=>{ if(!G.unlocked.includes(i)) G.unlocked.push(i); });
+  G.f=makeField(G.carry); G.bed=makeBed(); G.st=null; G.seed2=null; G.rep=[]; G.exploredThisJun=false; G.eaten=0; G.f.soilT=climT(0)-1.5;
+  G.stat.year={}; G.view='bed';
+}
+const BUFFS={yaki:{n:'焼き芋',atk:.25,txt:'攻撃 +25%'},dai:{n:'大学芋',hp:.3,txt:'体力 +30%'},hoshi:{n:'干し芋',def:.18,range:.2,txt:'防御 +18%・芋づる +20%'}};
+
+/* ---------- 温床 ---------- */
+function bedTemp(w,o){
+  return w.temp+(o.vinyl==='closed'?6+5*w.sun:1)+o.heat*.9-(o.vent?5:0)-(w.rain>90?1:0);
+}
+function updateBed(w){
+  const b=G.bed; if(!b.on||b.cut){ if(b.on) b.heat*=.72; return; }
+  const T=bedTemp(w,b); b.T=T;
+  if(b.sprout<1){
+    const s=(T>=28&&T<=33)?.55:((T>=25&&T<28)||(T>33&&T<=35))?.36:(T>=20&&T<25)?.15:T>35?.05:.03;
+    b.sprout=Math.min(1,b.sprout+s*(1-b.dmgT*.7));
+    if(T<20) b.rot+=(20-T)*.012*(1+b.dis*1.2);
+    if(T>35) b.rot+=(T-35)*.03;
+    b.rot+=b.dis*.012+b.dmgT*.05;
+  }else{
+    b.sLen=Math.min(1.4,b.sLen+.28*tz(T,25,30,8));
+    b.sThick=clamp(b.sThick+((T>=24&&T<=30&&w.sun>.3)?.12:T>32?-.1:0)+(b.vent?.04:0),0,1);
+    if(T>32) b.leggy=Math.min(1,b.leggy+.12);
+    if(T<18) b.rot+=(18-T)*.004;
+    b.rot+=b.dis*.004;
+  }
+  b.rot=clamp(b.rot,0,1);
+  b.heat*=.72; b.vent=false;
+}
+/* ---------- 土 ---------- */
+function updateSoil(w){
+  const f=G.f, live=f.planted>=0&&!f.harvested, canopy=live?clamp(f.vine*.8,0,1):0;
+  f.soilT+=(w.temp+(f.mulch?2.5:0)+f.ridgeH*1.0-(canopy>.5?1.5:0)-f.soilT)*.6;
+  const et=(.013*w.temp+.06)*(.75+.5*w.sun)*(f.mulch?.7:1)*(.7+.7*canopy);
+  f.moist+=w.rain/210-et;
+  if(f.moist>.85) f.moist=.85+(f.moist-.85)*(1-clamp(.25+.5*f.ridgeH+.3*f.aer,0,.9));
+  f.moist=clamp(f.moist,.04,1);
+  f.weed=Math.min(1,f.weed+.11*tz(w.temp,18,30,14)*(.5+f.moist)*(f.mulch?.35:1)*(1-.5*canopy)*(f.planted<0&&G.jun<3?.3:1));
+  const tg=.25+.4*f.depth+.25*f.comp+.1*f.ridgeH;
+  f.aer=clamp(f.aer+(tg-f.aer)*.08-Math.max(0,w.rain-90)/1800,.05,1);
+  f.N=Math.max(0,f.N*.99-Math.max(0,w.rain-100)/3000-(live?.008*f.vine:0));
+  f.K=Math.max(0,f.K-(live?.004*f.vine:0));
+  f.comp=Math.max(0,f.comp-.004);
+  f.watered=false;
+}
+/* ---------- 作物 ---------- */
+function tsuruOf(){
+  const f=G.f, v=VAR[f.variety];
+  return clamp((1.4*(f.N-.5)+.8*(f.moist-.72)+.8*(.45-f.aer)+.3*Math.max(0,f.vine-1.2)-.25*(f.K-.4))*v.ts,0,1);
+}
+function updateCrop(w){
+  const f=G.f; if(f.planted<0||f.harvested) return;
+  const v=VAR[f.variety], M=METH[f.method], age=G.jun-f.planted, P=PL(f);
+  f.sumT+=w.temp; f.nT++;
+  // 活着
+  if(age<=1){
+    if(w.sun>.65&&f.moist<.42&&!f.watered) f.stand-=.09*M.dr*(.5+w.sun);
+    if(f.soilT<15) f.stand-=.05;
+    f.stand=clamp(f.stand,.15,1);
+  }
+  // 虫・病気
+  updatePests(w,age);
+  // つる
+  const nutr=.55+1.1*f.N, wf=f.moist<.25?.5:f.moist>.92?.8:1;
+  f.vine=Math.min(1.9,f.vine+.27*tz(w.temp,23,31,10)*nutr*wf*f.stand*(age>=9?.45:1));
+  if(age>=11||w.temp<15){ f.yellow=Math.min(1,f.yellow+.11+(w.temp<16?.08:0)); }
+  if(f.yellow>.3) f.vine=Math.max(0,f.vine-f.yellow*.03);
+  f.nodeRoot=clamp(f.nodeRoot+(f.vine>.5?.07+(f.moist>.6?.04:0):0),0,1);
+  f.tsuru=tsuruOf();
+  // 台風
+  if(w.typhoon){ const g=f.typhGuard>0; f.vine*=g?.92:.68; f.leaf=Math.max(.05,f.leaf-(g?.04:.2)); f.crack+=g?0:.02; G.rep.push(g?'台風が来たが、備えのおかげで被害は小さかった':'台風でつるが吹きちぎられた！'); }
+  // 乾燥
+  if(f.moist<.2&&w.sun>.6){ f.leaf=Math.max(.05,f.leaf-.08); f.vine*=.96; }
+  // 霜
+  if(w.frost){ f.yellow=1; f.leaf=Math.min(f.leaf,.25); f.frostHit=Math.min(1,f.frostHit+(.55-.4*f.frostWard)); G.rep.push('霜がおりて、つるが黒く枯れた'); }
+  // 割れ
+  if(age>15) f.crack=Math.min(1,f.crack+.06*(age-15));
+  if(age>=8&&f.moist>.8) f.crack=Math.min(1,f.crack+.02);
+  // イモの数（着生）
+  if(age>=1&&age<=3){
+    const cf=tz(f.soilT,21,29,8)*(.6+.8*f.aer)*(1-.5*Math.max(0,f.N-.5))*(.8+.4*Math.min(1,f.P+.2));
+    f.tN+=1.1*cf*M.cnt*(1+(f.depth-.5)*.2);
+  }
+  // 肥大
+  if(age>=3){
+    const LA=Math.min(1.3,f.vine)*f.leaf*(1-f.yellow*.8);
+    const share=clamp(.85-1.0*f.tsuru-.2*Math.max(0,f.vine-1.2)-.3*f.nodeRoot,.08,.9);
+    const kf=.7+.6*Math.min(1,f.K+.1), pf=.9+.2*Math.min(1,f.P);
+    const wfac=f.moist<.3?.5+f.moist:f.moist>.9?.7:1;
+    const tf=tz(f.soilT,v.heat?24:20,v.heat?32:30,10)*(v.heat&&w.temp<22?.7:1);
+    const wc=Math.max(0,f.weed-.25)*(age<8?1:.6);
+    const sp=(f.spacing<=32?.97:f.spacing>=44?.95:1)*(f.ridgeW<90?.95:f.ridgeW>105?.96:1);
+    const sand=v.sand?(f.aer>.65?1.08:.96):1;
+    const kus=1-.55*f.kus, nem=1-.12*f.nem*v.nem;
+    f.tW+=P*f.stand*.135*tf*Math.min(1,LA)*(share/.8)*kf*pf*wfac*(1-.55*wc)*kus*nem*v.y*sp*sand*(f.avail);
+  }
+  f.typhGuard=Math.max(0,f.typhGuard-1);
+}
+function updatePests(w,age){
+  const f=G.f, j=G.jun;
+  // ハスモンヨトウ
+  const lay=(j>=13&&j<=21&&w.temp>=22)?f.yBase*.9*(.5+.5*Math.min(1.4,w.temp/26)):0;
+  const e0=f.egg,y0=f.young,b0=f.big;
+  f.big=b0*.55+y0*.7; f.young=y0*.18+e0*.9; f.egg=e0*.08+lay;
+  const loss=.35*f.young+.9*f.big+.05*f.egg;
+  if(f.young>.06&&!f.seen.y){ f.seen.y=1; G.rep.push('白っぽい葉が目立つ…ハスモンヨトウの若い幼虫だ'); }
+  f.leaf=clamp(f.leaf-loss+(loss<.01?.015:0),.05,1);
+  // コガネ幼虫・ハリガネ・線虫
+  if(w.temp>20) f.grub=Math.min(1,f.grub+.012*(1+f.comp*.5));
+  let d=0; if(age>=5) d+=f.grub*.04;
+  if(age>=3) d+=f.nem*.02*VAR[f.variety].nem;
+  f.dmg=clamp(f.dmg+d,0,1);
+  // 黒斑病・基腐病
+  f.bs=clamp(f.bs+.003+(f.moist>.88?.012:0)+d*.4+f.bsSoil*.005,0,1);
+  if(j>=10&&j<=24&&(w.rain>100||w.typhoon)){ const add=f.kusRisk*clamp(w.rain/200,.2,1)*.45; if(add>.01){ f.kus=clamp(f.kus+add,0,1); if(!f.seen.k){ f.seen.k=1; G.rep.push('株がしおれはじめた…基腐病かもしれない'); } } }
+  if(f.kus>0) { f.leaf=Math.max(.05,f.leaf-f.kus*.04); f.kus=clamp(f.kus+(w.rain>80?.03*f.kus:0),0,1); }
+}
+/* ---------- 貯蔵 ---------- */
+function brixOf(st,f){
+  const v=VAR[f.variety], c=f.crop;
+  const rc=clamp(st.ripe*v.rp,0,1), curve=rc*rc*(3-2*rc);
+  let b=lerp(v.b0,v.b1,curve)*(.88+.12*c.mature)+2.2*(Math.min(1,f.K)-.4)-4*c.tsuru-3*c.frostHit-3*st.sprout+.6*st.cureQ;
+  if(v.heat&&f.nT) b-=Math.max(0,24-f.sumT/f.nT)*.5;
+  return clamp(b,8,48);
+}
+function updateStorage(w){
+  const st=G.st; if(!st||st.kg<=0) return; const f=G.f, c=f.crop;
+  if(st.curing){
+    const q=clamp(1-Math.abs(st.cT-33)/6,0,1)*clamp(1-Math.abs(st.cH-92.5)/12,0,1);
+    st.cureQ=q; st.curing=false; st.cured=true;
+    if(st.cT>38) st.rot+=.06;
+    st.T=st.cT; st.H=st.cH; st.T+=(w.temp+5-st.T)*.7; st.H+=(72-st.H)*.5; return;
+  }
+  st.T+=(w.temp+5-st.T)*.28; st.H+=(72-st.H)*.2; st.H=clamp(st.H,40,100);
+  const T=st.T,H=st.H;
+  let r=.004+(T<12.5?(12.5-T)*.025:0)+(T>17?(T-17)*.012:0)+(H<85?(85-H)*.0006:0)+(H>97?(H-97)*.004:0)
+    +c.bs*.02+f.kus*.04+c.dmg*.03+c.frostHit*.04+(st.sorted?0:.02)+(c.crack*.03);
+  r*=1-.6*st.cureQ;
+  st.rot=clamp(st.rot+r*(1-st.rot),0,1);
+  if(T>=17.5) st.sprout=Math.min(1,st.sprout+.18+(T-17.5)*.12);
+  if(H<80) st.skin=Math.min(1,st.skin+(80-H)/110);
+  st.ripe=Math.min(1.2,st.ripe+(1/6)*clamp(1-Math.abs(T-14.5)/12,.2,1));
+  st.age++;
+}
+/* ---------- 旬を進める ---------- */
+function advance(){
+  const w=G.weather[G.jun];
+  G.rep=[]; G.rep.push('天気は'+w.label+'（'+fx(w.temp,1)+'℃・雨'+Math.round(w.rain)+'mm）');
+  updateSoil(w); updateBed(w); updateCrop(w); updateStorage(w);
+  const f=G.f;
+  if(f.harvested&&G.st){ const s=G.st; if(s.rot>.15&&!f.seen.rot){ f.seen.rot=1; G.rep.push('貯蔵庫から、いやな匂いがする…'); } if(s.sprout>.2&&!f.seen.spr){ f.seen.spr=1; G.rep.push('貯蔵庫の芋から芽が出ている！'); } }
+  // 年内の出来事
+  G.jun++; G.ap=6; G.exploredThisJun=false;
+  if(G.jun<30&&G.view!=='cellar'&&G.st&&G.f.harvested) G.view='cellar';
+  return G.rep;
+}
+/* ---------- 作業 ---------- */
+const TASKS={};
+function def(id,name,cost,o){ TASKS[id]=Object.assign({id,name,cost:typeof cost==='function'?cost:()=>cost},o); }
+const pre=()=>G.f.planted<0;
+const live=()=>G.f.planted>=0&&!G.f.harvested;
+const ageNow=()=>G.jun-G.f.planted;
+function unb(k){ if(k&&!G.book[k]){ G.book[k]=1; G.newBook=(G.newBook||[]); G.newBook.push(k); } }
+def('onsen','温湯処理（種いも）',1,{book:'onsen',kind:'mini',show:()=>!G.bed.on&&!G.bed.treated&&G.jun<=4,hint:()=>'47〜48℃の湯に40分。黒斑病を防ぐ',
+  run:o=>{ o=o||{}; const q=o.q==null?1:o.q; G.bed.treated=true; G.bed.q=q; G.bed.dmgT=o.dmg||0; return q>.85?'完璧な湯温管理！ 黒斑病の心配はぐっと減った':q>.4?'まずまずの消毒':'湯温が合わず、効果はいまひとつ'+(o.dmg>.1?'。種いもも傷んだ…':''); }});
+def('fusekomi','伏せ込み（温床に種いも）',1,{book:'fuse',kind:'var',show:()=>!G.bed.on&&G.jun<=8,can:()=>null,hint:()=>'3月に温床へ。床温28〜33℃で芽出し',
+  run:o=>{ const b=G.bed; b.on=true; b.variety=o&&o.variety!=null?o.variety:G.unlocked[0]; b.dis=(b.treated?.05+.5*(1-b.q):.55)+G.f.bsSoil*.3; G.f.variety=b.variety; return VAR[b.variety].n+'を温床に伏せ込んだ'; }});
+def('heat','わら・米ぬかを足す',1,{book:'bedcold',show:()=>G.bed.on&&!G.bed.cut,hint:()=>'発酵熱で床温UP（今の熱 '+fx(G.bed.heat,0)+'）',run:()=>{ G.bed.heat=Math.min(16,G.bed.heat+7); return '発酵熱でほかほか'; }});
+def('vent','換気',1,{book:'bedcold',show:()=>G.bed.on&&!G.bed.cut,hint:()=>'今旬だけ床温を約5℃下げる。苗が締まる',run:()=>{ G.bed.vent=true; return '風を通した'; }});
+def('vinyl',()=>G.bed.vinyl==='closed'?'ビニールを開ける':'ビニールを閉める',1,{book:'bedcold',show:()=>G.bed.on&&!G.bed.cut,hint:()=>G.bed.vinyl==='closed'?'今は閉じている（保温中）':'閉じると保温。開けると外気に近づく',run:()=>{ G.bed.vinyl=G.bed.vinyl==='closed'?'open':'closed'; return G.bed.vinyl==='closed'?'ビニールを閉じた':'ビニールを開けた'; }});
+def('cut','採苗（つるを切る）',1,{book:'cut',show:()=>G.bed.on&&!G.bed.cut&&G.bed.sprout>=1,can:()=>G.bed.sLen<.45?'つるがまだ短い':null,
+  hint:()=>'つる '+pct(G.bed.sLen/0.9)+'%・太さ '+pct(G.bed.sThick)+'%',
+  run:()=>{ const b=G.bed; const nodes=clamp(b.sLen/.9,0,1); const q=clamp(.25+.4*nodes+.35*b.sThick-b.leggy*.4-b.dis*.25,.1,1);
+    b.cut=true; G.seed2={q,treated:false,dis:b.dis*.7,avail:clamp(1-b.rot*1.2,.2,1)}; return '苗ができた（質 '+pct(q)+'%）'; }});
+def('onsenS','温湯処理（苗）',1,{book:'onsen',kind:'mini',show:()=>G.seed2&&!G.seed2.treated&&pre(),hint:()=>'47〜48℃の湯に15分',
+  run:o=>{ o=o||{}; const q=o.q==null?1:o.q; G.seed2.treated=true; G.seed2.dis=.04+.5*(1-q)*G.seed2.dis; if(o.dmg>.1) G.seed2.q*=1-o.dmg*.5; return q>.85?'苗の消毒も完璧':'苗の消毒をした'; }});
+def('buy','苗を買う（商人）',1,{book:'cut',show:()=>pre()&&!G.seed2&&G.jun>=6&&(!G.bed.on||G.bed.rot>.5||G.jun>=8),hint:()=>'質はそこそこ。自分で育てた苗にはかなわない',run:()=>{ G.seed2={q:.5,treated:false,dis:.3,avail:1}; if(!G.f.variety) G.f.variety=G.unlocked[0]; return '商人から苗を買った'; }});
+def('plow','耕す（ふつう）',1,{book:'plow',show:pre,hint:()=>'深さ '+pct(G.f.depth)+'%。通気UP',run:()=>{ const f=G.f; f.depth=Math.max(f.depth,.62); f.aer=Math.min(1,f.aer+.12); f.weed*=.4; return '畑を耕した'; }});
+def('plowD','深く耕す',2,{book:'plow',show:pre,hint:()=>'深耕。通気がぐんとよくなる',run:()=>{ const f=G.f; f.depth=.95; f.aer=Math.min(1,f.aer+.22); f.weed*=.3; return '深く耕して、土がふかふかに'; }});
+def('compost','堆肥を入れる',1,{book:'plow',show:pre,hint:()=>'通気UP・窒素は少し。'+(G.mats.leaf>0?'落ち葉'+G.mats.leaf+'ぶん効果UP':'落ち葉があると効果UP'),
+  run:()=>{ const f=G.f; const lf=G.mats.leaf>0; if(lf) G.mats.leaf--; f.comp=Math.min(1,f.comp+.25+(lf?.1:0)); f.aer=Math.min(1,f.aer+.06); f.N=Math.min(1,f.N+.04); return lf?'落ち葉堆肥を入れた':'堆肥を入れた'; }});
+def('fertN','窒素肥料',1,{book:'tsuru',show:pre,hint:()=>'窒素 '+pct(G.f.N)+'%。入れすぎるとつるぼけ！',run:()=>{ G.f.N=Math.min(1.2,G.f.N+.2); return '窒素肥料をまいた'; }});
+def('fertK','カリ肥料',1,{book:'kali',show:pre,hint:()=>'カリ '+pct(G.f.K)+'%。イモの肥大を助ける',run:()=>{ G.f.K=Math.min(1.2,G.f.K+.2); return 'カリ肥料をまいた'; }});
+def('ash','灰をまく（カリ）',1,{book:'kali',show:()=>pre()&&G.mats.ash>0,hint:()=>'灰'+G.mats.ash+'こ。カリ+30%',run:()=>{ G.mats.ash--; G.f.K=Math.min(1.2,G.f.K+.3); return '灰をまいた。カリがたっぷり'; }});
+def('bone','骨粉をまく',1,{book:'kali',show:()=>pre()&&G.mats.bone>0,hint:()=>'骨粉'+G.mats.bone+'こ。根づきがよくなる',run:()=>{ G.mats.bone--; G.f.P=Math.min(1,G.f.P+.3); return '骨粉をまいた'; }});
+def('ridge','畝を立てる',(g,o)=>(o&&o.h==='high')?2:1,{book:'ridge',kind:'ridge',show:pre,hint:()=>G.f.ridged?'立て直す（高さ '+pct(G.f.ridgeH)+'%）':'幅90〜100cm・株間35〜40cmが目安',
+  run:o=>{ o=o||{}; const f=G.f; f.ridged=true; f.ridgeH={low:.25,mid:.55,high:1}[o.h||'mid']; f.spacing=o.sp||38; f.ridgeW=o.w||95; f.aer=Math.min(1,f.aer+.04+(f.ridgeW<90?.03:f.ridgeW>105?-.05:0)); return '畝を立てた（'+({low:'低め',mid:'ふつう',high:'高畝'}[o.h||'mid'])+'・畝幅'+f.ridgeW+'cm・株間'+f.spacing+'cm）'; }});
+def('mulch','マルチをはる',1,{book:'mulch',show:()=>pre()&&G.f.ridged&&!G.f.mulch,hint:()=>'地温+3℃・雑草を抑える',run:()=>{ G.f.mulch=true; return 'マルチをはった'; }});
+def('rotate','緑肥をすき込む（輪作）',2,{book:'nem',show:()=>pre()&&!G.f.rotated&&G.jun<=6,hint:()=>'線虫・黒斑病の土の菌を減らす',run:()=>{ const f=G.f; f.rotated=true; f.nem*=.45; f.bsSoil*=.6; f.comp=Math.min(1,f.comp+.1); return '緑肥をすき込んだ（輪作の代わり）'; }});
+def('drug','土壌害虫の薬剤',1,{book:'grub',show:()=>pre()&&!G.f.drug,hint:()=>'コガネ・ハリガネの幼虫を減らす',run:()=>{ G.f.drug=true; G.f.grub*=.35; return '土に薬剤を混ぜた'; }});
+def('plant','植え付け',2,{book:'plant',kind:'method',show:()=>pre()&&!!G.seed2,can:()=>!G.f.ridged?'畝がありません':null,hint:()=>'今の気温 '+fx(G.weather[G.jun].temp,1)+'℃・地温 '+fx(G.f.soilT,1)+'℃（20℃前後が適期）',
+  run:o=>{ const f=G.f, w=G.weather[G.jun], m=(o&&o.m)||'o', M=METH[m], v=VAR[f.variety]; const s=G.seed2;
+    const tf=tz(w.temp,18,26,6), sf=tz(f.soilT,18,30,6), mf=f.moist<.3?.8:f.moist>.9?.85:1;
+    f.method=m; f.planted=G.jun; f.stand=clamp((M.root+v.root)*(.55+.45*s.q)*(.6+.4*tf)*(.7+.3*sf)*mf*1.1+.06*f.P-s.dis*.1,.2,.98); f.avail=s.avail==null?1:s.avail;
+    f.bs=Math.max(f.bs,s.dis*.3); f.sumT=0; f.nT=0; G.view='field'; return M.n+'で植えた（活着の見込み '+pct(f.stand)+'%）'; }});
+def('weed','除草',1,{book:'mulch',show:()=>G.f.weed>.06&&!G.f.harvested,hint:()=>'雑草 '+pct(G.f.weed)+'%',run:()=>{ G.f.weed*=.12; return '草むしりした'; }});
+def('turn','つる返し',1,{book:'turn',show:()=>live()&&ageNow()>=4,hint:()=>'節から出た根 '+pct(G.f.nodeRoot)+'%',run:()=>{ G.f.nodeRoot*=.2; return 'つるを返して根を切った'; }});
+def('water','水やり',1,{book:'estab',show:live,hint:()=>'土の水分 '+pct(G.f.moist)+'%。乾燥・活着に',run:()=>{ G.f.moist=Math.min(1,G.f.moist+.25); G.f.watered=true; return '水をたっぷりやった'; }});
+def('typh','台風対策',1,{book:'weather',show:live,hint:()=>'つるをまとめ、排水溝を切る（2旬有効）',run:()=>{ G.f.typhGuard=2; return '台風の備えをした'; }});
+def('scout','見回り（卵・若い幼虫を摘む）',1,{book:'yotou',show:()=>live()&&G.jun>=12,hint:()=>{ const f=G.f; return '卵 '+pct(f.egg*4)+'・若齢 '+pct(f.young*4)+'・老齢 '+pct(f.big*4)+(f.young>.04?'（白い葉あり）':''); },
+  run:()=>{ const f=G.f; f.egg*=.12; f.young*=.3; return '卵塊と若い幼虫の葉を摘み取った'; }});
+def('spray','薬剤散布',1,{book:'yotou',show:()=>live()&&G.jun>=12,hint:()=>'若い幼虫に効く。大きい幼虫には効きにくい',run:()=>{ const f=G.f; f.egg*=.7; f.young*=.2; f.big*=.75; return '薬剤をまいた'; }});
+def('pull','病株の抜き取り',1,{book:'kusare',show:()=>live()&&G.f.kus>.02,hint:()=>'基腐病 '+pct(G.f.kus)+'%',run:()=>{ G.f.kus*=.4; return '病気の株を抜いて処分した'; }});
+def('probe','試し掘り（1株）',1,{book:'harv',show:live,hint:()=>'1株だけ掘って育ちを見る',
+  run:()=>{ const f=G.f, P=PL(f), age=ageNow(); const per=f.tW/Math.max(1,P*f.stand); const n=Math.max(1,f.tN);
+    f.probeInfo={jun:G.jun,per,n,avg:per/n*1000,yellow:f.yellow}; return '1株掘った：'+fx(per,2)+'kg・イモ'+fx(n,1)+'本（平均'+Math.round(per/n*1000)+'g）'+(f.yellow>.25?'。葉も黄ばんでいる':'。まだ葉は青い'); }});
+def('harvest','収穫',3,{book:'harv2',show:live,hint:()=>{ const a=ageNow(); return '植え付けから'+a*10+'日（目安110〜150日）'+(G.weather[G.jun].frost?' 霜！':''); },run:()=>doHarvest()});
+def('sort','選別（傷のないイモだけ貯蔵へ）',1,{book:'harv2',show:()=>G.f.harvested&&!G.f.sorted,hint:()=>'傷イモは貯蔵に回さない',run:()=>{ const f=G.f, st=G.st; f.sorted=true; st.sorted=true; const clean=st.clean; const out=st.kg*(1-clean); st.kg*=clean; G.pantry+=out*.5; return '傷イモを分けた（貯蔵 '+fx(st.kg,0)+'kg）'; }});
+def('residue','くずイモ・藷梗を畑の外へ',1,{book:'kusare',show:()=>G.f.harvested&&!G.f.residue,hint:()=>'基腐病の来年のリスクを減らす',run:()=>{ G.f.residue=true; return '残渣を畑の外で処分した'; }});
+def('cure','キュアリング',1,{book:'cure',kind:'cond',show:()=>G.f.harvested&&G.st&&!G.st.cured&&!G.st.curing,hint:()=>'33℃前後・湿度90〜95%で約4日',run:o=>{ const st=G.st; st.curing=true; st.cT=(o&&o.T)||33; st.cH=(o&&o.H)||92.5; return 'キュアリングを始めた（'+st.cT+'℃・'+st.cH+'%）'; }});
+def('storage','貯蔵庫の調整',1,{book:'store',kind:'cond',show:()=>G.f.harvested&&G.st&&G.st.kg>0&&!G.st.curing,hint:()=>'今 '+fx(G.st.T,1)+'℃・湿度'+Math.round(G.st.H)+'%（13〜16℃・90〜95%）',run:o=>{ const st=G.st; st.T=(o&&o.T)||14; st.H=(o&&o.H)||95; return '貯蔵庫を '+fx(st.T,0)+'℃・'+Math.round(st.H)+'% に調整した'; }});
+function doHarvest(){
+  const f=G.f, w=G.weather[G.jun], v=VAR[f.variety], M=METH[f.method], P=PL(f), age=ageNow();
+  const N=P*f.stand*f.tN, avg=f.tW/Math.max(1,N)*1000;
+  const mature=clamp((age-9)/3,0,1);
+  const harvDmg=Math.max(0,f.moist-.55)*.25+(w.rain>90?.04:0);
+  const dmgT=clamp(f.dmg+harvDmg,0,1);
+  const sizeScore=1-clamp(Math.abs(avg-260)/260,0,1);
+  const sp=f.spacing<=32?0:f.spacing>=44?.03:.06;
+  const sand=v.sand&&f.aer>.65?.06:0;
+  const A=clamp(.5+M.shape+sp+sand+.25*sizeScore-.9*dmgT-.45*f.bs-.2*f.tsuru-.8*f.crack-.5*f.frostHit-.15*f.nem*v.nem,.05,.95);
+  const theft=clamp(f.tanuki*.5,0,.25);
+  const kg=f.tW*(1-theft);
+  f.harvested=true; f.harvJun=G.jun;
+  f.crop={kg,A,dmg:dmgT,bs:f.bs,avg,n:N,mature,tsuru:f.tsuru,frostHit:f.frostHit,crack:f.crack,age,theft};
+  G.st={kg,rot:0,T:w.temp+5,H:72,cureQ:0,sprout:0,skin:0,ripe:0,curing:false,cured:false,sorted:false,clean:clamp(1-dmgT*.9-f.bs*.3-f.crack*.2,.4,1),age:0};
+  G.view='cellar';
+  return '収穫！ '+fx(kg,0)+'kg（平均'+Math.round(avg)+'g）'+(theft>.03?' 狸に少し盗まれた…':'');
+}
+function taskCost(id,o){ return TASKS[id].cost(G,o); }
+function taskName(t){ return typeof t.name==='function'?t.name():t.name; }
+function doTask(id,o){
+  const T=TASKS[id]; if(!T) return {ok:false,msg:'そんな作業はない'};
+  if(!T.show()) return {ok:false,msg:'いまはできない'};
+  const why=T.can?T.can(o):null; if(why) return {ok:false,msg:why};
+  const c=T.cost(G,o); if(G.ap<c) return {ok:false,msg:'行動ポイントが足りない'};
+  const msg=T.run(o)||''; G.ap-=c; unb(T.book); G.lastMsg=msg; return {ok:true,msg};
+}
+function nextJun(){ const rep=advance(); if(G.jun>=30) return {rep,end:true}; return {rep}; }
+function onKill(type){
+  const f=G.f; if(!f) return; G.kills[type]=(G.kills[type]||0)+1;
+  if(type==='yotou'){ f.egg*=.96; f.young*=.96; f.yBase=Math.max(.03,f.yBase-.012); }
+  else if(type==='kogane') f.grub=Math.max(0,f.grub-.03);
+  else if(type==='snake') f.nem=Math.max(0,f.nem-.035);
+  else if(type==='ghost'){ f.kusRisk=Math.max(0,f.kusRisk-.03); f.kus=Math.max(0,f.kus-.02); f.bs=Math.max(0,f.bs-.01); f.bsSoil=Math.max(0,f.bsSoil-.01); }
+  else if(type==='tanuki') f.tanuki=Math.max(0,f.tanuki-.05);
+  else if(type==='frost') f.frostWard=Math.min(1,f.frostWard+.12);
+}
+/* ---------- 年の結果 ---------- */
+function yearResult(){
+  const f=G.f, st=G.st, c=f.crop;
+  if(!c||!st) return {kg:0,A:0,brix:0,kept:0,score:0,rank:'D',none:true,varName:'-'};
+  const kept=st.kg*(1-st.rot);
+  const brix=brixOf(st,f);
+  const A=clamp(c.A-st.skin*.25-st.rot*.3-st.sprout*.12,.02,.95);
+  const yS=clamp(c.kg/380,0,1.2), bS=clamp((brix-22)/16,0,1.2);
+  const score=Math.min(100,Math.round(100*(.35*Math.min(1,yS)+.3*A/.9+.35*Math.min(1,bS)))); 
+  const rank=score>=88?'S':score>=72?'A':score>=55?'B':score>=38?'C':'D';
+  return {kg:c.kg,A,brix,kept:kept*(1-.25*st.sprout),score,rank,rot:st.rot,sprout:st.sprout,skin:st.skin,ripe:st.ripe,tsuru:c.tsuru,frostHit:c.frostHit,avg:c.avg,age:c.age,varName:VAR[f.variety].n,theft:c.theft,harvJun:f.harvJun,cureQ:st.cureQ,eaten:G.eaten};
+}
+function applyGrowth(r){
+  const s=G.stats; const nv=G.unlocked.length;
+  const dHP=Math.round(clamp(r.kg/10,0,42)), dATK=Math.max(0,Math.round((r.brix-20)/6)), dDEF=Math.round(r.A*14);
+  s.hp+=dHP; s.atk+=dATK; s.def+=dDEF; s.range=100+22*nv;
+  return {dHP,dATK,dDEF,range:s.range};
+}
+function endYearCarry(){
+  const f=G.f, c=G.carry;
+  G.carry={N:f.N*.5+.15,K:f.K*.85,P:f.P*.8,comp:f.comp*.7+.05,nem:Math.min(1,f.nem*(f.rotated?.5:1.35)+.04),grub:f.grub*.6+.06,
+    kusRisk:clamp((f.residue?.1:.55)+f.kus*.3,.05,.9),bsSoil:clamp(f.bsSoil*.6+f.bs*.4+(f.residue?0:.1),.03,.8),yBase:clamp(f.yBase*.5+.06+(f.big+f.young)*.4,.06,.5),tanuki:f.tanuki*.8+.08};
+}
+/* ---------- 天気ヘルパー ---------- */
+const wA=j=>G.weather[Math.min(29,j)];
+
+/* ================= オート（畑）／シミュレーション ================= */
+function bedPlan(P){
+  const b=G.bed, w=G.weather[G.jun]; const pre=b.sprout<1; const lo=pre?28.6:25.6, hi=pre?32.4:29.6, tg=pre?30.5:27.6;
+  let best=null;
+  for(const vinyl of ['closed','open']) for(let adds=0;adds<=2;adds++) for(const vent of [false,true]){
+    const T=bedTemp(w,{vinyl,heat:Math.min(16,b.heat+7*adds),vent});
+    const cost=(vinyl!==b.vinyl?1:0)+adds+(vent?1:0);
+    const ok=T>=lo&&T<=hi; const sc=(ok?0:100+Math.abs(T-tg)*10)+cost*3+Math.abs(T-tg)*(ok?.4:0);
+    if(!best||sc<best.sc) best={sc,vinyl,adds,vent,T};
+  }
+  return best;
+}
+function pickVariety(P){
+  if(P.variety!=null) return P.variety;
+  if(P.mode!=='auto'||G.unlocked.length<2) return G.unlocked[0];
+  let best=null;
+  for(const v of G.unlocked){
+    const save=G; G=JSON.parse(JSON.stringify(save)); const wasSim=true;
+    try{ runYear(Object.assign({},P,{variety:v,noPick:true}),G.jun); const r=yearResult(); const sc=r.score+r.brix*.5;
+      if(!best||sc>best.sc) best={sc,v}; }catch(e){}
+    G=save;
+  }
+  return best?best.v:G.unlocked[0];
+}
+let doTaskHook=null;
+function farmPolicy(P){
+  const f=G.f,b=G.bed,j=G.jun,w=G.weather[j],mode=P.mode||'auto';
+  const T=(id,o)=>{ const t=TASKS[id]; if(t&&t.show()&&G.ap>=t.cost(G,o)&&!(t.can&&t.can(o))){ (doTaskHook||doTask)(id,o); return true; } return false; };
+  const age=ageNow(), nxt=wA(j+1), ff=G.ff;
+  if(mode==='none'){
+    if(j===0) T('fusekomi',{variety:P.variety!=null?P.variety:G.unlocked[0]});
+    if(b.on&&!b.cut&&b.sprout>=1&&j>=6) T('cut');
+    if(j>=8&&!G.seed2) T('buy');
+    if(j>=8&&pre()&&G.seed2){ T('ridge',{h:'low',sp:38}); T('plant',{m:'o'}); }
+    if(live()&&age>=P.hAge) T('harvest');
+    return;
+  }
+  // --- 育苗 ---
+  if(b.on&&!b.cut&&j<=8){ const pl=bedPlan(P); if(pl.vinyl!==b.vinyl) T('vinyl'); for(let i=0;i<pl.adds;i++) T('heat'); if(pl.vent) T('vent'); }
+  if(!b.on&&j<=1){ T('onsen',{q:1,dmg:0}); const v=P.variety!=null?P.variety:(P.noPick?G.unlocked[0]:pickVariety(P)); T('fusekomi',{variety:v}); const pl=bedPlan(P); if(pl.vinyl!==b.vinyl) T('vinyl'); for(let i=0;i<pl.adds;i++) T('heat'); if(pl.vent) T('vent'); }
+  if(b.on&&!b.cut&&b.sprout>=1&&((j>=6&&b.sLen>=.8)||(j>=7&&b.sLen>=.45)||j>=8)) T('cut');
+  if(G.seed2&&!G.seed2.treated) T('onsenS',{q:1,dmg:0});
+  // --- 畑づくり ---
+  if(pre()&&j>=3){
+    if(f.depth<.9) T('plowD');
+    if(f.comp<.4) T('compost');
+    const kt=mode==='nitro'?.3:.62; let guard=0;
+    while(f.K<kt&&guard++<4){ if(G.mats.ash>0&&T('ash')) continue; if(!T('fertK')) break; }
+    if(mode==='nitro'){ guard=0; while(f.N<.88&&guard++<4) if(!T('fertN')) break; }
+    if(!f.rotated&&(G.year>1||f.nem>.15)) T('rotate');
+    if(f.grub>.14) T('drug');
+    if(G.mats.bone>0) T('bone');
+    if(!f.ridged) T('ridge',{h:'high',sp:38,w:95});
+    if(f.ridged&&!f.mulch) T('mulch');
+  }
+  // --- 植え付け ---
+  if(pre()&&G.seed2&&f.ridged&&(!f.mulch?false:true)&&j>=7&&(w.temp>=19||j>=9)){
+    const r=w.rain+nxt.rain; const m=(r>=100||f.moist>.55)?'h':r>=45?'b':'v';
+    T('plant',{m}); if(!pre()&&f.moist<.5) T('water');
+  }
+  // --- 生育期 ---
+  if(live()){
+    if(w.typhoon||nxt.typhoon) T('typh');
+    if(age<=1&&f.moist<.5&&w.sun>.55&&!f.watered) T('water');
+    if(f.weed>.22) T('weed');
+    if(age>=4&&f.nodeRoot>.3) T('turn');
+    if(j>=12&&j<=23){ if(f.egg>.012||f.young>.02) T('scout'); if(f.big>.05) T('spray'); }
+    if(f.kus>.03) T('pull');
+    if(age>=2&&w.sun>.4&&w.rain<45){ if(f.moist<.5) T('water'); if(f.moist<.4) T('water'); }
+    // 収穫
+    let want=false; const dl=Math.min(ff-1,f.planted+P.hMax);
+    if(mode==='late'){ want=w.frost&&j>=ff+1; }
+    else{ const ready=age>=P.hAge&&(f.yellow>=.25||age>=P.hAge+1); const dry=w.rain<90&&f.moist<.78; want=(ready&&dry)||j>=dl; }
+    if(want&&!w.frost||want&&mode==='late'){ T('harvest'); }
+  }
+  if(f.harvested&&G.st){
+    T('sort'); const st=G.st;
+    if(!st.cured&&!st.curing&&mode!=='nocure') T('cure',{T:33,H:92.5});
+    T('residue');
+    if(st.cured&&!st.curing&&st.kg>0){
+      const tT=P.storeT, amb=w.temp+5; let t=(tT-.28*amb)/.72; t=clamp(t,8,26); if(P.storeT>=17.5) t=P.storeT;
+      let h=P.storeH!=null?P.storeH:clamp((93-14.4)/.8,60,100);
+      T('storage',{T:Math.round(t*2)/2,H:Math.round(h)});
+    }
+  }
+}
+const POLICIES={
+  auto:{mode:'auto',hAge:13,hMax:15,storeT:14.5},
+  nitro:{mode:'nitro',hAge:13,hMax:15,storeT:14.5},
+  none:{mode:'none',hAge:14},
+  late:{mode:'late',hAge:13,hMax:15,storeT:14.5},
+  warm18:{mode:'auto',hAge:13,hMax:15,storeT:18,storeH:95},
+  cold11:{mode:'auto',hAge:13,hMax:15,storeT:11,storeH:95},
+  dry70:{mode:'auto',hAge:13,hMax:15,storeT:14.5,storeH:70}
+};
+function runYear(P,fromJun){
+  for(let j=fromJun||0;j<30;j++){ farmPolicy(P); advance(); }
+}
+function simYear(policy,opt){
+  opt=opt||{}; const P=Object.assign({},typeof policy==='string'?POLICIES[policy]:policy);
+  if(opt.variety!=null) P.variety=opt.variety;
+  const save=G; newGame(opt.seed==null?1:opt.seed);
+  if(opt.year){ G.year=opt.year; G.unlocked=[0,1,2,3,4]; G.f=makeField(G.carry); G.weather=genWeather(G); }
+  if(opt.variety!=null&&!G.unlocked.includes(opt.variety)) G.unlocked.push(opt.variety);
+  const was=P.mode;
+  G.f.soilT=climT(0)-1.5;
+  runYear(P,0); const r=yearResult(); const f=G.f;
+  r.tsuruMax=f.tsuru; r.stand=f.stand; r.method=f.method; r.planted=f.planted; r.vine=f.vine; r.kus=f.kus; r.dmg=f.dmg; r.bs=f.bs;r.weed=f.weed;r.tN=f.tN;
+  r.policy=typeof policy==='string'?policy:'custom';
+  G=save; return r;
+}
+
+/* ================= 描画（畑・温床・貯蔵庫） ================= */
+const cv=$('#cv'), cx=cv.getContext('2d');
+let CW=1,CH=1,DPR=1;
+function fit(){ const r=cv.getBoundingClientRect(); DPR=Math.min(2,window.devicePixelRatio||1); cv.width=Math.max(2,Math.round(r.width*DPR)); cv.height=Math.max(2,Math.round(r.height*DPR)); CW=cv.width; CH=cv.height; }
+try{ new ResizeObserver(fit).observe(cv); }catch(_){ addEventListener('resize',fit); }
+fit();
+const hr=i=>{ const s=Math.sin(i*127.1+311.7)*43758.5453; return s-Math.floor(s); };
+function ell(c,x,y,rx,ry,rot,fill){ c.save(); c.translate(x,y); c.rotate(rot||0); c.fillStyle=fill; c.beginPath(); c.ellipse(0,0,rx,ry,0,0,7); c.fill(); c.restore(); }
+function leafP(c,x,y,s,ang,col){ c.save(); c.translate(x,y); c.rotate(ang); c.fillStyle=col; c.beginPath(); c.moveTo(0,0); c.bezierCurveTo(-s,-s*.3,-s*.8,-s*1.25,0,-s*.85); c.bezierCurveTo(s*.8,-s*1.25,s,-s*.3,0,0); c.fill(); c.restore(); }
+function mix(a,b,t){ const pa=a.match(/\w\w/g).map(h=>parseInt(h,16)), pb=b.match(/\w\w/g).map(h=>parseInt(h,16)); t=clamp(t,0,1); return 'rgb('+pa.map((v,i)=>Math.round(v+(pb[i]-v)*t)).join(',')+')'; }
+function skyAndWeather(c,w,h,T){
+  const tmp=w.fc?w.fc.temp:w.temp, lab=w.fc?w.fc.label:w.label, rain=w.fc?w.fc.rain:w.rain;
+  const wet=/雨|梅雨|台風|長雨/.test(lab), ty=lab==='台風', fr=lab==='霜', dr=lab==='干ばつ';
+  const g=c.createLinearGradient(0,0,0,h);
+  if(ty){ g.addColorStop(0,'#3a3f52'); g.addColorStop(1,'#6c7488'); }
+  else if(wet){ g.addColorStop(0,'#7c8aa0'); g.addColorStop(1,'#b5c0cc'); }
+  else if(fr){ g.addColorStop(0,'#aac8e6'); g.addColorStop(1,'#e8f2fa'); }
+  else if(dr){ g.addColorStop(0,'#5aa9e6'); g.addColorStop(1,'#f6e0a0'); }
+  else { const warm=clamp((tmp-8)/20,0,1); g.addColorStop(0,mix('6fb6ee','4aa4ea',warm)); g.addColorStop(1,mix('e6f1fa','fbe8b8',warm)); }
+  c.fillStyle=g; c.fillRect(0,0,400,h);
+  // hills
+  c.fillStyle=mix('7fae7a','a0a090',fr?1:clamp((12-tmp)/12,0,.6)); c.beginPath(); c.moveTo(0,h); c.lineTo(0,h-26); c.quadraticCurveTo(70,h-58,140,h-30); c.quadraticCurveTo(220,h-8,290,h-40); c.quadraticCurveTo(350,h-60,400,h-28); c.lineTo(400,h); c.fill();
+  if(!wet&&!ty){ const sx=330,sy=34; const rg=c.createRadialGradient(sx,sy,2,sx,sy,dr?56:38); rg.addColorStop(0,dr?'rgba(255,240,170,1)':'rgba(255,248,200,.95)'); rg.addColorStop(1,'rgba(255,230,120,0)'); c.fillStyle=rg; c.fillRect(sx-70,sy-70,140,140); ell(c,sx,sy,13,13,0,dr?'#ffe27a':'#fff2a8'); }
+  const nc=ty?6:wet?5:fr?1:2;
+  for(let i=0;i<nc;i++){ const cxp=(i*83+T*14+30)%460-30, cy=18+i*13%46; const col=ty?'#4a5064':wet?'#9aa6b6':'rgba(255,255,255,.9)'; ell(c,cxp,cy,34,10,0,col); ell(c,cxp+16,cy-7,22,10,0,col); ell(c,cxp-16,cy-4,20,8,0,col); }
+  if(wet||ty){ c.strokeStyle=ty?'rgba(210,225,255,.7)':'rgba(190,215,245,.6)'; c.lineWidth=1.3; const n=ty?60:clamp(rain/3,12,50); c.beginPath(); for(let i=0;i<n;i++){ const x=(hr(i)*460+T*(ty?220:90))%460-30, y=(hr(i+9)*h+T*(ty?300:240))%h; c.moveTo(x,y); c.lineTo(x-(ty?9:3),y+(ty?14:9)); } c.stroke(); }
+  if(fr){ c.fillStyle='rgba(255,255,255,.9)'; for(let i=0;i<22;i++){ const x=hr(i)*400, y=hr(i+3)*h, s=1+hr(i+5)*1.8*(.6+.4*Math.sin(T*3+i)); c.fillRect(x,y,s,s); } }
+}
+function drawField(c,T){
+  const f=G.f, w=G.weather[Math.min(29,G.jun)], night=false;
+  skyAndWeather(c,w,128,T);
+  const wlab=w.fc.label, ty=wlab==='台風';
+  const live=f.planted>=0;
+  const rH=f.ridged?8+34*f.ridgeH:0, yT=150-rH;      // 畝のてっぺん
+  const yF=f.ridged?166:150;                          // 畝間
+  // 土
+  const hb=130+(f.ridgeW-95)*.8, ht=62+(f.ridgeW-95)*.4; const sg=c.createLinearGradient(0,yT,0,320); sg.addColorStop(0,'#7a5640'); sg.addColorStop(.5,'#5a3e30'); sg.addColorStop(1,'#33231e');
+  c.fillStyle=sg; c.beginPath(); c.moveTo(0,yF); c.lineTo(200-hb,yF);
+  if(f.ridged){ c.lineTo(200-ht,yT); c.lineTo(200+ht,yT); c.lineTo(200+hb,yF); } else { c.lineTo(330,yF); }
+  c.lineTo(400,yF); c.lineTo(400,320); c.lineTo(0,320); c.closePath(); c.fill();
+  c.save(); c.clip();
+  // ほぐれた層（耕す深さ）
+  const dep=40+f.depth*100; c.fillStyle='rgba(176,130,92,'+(.18+.2*f.depth)+')'; c.fillRect(0,yT,400,dep);
+  c.fillStyle='rgba(30,18,16,.35)'; c.fillRect(0,yT+dep,400,320);
+  // 通気（すき間）
+  c.fillStyle='rgba(20,10,8,.35)'; for(let i=0;i<Math.round(14+f.aer*50);i++){ c.fillRect(hr(i)*400,yT+8+hr(i+2)*(dep-6),2+hr(i+4)*2,1.5); }
+  // 堆肥（黒い粒）
+  c.fillStyle='rgba(40,24,18,.8)'; for(let i=0;i<Math.round(f.comp*40);i++){ ell(c,hr(i+30)*400,yT+10+hr(i+31)*(dep),2,1.4,hr(i)*3,'rgba(40,24,18,.85)'); }
+  // 肥料の粒（窒素＝黄緑、カリ＝橙）
+  c.fillStyle='#c8e060'; for(let i=0;i<Math.round(f.N*26);i++) c.fillRect(hr(i+60)*400,yT+14+hr(i+61)*(dep+20),2,2);
+  c.fillStyle='#e8a050'; for(let i=0;i<Math.round(f.K*26);i++) c.fillRect(hr(i+90)*400,yT+14+hr(i+91)*(dep+20),2,2);
+  // 水分
+  c.fillStyle='rgba(60,110,190,'+(.04+f.moist*.34)+')'; c.fillRect(0,yT,400,320);
+  c.fillStyle='rgba(130,190,255,.6)'; for(let i=0;i<Math.round(f.moist*26);i++){ const x=hr(i+120)*400, y=yT+10+((hr(i+121)*200+T*8*f.moist)%(320-yT-10)); c.beginPath(); c.arc(x,y,1.5,0,7); c.fill(); }
+  // 作物（地下）
+  const cxm=200;
+  if(live){
+    const P=PL(f), n=Math.max(1,f.tN), gper=f.tW/Math.max(1,P*f.stand)/n*1000;     // 1本の重さ(g)
+    const np=f.spacing<=32?3:f.spacing>=44?1:2;                    // 隣の株の見え方
+    const cnt=Math.min(14,Math.max(3,Math.round(n*2.2)));
+    if(f.tN>0.3) for(let k=0;k<cnt;k++){
+      const a=Math.PI/2+(k/Math.max(1,cnt-1)-.5)*2.7+(hr(k)-.5)*.15;
+      const L=clamp(8+Math.sqrt(Math.max(0,gper))*2.5,6,72), Wd=L*.4, r=22+(k%3)*20+L*.45;
+      const tx=cxm+Math.cos(a)*r*1.5, ty=yT+14+Math.sin(a)*r*.95;
+      c.strokeStyle='#d9c8a8'; c.lineWidth=1.1; c.beginPath(); c.moveTo(cxm,yT+4); c.quadraticCurveTo(cxm+(tx-cxm)*.35,yT+10+(ty-yT)*.2,tx-Math.cos(a)*L*.45,ty-Math.sin(a)*L*.45); c.stroke();
+      c.save(); c.translate(tx,ty); c.rotate(a);
+      ell(c,0,0,L*.55,Wd*.5+1.5,0,VAR[f.variety].col); ell(c,-L*.1,-Wd*.16,L*.32,Wd*.12,0,'rgba(255,255,255,.2)');
+      if(f.bs>.15||f.kus>.2){ c.fillStyle='rgba(20,14,16,.85)'; const nn=Math.round(f.bs*9+f.kus*5); for(let q=0;q<nn;q++){ c.beginPath(); c.arc((hr(k*9+q)-.5)*L*.9,(hr(k*9+q+1)-.5)*Wd*.7,1.3+hr(q)*1.3,0,7); c.fill(); } }
+      if(f.dmg>.12){ c.fillStyle='#2b1c18'; const nn=Math.round(f.dmg*7); for(let q=0;q<nn;q++){ c.beginPath(); c.arc((hr(k*5+q)-.5)*L*.9,Wd*.4,1.9,0,7); c.fill(); } }
+      if(f.nem>.15){ c.fillStyle='#e8d8a8'; for(let q=0;q<Math.round(f.nem*6);q++) c.fillRect((hr(k+q)-.5)*L,-Wd*.5,2.2,2.2); }
+      if(f.crack>.15){ c.strokeStyle='rgba(30,16,16,.8)'; c.lineWidth=1.2; c.beginPath(); c.moveTo(-L*.2,-Wd*.3); c.lineTo(L*.1,Wd*.2); c.stroke(); }
+      c.restore();
+    }
+    // コガネ・ハリガネの幼虫
+    c.strokeStyle='#f2ead4'; c.lineWidth=3; for(let i=0;i<Math.round(f.grub*7);i++){ const x=60+hr(i+200)*280, y=yT+30+hr(i+201)*90; c.beginPath(); c.arc(x,y,4.5,.5,5.2); c.stroke(); ell(c,x+3,y-3,2.2,2,0,'#d8a050'); }
+    c.lineWidth=1;
+    // 畝のとなりの株（かげ）
+    c.globalAlpha=.35; for(let s=-1;s<=1;s+=2) for(let q=1;q<=np;q++){ const x=cxm+s*(60+q*26); ell(c,x,yT+26+q*6,6,10,0,VAR[f.variety].col); } c.globalAlpha=1;
+  }
+  c.restore();
+  // 畝の表面のふち
+  c.strokeStyle='rgba(30,18,12,.5)'; c.lineWidth=2; c.beginPath(); c.moveTo(0,yF); c.lineTo(200-hb,yF); if(f.ridged){ c.lineTo(200-ht,yT); c.lineTo(200+ht,yT); c.lineTo(200+hb,yF);} else c.lineTo(330,yF); c.lineTo(400,yF); c.stroke();
+  // マルチ
+  if(f.mulch){ c.strokeStyle='#15161c'; c.lineWidth=3.2; c.beginPath(); c.moveTo(200-hb+8,yF-1); c.lineTo(200-ht,yT-1.5); c.lineTo(200+ht,yT-1.5); c.lineTo(200+hb-8,yF-1); c.stroke(); c.strokeStyle='rgba(255,255,255,.25)'; c.lineWidth=1; c.beginPath(); c.moveTo(200-ht+2,yT-3); c.lineTo(200+ht-2,yT-3); c.stroke(); }
+  // 雑草
+  const wk=Math.round(f.weed*16);
+  for(let i=0;i<wk;i++){ const side=i%2?1:-1, x=side<0?(8+hr(i)*84):(310+hr(i+4)*84), sc=.5+f.weed*1.1; const yy=(x>200-hb&&x<200+hb)?(f.ridged?yT+rH*( x<200-ht?(200-ht-x)/(hb-ht):x>200+ht?(x-200-ht)/(hb-ht):0)-1:150):yF; c.strokeStyle=f.weed>.5?'#4f9a3a':'#6cbc54'; c.lineWidth=1.6; c.beginPath(); for(let q=-2;q<=2;q++){ c.moveTo(x,yy); c.quadraticCurveTo(x+q*3,yy-8*sc,x+q*5+Math.sin(T*2+i)*1.5,yy-(12+hr(i+q)*8)*sc); } c.stroke(); }
+  // 作物（地上）
+  if(live) drawVines(c,f,w,yT,T,ty);
+  else drawEmptyRidge(c,f,yT);
+  // 霜
+  if(w.fc.label==='霜'||w.frost){ c.fillStyle='rgba(255,255,255,.55)'; c.fillRect(0,yT-3,400,3); }
+  // 地温計
+  c.fillStyle='rgba(15,8,20,.65)'; c.fillRect(8,222,86,92); c.fillStyle='#fff'; c.font='bold 11px sans-serif'; c.textAlign='left';
+  c.fillText('地温 '+fx(f.soilT,1)+'℃',14,238); c.fillText('水分 '+pct(f.moist)+'%',14,254); c.fillText('通気 '+pct(f.aer)+'%',14,270);
+  c.fillStyle='#c8e060'; c.fillText('窒素 '+pct(f.N),14,286); c.fillStyle='#e8a050'; c.fillText('カリ '+pct(f.K),14,302);
+  c.fillStyle='rgba(255,255,255,.8)'; c.font='bold 10px sans-serif'; c.textAlign='right'; c.fillText('畝の断面図',392,314);
+  if(live&&f.method) { c.fillText(METH[f.method].n+'・株間'+f.spacing+'cm',392,302); }
+}
+function drawEmptyRidge(c,f,yT){
+  if(!f.ridged){ c.fillStyle='rgba(255,255,255,.7)'; c.font='bold 12px sans-serif'; c.textAlign='center'; c.fillText('畑をととのえて、畝を立てよう',200,yT-22); return; }
+  c.fillStyle='rgba(255,255,255,.75)'; c.font='bold 12px sans-serif'; c.textAlign='center'; c.fillText(G.seed2?'苗の準備はOK。植え付けのときを待とう':'苗ができるまで畑づくり',200,yT-18);
+}
+function drawVines(c,f,w,yT,T,ty){
+  const vine=f.vine, hv=clamp(f.leaf,0,1), yel=f.yellow, fr=f.frostHit>0&&w.frost;
+  const lean=ty?18:2*Math.sin(T*1.4);
+  const cxm=200, y0=yT-2;
+  // 株元
+  c.strokeStyle='#5a8a3a'; c.lineWidth=3; c.beginPath(); c.moveTo(cxm,y0+3); c.lineTo(cxm+lean*.2,y0-8); c.stroke();
+  if(f.planted>=0&&G.jun-f.planted<1&&f.vine<.06){ // 植えたての苗
+    for(let k=0;k<2;k++) leafP(c,cxm+(k?8:-8),y0-12,6,k?1.1:-1.1,'#7cc860'); return; }
+  const nv=5, ptsAll=[];
+  for(let i=0;i<nv;i++){
+    const dir=i%2?1:-1, len=clamp(16+vine*(54+i*12),10,150), up=(i<2?.9:i<4?.45:1.1)*len*.4;
+    const ex=cxm+dir*len+lean*(len/60), ey=Math.max(34,y0-up*.7+(i>=4?-len*.18:0)+Math.sin(T*1.7+i)*1.2*(ty?4:1));
+    const qx=cxm+dir*len*.45, qy=y0-up*1.1;
+    c.strokeStyle=mix('5b8a3a','8a6a3a',yel); c.lineWidth=2.2; c.beginPath(); c.moveTo(cxm,y0-4); c.quadraticCurveTo(qx,qy,ex,ey); c.stroke();
+    const nL=Math.round(3+vine*6.5);
+    for(let q=1;q<=nL;q++){ const t=q/nL, mx=(1-t)*(1-t)*cxm+2*(1-t)*t*qx+t*t*ex, my=(1-t)*(1-t)*(y0-4)+2*(1-t)*t*qy+t*t*ey;
+      const sz=7+Math.min(1.2,vine)*5*(.6+.4*t);
+      const ra=hr(i*20+q), dead=ra>hv+.15&&hv<.95;
+      let col=mix('3f9a3c',yel>.3?'c8a83a':'4fb04a',yel*1.1);
+      if(f.young>.05&&ra<f.young*5) col='#d8e6b8';
+      if(fr||f.frostHit>.5&&w.frost) col='#dbe6e0';
+      if(dead) col='#8a6a44';
+      leafP(c,mx,my,sz,(dir*.7)+(ra-.5)*1.6+lean*.02,col);
+      leafP(c,mx,my-1,sz*.55,(dir*.7)+(ra-.5)*1.6+lean*.02,'rgba(255,255,255,.12)');
+      if(f.leaf<.75&&ra<(1-f.leaf)*.9){ c.fillStyle='rgba(120,190,255,.0)'; c.globalCompositeOperation='destination-out'; c.beginPath(); c.arc(mx+(ra-.5)*6,my-sz*.5,2.2,0,7); c.fill(); c.globalCompositeOperation='source-over'; }
+      ptsAll.push([mx,my,sz,ra]);
+    }
+  }
+  // 卵塊・毛虫
+  c.fillStyle='#fff9e0'; for(let i=0;i<Math.min(8,Math.round(f.egg*40));i++){ const p=ptsAll[(i*7)%ptsAll.length]; if(p){ for(let q=0;q<4;q++){ c.beginPath(); c.arc(p[0]-3+q*2,p[1]-3+(q%2),1.3,0,7); c.fill(); } } }
+  const nc=Math.min(10,Math.round((f.young+f.big)*34));
+  for(let i=0;i<nc;i++){ const p=ptsAll[(i*5+2)%Math.max(1,ptsAll.length)]; if(!p) break; const big=i<f.big*34; const L=big?12:5; c.fillStyle=big?'#6a5a30':'#9ac060'; for(let q=0;q<4;q++){ c.beginPath(); c.arc(p[0]-L/2+q*L/3,p[1]-p[2]*.4+Math.sin(T*6+i+q)*.7,big?2.4:1.5,0,7); c.fill(); } }
+  // しおれ
+  if(f.kus>.15){ c.fillStyle='rgba(60,40,30,.5)'; c.font='bold 10px sans-serif'; c.textAlign='center'; c.fillText('しおれ',cxm,y0-vine*40-18); }
+}
+/* ---- 温床 ---- */
+function drawBed(c,T){
+  const b=G.bed, w=G.weather[Math.min(29,G.jun)];
+  skyAndWeather(c,w,86,T);
+  c.fillStyle='#6b8f48'; c.fillRect(0,86,400,14); c.fillStyle='#4d3a2c'; c.fillRect(0,100,400,220);
+  // 枠
+  const bx=40,by=108,bw=250,bh=180;
+  c.fillStyle='#8a6034'; c.fillRect(bx-8,by,8,bh); c.fillRect(bx+bw,by,8,bh); c.fillRect(bx-8,by+bh,bw+16,8);
+  // わら・米ぬか（発酵層）
+  const hy=by+bh-62; const hg=c.createLinearGradient(0,hy,0,by+bh); hg.addColorStop(0,'#d8b45a'); hg.addColorStop(1,'#a07a30'); c.fillStyle=hg; c.fillRect(bx,hy,bw,62);
+  c.strokeStyle='rgba(120,80,20,.6)'; c.lineWidth=1; for(let i=0;i<40;i++){ const x=bx+hr(i)*bw, y=hy+hr(i+2)*58; c.beginPath(); c.moveTo(x,y); c.lineTo(x+8,y+hr(i+5)*4-2); c.stroke(); }
+  c.fillStyle='#fff6d8'; for(let i=0;i<Math.round(b.heat*3);i++) c.fillRect(bx+hr(i+50)*bw,hy+hr(i+51)*58,2,2);
+  // 土の層
+  c.fillStyle='#6a4a36'; c.fillRect(bx,hy-38,bw,38);
+  // 種いも
+  const ty=hy-20;
+  if(b.on){
+    const n=7;
+    for(let i=0;i<n;i++){
+      const x=bx+24+i*34, bad=b.rot>.3&&hr(i)<b.rot;
+      ell(c,x,ty,13,8,.2*(hr(i)-.5),bad?'#4a3a34':VAR[b.variety].col);
+      if(b.dis>.3&&!b.treated) { c.fillStyle='#2a1c1c'; c.fillRect(x-4,ty-2,3,3); }
+      // 芽
+      if(b.sprout>.2){ const sh=(b.sprout>=1?10+b.sLen*70:b.sprout*14);
+        c.strokeStyle=b.sprout>=1?'#7cc860':'#f3f0d8'; c.lineWidth=2.4;
+        c.beginPath(); c.moveTo(x,ty-6); c.quadraticCurveTo(x+Math.sin(T+i)*3,ty-6-sh*.5,x+Math.sin(T*.8+i)*2,ty-6-sh); c.stroke();
+        if(b.sprout>=1){ const nn=Math.round(b.sLen*5); for(let q=1;q<=nn;q++){ const yy=ty-6-sh*q/(nn+.3); leafP(c,x+(q%2?5:-5),yy,5+b.sThick*3,(q%2?1:-1)*.9,'#58b050'); } }
+      }
+    }
+  }else{ c.fillStyle='rgba(255,255,255,.85)'; c.font='bold 13px sans-serif'; c.textAlign='center'; c.fillText('まだ伏せ込んでいません',bx+bw/2,ty); }
+  // ビニール
+  if(b.on&&b.vinyl==='closed'){ c.fillStyle='rgba(190,230,255,.28)'; c.strokeStyle='rgba(220,240,255,.8)'; c.lineWidth=2; c.beginPath(); c.moveTo(bx-8,by); c.quadraticCurveTo(bx+bw/2,by-70,bx+bw+8,by); c.closePath(); c.fill(); c.stroke(); c.fillStyle='rgba(255,255,255,.4)'; for(let i=0;i<8;i++){ c.beginPath(); c.arc(bx+30+hr(i)*190,by-10-hr(i+3)*30,1.5,0,7); c.fill(); } }
+  else if(b.on){ c.fillStyle='rgba(190,230,255,.5)'; c.fillRect(bx+bw-10,by-16,40,10); c.fillStyle='rgba(255,255,255,.7)'; c.font='10px sans-serif'; c.textAlign='left'; c.fillText('ビニール(開)',bx+bw-8,by-20); }
+  if(b.vent){ c.strokeStyle='rgba(255,255,255,.7)'; c.lineWidth=1.4; for(let i=0;i<4;i++){ c.beginPath(); c.moveTo(bx+20,by-10-i*8); c.bezierCurveTo(bx+60,by-20-i*8,bx+90,by-2-i*8,bx+130,by-12-i*8); c.stroke(); } }
+  // 湯気（発酵熱）
+  if(b.heat>2){ c.strokeStyle='rgba(255,230,160,'+clamp(b.heat/16,.15,.6)+')'; c.lineWidth=2; for(let i=0;i<5;i++){ const x=bx+30+i*48; c.beginPath(); c.moveTo(x,hy-4); c.bezierCurveTo(x+6,hy-14+Math.sin(T*3+i)*2,x-6,hy-22,x,hy-30); c.stroke(); } }
+  // 温度計
+  const tx=330,t0=130,t1=300; c.fillStyle='rgba(15,8,20,.7)'; c.fillRect(tx-30,t0-20,70,t1-t0+50);
+  c.fillStyle='#efe3ff'; c.fillRect(tx-4,t0,8,t1-t0);
+  const yOf=Tm=>t1-(clamp(Tm,10,40)-10)/30*(t1-t0);
+  const pre=b.sprout<1, lo=pre?28:25, hi=pre?33:30;
+  c.fillStyle='rgba(105,201,120,.9)'; c.fillRect(tx-4,yOf(hi),8,yOf(lo)-yOf(hi));
+  c.fillStyle='#ee5a48'; c.fillRect(tx-2,yOf(b.on?b.T:G.weather[G.jun].temp),4,t1-yOf(b.on?b.T:G.weather[G.jun].temp));
+  c.beginPath(); c.arc(tx,t1+8,9,0,7); c.fill();
+  c.fillStyle='#fff'; c.font='bold 11px sans-serif'; c.textAlign='center'; c.fillText(b.on?fx(b.T,1)+'℃':'--',tx,t1+32);
+  c.font='10px sans-serif'; c.fillStyle='#bfe8c4'; c.fillText(lo+'〜'+hi+'℃',tx,t0-6);
+  // 文字
+  c.fillStyle='rgba(255,255,255,.9)'; c.font='bold 11px sans-serif'; c.textAlign='left';
+  if(b.on){ c.fillText(b.sprout<1?'芽出し '+pct(b.sprout)+'%':'つる '+pct(b.sLen/.9)+'%・太さ '+pct(b.sThick)+'%',bx,by+bh+24); if(b.rot>.1){ c.fillStyle='#ff9a8a'; c.fillText('腐り '+pct(b.rot)+'%',bx+170,by+bh+24); } }
+  c.fillStyle='rgba(255,255,255,.7)'; c.font='bold 10px sans-serif'; c.textAlign='right'; c.fillText('温床の断面図',392,96);
+}
+/* ---- 貯蔵庫 ---- */
+function drawCellar(c,T){
+  const st=G.st, f=G.f;
+  const g=c.createLinearGradient(0,0,0,320); g.addColorStop(0,'#3a2c26'); g.addColorStop(1,'#241914'); c.fillStyle=g; c.fillRect(0,0,400,320);
+  c.fillStyle='#4b3a30'; for(let i=0;i<10;i++) c.fillRect(0,i*34,400,2);
+  c.fillStyle='#5a4030';
+  for(let r=0;r<3;r++){ const y=70+r*80; c.fillStyle='#7a5638'; c.fillRect(20,y+44,260,8);
+    for(let k=0;k<3;k++){ const x=26+k*84; c.fillStyle='#9a7040'; c.fillRect(x,y+8,76,38); c.fillStyle='#7a5638'; c.fillRect(x,y+8,76,4); c.fillRect(x,y+42,76,4);
+      const idx=r*3+k, fill=st?clamp(st.kg*(1-st.rot)/ (f.crop?Math.max(120,f.crop.kg):300)*9-idx,0,1):0;
+      if(fill>0){ const n=Math.round(14*fill); for(let q=0;q<n;q++){ const px=x+6+(q%7)*10+hr(q+idx)*3, py=y+12+Math.floor(q/7)*12; let col=VAR[f.variety].col;
+        if(st.rot>.15&&hr(q*3+idx)<st.rot*1.6) col='#4a4a3a'; ell(c,px+4,py+5,6,4.2,hr(q)*.6-.3,col);
+        if(st.sprout>.2&&hr(q+4)<st.sprout){ c.strokeStyle='#e8f0b0'; c.lineWidth=1.6; c.beginPath(); c.moveTo(px+5,py+2); c.lineTo(px+6,py-5-st.sprout*4); c.stroke(); }
+        if(st.skin>.2&&hr(q+8)<st.skin){ ell(c,px+4,py+5,6,4,0,'rgba(20,16,16,.45)'); } } }
+    } }
+  // 計器
+  const dial=(x,y,label,val,lo,hi,mn,mx,col)=>{ c.fillStyle='#f6ecd8'; c.beginPath(); c.arc(x,y,30,0,7); c.fill(); c.strokeStyle='#5a4030'; c.lineWidth=3; c.stroke();
+    const a=v=>Math.PI*(0.8+1.4*(clamp(v,mn,mx)-mn)/(mx-mn)); c.strokeStyle='#69c978'; c.lineWidth=5; c.beginPath(); c.arc(x,y,22,a(lo),a(hi)); c.stroke();
+    c.strokeStyle='#c0392b'; c.lineWidth=2.4; c.beginPath(); c.moveTo(x,y); c.lineTo(x+Math.cos(a(val))*24,y+Math.sin(a(val))*24); c.stroke();
+    c.fillStyle='#3a2a20'; c.font='bold 10px sans-serif'; c.textAlign='center'; c.fillText(label,x,y+22); };
+  if(st){ dial(330,60,'温度',st.curing?st.cT:st.T,13,16,0,40); dial(330,140,'湿度',st.curing?st.cH:st.H,90,95,40,100);
+    c.fillStyle='#fff'; c.font='bold 11px sans-serif'; c.textAlign='center'; c.fillText(fx(st.curing?st.cT:st.T,1)+'℃',330,104); c.fillText(Math.round(st.curing?st.cH:st.H)+'%',330,184);
+    c.textAlign='left'; c.fillStyle='rgba(255,255,255,.9)'; c.fillText('貯蔵 '+fx(st.kg*(1-st.rot),0)+'kg',20,20);
+    if(st.curing){ c.fillStyle='rgba(255,120,60,.18)'; c.fillRect(0,0,400,320); c.fillStyle='#ffd0a0'; c.fillText('キュアリング中…',20,36); }
+    else { c.fillStyle='#bfe8c4'; c.fillText(st.cured?'キュアリング済み':'キュアリング未実施',20,36); }
+    c.fillStyle='#ffd9a0'; c.fillText('熟成 '+pct(st.ripe)+'%',20,52);
+    if(st.rot>.1){ c.fillStyle='#ff9a8a'; c.fillText('腐り '+pct(st.rot)+'%',110,52); } if(st.sprout>.1){ c.fillStyle='#e8f0b0'; c.fillText('芽 '+pct(st.sprout)+'%',190,52); } if(st.skin>.1){ c.fillStyle='#c0b0a0'; c.fillText('皮の黒ずみ '+pct(st.skin)+'%',100,36); }
+  }else{ c.fillStyle='rgba(255,255,255,.85)'; c.font='bold 13px sans-serif'; c.textAlign='center'; c.fillText('貯蔵庫はからっぽ（収穫したらここで管理）',200,160); }
+  c.fillStyle='rgba(255,255,255,.6)'; c.font='bold 10px sans-serif'; c.textAlign='right'; c.fillText('貯蔵庫',392,314);
+}
+function drawImo(c,x,y,s,t,face){ // イモ姫（タイトル・会話用）
+  c.save(); c.translate(x,y); c.scale(s,s);
+  ell(c,0,34,16,4,0,'rgba(0,0,0,.25)');
+  c.fillStyle='#8a3b7a'; c.beginPath(); c.moveTo(-14,34); c.lineTo(-10,6); c.lineTo(10,6); c.lineTo(14,34); c.closePath(); c.fill();
+  c.fillStyle='#ffcf5a'; c.fillRect(-11,12,22,3);
+  ell(c,0,-4,12,12,0,'#ffd9b8');
+  c.fillStyle='#e0603a'; c.beginPath(); c.arc(0,-8,14,Math.PI,0); c.lineTo(14,2); c.lineTo(10,-6); c.lineTo(-10,-6); c.lineTo(-14,2); c.closePath(); c.fill();
+  leafP(c,-6,-22,9,-.5,'#5fbf6a'); leafP(c,6,-22,9,.5,'#69c978');
+  c.fillStyle='#3a1a2a'; c.beginPath(); c.arc(-4,-3,1.5,0,7); c.arc(4,-3,1.5,0,7); c.fill();
+  c.fillStyle='#e0507a'; c.beginPath(); c.arc(0,2,2.2,0,Math.PI); c.fill();
+  c.strokeStyle='#5fbf6a'; c.lineWidth=3; c.beginPath(); c.moveTo(-10,12); c.quadraticCurveTo(-24,20+Math.sin(t*2)*4,-18,34); c.stroke();
+  c.restore();
+}
+function drawTitleArt(){
+  const c=$('#tcv').getContext('2d'); c.clearRect(0,0,280,150);
+  c.save(); c.scale(.7,.7);
+  const t=performance.now()/1000;
+  c.fillStyle='rgba(255,255,255,.12)'; c.beginPath(); c.arc(200,110,90,0,7); c.fill();
+  c.fillStyle='#6a4630'; c.fillRect(0,170,400,50);
+  for(let i=0;i<5;i++) ell(c,60+i*70,176,40,12,0,'#7a5640');
+  ell(c,70,176,18,9,.3,'#a8343c'); ell(c,330,178,16,8,-.3,'#b24a58');
+  drawImo(c,200,100,2.2,t); c.restore();
+}
+
+/* ================= アクション（妖怪退治） ================= */
+const AW=480, AH=270, GRAV=1000;
+const ET={
+  yotou:{n:'ヨトウの子鬼',w:12,h:12,hp:4,dmg:6,grab:'small'},
+  kogane:{n:'コガネ甲鬼',w:22,h:18,hp:14,dmg:10,grab:'armor'},
+  snake:{n:'センチュウ蛇',w:14,h:30,hp:9,dmg:9,grab:'small'},
+  ghost:{n:'黒斑の怨霊',w:16,h:18,hp:8,dmg:7,grab:'small',fly:1},
+  tanuki:{n:'狸の芋泥棒',w:22,h:16,hp:12,dmg:9,grab:'small'},
+  frost:{n:'霜の女怪',w:16,h:28,hp:16,dmg:9,grab:'big',fly:1},
+  boss:{n:'霜枯れの大妖・クサレガミ',w:46,h:62,hp:420,dmg:14,grab:'none'}
+};
+const STG={
+  1:{len:2600,pal:{yotou:5,kogane:3},bg:['#a8d8a0','#e8f4c8'],gnd:'#4a7a3a',top:'#6cb04c'},
+  2:{len:2900,pal:{snake:4,ghost:3,yotou:2},bg:['#7fa6a0','#c8dcd0'],gnd:'#3e5a4a',top:'#5a8a62'},
+  3:{len:3100,pal:{kogane:4,snake:3,ghost:3},bg:['#2a2438','#4a3c5c'],gnd:'#3a3048',top:'#5a4a70'},
+  4:{len:3300,pal:{tanuki:4,kogane:3,ghost:2,snake:2},bg:['#5a2a28','#d8803a'],gnd:'#3a2420',top:'#7a4030'},
+  5:{len:1100,pal:{frost:3,yotou:3},bg:['#aac8e8','#f0f6fc'],gnd:'#8a9ab0',top:'#e8f2fa'}
+};
+let LV=null, A=null, FX=[], TXT=[], W_aiOn=false, viewW=480;
+const K={l:0,r:0,u:0,j:0,a:0,w:0};
+function genLevel(n){
+  const st=STG[n], rr=mkRng(4000+n*911+G.year*13), f=G.f;
+  const L={n,solids:[],ow:[],hooks:[],spawns:[],haz:[],W:0,H:AH,goal:0,arena:null,pk:[],deco:[]};
+  let x=0,y=205;
+  const flat=(len,yy,en)=>{ L.solids.push([x,yy,len,AH+40-yy]); if(en) en(x,len,yy); x+=len; y=yy; };
+  const dens={yotou:clamp(2+Math.round(f.yBase*14+f.egg*20+f.young*10),2,8),kogane:1+Math.round(f.grub*3),snake:1+Math.round(f.nem*3),ghost:1+Math.round(f.kusRisk*2.5),tanuki:1+Math.round(f.tanuki*4)};
+  const place=(type,px,py,o)=>L.spawns.push(Object.assign({type,x:px,y:py},o||{}));
+  const pal=Object.entries(st.pal);
+  const pick=()=>{ let tot=0; pal.forEach(p=>tot+=p[1]); let r=rr()*tot; for(const p of pal){ r-=p[1]; if(r<=0) return p[0]; } return pal[0][0]; };
+  const spawnOn=(sx,len,yy,k)=>{
+    for(let i=0;i<k;i++){
+      const t=pick(), px=sx+34+rr()*(len-68);
+      if(t==='yotou'){ const g=dens.yotou; for(let q=0;q<g;q++) place('yotou',px+q*14-g*7,yy,{}); }
+      else if(t==='ghost') place('ghost',px,yy-60-rr()*30);
+      else if(t==='frost') place('frost',px,yy-70-rr()*25);
+      else place(t,px,yy);
+    }
+  };
+  flat(240,y);
+  const endLen=n===5?0:st.len;
+  let lastWasGap=true;
+  while(x<(n===5?st.len:st.len)-300){
+    const r=rr();
+    if(n===5){ // 霜の峰の登り道：やや短く
+    }
+    if(r<.30||lastWasGap&&r<.6){ // 平地＋敵
+      const len=170+Math.floor(rr()*110), yy=clamp(y+[-24,0,0,24][Math.floor(rr()*4)],165,218);
+      flat(len,yy,(sx,l,y2)=>spawnOn(sx,l,y2,1+Math.floor(rr()*2))); lastWasGap=false;
+    }else if(r<.50){ // ふつうの穴（ジャンプでこえる）＋ふち
+      const gl=46+Math.floor(rr()*22); L.haz.push([x,AH-14,gl,40,n===4?'lava':n===2?'water':'pit']);
+      if(rr()<.5) L.hooks.push([x+gl/2,y-86]);
+      x+=gl; const len=130+Math.floor(rr()*90); flat(len,y,(sx,l,y2)=>spawnOn(sx,l,y2,1)); lastWasGap=true;
+    }else if(r<.72){ // 広い穴（芋づるで渡る）
+      const gl=130+Math.floor(rr()*60); L.haz.push([x,AH-14,gl,40,n===4?'lava':n===2?'water':'pit']);
+      L.hooks.push([x+gl*.22,y-74]); L.hooks.push([x+gl*.62,y-80]);
+      if(gl>165) L.hooks.push([x+gl*.9,y-74]);
+      if(rr()<.5) place('ghost',x+gl*.45,y-95);
+      x+=gl; const len=140+Math.floor(rr()*80); flat(len,y,(sx,l,y2)=>spawnOn(sx,l,y2,1)); lastWasGap=true;
+    }else{ // 浮き足場
+      const len=260; flat(len,y);
+      const sx=x-len;
+      [[30,y-58,80],[130,y-100,70],[200,y-58,60]].forEach((o,i)=>{ L.ow.push([sx+o[0],o[1],o[2],8]); if(i<2||rr()<.5) spawnOn(sx+o[0],o[2],o[1],1); });
+      L.hooks.push([sx+130,y-150>60?y-150:60]);
+      lastWasGap=false;
+    }
+    if(n===3&&rr()<.5) L.hooks.push([x-60-rr()*80,y-100]);
+  }
+  if(n===5){
+    flat(160,205); L.arena=[x,x+AW]; // ボス部屋
+    L.gate=[x-20,-200,20,AH+400];
+    flat(AW,205); L.solids.push([x+AW,-200,40,AH+400]);
+    L.hooks.push([x+90,125],[x+AW-90,125],[x+AW/2,100]);
+    L.ow.push([x+40,150,80,8],[x+AW-120,150,80,8]);
+    L.W=x+AW+40; L.goal=L.W+999;
+  }else{
+    flat(300,y); L.goal=x-150; L.W=x;
+  }
+  // 洞窟の天井
+  if(n===3){ L.solids.push([0,-20,L.W,70]); }
+  // 回復
+  for(let i=1;i<=2;i++){ const px=L.W*i/3; L.pk.push({type:'imo',x:px,y:140}); }
+  // 床の位置をそろえてスポーンのyを地面に
+  L.bucket={}; const reg=s=>{ for(let b=Math.floor(s[0]/64);b<=Math.floor((s[0]+s[2])/64);b++) (L.bucket[b]=L.bucket[b]||[]).push(s); };
+  L.solids.forEach(reg); L.ow.forEach(s=>{ s.ow=1; reg(s); });
+  return L;
+}
+function near(x0,x1){ const out=[]; for(let b=Math.floor(x0/64);b<=Math.floor(x1/64);b++){ const a=LV.bucket[b]; if(a) for(const s of a) out.push(s); } return out; }
+function solidHit(x0,y0,x1,y1){ for(const s of near(x0,x1)){ if(s.ow) continue; if(x1>s[0]&&x0<s[0]+s[2]&&y1>s[1]&&y0<s[1]+s[3]) return s; }
+  const g=LV.gate; if(g&&A.arenaOn&&x1>g[0]&&x0<g[0]+g[2]&&y1>g[1]&&y0<g[1]+g[3]) return g; return null; }
+function moveBody(b,dt,ignoreOw){
+  const hw=b.w/2; let nx=b.x+b.vx*dt; b.blocked=false;
+  if(solidHit(nx-hw,b.y-b.h,nx+hw,b.y-.02)){ b.vx=0; b.blocked=true; } else b.x=nx;
+  const ny=b.y+b.vy*dt; b.on=false;
+  if(b.vy>=0){
+    let best=1e9;
+    for(const s of near(b.x-hw,b.x+hw)){ if(s.ow&&ignoreOw) continue; if(b.x+hw>s[0]&&b.x-hw<s[0]+s[2]&&s[1]>=b.y-3&&s[1]<=ny+.001&&s[1]<best) best=s[1]; }
+    if(best<1e8){ b.y=best; b.vy=0; b.on=true; b.gx=best; } else b.y=ny;
+  }else{
+    if(solidHit(b.x-hw,ny-b.h,b.x+hw,ny-b.h+2)) b.vy=0; else b.y=ny;
+  }
+}
+function mkEn(type,x,y,o){ const t=ET[type]; return Object.assign({id:A.nid++,type,x,y,vx:0,vy:0,w:t.w,h:t.h,hp:t.hp,hpMax:t.hp,face:-1,st:'idle',t:0,stun:0,hit:0,on:false,home:x,dead:false,fly:t.fly||0,cd:1+((A.nid*37)%10)/10},o||{}); }
+function mkWorld(n){
+  LV=genLevel(n);
+  const S=G.stats, b=G.buff||{};
+  const hpMax=Math.round(S.hp*(1+(b.hp||0)));
+  A={t:0,rs:(G.seed*31+n*7+G.jun)|0,nid:1,sim:false,
+    stat:{atk:S.atk*(1+(b.atk||0)),def:clamp(S.def/100+(b.def||0),0,.7),range:S.range*(1+(b.range||0))},
+    p:{x:60,y:205,w:12,h:24,vx:0,vy:0,face:1,on:true,hp:hpMax,hpMax,inv:0,atkT:0,comboT:0,combo:0,hitIds:[],wcd:0,wh:null,hang:0,coy:0,jbuf:0,pj:0,pa:0,pw:0,wHold:0,safe:[60,205],lastHurt:0,anim:0,swing:0},
+    en:[],pr:[],pk:[],mk:[],cam:0,done:false,win:false,dead:false,kills:{},hits:0,fell:0,dmgDealt:0,drops:{leaf:0,bone:0,ash:0,imo:0},arenaOn:false,shake:0,bossIdx:-1,msg:'',flash:0};
+  LV.spawns.forEach(s=>{ const e=mkEn(s.type,s.x,s.y); if(s.type==='snake'){ e.st='hid'; } A.en.push(e); });
+  LV.pk.forEach(p=>A.pk.push(Object.assign({vy:0},p)));
+  if(n===5){ const bx=LV.arena[1]-70; const e=mkEn('boss',bx,205,{face:-1,st:'sleep'}); A.en.push(e); A.bossIdx=e.id; }
+  FX=[]; TXT=[];
+  return A;
+}
+const rA=()=>{ A.rs=(A.rs+0x6D2B79F5)|0; let t=Math.imul(A.rs^A.rs>>>15,1|A.rs); t=(t+Math.imul(t^t>>>7,61|t))^t; return ((t^t>>>14)>>>0)/4294967296; };
+function fxAdd(o){ if(A.sim) return; FX.push(o); if(FX.length>220) FX.shift(); }
+function puff(x,y,col,n,sp){ if(A.sim) return; for(let i=0;i<n;i++){ const a=Math.random()*6.28, v=(.3+Math.random())*(sp||60); fxAdd({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-20,life:.4+Math.random()*.3,t:0,col,r:1.5+Math.random()*2}); } }
+function txt(x,y,s,col){ if(A.sim) return; TXT.push({x,y,s,col:col||'#fff',life:.7,t:0}); }
+function hurtP(d,kx){
+  const p=A.p; if(p.inv>0||A.done) return;
+  d=Math.max(1,Math.round(d*(1-A.stat.def)));
+  p.hp-=d; p.inv=1.1; p.vy=-170; p.vx=kx*150; p.on=false; A.hits++; A.flash=.25; A.shake=.2;
+  if(p.wh&&(p.wh.st==='hold'||p.wh.st==='pull')){ const e=A.en.find(q=>q.id===p.wh.tg); if(e) e.held=false; }
+  if(p.wh&&p.wh.st!=='idle'){ p.wh=null; p.hang=0; }
+  puff(p.x,p.y-12,'#ff6a6a',8,90); if(!A.sim) sfx('hurt');
+  if(p.hp<=0){ p.hp=0; A.dead=true; A.done=true; }
+}
+function dmgEn(e,d,kx,src){
+  if(e.dead) return 0;
+  if(e.type==='snake'&&(e.st==='hid'||e.st==='warn')) return 0;
+  if(e.type==='boss'&&e.st==='sleep') return 0;
+  let dd=d;
+  if(e.type==='kogane'&&!e.stun&&src==='slash'){ const front=(A.p.x-e.x)*e.face>0; if(front){ dd=1; txt(e.x,e.y-24,'ガキン','#ccc'); if(!A.sim) sfx('slash'); } }
+  if(e.type==='kogane'&&e.stun>0) dd*=1.6;
+  if(e.type==='boss'){ if(!e.vuln&&src!=='throw') dd*=.35; }
+  dd=Math.max(.5,dd);
+  e.hp-=dd; e.hit=.14; A.dmgDealt+=Math.min(dd,Math.max(0,e.hp+dd))*(e.type==='boss'?.5:1);
+  if(e.type!=='boss'&&e.type!=='kogane'&&!e.held){ e.vx+=kx*90; if(!e.fly&&e.on) e.vy=-90; }
+  txt(e.x,e.y-e.h-4,String(Math.round(dd)),'#fff');
+  puff(e.x,e.y-e.h/2,'#fff6a0',5,70); if(!A.sim) sfx('hit');
+  if(e.hp<=0) killEn(e);
+  return dd;
+}
+function killEn(e){
+  e.dead=true; A.kills[e.type]=(A.kills[e.type]||0)+1; puff(e.x,e.y-e.h/2,'#ffd9a0',12,110); if(!A.sim){ sfx('kill'); onKill(e.type); }
+  if(A.p.wh&&A.p.wh.tg===e.id){ A.p.wh=null; }
+  const r=rA();
+  if(e.type==='tanuki'||r<.07) A.pk.push({type:'imo',x:e.x,y:e.y-12,vy:-120});
+  else if(r<.42){ const n=LV.n; const t=n===1||n===2?'leaf':n===3?'bone':n===4?'ash':(rA()<.5?'ash':'bone'); A.pk.push({type:t,x:e.x,y:e.y-12,vy:-120}); }
+  if(e.type==='boss'){ A.done=true; A.win=true; }
+}
+function throwDmg(e,thrown){ // 投げた敵がぶつかる
+  dmgEn(e,6,0,'throw');
+}
+/* ---- プレイヤー ---- */
+function groundAt(x){ let b=null; for(const s of near(x,x)){ if(x>=s[0]&&x<=s[0]+s[2]&&(b==null||s[1]<b.s[1])) b={s}; } return b?b.s:null; }
+function hookTargets(p,R,wantUp){
+  const out=[];
+  LV.hooks.forEach((h,i)=>{ const dx=h[0]-p.x, dy=h[1]-(p.y-12), d=Math.hypot(dx,dy); if(d<=R&&d>20&&!(p.wh&&p.wh.hk===i)) out.push({i,x:h[0],y:h[1],d,dx,dy}); });
+  return out;
+}
+function startZip(p,tx,ty,kind,tg){ p.wh={st:'zip',tx,ty,kind,tg,t:0,hk:kind==='hook'?tg:-1}; if(!A.sim) sfx('zip'); }
+function whipPress(inp){
+  const p=A.p, R=A.stat.range, wh=p.wh;
+  if(wh&&wh.st==='hold'){ const e=A.en.find(q=>q.id===wh.tg); if(e){ e.held=false; e.thrown=1.2; e.vx=p.face*430; e.vy=-30; e.face=p.face; } p.wh=null; p.wcd=.25; if(!A.sim) sfx('whip'); return; }
+  if(wh&&wh.st==='hang'){
+    const c=hookTargets(p,R,true).filter(h=>(h.dx*p.face>-10||inp.u)&&h.d>24).sort((a,b)=>b.dx*p.face-a.dx*p.face)[0];
+    if(c){ p.face=c.dx>=0?1:-1; startZip(p,c.x,c.y+14,'hook',c.i); } else { p.wh=null; p.hang=0; }
+    return;
+  }
+  if(wh||p.wcd>0) return;
+  // 敵を優先（上ボタンで鉤を優先）
+  let tgE=null, tgH=null;
+  if(!inp.u){
+    let bd=1e9; A.en.forEach(e=>{ if(e.dead||e.held||ET[e.type].grab==='none') return; if(e.type==='snake'&&e.st!=='up'&&e.st!=='strike'&&e.st!=='stay') return;
+      const dx=e.x-p.x, dy=(e.y-e.h/2)-(p.y-12), d=Math.hypot(dx,dy); if(d<=R*.9&&dx*p.face>-8&&d<bd){ bd=d; tgE=e; } });
+  }
+  if(!tgE){ const hs=hookTargets(p,R).filter(h=>(h.dx*p.face>-10||inp.u)); hs.sort((a,b)=>inp.u?(a.y-b.y):(b.dx*p.face-a.dx*p.face)); tgH=hs[0]; }
+  if(tgE){
+    const g=ET[tgE.type].grab;
+    if(g==='small'){ p.wh={st:'pull',tg:tgE.id,t:0}; tgE.held=true; tgE.st='held'; if(!A.sim) sfx('whip'); }
+    else if(g==='armor'){ tgE.stun=2.3; tgE.vx=0; p.wcd=.35; txt(tgE.x,tgE.y-30,'ひっくり返し！','#ffeb7a'); if(!A.sim) sfx('whip'); }
+    else if(g==='big'){ startZip(p,tgE.x,tgE.y-tgE.h/2,'enemy',tgE.id); }
+  }else if(tgH){ p.face=tgH.dx>=0?1:-1; startZip(p,tgH.x,tgH.y+14,'hook',tgH.i); }
+  else { p.wcd=.15; }
+}
+function updP(inp,dt){
+  const p=A.p, S=A.stat;
+  p.inv=Math.max(0,p.inv-dt); p.atkT-=dt; p.comboT-=dt; p.wcd-=dt; p.anim+=dt; p.swing=Math.max(0,p.swing-dt);
+  const ax=(inp.r?1:0)-(inp.l?1:0);
+  const jp=inp.j&&!p.pj, ap=inp.a&&!p.pa, wp=inp.w&&!p.pw; p.pj=inp.j; p.pa=inp.a; p.pw=inp.w;
+  if(wp) whipPress(inp);
+  const wh=p.wh;
+  if(wh&&wh.st==='pull'){
+    const e=A.en.find(q=>q.id===wh.tg); wh.t+=dt;
+    if(!e||e.dead){ p.wh=null; }
+    else{ const tx=p.x+p.face*16, ty=p.y-10; const dx=tx-e.x, dy=ty-(e.y-e.h/2), d=Math.hypot(dx,dy); const sp=620*dt;
+      if(d<=sp+3||wh.t>.6){ e.x=tx; e.y=ty+e.h/2; wh.st='hold'; wh.t=0; e.vx=e.vy=0; } else { e.x+=dx/d*sp; e.y+=dy/d*sp; } }
+  }else if(wh&&wh.st==='hold'){
+    const e=A.en.find(q=>q.id===wh.tg); wh.t+=dt;
+    if(!e||e.dead) p.wh=null; else { e.x=p.x+p.face*14; e.y=p.y-10+e.h/2; if(wh.t>1.2){ e.held=false; e.vx=p.face*100; e.vy=-100; p.wh=null; } }
+  }
+  if(wh&&wh.st==='zip'){
+    wh.t+=dt; let tx=wh.tx, ty=wh.ty;
+    if(wh.kind==='enemy'){ const e=A.en.find(q=>q.id===wh.tg); if(!e||e.dead){ p.wh=null; } else { tx=e.x; ty=e.y-e.h/2; } }
+    if(p.wh){ const dx=tx-p.x, dy=ty-(p.y-12), d=Math.hypot(dx,dy), sp=560*dt;
+      if(d<=sp+4||wh.t>.7){
+        if(wh.kind==='hook'){ p.x=tx; p.y=ty+12; p.vx=p.vy=0; p.wh={st:'hang',t:0,hk:wh.hk}; p.hang=1.15; }
+        else { const e=A.en.find(q=>q.id===wh.tg); if(e){ dmgEn(e,S.atk*(e.type==='boss'?2.6:1.8),p.face,'dive'); } p.vy=-230; p.vx=-p.face*130; p.wh=null; p.wcd=.2; }
+      }else{ p.vx=dx/d*560; p.vy=dy/d*560; p.x+=p.vx*dt; p.y+=p.vy*dt; p.face=dx>=0?1:-1; }
+      // 飛びつきの途中で敵に当たる
+      A.en.forEach(e=>{ if(!e.dead&&e.type!=='boss'&&Math.abs(e.x-p.x)<e.w/2+9&&Math.abs((e.y-e.h/2)-(p.y-12))<e.h/2+14&&!(e.held)){ dmgEn(e,S.atk*.8,p.face,'dive'); } });
+    }
+    return;
+  }
+  if(wh&&wh.st==='hang'){
+    p.hang-=dt; p.vx=p.vy=0;
+    if(jp){ p.vy=-340; p.vx=(ax||p.face)*170; p.wh=null; p.hang=0; p.jbuf=0; p.coy=0; if(!A.sim) sfx('jump'); }
+    else if(p.hang<=0){ p.wh=null; }
+    else if(ap){ p.atkT=.2; p.swing=.2; }
+    if(ax) p.face=ax;
+    if(A.p.wh) return;
+  }
+  // 移動
+  const sp=130*(p.atkT>0&&p.on?.45:1);
+  if(p.inv>.85) { /* ノックバック中 */ } else { const target=ax*sp; p.vx+= (target-p.vx)*Math.min(1,(p.on?18:9)*dt); if(ax&&p.atkT<=0) p.face=ax; }
+  if(p.on) p.coy=.09; else p.coy-=dt;
+  if(jp) p.jbuf=.1; else p.jbuf-=dt;
+  if(p.jbuf>0&&p.coy>0){ p.vy=-390; p.on=false; p.coy=0; p.jbuf=0; if(!A.sim) sfx('jump'); }
+  if(!inp.j&&p.vy<-170) p.vy+=GRAV*2.2*dt;       // 短ジャンプ
+  p.vy=Math.min(p.vy+GRAV*dt,600);
+  moveBody(p,dt,p.vy<0);
+  if(p.on){ const g=groundAt(p.x); if(g&&p.x>g[0]+16&&p.x<g[0]+g[2]-16) p.safe=[p.x,p.y]; }
+  // こうげき
+  if(ap&&p.atkT<=0){
+    p.combo=p.comboT>0?(p.combo%3)+1:1; p.atkT=p.combo===3?.36:.26; p.comboT=.55; p.hitIds=[]; p.swing=.22; p.swingC=p.combo; if(!A.sim) sfx('slash');
+  }
+  if(p.atkT>0){
+    const elapsed=(p.combo===3?.36:.26)-p.atkT;
+    if(elapsed>=.04&&elapsed<=.2){
+      const reach=p.combo===3?40:30, x0=p.face>0?p.x-4:p.x-reach, x1=p.face>0?p.x+reach:p.x+4;
+      A.en.forEach(e=>{ if(e.dead||e.held||p.hitIds.includes(e.id)) return;
+        if(e.x+e.w/2>x0&&e.x-e.w/2<x1&&e.y>p.y-28&&e.y-e.h<p.y+2){ p.hitIds.push(e.id); dmgEn(e,S.atk*(p.combo===3?1.6:1),p.face,'slash'); } });
+    }
+  }
+  // 落下・溶岩
+  if(p.y>AH+30){ A.fell++; const d=Math.round(p.hpMax*.1); p.hp-=d; A.hits++; A.flash=.3; if(p.hp<=0){ p.hp=0; A.dead=true; A.done=true; } p.x=p.safe[0]; p.y=p.safe[1]; p.vx=p.vy=0; p.inv=1.2; p.wh=null; if(!A.sim) sfx('hurt'); }
+  if(p.x<10){ p.x=10; p.vx=0; }
+}
+/* ---- 敵 ---- */
+function updEn(e,dt){
+  const p=A.p, T=ET[e.type];
+  e.t+=dt; e.hit=Math.max(0,e.hit-dt); e.cd-=dt;
+  if(e.held) return;
+  if(e.thrown>0){ // 投げられている
+    e.thrown-=dt; e.x+=e.vx*dt; e.y+=e.vy*dt; e.vy+=300*dt;
+    A.en.forEach(o=>{ if(o!==e&&!o.dead&&!o.held&&Math.abs(o.x-e.x)<(o.w+e.w)/2+4&&Math.abs((o.y-o.h/2)-(e.y-e.h/2))<(o.h+e.h)/2){ if(o.type==='boss') dmgEn(o,30,e.face,'throw'); else dmgEn(o,7,e.face,'throw'); e.thrown=0; if(!e.dead) dmgEn(e,99,0,'throw'); } });
+    if(solidHit(e.x-e.w/2,e.y-e.h,e.x+e.w/2,e.y)||e.thrown<=0){ e.thrown=0; if(!e.dead) dmgEn(e,e.type==='boss'?0:6,0,'throw'); }
+    return;
+  }
+  if(e.stun>0&&e.type!=='boss'){ e.stun-=dt; e.vy=Math.min(e.vy+GRAV*dt,500); e.vx*=.9; moveBody(e,dt,false); return; }
+  const dx=p.x-e.x, ad=Math.abs(dx), face=dx>=0?1:-1;
+  switch(e.type){
+  case 'yotou':{
+    if(e.st==='idle'&&ad<190) e.st='act';
+    if(e.st==='act'){ if(e.on){ e.vx*=.8; if(e.cd<=0){ e.vy=-175; e.vx=face*(64+(e.id%4)*8); e.cd=.75+(e.id%5)*.08; e.face=face; } } }
+    e.vy=Math.min(e.vy+GRAV*dt,500); moveBody(e,dt,false); break; }
+  case 'kogane':{
+    e.vy=Math.min(e.vy+GRAV*dt,500);
+    if(e.st==='idle'){ if(ad<230) e.st='walk'; }
+    else if(e.st==='walk'){ e.face=face; e.vx=face*28; if(ad<80&&e.cd<=0){ e.st='wind'; e.t=0; e.vx=0; } }
+    else if(e.st==='wind'){ e.vx=0; if(e.t>.5){ e.st='charge'; e.t=0; e.vx=e.face*190; } }
+    else if(e.st==='charge'){ if(e.t>.6||e.blocked){ e.st='rest'; e.t=0; e.vx=0; } }
+    else if(e.st==='rest'){ e.vx=0; if(e.t>.7){ e.st='walk'; e.cd=1.2; } }
+    moveBody(e,dt,false); break; }
+  case 'snake':{
+    if(e.st==='hid'){ if(ad<85&&Math.abs(p.y-e.y)<50&&e.cd<=0){ e.st='warn'; e.t=0; } }
+    else if(e.st==='warn'){ if(e.t>.55){ e.st='up'; e.t=0; e.face=face; } }
+    else if(e.st==='up'){ if(e.t>.2){ e.st='strike'; e.t=0; e.vx=face*110; } }
+    else if(e.st==='strike'){ e.x+=e.vx*dt; if(e.t>.45){ e.st='stay'; e.t=0; e.vx=0; } }
+    else if(e.st==='stay'){ if(e.t>.9){ e.st='hid'; e.t=0; e.cd=1.3; } }
+    break; }
+  case 'ghost':{
+    const hy=e.home!==undefined?(e.hy=e.hy||e.y):e.y;
+    e.face=face; if(ad<260) e.x+=face*34*dt; e.y=hy+Math.sin(e.t*2)*12;
+    if(ad<250&&e.cd<=0){ e.cd=2.6; const a=Math.atan2((p.y-14)-(e.y-9),p.x-e.x); A.pr.push({k:'spore',x:e.x,y:e.y-9,vx:Math.cos(a)*85,vy:Math.sin(a)*85,r:5,dmg:T.dmg,life:4}); }
+    break; }
+  case 'tanuki':{
+    e.vy=Math.min(e.vy+GRAV*dt,500);
+    if(e.st==='idle'){ if(ad<230&&Math.abs(p.y-e.y)<60){ e.st='tele'; e.t=0; e.face=face; } else { e.vx=Math.sin(e.t)*30; } }
+    else if(e.st==='tele'){ e.vx=0; e.face=face; if(e.t>.45){ e.st='dash'; e.t=0; e.vx=e.face*205; } }
+    else if(e.st==='dash'){ if(e.t>1||e.blocked){ e.st='tired'; e.t=0; e.vx=0; } else { const gAhead=groundAt(e.x+e.face*16); if(!gAhead||gAhead[1]>e.y+8){ e.st='tired'; e.t=0; e.vx=0; } } }
+    else if(e.st==='tired'){ e.vx=0; if(e.t>.9){ e.st='idle'; e.t=0; } }
+    moveBody(e,dt,false); break; }
+  case 'frost':{
+    const hy=(e.hy=e.hy||e.y); e.face=face; e.x=e.home+Math.sin(e.t*.8)*60; e.y=hy+Math.sin(e.t*1.6)*8;
+    if(ad<280&&e.cd<=0){ e.cd=2.7; const a0=Math.atan2((p.y-14)-(e.y-14),p.x-e.x); for(const da of [-.28,0,.28]) A.pr.push({k:'ice',x:e.x,y:e.y-14,vx:Math.cos(a0+da)*125,vy:Math.sin(a0+da)*125,r:4,dmg:T.dmg,life:3.5}); }
+    break; }
+  case 'boss': updBoss(e,dt); break;
+  }
+  // 接触ダメージ
+  if(!e.dead&&p.inv<=0&&e.type!=='boss'){
+    let harm=true;
+    if(e.type==='snake'&&(e.st==='hid'||e.st==='warn')) harm=false;
+    if(e.type==='kogane'&&e.stun>0) harm=false;
+    if(e.type==='tanuki'&&e.st==='tired') harm=e.t<.05;
+    if(harm&&Math.abs(e.x-p.x)<e.w/2+p.w/2-1&&(e.y-e.h)<p.y-2&&e.y>p.y-p.h+2) hurtP(T.dmg,e.x<p.x?1:-1);
+  }
+}
+function updBoss(e,dt){
+  const p=A.p, ar=LV.arena, dx=p.x-e.x, face=dx>=0?1:-1;
+  const ph=e.hp>e.hpMax*.66?0:e.hp>e.hpMax*.33?1:2;
+  if(e.st==='sleep'){ if(p.x>ar[0]+60){ A.arenaOn=true; e.st='idle'; e.t=0; e.cd=1; A.msg='boss'; if(!A.sim) sfx('boss');  } return; }
+  e.vuln=false; e.h=62;
+  e.vy=Math.min(e.vy+GRAV*dt,700);
+  if(e.st==='idle'){ e.face=face; e.vx=0; if(e.t>(ph===0?.7:ph===1?.5:.35)){
+      const opts=ph===0?['slam','spore','icicle']:ph===1?['slam','spore','icicle','charge']:['slam','charge','icicle','summon','spore'];
+      e.nx=(e.nx||0)+1; e.st=opts[(e.nx*3+Math.floor(rA()*2))%opts.length]; e.t=0; e.did=0; } }
+  else if(e.st==='slam'){
+    if(e.t<.65){ e.vx=0; e.crouch=1; }
+    else if(!e.did){ e.did=1; e.vy=-440; e.vx=clamp(dx/.9,-230,230); e.on=false; }
+    else if(e.on&&e.t>.8){ e.st='rest'; e.t=0; e.vx=0; A.shake=.35; for(const d of [-1,1]) A.pr.push({k:'wave',x:e.x+d*26,y:205,vx:d*160,vy:0,r:8,dmg:12,life:2.6,w:14,h:16}); if(!A.sim) sfx('boss'); }
+  }
+  else if(e.st==='rest'){ e.vx=0; e.vuln=true; if(e.t>1.7){ e.st='idle'; e.t=0; } }
+  else if(e.st==='spore'){ e.vx=0; e.face=face; if(e.t>.5&&!e.did){ e.did=1; for(let i=-2;i<=2;i++){ const a=Math.atan2(-60,dx)+i*.22; A.pr.push({k:'spore',x:e.x,y:e.y-48,vx:Math.cos(a)*150,vy:Math.sin(a)*150-60,r:5,dmg:9,life:4,g:160}); } } if(e.t>1.1){ e.st='idle'; e.t=0; } }
+  else if(e.st==='icicle'){ e.vx=0; if(e.t<.05&&!e.did){ e.did=1; const xs=[p.x,p.x+70,p.x-70,p.x+(rA()<.5?-140:140)]; e.xs=xs.map(x=>clamp(x,ar[0]+20,ar[1]-20)); A.mk=e.xs.map(x=>({x,t:0})); }
+    if(e.t>.9&&e.did===1){ e.did=2; (e.xs||[]).forEach(x=>A.pr.push({k:'icicle',x,y:-10,vx:0,vy:300,r:5,dmg:13,life:2,w:10,h:24})); A.mk=[]; }
+    if(e.t>1.5){ e.st='idle'; e.t=0; } }
+  else if(e.st==='charge'){
+    if(e.t<.7){ e.vx=0; e.face=face; e.crouch=1; e.h=40; e.dir=face; }
+    else{ e.h=38; e.vx=(e.dir||1)*255; if(e.blocked||e.x<ar[0]+40||e.x>ar[1]-40||e.t>2.4){ e.x=clamp(e.x,ar[0]+36,ar[1]-36); e.st='rest'; e.t=0; e.vx=0; A.shake=.4; } }
+  }
+  else if(e.st==='summon'){ e.vx=0; if(e.t>.6&&!e.did){ e.did=1; for(let i=0;i<2;i++) A.en.push(mkEn('yotou',e.x-60-i*30,205,{st:'act'})); } if(e.t>1.1){ e.st='idle'; e.t=0; } }
+  e.x=clamp(e.x,ar[0]+30,ar[1]-30);
+  moveBody(e,dt,false);
+  // 接触
+  if(p.inv<=0){
+    const harm=(e.st==='charge'&&e.t>.7)||e.st==='slam'&&e.t>.65&&!e.on||(e.st!=='rest'&&e.st!=='idle'&&e.st!=='sleep');
+    if(harm&&Math.abs(e.x-p.x)<e.w/2+5&&(e.y-e.h)<p.y-2&&e.y>p.y-p.h+2) hurtP(ET.boss.dmg,e.x<p.x?1:-1);
+    else if(!harm&&Math.abs(e.x-p.x)<e.w/2+5&&(e.y-e.h)<p.y-2&&e.y>p.y-p.h+2) hurtP(6,e.x<p.x?1:-1);
+  }
+}
+function updPr(dt){
+  const p=A.p;
+  A.pr.forEach(q=>{
+    q.life-=dt; if(q.g) q.vy+=q.g*dt; q.x+=q.vx*dt; q.y+=q.vy*dt;
+    if(q.k==='icicle'&&q.y>205-4){ q.life=0; puff(q.x,205,'#cfe8ff',5,60); }
+    if(q.k==='wave'){ q.y=205; }
+    if((q.k==='spore'||q.k==='ice')&&solidHit(q.x-2,q.y-2,q.x+2,q.y+2)) q.life=0;
+    if(p.inv<=0){
+      const hw=(q.w||q.r*2)/2, hh=(q.h||q.r*2)/2;
+      const qy=q.k==='wave'?q.y-hh:q.k==='icicle'?q.y-hh:q.y;
+      if(Math.abs(q.x-p.x)<hw+p.w/2&&Math.abs(qy-(p.y-12))<hh+12){ hurtP(q.dmg,q.vx>=0?1:-1); if(q.k!=='wave') q.life=0; }
+    }
+  });
+  A.pr=A.pr.filter(q=>q.life>0);
+}
+function updWorld(inp,dt){
+  if(A.done) return;
+  A.t+=dt; const p=A.p;
+  A.flash=Math.max(0,A.flash-dt); A.shake=Math.max(0,A.shake-dt);
+  updP(inp,dt);
+  A.en.forEach(e=>{ if(e.held&&!(p.wh&&(p.wh.st==='pull'||p.wh.st==='hold')&&p.wh.tg===e.id)){ e.held=false; e.st=e.type==='yotou'?'act':'idle'; } });
+  A.en.forEach(e=>{ if(!e.dead) updEn(e,dt); });
+  updPr(dt);
+  A.mk.forEach(m=>m.t+=dt);
+  A.en=A.en.filter(e=>!e.dead||e.type==='boss');
+  // ハザード
+  for(const h of LV.haz){ if(p.inv<=0&&p.x>h[0]&&p.x<h[0]+h[2]&&p.y>AH-34&&h[4]==='lava'){ hurtP(14,0); const s=p.safe; p.x=s[0]; p.y=s[1]; p.vx=p.vy=0; } }
+  // ピックアップ
+  A.pk.forEach(k=>{ if(k.vy||k.fall){ k.vy=(k.vy||0)+500*dt; k.y+=k.vy*dt; const g=groundAt(k.x); if(g&&k.y>=g[1]-6){ k.y=g[1]-6; k.vy=0; k.fall=0; } }
+    if(!k.got&&Math.abs(k.x-p.x)<16&&Math.abs(k.y-(p.y-12))<22){ k.got=1; if(k.type==='imo'){ p.hp=Math.min(p.hpMax,p.hp+p.hpMax*.25); txt(p.x,p.y-30,'+回復','#9affb0'); } else { A.drops[k.type]++; txt(p.x,p.y-30,{leaf:'落ち葉',bone:'骨粉',ash:'灰'}[k.type]+'+1','#ffe27a'); } if(!A.sim) sfx('coin'); } });
+  A.pk=A.pk.filter(k=>!k.got);
+  // カメラ
+  let tgt=clamp(p.x-viewW*.4+p.face*30,0,Math.max(0,LV.W-viewW));
+  if(A.arenaOn) tgt=clamp(p.x-viewW/2,LV.arena[0],LV.arena[1]-viewW);
+  A.cam+=(tgt-A.cam)*Math.min(1,8*dt);
+  // ゴール
+  if(LV.n!==5&&p.x>=LV.goal&&!A.done){ A.done=true; A.win=true; }
+}
+
+/* ---------- アクション描画 ---------- */
+function drawBG(c,n,cam,T){
+  const st=STG[n]; const g=c.createLinearGradient(0,0,0,AH); g.addColorStop(0,st.bg[0]); g.addColorStop(1,st.bg[1]); c.fillStyle=g; c.fillRect(0,0,AW,AH);
+  if(n===1){ // 竹林
+    for(let layer=0;layer<3;layer++){ const par=[.15,.3,.55][layer], col=['#a6cf98','#78b06c','#4f8a4a'][layer], wd=[7,10,14][layer], gap=[46,62,86][layer];
+      c.fillStyle=col; const off=-(cam*par)%gap; for(let x=off-gap;x<AW+gap;x+=gap){ const hx=x+hr(Math.round((x-off)/gap)+layer*9)*20; c.fillRect(hx,0,wd,AH); c.fillStyle='rgba(0,0,0,.12)'; for(let y=20;y<AH;y+=44) c.fillRect(hx,y,wd,2); c.fillStyle=col; } }
+    c.fillStyle='rgba(255,255,255,.12)'; for(let i=0;i<4;i++) c.fillRect((i*140-cam*.1)%520,0,30,AH);
+  }else if(n===2){ // 湿地
+    c.fillStyle='rgba(255,255,255,.18)'; for(let i=0;i<5;i++) ell(c,(i*150-cam*.12+T*6)%620-60,60+i*18,90,16,0,'rgba(255,255,255,.14)');
+    c.strokeStyle='#4d7a5a'; c.lineWidth=2; for(let i=0;i<26;i++){ const x=((i*62-cam*.4)%(AW+80)+AW+80)%(AW+80)-30, h=60+hr(i)*50; c.beginPath(); c.moveTo(x,AH-50); c.quadraticCurveTo(x+Math.sin(T+i)*5,AH-50-h/2,x+10,AH-50-h); c.stroke(); ell(c,x+10,AH-50-h,3,9,0,'#7a5a3a'); }
+  }else if(n===3){ // 洞窟
+    c.fillStyle='#1c1828'; for(let i=0;i<14;i++){ const x=((i*80-cam*.35)%(AW+120)+AW+120)%(AW+120)-40, h=30+hr(i)*60; c.beginPath(); c.moveTo(x,0); c.lineTo(x+16,0); c.lineTo(x+8,h); c.fill(); }
+    for(let i=0;i<9;i++){ const x=((i*120-cam*.5)%(AW+160)+AW+160)%(AW+160)-40; c.fillStyle='rgba(140,200,255,'+(.5+.3*Math.sin(T*2+i))+')'; c.beginPath(); c.moveTo(x,AH-60); c.lineTo(x+6,AH-90-hr(i)*30); c.lineTo(x+12,AH-60); c.fill(); }
+  }else if(n===4){ // 火山
+    c.fillStyle='#3a1a1c'; c.beginPath(); c.moveTo(-20-cam*.1,AH); c.lineTo(160-cam*.1,70); c.lineTo(230-cam*.1,70); c.lineTo(420-cam*.1,AH); c.fill();
+    const rg=c.createRadialGradient(195-cam*.1,70,4,195-cam*.1,70,60); rg.addColorStop(0,'rgba(255,200,80,.9)'); rg.addColorStop(1,'rgba(255,100,40,0)'); c.fillStyle=rg; c.fillRect(100-cam*.1,10,200,120);
+    c.fillStyle='rgba(30,20,20,.7)'; for(let i=0;i<24;i++) c.fillRect(((hr(i)*620+T*14*(.4+hr(i+3)))%620)-20,(hr(i+9)*AH+T*20)%AH,2,2);
+  }else{ // 霜の峰
+    c.fillStyle='#d9e8f5'; c.beginPath(); c.moveTo(-cam*.1,AH); c.lineTo(100-cam*.1,90); c.lineTo(180-cam*.1,160); c.lineTo(280-cam*.1,60); c.lineTo(400-cam*.1,170); c.lineTo(520-cam*.1,AH); c.fill();
+    c.fillStyle='rgba(255,255,255,.9)'; for(let i=0;i<50;i++){ const x=(hr(i)*520+Math.sin(T+i)*10-T*12)%520, y=(hr(i+7)*AH+T*(24+hr(i)*30))%AH; c.fillRect((x+520)%520,y,2,2); }
+  }
+}
+function drawSolids(c,n,cam,T){
+  const st=STG[n];
+  for(const h of LV.haz){ if(h[0]+h[2]<cam-10||h[0]>cam+AW+10) continue; const k=h[4];
+    c.fillStyle=k==='lava'?'#e8501c':k==='water'?'#3a7a9a':'#0c0810'; c.fillRect(h[0],AH-34,h[2],40);
+    c.fillStyle=k==='lava'?'#ffb040':k==='water'?'#8ac8e0':'#241830'; for(let x=h[0];x<h[0]+h[2];x+=14) c.fillRect(x,AH-34+Math.sin(T*3+x*.2)*2,10,3); }
+  for(const s of LV.solids){ if(s[0]+s[2]<cam-10||s[0]>cam+AW+10) continue; if(s[3]<12||s[1]<-100&&n!==3) continue;
+    c.fillStyle=st.gnd; c.fillRect(s[0],s[1],s[2],s[3]); c.fillStyle=st.top; c.fillRect(s[0],s[1],s[2],7);
+    c.fillStyle='rgba(0,0,0,.18)'; for(let x=s[0]+8;x<s[0]+s[2];x+=26) c.fillRect(x,s[1]+14+(x%3)*8,12,3);
+    if(n===1||n===2){ c.strokeStyle=st.top; c.lineWidth=1.4; for(let x=s[0]+4;x<s[0]+s[2];x+=11){ c.beginPath(); c.moveTo(x,s[1]); c.lineTo(x+1,s[1]-3-hr(x)*3); c.stroke(); } } }
+  if(n===3){ c.fillStyle='#2a2238'; for(const s of LV.solids) if(s[1]<0&&s[2]>400){ c.fillRect(s[0],s[1],s[2],s[3]); c.fillStyle='#3a3050'; for(let x=Math.max(s[0],cam-20);x<cam+AW+20;x+=22){ c.beginPath(); c.moveTo(x,s[1]+s[3]); c.lineTo(x+11,s[1]+s[3]+12+hr(x)*18); c.lineTo(x+22,s[1]+s[3]); c.fill(); } c.fillStyle='#2a2238'; } }
+  for(const s of LV.ow){ if(s[0]+s[2]<cam-10||s[0]>cam+AW+10) continue; c.fillStyle='#8a6a40'; c.fillRect(s[0],s[1],s[2],7); c.fillStyle='#b08a52'; c.fillRect(s[0],s[1],s[2],3); }
+}
+function drawHooks(c,T){
+  const p=A.p;
+  LV.hooks.forEach((h,i)=>{ const d=Math.hypot(h[0]-p.x,h[1]-(p.y-12)); const near_=d<=A.stat.range;
+    if(near_){ c.strokeStyle='rgba(255,240,140,'+(.35+.25*Math.sin(T*6))+')'; c.lineWidth=2; c.beginPath(); c.arc(h[0],h[1],11,0,7); c.stroke(); }
+    c.strokeStyle='#5a8a3a'; c.lineWidth=2.4; c.beginPath(); c.moveTo(h[0],h[1]-30); c.lineTo(h[0],h[1]-4); c.stroke();
+    ell(c,h[0],h[1],5,5,0,'#9ae870'); ell(c,h[0],h[1],2.4,2.4,0,'#fff6b0'); leafP(c,h[0]-4,h[1]-3,6,-1.1,'#58b050'); leafP(c,h[0]+4,h[1]-3,6,1.1,'#58b050'); });
+}
+function drawEnemy(c,e,T){
+  const x=e.x, y=e.y, f=e.face||1, hit=e.hit>0;
+  c.save(); c.translate(x,y);
+  const col=(a)=>hit?'#ffffff':a;
+  switch(e.type){
+  case 'yotou':{ // 緑のいも虫鬼
+    const b=Math.sin(e.t*8)*1.2; for(let i=0;i<3;i++) ell(c,-i*4*f,-5-(i===1?1:0)+b*(i-1)*.3,5.5-i*.6,5-i*.4,0,col(i%2?'#7cc060':'#5aa84a'));
+    ell(c,3*f,-8,4,3.2,0,col('#6cba54')); c.fillStyle='#e0402a'; c.fillRect(3*f+(f>0?0:-3),-9,1.8,1.8); c.fillStyle=col('#f0e8c0'); c.fillRect(2*f-1,-14,1.6,3); c.fillRect(5*f-1,-14,1.6,3);
+    if(e.st==='idle'){ c.fillStyle='#fff'; c.fillText('',0,0); } break; }
+  case 'kogane':{
+    if(e.stun>0){ c.rotate(Math.PI); c.translate(0,e.h); }
+    ell(c,0,-9,12,9,0,col('#2c2a44')); ell(c,0,-11,10,6,0,col('#4a4672')); c.fillStyle=col('#7a76a8'); c.fillRect(-1,-18,2,9);
+    ell(c,f*10,-8,5,4,0,col('#201e30')); c.fillStyle='#ff5030'; c.fillRect(f*11,-9,2,2);
+    c.fillStyle=col('#e8d890'); c.beginPath(); c.moveTo(f*8,-12); c.lineTo(f*12,-20); c.lineTo(f*13,-11); c.fill();
+    c.strokeStyle='#20182a'; c.lineWidth=1.5; for(let i=-1;i<=1;i++){ c.beginPath(); c.moveTo(i*5,0); c.lineTo(i*5+Math.sin(e.t*8+i)*2,3); c.stroke(); }
+    if(e.st==='wind'){ c.fillStyle='#ff7050'; c.fillRect(-2,-30,4,8); }
+    if(e.stun>0){ c.fillStyle='#ffe27a'; for(let i=0;i<3;i++) c.fillRect(-8+i*8,-26+Math.sin(T*8+i)*2,3,3); }
+    break; }
+  case 'snake':{
+    if(e.st==='hid'){ c.fillStyle='rgba(30,20,10,.5)'; c.fillRect(-6,-2,12,2); break; }
+    const hgt=e.st==='warn'?6+Math.sin(e.t*40)*2:e.st==='up'?e.t/.2*30:30; if(e.st==='warn'){ c.fillStyle='#ffcf5a'; for(let i=0;i<4;i++) c.fillRect(-10+i*6,-2-Math.abs(Math.sin(e.t*30+i))*5,3,3); break; }
+    c.strokeStyle=col('#7a4a7a'); c.lineWidth=7; c.lineCap='round'; c.beginPath(); c.moveTo(0,0); c.quadraticCurveTo(Math.sin(e.t*5)*4,-hgt*.5,(e.st==='strike'?f*14:0),-hgt); c.stroke();
+    ell(c,(e.st==='strike'?f*14:0),-hgt,6,5,0,col('#a05a98')); c.fillStyle='#ffe27a'; c.fillRect((e.st==='strike'?f*14:0)+1*f,-hgt-2,2,2);
+    c.fillStyle=col('#d8c080'); for(let i=0;i<3;i++){ c.beginPath(); c.arc(-3+i*3,-6-i*7,2.4,0,7); c.fill(); } c.lineCap='butt'; break; }
+  case 'ghost':{
+    ell(c,0,-9,9,9,0,col('rgba(190,170,225,.92)')); c.fillStyle=col('rgba(190,170,225,.92)'); c.beginPath(); c.moveTo(-9,-9); c.lineTo(-7,2+Math.sin(T*6)*2); c.lineTo(-3,-4); c.lineTo(0,3); c.lineTo(3,-4); c.lineTo(7,2+Math.sin(T*6+1)*2); c.lineTo(9,-9); c.fill();
+    c.fillStyle='#2a1a3a'; for(const q of [[-4,-12],[3,-6],[5,-13]]){ c.beginPath(); c.arc(q[0],q[1],1.8,0,7); c.fill(); } c.fillStyle='#ff4a6a'; c.fillRect(-5*0+f*2-1,-10,2,2); c.fillRect(f*5-1,-10,2,2); break; }
+  case 'tanuki':{
+    const run=e.st==='dash'; ell(c,0,-8,11,7,0,col('#7a5a3a')); ell(c,f*9,-10,6,5.5,0,col('#6a4c30')); c.fillStyle=col('#3a2a20'); c.fillRect(f*10,-13,3,3); c.fillRect(f*6,-14,2,3);
+    c.fillStyle='#fff'; c.fillRect(f*12,-11,1.8,1.8); leafP(c,f*8,-15,5,f*.3,'#58b050');
+    ell(c,-f*8,-12,5,4,0,col('#c8a068')); c.strokeStyle='#4a321e'; c.lineWidth=2; for(let i=0;i<2;i++){ c.beginPath(); c.moveTo(-4+i*8,-2); c.lineTo(-4+i*8+(run?Math.sin(T*30+i*3)*4:0),1); c.stroke(); }
+    if(e.st==='tele'){ c.fillStyle='#ff4a30'; c.fillRect(f*12,-12,3,3); c.fillRect(-2,-26,4,8); } if(e.st==='tired'){ c.fillStyle='#ffe27a'; c.fillRect(-4,-22,3,3); c.fillRect(2,-24,3,3); }
+    break; }
+  case 'frost':{
+    c.fillStyle=col('#e8f4ff'); c.beginPath(); c.moveTo(-9,0); c.lineTo(-6,-20); c.lineTo(6,-20); c.lineTo(9,0); c.lineTo(3,-6); c.lineTo(0,2); c.lineTo(-3,-6); c.closePath(); c.fill();
+    ell(c,0,-24,6,6,0,col('#fbe8f0')); c.fillStyle=col('#9ad0f0'); for(let i=-2;i<=2;i++){ c.beginPath(); c.moveTo(i*3-1.5,-28); c.lineTo(i*3,-35-(i===0?4:0)); c.lineTo(i*3+1.5,-28); c.fill(); }
+    c.fillStyle='#4a7ac8'; c.fillRect(f*2-1,-25,2,2); c.fillRect(f*-2-1,-25,2,2); break; }
+  case 'boss':{
+    const sc=e.crouch&&e.st==='slam'&&e.t<.65?.85:1; c.scale(f<0?1:-1,1); c.scale(sc,sc);
+    const hh=e.st==='charge'?.72:1;
+    c.fillStyle=col('#1c1418'); c.beginPath(); c.moveTo(-24,0); c.lineTo(-18,-40*hh); c.lineTo(-8,-58*hh); c.lineTo(8,-58*hh); c.lineTo(18,-40*hh); c.lineTo(24,0); c.closePath(); c.fill();
+    c.strokeStyle=col('#3a2a30'); c.lineWidth=3; for(let i=0;i<7;i++){ c.beginPath(); c.moveTo(-20+i*7,0); c.quadraticCurveTo(-24+i*8+Math.sin(T*3+i)*3,-24,-14+i*5,-46*hh); c.stroke(); }
+    c.fillStyle=col('#e8f4ff'); c.beginPath(); c.moveTo(-12,-48*hh); c.lineTo(0,-30*hh); c.lineTo(12,-48*hh); c.lineTo(8,-40*hh); c.lineTo(0,-24*hh); c.lineTo(-8,-40*hh); c.fill();
+    c.fillStyle='#ff3a2a'; ell(c,-6,-46*hh,3,2.4,0,'#ff3a2a'); ell(c,6,-46*hh,3,2.4,0,'#ff3a2a');
+    c.fillStyle=col('#9ad0f0'); for(let i=-2;i<=2;i++){ c.beginPath(); c.moveTo(i*5-2,-58*hh); c.lineTo(i*5,-70*hh-(i===0?8:0)); c.lineTo(i*5+2,-58*hh); c.fill(); }
+    c.fillStyle='rgba(60,20,50,.8)'; for(let i=0;i<5;i++){ c.beginPath(); c.arc(-14+i*7,-20-(i%2)*8,2.5,0,7); c.fill(); }
+    if(e.vuln){ c.fillStyle='#ffe27a'; for(let i=0;i<4;i++) c.fillRect(-14+i*9,-76+Math.sin(T*8+i)*3,4,4); }
+    break; }
+  }
+  c.restore();
+  if(e.type!=='boss'&&e.hp<e.hpMax&&e.type!=='yotou'&&!(e.type==='snake'&&e.st==='hid')){ c.fillStyle='rgba(0,0,0,.5)'; c.fillRect(x-10,y-e.h-8,20,3); c.fillStyle='#ff6a6a'; c.fillRect(x-10,y-e.h-8,20*e.hp/e.hpMax,3); }
+}
+function drawPlayer(c,p,T){
+  if(p.inv>0&&Math.floor(p.inv*14)%2===0&&p.inv<.9) return;
+  const f=p.face, x=p.x, y=p.y, moving=Math.abs(p.vx)>20&&p.on, ph=p.anim*12;
+  c.save(); c.translate(x,y);
+  ell(c,0,1,7,2,0,'rgba(0,0,0,.25)');
+  // 足
+  c.strokeStyle='#4a2a5a'; c.lineWidth=3; const lg=moving?Math.sin(ph)*5:0;
+  c.beginPath(); c.moveTo(-2,-8); c.lineTo(-2+lg*(p.on?1:.2)-(p.on?0:3),-1); c.moveTo(2,-8); c.lineTo(2-lg*(p.on?1:.2)+(p.on?0:3),-1); c.stroke();
+  // からだ
+  c.fillStyle='#9a4a8a'; c.beginPath(); c.moveTo(-6,-7); c.lineTo(-4,-18); c.lineTo(4,-18); c.lineTo(6,-7); c.closePath(); c.fill();
+  c.fillStyle='#ffcf5a'; c.fillRect(-5,-13,10,2);
+  // 頭
+  ell(c,0,-21,6,6,0,'#ffd9b8'); c.fillStyle='#e0603a'; c.beginPath(); c.arc(0,-23,6.6,Math.PI,0); c.lineTo(6.6,-18); c.lineTo(-6.6,-18); c.closePath(); c.fill();
+  ell(c,-f*6,-17,2.5,4,0,'#e0603a'); leafP(c,-3,-28,5,-.6,'#5fbf6a'); leafP(c,3,-28,5,.6,'#69c978');
+  c.fillStyle='#3a1a2a'; c.fillRect(f*2.5-0.8,-22,1.8,2.2);
+  // 鍬
+  const sw=p.swing>0?(1-p.swing/.22):0;
+  c.save(); c.translate(f*4,-14); c.rotate(f*(p.swing>0?(-1.6+sw*2.6):-.5+Math.sin(ph)*.1*(moving?1:0)));
+  c.strokeStyle='#8a5a30'; c.lineWidth=2.2; c.beginPath(); c.moveTo(0,0); c.lineTo(0,-17); c.stroke(); c.fillStyle='#cfd4dc'; c.fillRect(-1,-20,(p.swingC===3?9:6)*f+ (f<0?-1:1),5*(p.swingC===3?1.4:1)); c.restore();
+  if(p.swing>0){ c.strokeStyle='rgba(255,250,200,'+(p.swing/.22)+')'; c.lineWidth=3; c.beginPath(); c.arc(0,-14,(p.swingC===3?30:24),f>0?-1.2:Math.PI-1.2+0,f>0?1.2:Math.PI+1.2,false); c.stroke(); }
+  c.restore();
+}
+function drawWhip(c,p,T){
+  const wh=p.wh; if(!wh) return; let tx,ty;
+  if(wh.st==='zip'||wh.st==='hang'){ if(wh.st==='zip'){ tx=wh.tx; ty=wh.ty; if(wh.kind==='enemy'){ const e=A.en.find(q=>q.id===wh.tg); if(e){ tx=e.x; ty=e.y-e.h/2; } } } else { tx=p.x; ty=p.y-34; } }
+  else if(wh.st==='pull'||wh.st==='hold'){ const e=A.en.find(q=>q.id===wh.tg); if(!e) return; tx=e.x; ty=e.y-e.h/2; }
+  if(tx==null) return;
+  const sx=p.x+p.face*3, sy=p.y-14;
+  c.strokeStyle='#4aa43c'; c.lineWidth=3; c.beginPath(); c.moveTo(sx,sy); const mx=(sx+tx)/2+Math.sin(T*20)*3, my=(sy+ty)/2-6; c.quadraticCurveTo(mx,my,tx,ty); c.stroke();
+  c.strokeStyle='#8be070'; c.lineWidth=1; c.stroke(); leafP(c,tx,ty,5,0,'#69c978');
+}
+function drawAction(c,T,vw,vh,oy){
+  const n=LV.n, cam=A.cam+(A.shake>0?(Math.random()-.5)*5:0), st0=STG[n];
+  c.fillStyle=st0.bg[0]; c.fillRect(0,0,vw+2,oy+2); c.fillStyle=st0.gnd; c.fillRect(0,oy+AH-2,vw+2,vh);
+  c.save(); c.translate(0,oy); c.beginPath(); c.rect(0,0,vw,AH+400); c.clip();
+  drawBG(c,n,cam,T);
+  c.save(); c.translate(-Math.round(cam),0);
+  drawSolids(c,n,cam,T);
+  drawHooks(c,T);
+  if(LV.n!==5||true){ // ゴールの鳥居
+    if(LV.n!==5){ const gx=LV.goal; c.fillStyle='#d8402a'; c.fillRect(gx-22,AH-110-20,6,110+20-0); c.fillRect(gx+16,AH-130,6,130); c.fillRect(gx-28,AH-140,56,7); c.fillRect(gx-22,AH-124,44,4); c.fillStyle='rgba(255,255,255,.7)'; c.font='bold 11px sans-serif'; c.textAlign='center'; c.fillText('ゴール',gx,AH-148); }
+  }
+  A.mk.forEach(m=>{ c.fillStyle='rgba(255,80,60,'+(.3+.4*Math.abs(Math.sin(m.t*14)))+')'; c.fillRect(m.x-6,0,12,205); });
+  A.pk.forEach(k=>{ const cols={leaf:'#8ac84a',bone:'#f0ead8',ash:'#9a9a9a',imo:'#c04a58'}; if(k.type==='imo'){ ell(c,k.x,k.y,6,4,.4,cols.imo); ell(c,k.x,k.y-1,3,1.5,.4,'rgba(255,255,255,.35)'); } else { ell(c,k.x,k.y,5,4,0,cols[k.type]); c.strokeStyle='#fff6'; c.strokeRect(k.x-5,k.y-4,10,8); } });
+  A.en.forEach(e=>{ if(!e.dead) drawEnemy(c,e,T); });
+  drawWhip(c,A.p,T);
+  drawPlayer(c,A.p,T);
+  A.pr.forEach(q=>{ if(q.k==='spore'){ ell(c,q.x,q.y,5,5,0,'#7a3a8a'); ell(c,q.x,q.y,2.4,2.4,0,'#1a0a20'); }
+    else if(q.k==='ice'){ c.fillStyle='#bfe6ff'; c.beginPath(); c.moveTo(q.x-5,q.y); c.lineTo(q.x,q.y-3); c.lineTo(q.x+5,q.y); c.lineTo(q.x,q.y+3); c.fill(); }
+    else if(q.k==='wave'){ c.fillStyle='rgba(90,40,70,.85)'; c.beginPath(); c.moveTo(q.x-8,205); c.quadraticCurveTo(q.x,205-26,q.x+8,205); c.fill(); }
+    else { c.fillStyle='#d8f0ff'; c.beginPath(); c.moveTo(q.x-5,q.y-24); c.lineTo(q.x+5,q.y-24); c.lineTo(q.x,q.y); c.fill(); } });
+  FX.forEach(f=>{ c.globalAlpha=clamp(f.life*2,0,1); c.fillStyle=f.col; c.fillRect(f.x-f.r/2,f.y-f.r/2,f.r,f.r); }); c.globalAlpha=1;
+  TXT.forEach(t=>{ c.globalAlpha=clamp(t.life*2,0,1); c.fillStyle=t.col; c.font='bold 11px sans-serif'; c.textAlign='center'; c.strokeStyle='#000'; c.lineWidth=2.4; c.strokeText(t.s,t.x,t.y-t.t*30); c.fillText(t.s,t.x,t.y-t.t*30); }); c.globalAlpha=1;
+  c.restore(); c.restore();
+  if(A.flash>0){ c.fillStyle='rgba(255,40,40,'+A.flash*.8+')'; c.fillRect(0,0,vw,vh); }
+  // HUD
+  const p=A.p; c.fillStyle='rgba(0,0,0,.55)'; c.fillRect(6,6,132,28); c.fillStyle='#fff'; c.font='bold 10px sans-serif'; c.textAlign='left'; c.fillText('HP '+Math.ceil(p.hp)+'/'+p.hpMax,10,17);
+  c.fillStyle='#401020'; c.fillRect(10,21,124,8); c.fillStyle=p.hp/p.hpMax<.3?'#ff5a4a':'#69c978'; c.fillRect(10,21,124*p.hp/p.hpMax,8);
+  c.fillStyle='rgba(0,0,0,.5)'; c.fillRect(vw/2-10,6,vw/2+4,16); c.fillStyle='#fff'; c.textAlign='left'; c.fillText(STAGES[LV.n-1].n+'  討伐 '+Object.values(A.kills).reduce((a,b)=>a+b,0),vw/2-4,17);
+  const boss=A.en.find(e=>e.type==='boss'&&!e.dead);
+  if(boss&&A.arenaOn){ const bw=Math.min(260,vw-20), bx0=vw/2-bw/2; c.fillStyle='rgba(0,0,0,.6)'; c.fillRect(bx0-4,40,bw+8,20); c.fillStyle='#401020'; c.fillRect(bx0,50,bw,8); c.fillStyle=boss.vuln?'#ffe27a':'#c04aa0'; c.fillRect(bx0,50,bw*Math.max(0,boss.hp)/boss.hpMax,8); c.fillStyle='#fff'; c.font='bold 9px sans-serif'; c.textAlign='center'; c.fillText('霜枯れの大妖・クサレガミ',vw/2,47); }
+}
+/* ---------- オートの腕前（先読み） ---------- */
+const AI={k:0,len:8,plan:null,name:''};
+const I=(l,r,u,j,a,w)=>({l:!!l,r:!!r,u:!!u,j:!!j,a:!!a,w:!!w});
+const CANDS=[
+ ['run',k=>I(0,1,0,0,0,0)],
+ ['jumprun',k=>I(0,1,0,k<18,0,0)],
+ ['jumprunshort',k=>I(0,1,0,k<8,0,0)],
+ ['jumpslash',k=>I(0,1,0,k<16,k===6||k===18||k===30,0)],
+ ['runslash',k=>I(0,1,0,0,k===0||k===14||k===28,0)],
+ ['slash3',k=>I(0,0,0,0,k===0||k===14||k===28,0)],
+ ['faceRslash',k=>I(0,k<2,0,0,k===3||k===17||k===31,0)],
+ ['faceLslash',k=>I(k<2,0,0,0,k===3||k===17||k===31,0)],
+ ['whipRun',k=>I(0,1,0,0,0,k===0)],
+ ['whipThrow',k=>I(0,0,0,0,0,k===0||k===16)],
+ ['whipThrowRun',k=>I(0,k>16,0,0,0,k===0||k===16)],
+ ['whipSlash',k=>I(0,0,0,0,k>=10&&(k===10||k===24),k===0)],
+ ['upwhip',k=>I(0,1,1,0,0,k===0)],
+ ['upwhipL',k=>I(1,0,1,0,0,k===0)],
+ ['jumpwhip',k=>I(0,1,0,k<12,0,k===8)],
+ ['back',k=>I(k<22,k>=22,0,0,0,0)],
+ ['backjump',k=>I(1,0,0,k<16,0,0)],
+ ['jumpL',k=>I(1,0,0,k<18,0,0)],
+ ['stand',k=>I(0,0,0,0,0,0)],
+ ['jump',k=>I(0,0,0,k<18,0,0)],
+ ['jumpslashstand',k=>I(0,0,0,k<16,k===6||k===16,0)],
+ ['jumpslashL',k=>I(1,0,0,k<16,k===6||k===18,0)],
+ ['hangjump',k=>I(0,1,0,k===0||k<4,0,0)],
+ ['hangjumpL',k=>I(1,0,0,k===0||k<4,0,0)]
+];
+function willFall(p){
+  if(p.wh&&(p.wh.st==='hang'||p.wh.st==='zip')) return false;
+  if(p.on) return false;
+  for(const s of near(p.x-4,p.x+4)){ if(s[1]>=p.y-4&&p.x>=s[0]&&p.x<=s[0]+s[2]) return false; }
+  if(LV.hazAt) return true; return true;
+}
+function aiEval(fn,H){
+  const real=A; const c=structuredClone(real); c.sim=true; A=c; let sc=0;
+  try{
+    const dtf=1/60;
+    for(let k=0;k<H;k++){ updWorld(fn(k),dtf); if(A.done) break; }
+    { const fin=I(0,1,0,0,0,0); let ex=0; while(!A.done&&!A.p.on&&!(A.p.wh&&(A.p.wh.st==='hang'||A.p.wh.st==='zip'))&&ex++<60) updWorld(fin,dtf); }
+    const p=A.p, rp=real.p;
+    const boss=A.en.find(e=>e.type==='boss'&&!e.dead);
+    sc+=(p.x-rp.x)*(real.arenaOn?0:.7);
+    sc+=(A.dmgDealt-real.dmgDealt)*5;
+    sc+=(Object.values(A.kills).reduce((a,b)=>a+b,0)-Object.values(real.kills).reduce((a,b)=>a+b,0))*28;
+    sc-=(rp.hp-p.hp)*70;
+    if(A.fell>real.fell) sc-=2500;
+    if(A.dead) sc-=20000;
+    if(A.win) sc+=6000;
+    if(!A.done&&willFall(p)) sc-=1800;
+    if(real.arenaOn&&boss){ const d=Math.abs(p.x-boss.x); sc-=boss.vuln?d*.5:Math.abs(d-90)*.12; if(boss.vuln&&p.on) sc+=2; if(boss.st==='icicle') for(const m of A.mk) if(Math.abs(m.x-p.x)<20) sc-=40; }
+    // 体力が高いうちは、前の敵を待たずに進む
+    if(!real.arenaOn&&p.x-rp.x<2) sc-=3;
+  }catch(e){ sc=-1e9; }
+  A=real; return sc;
+}
+function aiInput(){
+  if(A.t<.05){ AI.bx=0; AI.bt=0; AI.len=8; }
+  if(A.p.x>AI.bx+8){ AI.bx=A.p.x; AI.bt=A.t; }
+  if(!A.arenaOn&&A.t-AI.bt>7&&AI.k>=AI.len){ const c=CANDS[Math.floor(rA()*16)]; AI.plan=c[1]; AI.name='unstick:'+c[0]; AI.k=0; AI.len=10; }
+  if(!A.arenaOn&&A.t-AI.bt>45&&!A.done){ A.done=true; A.win=false; A.quit=true; }
+  if(AI.k>=AI.len||!AI.plan){
+    AI.len=8;
+    let best=-1e12, bn=null;
+    for(const [name,fn] of CANDS){ const s=aiEval(fn,40)+(name==='run'?1:0); if(s>best){ best=s; bn=[name,fn]; } }
+    AI.plan=bn[1]; AI.name=bn[0]; AI.k=0;
+  }
+  return AI.plan(AI.k++);
+}
+
+/* ================= UI・流れ ================= */
+let LASTRUN=null, mode='title', auto=false, T=0, view='bed', best=store.get('imohime.best',{kg:0,brix:0,juns:0,clears:0});
+const elInfo=$('#info'), elTasks=$('#tasks'), elBar=$('#bar'), elModal=$('#modal'), elDlg=$('#dlg'), elStage=$('#stage');
+function setMode(m){ mode=m; document.body.dataset.mode=m; fit(); }
+function toast(msg,ms){
+  let t=$('#toast'); if(!t){ t=document.createElement('div'); t.id='toast'; t.style.cssText='position:absolute;left:50%;top:34px;transform:translateX(-50%);z-index:8;background:rgba(255,246,232,.95);color:#3a2300;font-weight:800;font-size:13px;padding:6px 12px;border-radius:12px;max-width:92%;text-align:center;pointer-events:none;box-shadow:0 3px 0 rgba(0,0,0,.3);transition:opacity .25s'; elStage.appendChild(t); }
+  t.textContent=msg; t.style.top=mode==='action'?'96px':'34px'; t.style.opacity=1; clearTimeout(toast.h); toast.h=setTimeout(()=>{ t.style.opacity=0; },ms||(auto?1100:2400));
+}
+/* ---- モーダル ---- */
+function modal(html,binds){
+  elModal.hidden=false; elModal.innerHTML='<div class="box">'+html+'</div>';
+  if(binds) for(const [sel,fn] of Object.entries(binds)){ elModal.querySelectorAll(sel).forEach(el=>el.addEventListener('click',e=>{ unlock(); fn(e,el); })); }
+  elModal.querySelector('.box').scrollTop=0;
+}
+function closeModal(){ elModal.hidden=true; elModal.innerHTML=''; }
+const modalOpen=()=>!elModal.hidden;
+const backLink='<a href="../" class="big alt" style="display:block;text-align:center;text-decoration:none;margin-top:6px;box-sizing:border-box;font-size:13px">← ゲーム一覧にもどる</a>';
+const okBtn=(label,cls)=>'<button class="big '+(cls||'')+'" id="mOk" style="width:100%;margin-top:6px">'+(label||'OK')+'</button>';
+/* ---- 会話 ---- */
+let D=null;
+function say(lines,cb){
+  D={lines,i:0,cb,t:0}; showLine();
+}
+function showLine(){
+  const l=D.lines[D.i]; elDlg.hidden=false;
+  const col={'イモ姫':'#ff8ab4','ゲンさん':'#ffcf5a','ハナ':'#9ad8ff','ソウタ':'#a8f0a0','ハチベエ':'#f0b070','天の声':'#e8e0ff','クサレガミ':'#d070d0'}[l[0]]||'#fff';
+  elDlg.innerHTML='<div class="nm" style="color:'+col+'">'+(l[0]||'')+'</div>'+l[1]+'<span class="nx">▼</span>'; D.t=0;
+}
+function nextLine(){
+  if(!D) return; D.i++;
+  if(D.i>=D.lines.length){ const cb=D.cb; D=null; elDlg.hidden=true; if(cb) cb(); } else showLine();
+}
+elDlg.addEventListener('click',()=>{ unlock(); sfx('tap'); nextLine(); });
+/* ---- 台本 ---- */
+const PROLOGUE=[
+ ['天の声','天上の蔵には、神々のための芋がうず高く積まれていた。'],
+ ['イモ姫','このお芋、とっても甘い…もうひとつ…もうひとつだけ…'],
+ ['天の声','――三日後。蔵は、からっぽになった。'],
+ ['天の声','イモ姫！ 蔵の芋を食べつくすとは何事じゃ！ 罰として、妖怪はびこる地上の島「ヒノモト芋島」へ落とす！'],
+ ['イモ姫','えええ！？ ちょ、ちょっと待ってぇぇぇ！'],
+ ['ゲンさん','おや、空から女の子が…芋畑に落ちてきたぞ。'],
+ ['イモ姫','いったぁ…。ここはどこ？ お芋は？ お芋はどこ！？'],
+ ['ゲンさん','わしはゲン。この島で芋を作っておる。あんた、芋の神さまじゃと？ なら芋づくりくらい、できるじゃろう。'],
+ ['イモ姫','えっ、育てたことなんてない…食べる専門なんだけど…'],
+ ['ゲンさん','育てなきゃ食えんし、強くもなれん。島には芋をねらう妖怪がうようよおるでの。'],
+ ['ハナ','おねえちゃん、てつだうよ！'],['ソウタ','ぼくも！'],
+ ['イモ姫','…わかった！ 芋を育てて、妖怪をやっつけて、お腹いっぱい食べてやるわ！'],
+ ['ゲンさん','まずは種いもの消毒じゃ。『芋の書』も読むとええ。3月上旬、温床づくりから始めるぞ。']
+];
+const SCENES={
+ '1:6':[['ハナ','おねえちゃん、つるがぐんぐんのびてるよ！'],['ソウタ','もうすぐ苗を切れるね！'],['ゲンさん','節が多くて太い苗がええ。ひょろひょろは、根づかんぞ。']],
+ '1:12':[['ハチベエ','やあ、旅の商人のハチベエじゃ。いい芋畑じゃのう。'],['ハチベエ','来年は紅はるかとシルクスイートの種いもを持ってきてやろう。']],
+ '1:16':[['ゲンさん','8月から9月は台風の季節じゃ。つるを束ねて、水はけの溝もきっておくんじゃぞ。']],
+ '2:0':[['ハチベエ','約束どおり、紅はるかとシルクスイートの種いもじゃ。熟成させると甘くなるぞ。'],['イモ姫','わーい！ 食べていい？'],['ゲンさん','だめじゃ！ 種じゃ！']],
+ '2:12':[['ソウタ','山の向こうが、うす暗いんだ…。大きな妖怪がいるって、みんな言ってる。'],['ゲンさん','島の主「霜枯れの大妖・クサレガミ」じゃ。基腐病と霜の化身といわれておる。']],
+ '3:0':[['ハチベエ','最後は安納芋と鳴門金時じゃ。これで島のどの畑でも育てられるぞ。'],['ゲンさん','今年こそ、クサレガミを倒すときじゃな。霜がおりる11月の終わり、霜の峰に道がひらく。']]
+};
+const ENDING=[
+ ['イモ姫','やった…！ 倒したわ！ 霜がとけていく…！'],
+ ['クサレガミ','…………うまい…芋の、においだ…。'],
+ ['ゲンさん','大妖が消えた。島に春がもどってくるぞ。'],
+ ['天の声','イモ姫よ、よくやった。罰はもう終わりじゃ。天上へ戻ってよいぞ。蔵の芋も、たんと用意してある。'],
+ ['イモ姫','えっ、いいの！？ 天上のお芋、食べ放題…'],
+ ['ハナ','おねえちゃん、行っちゃうの…？'],['ソウタ','せっかく仲よくなったのに…'],
+ ['イモ姫','…ううん。天上のお芋も好きだけど、みんなと育てた芋は、もっとおいしいの。'],
+ ['イモ姫','だから、ここでみんなと焼き芋を食べる！'],
+ ['ゲンさん','ほっほっ。ならば今夜は、とれたての焼き芋じゃ。'],
+ ['ハチベエ','わしの分も残しておくれよ！'],
+ ['天の声','……芋の女神の笑い声が、島じゅうにひびいた。　おしまい。']
+];
+function genHint(){
+  const f=G.f,b=G.bed,j=G.jun,w=G.weather[Math.min(29,j)],nx=G.weather[Math.min(29,j+1)],st=G.st;
+  const age=f.planted>=0?j-f.planted:-1;
+  if(j<=2&&!b.on&&!b.treated) return '種いもは温湯で消毒じゃ。47〜48℃で40分。熱すぎてもぬるすぎてもいかんぞ。';
+  if(b.on&&!b.cut&&b.sprout<1&&b.T<27) return '温床が冷えとる。芽が出るまでは28〜33℃じゃ。わら・米ぬかとビニールで温めるんじゃ。';
+  if(b.on&&!b.cut&&b.T>34) return '温床が熱すぎる！ 換気して、ビニールを開けてやらんと種いもが傷むぞ。';
+  if(b.on&&!b.cut&&b.sprout>=1&&b.T>31) return '芽が出たら昼25〜30℃じゃ。暑すぎるとひょろひょろの苗になる。換気じゃ。';
+  if(b.rot>.25&&!b.cut) return '種いもが腐りはじめとる…床温が低いと腐りやすいんじゃ。';
+  if(f.planted<0&&j>=3&&j<=6&&!f.ridged) return '畑づくりじゃ。深く耕して堆肥、窒素は控えめ、カリは多めに。畝は高くな。';
+  if(f.planted<0&&G.seed2&&f.ridged&&!f.mulch) return 'マルチで地温を上げてから植えるんじゃ。気温が20℃前後になったころが適期じゃぞ。';
+  if(age===1&&f.stand<.7) return '活着がいまいちじゃのう。植えた後に晴れが続くと根づきにくい。水をやるんじゃ。';
+  if(f.tsuru>.25&&age>=4) return 'つるばかり茂っておる…つるぼけじゃ。窒素と水と、土の通気を見直さんとな。';
+  if(f.weed>.4&&age>=0&&age<8) return '草がのびとるぞ。草に負けると芋が太らん。';
+  if(f.young>.05&&!f.harvested) return '白っぽい葉が見える。ハスモンヨトウの若い幼虫じゃ。大きくなる前に見回って摘むんじゃ。';
+  if(f.kus>.08&&!f.harvested) return 'しおれた株があるのう…基腐病じゃ。病気の株は抜いて、畑の外で処分するんじゃ。';
+  if(f.nodeRoot>.5&&age>=4&&!f.harvested) return 'つるの節から根が出とる。つる返しをして、芋が分散するのを防ぐんじゃ。';
+  if(nx.typhoon&&f.planted>=0&&!f.harvested) return '次の旬は台風が来そうじゃ。つるをまとめて、排水の溝もきっておくんじゃ。';
+  if(f.planted>=0&&!f.harvested&&age>=11&&f.yellow>.2) return '葉が黄ばんできた。収穫どきじゃ。霜がおりる前、晴れの日に掘るんじゃぞ。';
+  if(f.planted>=0&&!f.harvested&&G.ff&&j>=G.ff-2) return 'もうすぐ霜がおりる。霜にあたると品質が大きく落ちる。急いで掘るんじゃ！';
+  if(f.harvested&&st&&!st.cured&&!st.curing) return '掘った芋は、まずキュアリングじゃ。33℃前後、湿度90〜95%で4日ほど。傷が治って腐りにくくなる。';
+  if(f.harvested&&st&&st.cured&&(st.T<12||st.T>17)) return '貯蔵庫は13〜16℃がええ。11℃だと腐るし、18℃だと芽が出てしまうんじゃ。';
+  if(f.harvested&&st&&st.cured&&st.H<88) return '湿度が低いぞ。70%くらいだと皮が黒ずむ。90〜95%を保つんじゃ。';
+  if(f.harvested&&st&&st.ripe<.4) return '収穫したては甘みが弱い。2か月以上おくと、ぐっと甘くなるんじゃよ。';
+  const gen=['芋づくりは天気との相談じゃ。焦らんことじゃな。','妖怪を倒すと、畑の虫や病気も減るんじゃ。','焼き芋は攻撃、大学芋は体力、干し芋は防御じゃ。','「芋の書」は作業をするたびに増えていくぞ。'];
+  return gen[j%gen.length];
+}
+/* ---- 画面の更新 ---- */
+const WI={'晴れがち':'☀','くもり':'☁','雨がち':'🌦','梅雨':'☔','大雨・長雨':'🌧','台風':'🌀','霜':'❄','干ばつ':'🔥','好天つづき':'☀'};
+const gauge=(l,v,bad)=>'<span class="g'+(bad?' bad':'')+'">'+l+'<i><u style="width:'+pct(v)+'%"></u></i></span>';
+function updateHud(){
+  if(!G) return;
+  $('#hudL').textContent=G.year+'年目 '+junName(Math.min(29,G.jun))+'（'+Math.min(30,G.jun+1)+'/30）';
+  const w=G.weather[Math.min(29,G.jun)];
+  $('#hudR').textContent=(WI[w.fc.label]||'')+' '+w.fc.label+' '+fx(w.fc.temp,0)+'℃';
+}
+function renderPanel(){
+  if(!G||mode==='title'||mode==='action') return;
+  const f=G.f,b=G.bed,w=G.weather[Math.min(29,G.jun)],n=G.weather[Math.min(29,G.jun+1)];
+  const ap='●'.repeat(G.ap)+'○'.repeat(6-G.ap);
+  let gs='';
+  if(f.planted>=0&&!f.harvested){ gs=gauge('水分',f.moist,f.moist<.3||f.moist>.88)+gauge('窒素',f.N,f.N>.6)+gauge('カリ',f.K)+gauge('雑草',f.weed,f.weed>.4)+gauge('つる',f.vine/1.5)+gauge('葉',f.leaf,f.leaf<.6)+gauge('虫',(f.egg+f.young+f.big)*5,(f.egg+f.young+f.big)>.06)+gauge('病気',f.kus+f.bs*.6,f.kus>.05); }
+  else if(f.harvested&&G.st){ const s=G.st; gs=gauge('温度',s.T/30,s.T<12||s.T>17)+gauge('湿度',s.H/100,s.H<88)+gauge('腐り',s.rot,s.rot>.1)+gauge('芽',s.sprout,s.sprout>.1)+gauge('熟成',s.ripe); }
+  else if(b.on&&!b.cut){ gs=gauge('床温',(b.T-10)/30,b.T<(b.sprout<1?28:25)||b.T>(b.sprout<1?33:30))+gauge('芽出し',b.sprout)+gauge('つる',b.sLen/.9)+gauge('腐り',b.rot,b.rot>.1); }
+  else gs=gauge('地温',f.soilT/35)+gauge('水分',f.moist,f.moist>.88)+gauge('窒素',f.N,f.N>.6)+gauge('カリ',f.K)+gauge('通気',f.aer)+gauge('雑草',f.weed,f.weed>.4);
+  elInfo.innerHTML='<div class="row sp"><b>'+G.year+'年目 '+junName(G.jun)+'</b><span class="ap" title="行動ポイント">'+ap+'</span></div><div class="row"><span>予報 '+(WI[w.fc.label]||'')+w.fc.label+' '+fx(w.fc.temp,0)+'℃・雨'+Math.round(w.fc.rain)+'mm</span><span>次旬 '+(WI[n.fc.label]||'')+n.fc.label+'</span></div><div class="row">'+gs+'</div>'+
+    (G.buff?'<div class="row"><span style="color:#9affb0">今日の力：'+G.buff.n+'（'+G.buff.txt+'）</span></div>':'');
+  // 作業
+  const order=['onsen','fusekomi','heat','vent','vinyl','cut','onsenS','buy','plow','plowD','compost','fertK','ash','bone','fertN','rotate','drug','ridge','mulch','plant','water','weed','turn','typh','scout','spray','pull','probe','harvest','sort','cure','residue','storage'];
+  let h='';
+  order.forEach(id=>{ const t=TASKS[id]; if(!t||!t.show()) return; const c=t.cost(G,id==='ridge'?{h:'low'}:null); const why=t.can?t.can():null; const dis=G.ap<c||why;
+    h+='<button class="tk" data-id="'+id+'"'+(dis?' disabled':'')+'><b>'+taskName(t)+'<em>AP '+(id==='ridge'?'1〜2':c)+'</em></b><small>'+(why||t.hint())+'</small></button>'; });
+  if(!h) h='<div style="grid-column:1/3;color:#c9b3c9;font-size:12px;padding:8px">いまできる作業はありません。昼の探索か、夜へ。</div>';
+  elTasks.innerHTML=h;
+  elTasks.querySelectorAll('.tk').forEach(el=>el.addEventListener('click',()=>{ unlock(); clickTask(el.dataset.id); }));
+  elBar.innerHTML='<button class="big alt" id="bBook">📖 芋の書</button><button class="big" id="bDay">⚔ 昼：探索へ</button><button class="big gold" id="bNight">🌙 夜へ</button>';
+  $('#bBook').onclick=()=>{ unlock(); openBook(); }; $('#bDay').onclick=()=>{ unlock(); openExplore(); }; $('#bNight').onclick=()=>{ unlock(); goNight(); };
+  document.querySelectorAll('#tabs button').forEach(bt=>bt.classList.toggle('on',bt.dataset.v===G.view));
+  updateHud();
+}
+function refresh(){ renderPanel(); }
+document.querySelectorAll('#tabs button').forEach(bt=>bt.addEventListener('click',()=>{ unlock(); if(G){ G.view=bt.dataset.v; refresh(); } }));
+/* ---- 作業 ---- */
+function clickTask(id){
+  const t=TASKS[id]; if(!t||modalOpen()||D) return;
+  if(t.kind==='mini') return openMini(id);
+  if(t.kind==='var') return chooseVariety();
+  if(t.kind==='ridge') return chooseRidge();
+  if(t.kind==='method') return chooseMethod();
+  if(t.kind==='cond') return chooseCond(id);
+  runTask(id);
+}
+function runTask(id,o){
+  const r=doTask(id,o);
+  if(r.ok){ sfx(id==='water'?'water':/plow|compost|ridge|weed|turn|harvest|probe|cut/.test(id)?'dig':'ok'); if(id==='plant'||id==='harvest'||id==='cut'||id==='fusekomi'){ G.view=id==='fusekomi'||id==='cut'?(id==='cut'?'field':'bed'):(id==='harvest'?'cellar':'field'); } let m=r.msg; if(G.newBook&&G.newBook.length){ const bk=BOOK.find(x=>x.id===G.newBook[0]); m+='　📖「'+bk.t+'」を芋の書に追加'; G.newBook=[]; } toast(m); if(!auto&&id==='harvest') toast(r.msg); }
+  else { sfx('bad'); toast(r.msg); }
+  refresh(); return r;
+}
+function chooseVariety(){
+  let h='<h2>伏せ込む品種をえらぶ</h2><p>種いもを温床に伏せます。品種はそのまま今年の作物になります。</p><div class="opts">';
+  G.unlocked.forEach(i=>{ const v=VAR[i]; h+='<button class="tk" data-v="'+i+'"><b>'+v.n+'</b><small>'+v.d+'</small></button>'; });
+  h+='</div><button class="big alt" id="mNo" style="width:100%">やめる</button>';
+  modal(h,{'.tk':(e,el)=>{ closeModal(); runTask('fusekomi',{variety:+el.dataset.v}); },'#mNo':()=>closeModal()});
+}
+function chooseRidge(){
+  let hh='mid', sp=38, rw=95;
+  const draw=()=>{
+    modal('<h2>畝を立てる</h2><p>畝幅の目安は90〜100cm、株間35〜40cm（ヤンマー 資料）。高い畝は水はけと通気がよく、地温も上がりやすい。</p><p><b>高さ</b></p><div class="opts row">'+
+      [['low','低め 20cm','AP1'],['mid','ふつう 28cm','AP1'],['high','高畝 35cm','AP2']].map(a=>'<button class="tk'+(hh===a[0]?' hot':'')+'" data-h="'+a[0]+'"><b>'+a[1]+'<em>'+a[2]+'</em></b></button>').join('')+
+      '</div><p><b>畝幅</b></p><div class="opts row">'+[80,95,120].map(s=>'<button class="tk'+(rw===s?' hot':'')+'" data-w="'+s+'"><b>'+s+'cm</b><small>'+(s===80?'せまい（水はけ○）':s===95?'標準':'ひろい（乾きにくい）')+'</small></button>').join('')+'</div><p><b>株間</b></p><div class="opts row">'+[30,38,45].map(s=>'<button class="tk'+(sp===s?' hot':'')+'" data-s="'+s+'"><b>'+s+'cm</b><small>'+(s===30?'密植（小ぶり）':s===38?'標準':'広め（大きめ）')+'</small></button>').join('')+'</div>'+okBtn('この畝にする')+'<button class="big alt" id="mNo" style="width:100%;margin-top:6px">やめる</button>',
+      {'[data-h]':(e,el)=>{ hh=el.dataset.h; draw(); },'[data-s]':(e,el)=>{ sp=+el.dataset.s; draw(); },'[data-w]':(e,el)=>{ rw=+el.dataset.w; draw(); },'#mOk':()=>{ closeModal(); runTask('ridge',{h:hh,sp,w:rw}); },'#mNo':()=>closeModal()});
+  }; draw();
+}
+function chooseMethod(){
+  const f=G.f,w=G.weather[G.jun];
+  let h='<h2>植え方をえらぶ</h2><p>今：気温 '+fx(w.fc.temp,1)+'℃・地温 '+fx(f.soilT,1)+'℃・予報 '+w.fc.label+'。晴天が続くと活着が下がります（水やりで補えます）。</p><div class="opts">';
+  ['h','b','o','v'].forEach(k=>{ const m=METH[k]; h+='<button class="tk" data-m="'+k+'"><b>'+m.n+'</b><small>'+m.d+'</small></button>'; });
+  h+='</div><p class="src">出典：佐賀県 資料</p><button class="big alt" id="mNo" style="width:100%">やめる</button>';
+  modal(h,{'.tk':(e,el)=>{ closeModal(); runTask('plant',{m:el.dataset.m}); },'#mNo':()=>closeModal()});
+}
+function chooseCond(id){
+  const cure=id==='cure'; let Tm=cure?33:14, Hm=cure?92:95;
+  const st=G.st; if(!cure&&st){ Tm=Math.round(st.T); Hm=Math.round(st.H); }
+  modal('<h2>'+(cure?'キュアリング':'貯蔵庫の調整')+'</h2><p>'+(cure?'傷を治して腐りにくくする。約4日間、この条件を保ちます。':'旬ごとに温度と湿度を管理します。放っておくと外の気温と乾燥に近づきます。')+'</p>'+
+    '<div class="sl">温度 <b id="vT">'+Tm+'</b>℃<input type="range" id="sT" min="'+(cure?25:8)+'" max="'+(cure?40:24)+'" step="1" value="'+Tm+'"></div>'+
+    '<div class="sl">湿度 <b id="vH">'+Hm+'</b>%<input type="range" id="sH" min="60" max="100" step="1" value="'+Hm+'"></div>'+okBtn('この条件にする')+'<button class="big alt" id="mNo" style="width:100%;margin-top:6px">やめる</button>',
+    {'#mOk':()=>{ const t=+$('#sT').value,hm=+$('#sH').value; closeModal(); runTask(id,{T:t,H:hm}); },'#mNo':()=>closeModal()});
+  $('#sT').oninput=e=>$('#vT').textContent=e.target.value; $('#sH').oninput=e=>$('#vH').textContent=e.target.value;
+}
+/* ---- 温湯処理ミニゲーム ---- */
+let MG=null;
+function openMini(id){
+  const seedling=id==='onsenS', dur=seedling?15:40;
+  MG={id,dur,temp:44,t:0,inr:0,part:0,hot:0,cold:0,heat:0,done:false,sec:seedling?6:16};
+  modal('<h2>温湯処理（'+(seedling?'苗・15分':'種いも・40分')+'）</h2><p>湯温を <b style="color:#9affb0">47〜48℃</b> に保とう。高すぎると傷み、低すぎると効果がない。（愛知県 防除資料）</p><canvas id="mgc" width="300" height="150" style="width:100%;background:#2a1b30;border-radius:10px"></canvas>'+
+    '<div style="display:flex;gap:8px;margin:8px 0"><button class="big" id="mFire" style="touch-action:none">🔥 火を足す</button><button class="big alt" id="mWater" style="touch-action:none">💧 水をさす</button></div><p class="src">ボタンを押している間だけ働きます。時間：<span id="mgT">0</span>/'+dur+'分</p>',{});
+  const hold=(sel,v)=>{ const el=$(sel); el.addEventListener('pointerdown',e=>{ e.preventDefault(); MG.heat=v; unlock(); }); ['pointerup','pointerleave','pointercancel'].forEach(ev=>el.addEventListener(ev,()=>{ if(MG&&MG.heat===v) MG.heat=0; })); };
+  hold('#mFire',1); hold('#mWater',-1);
+}
+function stepMini(dt){
+  if(!MG||MG.done) return;
+  const m=MG; m.t+=dt*m.dur/m.sec;
+  m.temp+=(m.heat*3.4-(m.heat<0?2.4:0)-.035*(m.temp-20))*dt+(Math.sin(T*3.1)*.2)*dt;
+  const d=dt*m.dur/m.sec;
+  if(m.temp>=46.6&&m.temp<=48.4) m.inr+=d; else if(m.temp>=45.6&&m.temp<=49.4) m.part+=d;
+  if(m.temp>49.6) m.hot+=d; if(m.temp<45.6) m.cold+=d;
+  const c=$('#mgc'); if(c){ const g=c.getContext('2d'); g.clearRect(0,0,300,150);
+    const y=v=>130-(clamp(v,38,56)-38)/18*110;
+    g.fillStyle='rgba(105,201,120,.35)'; g.fillRect(40,y(48.4),220,y(46.6)-y(48.4)); g.fillStyle='rgba(105,201,120,.7)'; g.fillRect(40,y(48),220,y(47)-y(48));
+    g.strokeStyle='#8a7090'; g.strokeRect(40,20,220,110);
+    g.fillStyle='#ee5a48'; g.fillRect(138,y(m.temp),24,130-y(m.temp)); g.beginPath(); g.arc(150,138,14,0,7); g.fill();
+    g.fillStyle='#fff'; g.font='bold 13px sans-serif'; g.textAlign='center'; g.fillText(fx(m.temp,1)+'℃',150,14); g.font='11px sans-serif'; g.textAlign='left'; g.fillText('48℃',4,y(48)+4); g.fillText('47℃',4,y(47)+4);
+    g.fillStyle='#ffd0a0'; if(m.heat>0){ for(let i=0;i<5;i++) g.fillRect(100+i*20,138+Math.sin(T*20+i)*2,6,6); }
+    if(m.heat<0){ g.fillStyle='#9ad8ff'; for(let i=0;i<5;i++) g.fillRect(100+i*20,20+(T*80+i*15)%60,3,8); }
+    const te=$('#mgT'); if(te) te.textContent=Math.min(m.dur,Math.round(m.t)); }
+  if(m.t>=m.dur) finishMini();
+}
+function finishMini(){
+  const m=MG; m.done=true; const q=clamp((m.inr+m.part*.5)/m.dur,0,1), dmg=clamp(m.hot/m.dur*2,0,1); const id=m.id; MG=null;
+  closeModal(); runTask(id,{q,dmg});
+}
+/* ---- 芋の書 ---- */
+function openBook(){
+  let h='<h2>📖 芋の書</h2><p class="src">作業をすると読めるページが増えます（'+BOOK.filter(b=>G&&G.book[b.id]).length+'/'+BOOK.length+'）。数値は各県などの資料にもとづくもの。</p>';
+  BOOK.forEach(b=>{ const o=G&&G.book[b.id]; h+=o?'<div class="bk"><h3>'+b.t+'</h3><p>'+b.x+'</p><p class="src">出典：'+b.s+'</p></div>':'<div class="bk lock"><h3>？？？</h3><p class="src">まだ読めない（作業をすると解放）</p></div>'; });
+  h+=okBtn('とじる'); modal(h,{'#mOk':()=>closeModal()});
+}
+$('#bookBtn').onclick=()=>{ unlock(); if(mode==='action') return; openBook(); };
+function openHow(){
+  modal('<h2>あそびかた</h2><p><b>1年＝3月上旬〜12月下旬の30旬。3年でクサレガミを倒そう。</b></p><p>■ 朝：行動ポイント6で畑仕事（温湯処理→伏せ込み→畑づくり→植え付け→管理→収穫→キュアリング→貯蔵）。<br>■ 昼：横スクロールで妖怪退治（行かなくてもOK）。<br>■ 夜：ご飯（焼き芋＝攻撃、大学芋＝体力、干し芋＝防御・射程）を食べて旬を終える。</p><p>畑の出来（収量→体力、糖度→攻撃、A品率→防御、品種の数→芋づるの射程）が、年末にイモ姫を強くします。妖怪を倒すと畑の虫や病気も減ります。</p>'+
+    '<p><b>アクション操作</b><br>PC：←→ / A D で移動、Space でジャンプ、J で攻撃（くわ・くわ・かま）、K で芋づる（敵をつかむ→もう一度Kで投げる／鉤にぶら下がる→Kで次の鉤）。↑を押しながらKで鉤を優先。<br>スマホ：左下の◀▶、右下の「ジャンプ」「攻撃」「芋づる」（芋づるは長押しで鉤を狙う）。</p><p><b>🤖 オート</b>（Oキー）：畑も戦いも、最適な手順で自動プレイ。</p>'+okBtn('とじる'),{'#mOk':()=>closeModal()});
+}
+/* ---- 探索（昼） ---- */
+function stageOpen(k){
+  if(k===1) return true; if(k<5) return G.cleared[k-2];
+  return G.cleared[3]&&G.year===3&&G.jun>=26;
+}
+function openExplore(){
+  if(D||modalOpen()) return;
+  let h='<h2>昼：どこへ行く？</h2><p>体力 '+G.stats.hp+'／攻撃 '+G.stats.atk+'／防御 '+G.stats.def+'%／芋づる射程 '+G.stats.range+(G.buff?'　（'+G.buff.n+'：'+G.buff.txt+'）':'')+'</p><div class="opts">';
+  STAGES.forEach(s=>{ const op=stageOpen(s.id); const eff={1:'ヨトウ・コガネが減る',2:'線虫・黒斑病が減る',3:'コガネ・線虫・病気が減る',4:'狸・コガネ・灰が手に入る',5:'最終決戦'}[s.id];
+    h+='<button class="tk" data-s="'+s.id+'"'+(op?'':' disabled')+'><b>'+s.id+'. '+s.n+'<em>'+(G.cleared[s.id-1]?'クリア済み':op?'':'🔒')+'</em></b><small>'+s.sub+'　／　'+eff+(op?'':(s.id===5?'（4面クリア後、3年目の11月下旬から）':'（前のステージをクリアすると解放）'))+'</small></button>'; });
+  h+='</div><button class="big alt" id="mNo" style="width:100%">家にいる（行かない）</button>';
+  modal(h,{'.tk':(e,el)=>{ closeModal(); startAction(+el.dataset.s); },'#mNo':()=>closeModal()});
+}
+function startAction(n){
+  if(!G.buff) {}
+  closeModal(); mkWorld(n); AI.plan=null; AI.k=0; AI.len=8; AI.bx=0; AI.bt=0; setMode('action'); acc=0; endT=0; G.exploredThisJun=true; sfx('ok');
+  toast(STAGES[n-1].n+(n===5?'：クサレガミが待つ…':'へ出発！'),1600);
+}
+let acc=0, endT=0;
+function finishAction(){
+  const n=LV.n, win=A.win, S=A.kills;
+  Object.entries(A.drops).forEach(([k,v])=>{ if(G.mats[k]!=null) G.mats[k]+=v; });
+  if(win&&n<5) G.cleared[n-1]=true;
+  (G.stat.log=G.stat.log||[]).push({y:G.year,j:G.jun,stage:n,win,hits:A.hits,t:+A.t.toFixed(1),fell:A.fell,hp:Math.round(A.p.hp)}); G.hits+=A.hits; G.stat.actHits=(G.stat.actHits||0)+A.hits; G.stat.actTime=(G.stat.actTime||0)+A.t;
+  const lines=Object.entries(S).map(([t,c])=>ET[t].n+' ×'+c).join('、')||'なし';
+  const eff=[]; if(S.yotou) eff.push('ヨトウの虫の密度が下がった'); if(S.kogane) eff.push('土の中のコガネ幼虫が減った'); if(S.snake) eff.push('線虫が減った'); if(S.ghost) eff.push('病気のもとが減った'); if(S.tanuki) eff.push('狸の被害が減りそう'); if(S.frost) eff.push('霜害に強くなった');
+  const dr=Object.entries(A.drops).filter(e=>e[1]>0).map(e=>({leaf:'落ち葉',bone:'骨粉',ash:'灰',imo:'芋'}[e[0]])+' ×'+e[1]).join('、');
+  const back=()=>{ closeModal(); setMode('morning'); G.buff=null;
+    if(n===5&&win){ doEnding(); return; }
+    if(n===5&&!win){ if(G.year===3&&G.jun>=30){ retryBoss(); return; } }
+    if(G.jun>=30){ yearEndFlow(); return; }
+    goNight(); };
+  if(win){ sfx('fanfare'); if(n===5) { back(); return; } }
+  else sfx('bad');
+  setMode('morning'); refresh();
+  modal('<h2>'+(win?'ステージクリア！':'やられた…')+'</h2><p>'+STAGES[n-1].n+(win?'を突破した。':'から、命からがらにげ帰った。')+'</p><table><tr><td>討伐</td><td>'+lines+'</td></tr><tr><td>素材</td><td>'+(dr||'なし')+'</td></tr><tr><td>被弾</td><td>'+A.hits+'回</td></tr><tr><td>タイム</td><td>'+fx(A.t,1)+'秒</td></tr></table>'+(eff.length?'<p style="color:#9affb0">畑への効果：'+eff.join('、')+'。</p>':'')+okBtn('家へもどる')+backLink,{'#mOk':back});
+}
+function retryBoss(){
+  modal('<h2>最後の戦い</h2><p>クサレガミはまだ立っている。傷はいやした。もういちど、挑もう！</p>'+okBtn('霜の峰へ'),{'#mOk':()=>{ closeModal(); G.deaths++; startAction(5); }});
+}
+/* ---- 夜 ---- */
+function goNight(){
+  if(D||modalOpen()) return;
+  G.buff=null;
+  const foodKg=(G.st&&G.st.kg>1?G.st.kg:0)+G.pantry;
+  if(foodKg<.5){ afterMeal(null); return; }
+  modal('<h2>🌙 夜：ご飯</h2><p>芋料理を食べて、明日のぶんの力をつけよう（芋 0.5kg）。<br>貯蔵 '+fx(foodKg,0)+'kg</p><div class="opts">'+Object.entries(BUFFS).map(([k,b])=>'<button class="tk" data-k="'+k+'"><b>'+b.n+'</b><small>'+b.txt+'</small></button>').join('')+'</div><button class="big alt" id="mNo" style="width:100%">食べない</button>',
+    {'.tk':(e,el)=>{ closeModal(); afterMeal(el.dataset.k); },'#mNo':()=>{ closeModal(); afterMeal(null); }});
+}
+function afterMeal(k){
+  if(k){ if(G.st&&G.st.kg>1){ G.st.kg-=.5; } else G.pantry-=.5; G.eaten+=.5; G.buff=Object.assign({k},BUFFS[k]); sfx('coin'); }
+  const prevJ=G.jun, rep=nextJun().rep;
+  if(G.jun>=30){ yearEndFlow(); return; }
+  store.set('imohime.save',G);
+  refresh();
+  const hint=genHint();
+  modal('<h2>🌙 '+G.year+'年目 '+junName(prevJ)+'のまとめ</h2>'+rep.map(r=>'<p>・'+r+'</p>').join('')+'<div class="bk"><h3>ゲンさんのひと言</h3><p>「'+hint+'」</p></div>'+okBtn('次の旬へ'),{'#mOk':()=>{ closeModal(); morningStart(); }});
+}
+function morningStart(){
+  const key=G.year+':'+G.jun;
+  const sc=SCENES[key];
+  if(G.view==='cellar'&&!(G.f.harvested)) G.view='field';
+  if(G.jun===0&&G.year>1){ const nm=VAR_UNLOCK[Math.min(G.year-1,2)].map(i=>VAR[i].n).join('と'); toast('商人から '+nm+' の種いもが届いた！',2600); }
+  if(sc&&!G.seen) G.seen={}; if(sc&&!(G.seen||{})[key]){ G.seen=G.seen||{}; G.seen[key]=1; say(sc,()=>refresh()); }
+  refresh();
+}
+/* ---- 年末 ---- */
+function yearData(){
+  const r=yearResult(); const g=applyGrowth(r);
+  G.lastResult=r; G.hist.push(Object.assign({year:G.year},r));
+  best.kg=Math.max(best.kg||0,Math.round(r.kg)); best.brix=Math.max(best.brix||0,+(r.brix||0).toFixed(1)); store.set('imohime.best',best);
+  return {r,g};
+}
+function yearEndFlow(){
+  const {r,g}=yearData();
+  const rows=[['品種',r.varName],['収穫量',fx(r.kg,0)+' kg　→ 体力 +'+g.dHP],['焼き芋の糖度',fx(r.brix,1)+' Brix　→ 攻撃 +'+g.dATK],['A品率',pct(r.A)+' %　→ 防御 +'+g.dDEF+'%'],['品種の数',G.unlocked.length+'種　→ 芋づる射程 '+g.range],['貯蔵ロス（腐り）',pct(r.rot||0)+' %'],['評価',r.rank+'（'+r.score+'点）']];
+  let cm=r.none?'今年は収穫できなかった…。来年こそ！':r.rank==='S'||r.rank==='A'?'見事な出来じゃ！ 島じゅうが焼き芋のにおいじゃぞ。':r.rank==='B'?'まずまずじゃ。来年はもっと甘くできるぞ。':'苦労したのう…。『芋の書』を読みなおして、来年こそじゃ。';
+  if(!r.none){ if(r.frostHit>.3) cm='霜にあたってしもうた…収穫は霜の前にな。'; else if(r.tsuru>.2) cm='つるぼけ気味じゃった。窒素を控えめにしてみい。'; else if(r.sprout>.3) cm='貯蔵庫で芽が出とる。温度が高すぎたんじゃ。'; else if((r.skin||0)>.3) cm='皮が黒ずんどる。湿度は90%以上を保つんじゃ。'; }
+  sfx('fanfare');
+  setMode('morning'); G.view='cellar'; refresh();
+  modal('<h2>🎍 '+G.year+'年目の結果発表</h2><table>'+rows.map(a=>'<tr><td>'+a[0]+'</td><td>'+a[1]+'</td></tr>').join('')+'</table><div class="bk"><h3>ゲンさん</h3><p>「'+cm+'」</p></div><p>イモ姫の力：体力 '+G.stats.hp+'／攻撃 '+G.stats.atk+'／防御 '+G.stats.def+'%／射程 '+G.stats.range+'</p>'+okBtn(G.year<3?'来年へ':'最後の戦いへ')+backLink,{'#mOk':()=>{
+    closeModal();
+    if(G.year<3){ endYearCarry(); G.pantry+=8; newYear(true); G.view='bed'; store.set('imohime.save',G); setMode('morning'); morningStart(); }
+    else { G.pantry+=4; say([['ゲンさん','3年目の冬じゃ。霜の峰に、道がひらいた。'],['イモ姫','行ってくる。みんなの芋を、守るために！']],()=>{ if(G.cleared[3]||true) startAction(5); }); }
+  }});
+}
+function doEnding(){
+  G.ending=true; LASTRUN={playT:G.playT,hits:G.hits,deaths:G.deaths,hist:G.hist.map(h=>({year:h.year,varName:h.varName,kg:h.kg,brix:h.brix,A:h.A,rank:h.rank,score:h.score,rot:h.rot})),stats:Object.assign({},G.stats),actTime:G.stat.actTime,log:G.stat.log,cleared:G.cleared.slice(),kills:Object.assign({},G.kills)}; const juns=(G.year-1)*30+Math.min(30,G.jun); best.clears=(best.clears||0)+1; best.juns=best.juns?Math.min(best.juns,juns):juns; store.set('imohime.best',best);
+  store.set('imohime.save',null);
+  setMode('morning'); elTasks.innerHTML=''; elBar.innerHTML=''; G.view='field';
+  say(ENDING,()=>{
+    const hs=G.hist.map(h=>'<tr><td>'+h.year+'年目 '+h.varName+'</td><td>'+fx(h.kg,0)+'kg / '+fx(h.brix,1)+'Brix / '+h.rank+'</td></tr>').join('');
+    modal('<h2>🍠 ENDING　イモ姫は島で暮らす</h2><table>'+hs+'<tr><td>クリアまでの旬</td><td>'+juns+'旬</td></tr><tr><td>被弾（全ステージ）</td><td>'+G.hits+'回</td></tr><tr><td>ベスト収量</td><td>'+(best.kg||0)+' kg</td></tr><tr><td>ベスト糖度</td><td>'+fx(best.brix||0,1)+' Brix</td></tr><tr><td>最短クリア</td><td>'+best.juns+'旬</td></tr></table><p>ごちそうさま！ 遊んでくれてありがとう。</p>'+okBtn('タイトルへ')+backLink,{'#mOk':()=>{ closeModal(); toTitle(); }});
+    if(auto) AU.t=3.2;
+  });
+}
+/* ---- タイトル・セーブ ---- */
+function toTitle(){
+  G=null; setMode('title'); $('#title').hidden=false; elDlg.hidden=true; closeModal();
+  const sv=store.get('imohime.save',null); $('#bCont').hidden=!(sv&&sv.v===1);
+  $('#bestTxt').textContent=(best.kg||best.clears)?'ベスト：収量 '+(best.kg||0)+'kg／糖度 '+fx(best.brix||0,1)+' Brix'+(best.juns?'／最短クリア '+best.juns+'旬':''):'';
+}
+function startNew(){
+  unlock(); $('#title').hidden=true; newGame(); setMode('morning'); G.view='bed'; refresh();
+  if(auto) { morningStart(); } else say(PROLOGUE,()=>{ morningStart(); });
+}
+function continueGame(){
+  unlock(); const sv=store.get('imohime.save',null); if(!sv) return;
+  G=sv; $('#title').hidden=true; setMode('morning'); refresh(); if(G.jun>=30){ yearEndFlow(); return; } morningStart();
+}
+$('#bStart').onclick=startNew; $('#bCont').onclick=continueGame; $('#bHow').onclick=()=>{ unlock(); openHow(); };
+/* ---- オート ---- */
+const AU={t:0};
+const autoBtn=$('#autoBtn');
+function setAuto(b){ auto=!!b; autoBtn.setAttribute('aria-pressed',auto?'true':'false'); autoBtn.textContent=auto?'🤖 オート中':'🤖 オート'; AU.t=.3; if(auto){ unlock(); } }
+autoBtn.onclick=()=>{ unlock(); setAuto(!auto); };
+function exploreWant(){
+  const f=G.f, j=G.jun, y=G.year, c=G.cleared;
+  if(y===1){ if(!c[0]&&j>=9) return 1; if(c[0]&&!c[1]&&j>=12) return 2; }
+  if(y===2){ if(!c[2]&&j>=7) return 3; if(c[2]&&!c[3]&&j>=11) return 4; }
+  if(c[0]&&j>=12&&j<=20&&(f.egg+f.young+f.big)>.05&&G.exploredFor!==G.year+':'+j) return 1;
+  return 0;
+}
+function pickMeal(explore){ const a=G.year; return explore?'yaki':(G.year>1?'dai':'hoshi'); }
+function autoTick(dt){
+  AU.t-=dt; if(AU.t>0) return;
+  if(mode==='title'){ if(!$('#title').hidden){ startNew(); AU.t=.3; } return; }
+  if(D){ nextLine(); AU.t=.14; return; }
+  if(mode==='action') return;
+  if(modalOpen()){ const ok=$('#mOk'); if(ok){ ok.click(); AU.t=.35; return; } const mn=elModal.querySelector('.tk[data-k]'); if(mn){ mn.click(); AU.t=.2; return; } elModal.querySelector('.tk:not([disabled])')?.click(); AU.t=.3; return; }
+  if(!G||G.ending) return;
+  if(MG) return;
+  // 畑仕事
+  if(!G.autoDone||G.autoDone!==G.year+':'+G.jun){
+    G.autoDone=G.year+':'+G.jun;
+    const msgs=[]; const orig=doTask;
+    const P=Object.assign({},POLICIES.auto);
+    // 方針を実行しつつ、メッセージをためて順に出す
+    const wrap=(id,o)=>{ const r=orig(id,o); if(r.ok) msgs.push(r.msg); return r; };
+    doTaskHook=wrap; farmPolicy(P); doTaskHook=null;
+    G.view=G.f.harvested?'cellar':(G.f.planted>=0?'field':(G.bed.on&&!G.bed.cut?'bed':'field'));
+    AU.q=msgs; AU.t=.05; refresh(); return;
+  }
+  if(AU.q&&AU.q.length){ const m=AU.q.shift(); toast(m,900); sfx('ok'); AU.t=.16; return; }
+  const w=exploreWant();
+  if(w&&!G.exploredThisJun){ G.exploredThisJun=true; G.exploredFor=G.year+':'+G.jun; startAction(w); AU.t=.2; return; }
+  if(G.jun>=30) return;
+  // 夜
+  const explore=false; const k=(G.st&&G.st.kg>1)||G.pantry>=.5?pickMeal(w):null;
+  afterMeal(k); AU.t=.3;
+}
+
+/* ================= 入力・ループ・フック ================= */
+const keyMap={ArrowLeft:'l',a:'l',A:'l',ArrowRight:'r',d:'r',D:'r',ArrowUp:'u',w:'u',W:'u',' ':'j',j:'a',J:'a',k:'w',K:'w'};
+function readKeys(){ return {l:!!K.l,r:!!K.r,u:!!K.u,j:!!K.j,a:!!K.a,w:!!K.w}; }
+addEventListener('keydown',e=>{
+  if(e.repeat&&(e.key==='o'||e.key==='O')) return;
+  if(e.key==='o'||e.key==='O'){ unlock(); setAuto(!auto); e.preventDefault(); return; }
+  if(auto&&e.isTrusted&&mode!=='title'&&(keyMap[e.key]||e.key==='Enter')){ setAuto(false); }
+  if(D&&(e.key===' '||e.key==='Enter'||e.key==='z'||e.key==='Z')){ unlock(); nextLine(); e.preventDefault(); return; }
+  if(modalOpen()&&e.key==='Enter'){ const ok=$('#mOk'); if(ok){ ok.click(); e.preventDefault(); } return; }
+  const k=keyMap[e.key]; if(k&&mode==='action'){ K[k]=1; unlock(); e.preventDefault(); }
+});
+addEventListener('keyup',e=>{ const k=keyMap[e.key]; if(k) K[k]=0; });
+addEventListener('blur',()=>{ for(const k in K) K[k]=0; });
+addEventListener('pointerdown',e=>{ if(auto&&e.isTrusted&&mode!=='title'&&e.target.closest&&!e.target.closest('#top')&&e.target.closest('#app')) setAuto(false); },true);
+function bindBtn(id,key){
+  const el=$(id); let lp=0;
+  const on=e=>{ e.preventDefault(); unlock(); K[key]=1; el.classList.add('on'); if(key==='w'){ lp=setTimeout(()=>{ if(K.w) K.u=1; },280); } };
+  const off=()=>{ K[key]=0; el.classList.remove('on'); if(key==='w'){ clearTimeout(lp); K.u=0; } };
+  el.addEventListener('pointerdown',on); ['pointerup','pointercancel','pointerleave'].forEach(ev=>el.addEventListener(ev,off));
+  el.addEventListener('contextmenu',e=>e.preventDefault());
+}
+bindBtn('#bL','l'); bindBtn('#bR','r'); bindBtn('#bJ','j'); bindBtn('#bA','a'); bindBtn('#bW','w');
+$('#bX').addEventListener('click',()=>{ if(mode==='action'&&A&&!A.done){ A.done=true; A.win=false; A.quit=true; } });
+const muteBtn=$('#muteBtn'); const paintMute=()=>{ muteBtn.textContent=muted?'音 OFF':'音 ON'; muteBtn.setAttribute('aria-pressed',muted?'false':'true'); };
+muteBtn.onclick=()=>{ unlock(); muted=!muted; store.set('imohime.mute',muted); paintMute(); if(!muted) sfx('ok'); }; paintMute();
+
+function stepAction(dt){
+  if(!A) return; acc+=dt; let n=0;
+  while(acc>=1/60&&n<8){ acc-=1/60; n++;
+    if(!A.done){ const inp=auto?aiInput():readKeys(); updWorld(inp,1/60); } }
+  FX.forEach(f=>{ f.t+=dt; f.life-=dt; f.x+=f.vx*dt; f.y+=f.vy*dt; f.vy+=200*dt; }); FX=FX.filter(f=>f.life>0);
+  TXT.forEach(t=>{ t.t+=dt; t.life-=dt; }); TXT=TXT.filter(t=>t.life>0);
+  if(A.done&&endT>=0){ endT+=dt; if(endT>(auto?.4:1.1)){ endT=-999; finishAction(); } }
+}
+function tick(dt){
+  T+=dt; if(G&&mode!=='title') G.playT=(G.playT||0)+dt;
+  if(auto) autoTick(dt);
+  if(mode==='action') stepAction(dt);
+  if(MG) stepMini(dt);
+  if(D&&auto===false) {}
+}
+function draw(){
+  const c=cx; c.setTransform(1,0,0,1,0,0); c.fillStyle='#1a1220'; c.fillRect(0,0,CW,CH);
+  if(mode==='action'&&A&&LV){ const portrait=CW<CH*.9; viewW=portrait?300:AW; const s=portrait?CW/300:Math.min(CW/AW,CH/AH); const vh=CH/s, oy=portrait?(vh-AH)*.5:(vh-AH)/2, ox=(CW-viewW*s)/2/s; c.setTransform(s,0,0,s,ox*s,0); drawAction(c,T,viewW,vh,Math.max(0,oy)); }
+  else if(mode==='title'){ drawTitleArt(); }
+  else if(G&&G.weather){ const LW=400,LH=320, s=Math.min(CW/LW,CH/LH); c.setTransform(s,0,0,s,(CW-LW*s)/2,(CH-LH*s)/2); c.save(); c.beginPath(); c.rect(0,0,LW,LH); c.clip(); (G.view==='bed'?drawBed:G.view==='cellar'?drawCellar:drawField)(c,T); c.restore(); }
+}
+let lastTs=0;
+function frame(ts){ const dt=Math.min(.05,(ts-lastTs)/1000||0); lastTs=ts; tick(dt); draw(); requestAnimationFrame(frame); }
+/* ---- テスト用フック ---- */
+window.__imohime={
+  get year(){ return G?G.year:0; }, get jun(){ return G?G.jun:0; }, get mode(){ return mode; }, get field(){ return G&&G.f; }, get bed(){ return G&&G.bed; }, get storage(){ return G&&G.st; },
+  get stats(){ return G&&G.stats; }, get weather(){ return G&&G.weather[Math.min(29,G.jun)]; }, get G(){ return G; }, get A(){ return A; }, get auto(){ return auto; }, get ap(){ return G&&G.ap; },
+  get modalOpen(){ return modalOpen(); }, get dialog(){ return !!D; },
+  step(dt){ const n=Math.max(1,Math.round(dt*60)); for(let i=0;i<n;i++) tick(1/60); draw(); },
+  doTask(id,o){ const r=doTask(id,o); refresh(); return r; },
+  nextJun(){ const r=nextJun(); if(G.jun>=30){ const {r:yr}=yearData(); if(G.year<3){ endYearCarry(); newYear(true); } else G.jun=30; refresh(); return {rep:r.rep,year:yr}; } refresh(); return {rep:r.rep}; },
+  setAuto, newGame(seed){ $('#title').hidden=true; newGame(seed); setMode('morning'); refresh(); return G; }, startAction, setView(v){ G.view=v; refresh(); },
+  yearEnd:yearEndFlow, ending:doEnding, closeModal, skipDialog(){ while(D) nextLine(); }, openBook, openExplore, openHow, chooseRidge, chooseMethod, chooseVariety, chooseCond, openMini,
+  simYear(p,o){ const w=window.__imohime; return simYear(p,o); }, policies:POLICIES,
+  mkWorld, updWorld, aiInput, yearResult, finishAction, goNight, toTitle, setStats(s){ Object.assign(G.stats,s); }, setJun(j){ G.jun=j; refresh(); },
+  get lastRun(){ return LASTRUN; }, best, farmPolicy, TASKS, advance
+};
+setAuto(false);
+toTitle();
+requestAnimationFrame(frame);
+})();
+</script>
+<!-- zoom guard: ピンチ・ダブルタップでズームしない -->
+<script>(function(){var p=function(e){e.preventDefault();};['gesturestart','gesturechange','gestureend'].forEach(function(t){document.addEventListener(t,p,{passive:false});});document.addEventListener('touchmove',function(e){if(e.touches&&e.touches.length>1)e.preventDefault();},{passive:false});document.addEventListener('dblclick',function(e){var t=e.target;if(t&&t.closest&&t.closest('input,textarea,select,[contenteditable]'))return;e.preventDefault();},{passive:false});})();</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>
