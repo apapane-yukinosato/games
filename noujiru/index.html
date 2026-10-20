@@ -1,0 +1,859 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="description" content="脳の報酬系の論文をもとにした、脳汁ドバドバのコンボアクション。旗あつめ・予想外ボーナス・ハテナボックス・報酬ルーレット。実際の脳を測るものではありません。">
+<title>脳汁ラボ ドーパミン・ラッシュ</title>
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" href="data:,">
+<style>
+html,body{touch-action:manipulation}
+:root{--bg:#07041a;--panel:#120a30;--panel2:#1a0f45;--ink:#efe9ff;--mute:#9a8fc7;--pink:#ff3fa4;--cyan:#27e6ff;--gold:#ffd54a;--line:#33237a}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);overflow:hidden;overscroll-behavior:none}
+body{font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#app{height:100vh;height:100dvh;max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:6px;padding:6px 10px calc(8px + env(safe-area-inset-bottom,0px));padding-top:calc(6px + env(safe-area-inset-top,0px))}
+#top{display:flex;align-items:center;gap:8px}
+#top a{color:var(--mute);text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:16px;font-weight:900;white-space:nowrap;text-shadow:0 0 10px var(--pink)}
+#tools{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--panel);white-space:nowrap}
+.mini[aria-pressed=true]{background:var(--pink);border-color:var(--pink);color:#fff;box-shadow:0 0 10px var(--pink)}
+#main{flex:1;min-height:0;display:grid;grid-template-columns:1fr;grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"hud" "dp" "arena";gap:6px}
+#hud{grid-area:hud;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+#hud div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px 6px;text-align:center;line-height:1.15}
+#hud small{display:block;font-size:10px;color:var(--mute);font-weight:700}
+#hud b{font-size:18px;font-variant-numeric:tabular-nums}
+#hCombo.hot{color:var(--pink);text-shadow:0 0 8px var(--pink)}
+#dp{grid-area:dp;height:clamp(120px,19dvh,180px);background:var(--panel);border:1px solid var(--line);border-radius:12px;position:relative;overflow:hidden}
+#dcv{position:absolute;inset:0;width:100%;height:100%}
+#arenaWrap{grid-area:arena;position:relative;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:12px}
+#arena{display:block;touch-action:none;border-radius:12px;background:#0a0524}
+#buffs{position:absolute;left:6px;top:6px;display:flex;gap:4px;flex-wrap:wrap;pointer-events:none;font-size:11px;font-weight:800}
+#buffs span{background:rgba(18,10,48,.85);border:1px solid var(--cyan);border-radius:999px;padding:2px 7px}
+@media (min-width:900px){
+  #main{grid-template-columns:minmax(0,1fr) 400px;grid-template-rows:auto minmax(0,1fr);grid-template-areas:"hud dp" "arena dp"}
+  #dp{height:auto}
+}
+.scr{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:14px 16px;text-align:center;background:rgba(7,4,26,.93);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.scr h2{margin:2px 0;font-size:26px;line-height:1.2;font-weight:900;text-shadow:0 0 14px var(--pink)}
+.scr h2 span{display:block;font-size:19px;color:var(--cyan);text-shadow:0 0 12px var(--cyan)}
+.scr h3{margin:8px 0 2px;font-size:14px;color:var(--cyan)}
+.scr p{margin:0;font-size:13px;line-height:1.6;max-width:430px}
+.scr .warn{font-size:12px;color:var(--gold);background:rgba(255,213,74,.08);border:1px solid rgba(255,213,74,.35);border-radius:10px;padding:6px 10px}
+.scr .small{font-size:11px;color:var(--mute)}
+.scr .brain svg{width:84px;height:84px;filter:drop-shadow(0 0 8px var(--pink))}
+.big{font-size:20px;font-weight:900;padding:12px 36px;border-radius:999px;border:0;background:linear-gradient(90deg,var(--pink),#9b5cff);color:#fff;box-shadow:0 0 18px var(--pink)}
+.btn{font-size:14px;font-weight:800;padding:9px 16px;border-radius:999px;border:1px solid var(--cyan);background:var(--panel);color:var(--ink)}
+.row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.scr a{color:var(--mute);font-size:13px;font-weight:800;text-decoration:none}
+.stats{list-style:none;margin:0;padding:0;width:100%;max-width:430px;display:grid;gap:5px;text-align:left}
+.stats li{display:flex;align-items:baseline;justify-content:space-between;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:13px}
+.stats b{font-size:17px;color:var(--gold);white-space:nowrap}
+.stats small{display:block;color:var(--mute);font-size:11px}
+table.bx{border-collapse:collapse;width:100%;max-width:430px;font-size:12px}
+table.bx th,table.bx td{border-bottom:1px solid var(--line);padding:4px 5px;text-align:center}
+table.bx th{color:var(--mute);font-weight:700}
+#rcv{width:100%;max-width:430px;height:140px;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+#stopBtn{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:4;font-size:22px;font-weight:900;padding:12px 44px;border-radius:999px;border:0;background:linear-gradient(90deg,var(--gold),#ff8a3f);color:#2a1200;box-shadow:0 0 18px var(--gold)}
+#notes,#brk{position:fixed;inset:0;z-index:50;background:#07041a;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 40px}
+#notes .in,#brk .in{max-width:560px;margin:0 auto;display:grid;gap:10px}
+#notes h2,#brk h2{margin:0;font-size:22px;text-shadow:0 0 12px var(--pink)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.65}
+.card h3{margin:0 0 4px;font-size:14px;color:var(--cyan)}
+.card cite{display:block;font-style:normal;font-size:12px;color:var(--ink);background:rgba(255,255,255,.05);border-radius:8px;padding:5px 8px;margin:4px 0;line-height:1.5}
+.card .game{color:var(--gold);font-weight:800}
+.card code{background:rgba(255,255,255,.08);padding:1px 5px;border-radius:5px;font-size:12px}
+#brk{display:flex;align-items:center;justify-content:center;text-align:center}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <a href="../">← 一覧</a>
+    <h1>🧠 脳汁ラボ</h1>
+    <button id="autoBtn" class="mini" type="button" aria-pressed="false">🤖 オート</button>
+  </header>
+  <div id="tools">
+    <button id="sndBtn" class="mini" type="button" aria-pressed="true">🔊 音 ON</button>
+    <button id="fxBtn" class="mini" type="button" aria-pressed="false">✨ エフェクト控えめ</button>
+    <button id="notesBtn" class="mini" type="button">📖 論文メモ</button>
+  </div>
+  <div id="main">
+    <div id="hud">
+      <div><small>のこり</small><b id="hTime">60</b></div>
+      <div><small>スコア</small><b id="hScore">0</b></div>
+      <div><small>コンボ</small><b id="hCombo">0</b></div>
+      <div><small>ラウンド</small><b id="hRound">-</b></div>
+    </div>
+    <div id="dp"><canvas id="dcv"></canvas></div>
+    <div id="arenaWrap">
+      <canvas id="arena" width="360" height="480" aria-label="ゲーム画面"></canvas>
+      <div id="buffs"></div>
+      <button id="stopBtn" type="button" hidden>ストップ！</button>
+
+      <section class="scr" id="scrTitle">
+        <div class="brain" aria-hidden="true">
+          <svg viewBox="0 0 100 100" fill="none" stroke="#ff3fa4" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M50 18c-6-8-20-7-24 3-9 1-14 11-9 19-5 6-3 16 5 20 1 9 11 14 19 9 3 3 7 4 9 4z" />
+            <path d="M50 18c6-8 20-7 24 3 9 1 14 11 9 19 5 6 3 16-5 20-1 9-11 14-19 9-3 3-7 4-9 4z" stroke="#27e6ff"/>
+            <path d="M50 18v66M33 36c6 1 9 5 9 10M67 36c-6 1-9 5-9 10M30 62c6-1 10-4 12-9M70 62c-6-1-10-4-12-9" stroke-width="2.5" opacity=".7"/>
+          </svg>
+        </div>
+        <h2>脳汁ラボ<span>ドーパミン・ラッシュ</span></h2>
+        <p>60秒の旗あつめアクション。コンボをつなぎ、予想外のボーナスにおどろき、ハテナボックスにドキドキして、最後のルーレットを自分で止めよう。</p>
+        <p class="warn">※ このゲームは、あなたの実際のドーパミンを測るものではありません。実際の脳を測っているわけではありません。画面のメーターは、論文の TD 学習モデルでゲーム内の出来事を計算した「モデル」です。</p>
+        <button id="startBtn" class="big" type="button">はじめる</button>
+        <div class="row">
+          <button id="autoStartBtn" class="btn" type="button">🤖 オートで見る</button>
+          <button class="btn notesOpen" type="button">📖 論文メモ</button>
+        </div>
+        <p class="small" id="bestLine"></p>
+        <p class="small">そうさ：ドラッグ（スティック）／矢印キー・WASD　ルーレットはボタンかスペース　O キーでオート</p>
+        <p class="small">お金や課金はありません。15分つづけて遊ぶと休憩をすすめます。</p>
+      </section>
+
+      <section class="scr" id="scrReport" hidden></section>
+    </div>
+  </div>
+</div>
+
+<section id="notes" hidden aria-label="論文メモ">
+  <div class="in">
+    <h2>📖 論文メモ（図鑑）</h2>
+    <div class="card" style="border-color:var(--gold)">
+      <h3>だいじなおことわり</h3>
+      このゲームは、あなたの実際のドーパミンを測るものではありません。<b>実際の脳を測っているわけではありません。</b>画面の「ドーパミン予測誤差メーター」は、論文1の考え方（TD 学習モデル）で、ゲームの中の出来事から計算した「モデル」です。<br>
+      ルーレットや？ボックスの確率は、表示どおりの本当の確率で決めています。ニアミスをわざと増やすことはしていません。お金や課金はなく、アイテムやポイントはゲームの中だけのものです。
+    </div>
+    <div class="card">
+      <h3>1. 予測誤差（旗・予想外ボーナス）</h3>
+      <cite>Schultz, W., Dayan, P., Montague, P. R. (1997). A neural substrate of prediction and reward. <i>Science</i>, 275, 1593–1599.</cite>
+      ドーパミンニューロンの反応は、報酬そのものではなく「報酬の予測誤差」（予想より良い／悪い）を表しているように見えます。予想どおりの報酬には反応が小さくなり、予想した報酬がないと反応が下がります。<br>
+      <span class="game">ゲームでは：</span>δ = r − V（r はもらった報酬、V は予想）。V は <code>V ← V + α·δ</code>（α = 0.12）で少しずつ更新します。いつもの旗は δ がだんだん 0 に近づき、金色の「予想外ボーナス」（r = 5）は大きなプラス。きらきらの旗が「いつも金」のパターンになったあと、金が出ないと δ がマイナスにふれます。
+    </div>
+    <div class="card">
+      <h3>2. 不確実さ（？ボックス）</h3>
+      <cite>Fiorillo, C. D., Tobler, P. N., Schultz, W. (2003). Discrete coding of reward probability and uncertainty by dopamine neurons. <i>Science</i>, 299, 1898–1902.</cite>
+      報酬の確率に応じた反応とは別に、不確実さに比例して、報酬の時刻に向けてじわじわ高まる反応が見つかりました。不確実さは、確率 50% のときにいちばん大きくなります。<br>
+      <span class="game">ゲームでは：</span>？ボックスは 25%・50%・75%。取ってから中身が出るまでの約1.5秒の「ため」で、光と音が <code>p(1−p)</code> に比例してじわじわ高まります（50% が最大）。当たり／はずれは表示どおりの確率です。
+    </div>
+    <div class="card">
+      <h3>3. ニアミスと自分の操作（ルーレット）</h3>
+      <cite>Clark, L., Lawrence, A. J., Astley-Jones, F., Gray, N. (2009). Gambling near-misses enhance motivation to gamble and recruit win-related brain circuitry. <i>Neuron</i>, 61, 481–490.</cite>
+      ニアミス（惜しいハズレ）は、不快に感じられるのに続けたい気持ちを高め、勝ちに関わる脳の領域（腹側線条体など）を活動させました。この効果は、本人が操作に関わったときに出ました。<br>
+      <span class="game">ゲームでは：</span>ラウンドの合間のルーレットは自分で止めます。当たりの扇形のすぐ隣に止まったときだけ「ニアミス！」と出します。扇形の面積が、そのまま当たりの確率です。
+    </div>
+    <div class="card">
+      <h3>4. ビデオゲームとドーパミン（旗あつめ）</h3>
+      <cite>Koepp, M. J., Gunn, R. N., Lawrence, A. D., et al. (1998). Evidence for striatal dopamine release during a video game. <i>Nature</i>, 393, 266–268.</cite>
+      PET という方法の研究です。戦車を操作して旗を集めるビデオゲーム（金銭報酬つき）をしている間に、線条体でドーパミンが放出されたことを示す証拠が得られました。成績とも関係していました。<br>
+      <span class="game">ゲームでは：</span>この研究へのオマージュとして、アリーナを動き回って旗を集めます。
+    </div>
+    <div class="card" style="border-color:var(--pink)">
+      <h3>じょうずに付き合おう</h3>
+      報酬系を刺激する仕組みは、ギャンブルや依存にも使われるので、上手に付き合おう。このゲームは15分つづけて遊ぶと休憩をすすめます。つかれたら、水をのんで目をやすめてね。
+    </div>
+    <div class="row" style="justify-content:center"><button id="notesClose" class="big" type="button" style="font-size:16px;padding:10px 30px">とじる</button></div>
+  </div>
+</section>
+
+<section id="brk" hidden aria-label="休憩">
+  <div class="in">
+    <h2>☕ ちょっと休憩しよう</h2>
+    <div class="card">連続で15分あそびました。水をのんで、目を遠くに向けて、からだをのばしてみよう。<br>報酬系を刺激する仕組みは、ギャンブルや依存にも使われるので、上手に付き合おう。</div>
+    <div class="row" style="justify-content:center">
+      <button id="brkRest" class="big" type="button" style="font-size:16px;padding:10px 26px">休憩する（タイトルへ）</button>
+      <button id="brkSkip" class="btn" type="button">スキップしてつづける</button>
+    </div>
+    <p class="small" style="color:var(--mute);font-size:11px">オート中は数秒で自動的につづきます。</p>
+  </div>
+</section>
+
+<script>
+(()=>{
+'use strict';
+/* ===== 基本 ===== */
+const W=360,H=480, ROUND_T=60, SPEED=175, PR=11, ER=12, FR=9, BOX_T=1.5;
+const R_FLAG=1, R_GOLD=5, R_BOX=8, ALPHA=.12, P_SURPRISE=.08, COMBO_T=2.6;
+const $=id=>document.getElementById(id);
+const cv=$('arena'), ctx=cv.getContext('2d'), dcv=$('dcv'), dctx=dcv.getContext('2d');
+function lsGet(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:v; }catch(_){ return d; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(_){ } }
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+
+/* 乱数（ゲームの判定用。見た目のパーティクルは Math.random） */
+let seedv=(Date.now()&0x7fffffff)||1;
+function rnd(){ seedv=(seedv+0x6D2B79F5)|0; let t=Math.imul(seedv^seedv>>>15,1|seedv); t=(t+Math.imul(t^t>>>7,61|t))^t; return ((t^t>>>14)>>>0)/4294967296; }
+function setSeed(n){ seedv=(n|0)||1; }
+
+/* ===== TD 学習モデル（論文1）：δ = r − V,  V ← V + α·δ ===== */
+const td={ alpha:ALPHA, V:{},
+  reset(){ this.V={flag:0,cue:0,box25:.25*R_BOX,box50:.5*R_BOX,box75:.75*R_BOX}; },
+  feed(state,r){ const v=this.V[state]; const d=r-v; this.V[state]=v+this.alpha*d; return d; } };
+td.reset();
+
+/* ===== 状態 ===== */
+const S={ mode:'title', overlay:null, t:0, round:0, total:0, auto:false, bot:null, manual:false,
+  sound:lsGet('noujiru.sound','1')!=='0',
+  fx:lsGet('noujiru.fx',(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)?'1':'0')==='1',
+  player:{x:W/2,y:H/2,vx:0,vy:0,inv:0,face:0}, flags:[], enemies:[], box:null, parts:[], pops:[],
+  buffs:{magnet:false,shield:false,more:false}, nextBuff:{magnet:false,shield:false,more:false},
+  meter:0, ramp:0, delta:0, lastR:0, lastV:0, lastState:'', glow:0, glowCool:0, shake:0,
+  nearMissTotal:0, wheel:null, readyT:0, resultT:0, reportT:0, playSec:0, titleIdle:0, breakT:0, stick:null,
+  best:{score:+lsGet('noujiru.bestScore',0)||0, combo:+lsGet('noujiru.bestCombo',0)||0, delta:+lsGet('noujiru.bestDelta',0)||0} };
+let R=newRound(), quiet=false;
+function newRound(){ return { score:0, combo:0, maxCombo:0, comboT:0, elapsed:0, picked:0, spawned:0, cueIdx:0, omitAt:99, hits:0,
+  hist:[], ramps:[], maxD:null, flagD:[], nearMiss:0, boxTimer:5, closed:false,
+  boxStats:{25:{open:0,hit:0},50:{open:0,hit:0},75:{open:0,hit:0}}, wheelRes:null, golds:0 }; }
+
+/* ===== 音（WebAudio 合成） ===== */
+let AC=null, master=null, chOsc=null, chGain=null;
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); master=AC.createGain(); master.gain.value=.5; master.connect(AC.destination); }catch(_){ AC=null; } }
+  if(AC&&AC.state==='suspended') AC.resume().catch(()=>{}); return AC; }
+function tone(f,dur,type,vol,when,slide){ if(!S.sound||quiet) return; const a=ac(); if(!a) return; try{
+  const t=a.currentTime+(when||0), o=a.createOscillator(), g=a.createGain(); o.type=type||'sine'; o.frequency.setValueAtTime(f,t);
+  if(slide) o.frequency.exponentialRampToValueAtTime(slide,t+dur);
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol||.15,t+.01); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t+dur+.03); }catch(_){ } }
+function chime(combo){ const semi=Math.min(Math.max(combo-1,0),24), f=523.25*Math.pow(2,semi/12); tone(f,.2,'triangle',.15); tone(f*2,.12,'sine',.045,.01); }
+function arpeggio(){ [523.25,659.25,783.99,1046.5,1318.5,1568,2093].forEach((f,i)=>{ tone(f,.22,'triangle',.13,i*.055); tone(f*2,.12,'sine',.04,i*.055); }); }
+function superFanfare(){ arpeggio(); [1046.5,1318.5,1568,2093,2637].forEach((f,i)=>tone(f,.3,'square',.06,.42+i*.07)); }
+function hitSfx(){ tone(220,.25,'sawtooth',.14,0,70); }
+function missSfx(){ tone(330,.18,'triangle',.12,0,220); tone(247,.28,'triangle',.12,.16,150); }
+function tick(){ tone(1400,.03,'square',.04); }
+function nearSfx(){ tone(660,.14,'triangle',.12); tone(494,.14,'triangle',.12,.13); tone(330,.4,'triangle',.13,.26,260); }
+function winSfx(){ arpeggio(); }
+function chargeStart(){ if(!S.sound||quiet) return; const a=ac(); if(!a) return; chargeStop(); try{ chOsc=a.createOscillator(); chGain=a.createGain(); chOsc.type='triangle'; chOsc.frequency.value=220; chGain.gain.value=0; chOsc.connect(chGain); chGain.connect(master); chOsc.start(); }catch(_){ chOsc=null; } }
+function chargeSet(I){ if(!chOsc||!AC) return; try{ chOsc.frequency.setTargetAtTime(220*Math.pow(2,2.5*I),AC.currentTime,.05); chGain.gain.setTargetAtTime(.01+.13*I,AC.currentTime,.05); }catch(_){ } }
+function chargeStop(){ if(chOsc&&AC){ try{ chGain.gain.setTargetAtTime(0,AC.currentTime,.02); chOsc.stop(AC.currentTime+.1); }catch(_){ } } chOsc=null; chGain=null; }
+
+/* ===== 演出 ===== */
+const FX=()=>S.fx?.3:1;
+function burst(x,y,n,cols,spd,life){ n=Math.round(n*FX()); for(let i=0;i<n;i++){ const a=Math.random()*6.283, s=spd*(.3+Math.random()); S.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:life*(.6+Math.random()*.6),max:life,col:cols[(Math.random()*cols.length)|0],r:1.5+Math.random()*2.5}); } if(S.parts.length>420) S.parts.splice(0,S.parts.length-420); }
+function pop(x,y,text,col,size,life){ S.pops.push({x:clamp(x,40,W-40),y:clamp(y,16,H-10),text,col,size:size||14,life:life||.9,max:life||.9}); if(S.pops.length>14) S.pops.shift(); }
+function addShake(a){ if(!S.fx) S.shake=Math.max(S.shake,a); }
+function addGlow(a){ if(S.glowCool>0) return; S.glow=Math.min(1,S.glow+a*(S.fx?.5:1)); S.glowCool=.45; }
+
+/* ===== ラウンド進行 ===== */
+function startGame(){ S.round=0; S.total=0; S.nearMissTotal=0; td.reset(); S.meter=0; S.delta=0; S.nextBuff={magnet:false,shield:false,more:false}; S.parts=[]; S.pops=[]; startRound(); }
+function startRound(){
+  S.round++; R=newRound();
+  S.buffs=Object.assign({},S.nextBuff); S.nextBuff={magnet:false,shield:false,more:false};
+  R.omitAt = S.round===2 ? 6+Math.floor(rnd()*3) : S.round>2 ? 3+Math.floor(rnd()*4) : 99;
+  const p=S.player; p.x=W/2; p.y=H/2; p.vx=p.vy=0; p.inv=.8;
+  S.flags=[]; S.enemies=[]; S.box=null; S.ramp=0; S.meter=0; S.stick=null; chargeStop();
+  const ne=Math.min(2+S.round-1,6), speed=Math.min(70+8*S.round,120);
+  for(let i=0;i<ne;i++){ let x,y,k=0; do{ x=30+rnd()*(W-60); y=30+rnd()*(H-60); k++; }while(Math.hypot(x-p.x,y-p.y)<130&&k<30);
+    const chase=(S.round>=3&&i===ne-1), a=rnd()*6.283;
+    S.enemies.push({x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,kind:chase?'chase':'drift',sp:chase?58+S.round*3:speed}); }
+  fillFlags();
+  S.mode='ready'; S.readyT=(S.auto||S.bot)?.35:1.1;
+  $('scrReport').hidden=true; $('scrTitle').hidden=true; $('stopBtn').hidden=true;
+  if(S.auto) AI.reset();
+}
+function flagTarget(){ return S.buffs.more?7:4; }
+function fillFlags(){ while(S.flags.length<flagTarget()) spawnFlag(); }
+function spawnFlag(){
+  const p=S.player; let x,y,k=0;
+  do{ x=24+rnd()*(W-48); y=26+rnd()*(H-52); k++; }while((Math.hypot(x-p.x,y-p.y)<60||S.enemies.some(e=>Math.hypot(x-e.x,y-e.y)<40))&&k<40);
+  R.spawned++;
+  S.flags.push({x,y,kind:(S.round>=2&&R.spawned%5===0)?'cue':'normal',ph:rnd()*6.28});
+}
+function endRound(){
+  if(R.closed) return; R.closed=true; chargeStop(); S.box=null; S.ramp=0;
+  S.total+=R.score;
+  if(R.score>S.best.score){ S.best.score=R.score; lsSet('noujiru.bestScore',R.score); }
+  if(R.maxCombo>S.best.combo){ S.best.combo=R.maxCombo; lsSet('noujiru.bestCombo',R.maxCombo); }
+  if(R.maxD&&R.maxD.d>S.best.delta){ S.best.delta=R.maxD.d; lsSet('noujiru.bestDelta',R.maxD.d.toFixed(2)); }
+  S.mode='wheel'; S.pops=[]; startWheel();
+}
+
+/* ===== 報酬と TD ===== */
+function reward(state,r){
+  const V0=td.V[state], d=td.feed(state,r);
+  S.delta=d; S.lastR=r; S.lastV=V0; S.lastState=state; S.meter=d;
+  R.hist.push({t:R.elapsed,d,state,r});
+  if(!R.maxD||d>R.maxD.d) R.maxD={d,t:R.elapsed,state,r};
+  return d;
+}
+function comboMult(){ return 1+Math.min(R.combo,40)*.05; }
+function addScore(base,x,y,col,size){ const v=Math.round(base*comboMult()); R.score+=v; pop(x,y-10,'+'+v,col||'#fff',size||13,.8); return v; }
+function pickFlag(f){
+  R.combo++; R.maxCombo=Math.max(R.maxCombo,R.combo); R.comboT=COMBO_T; R.picked++;
+  let r=R_FLAG, state='flag', gold=false, cuePaid=false;
+  if(f.kind==='cue'){ R.cueIdx++; state='cue'; if(R.cueIdx!==R.omitAt){ r=R_GOLD; cuePaid=true; } }
+  else if(S.forceGold||rnd()<P_SURPRISE){ S.forceGold=false; r=R_GOLD; gold=true; }
+  const V0=td.V[state], d=reward(state,r);
+  if(state==='flag'&&!gold) R.flagD.push(d);
+  const c=R.combo, big=Math.min(c,30);
+  if(gold){
+    R.golds++; addScore(10*R_GOLD,f.x,f.y,'#ffd54a',20); arpeggio();
+    burst(f.x,f.y,34,['#ffd54a','#fff2a8','#ff3fa4'],190,.9); addShake(5); addGlow(.7);
+    pop(f.x,f.y-50,'予想外ボーナス！ ×5','#ffd54a',16,1.3);
+  } else if(cuePaid){
+    addScore(10*R_GOLD,f.x,f.y,'#ffd54a',16); chime(c); tone(1568,.2,'triangle',.1,.06);
+    burst(f.x,f.y,18,['#27e6ff','#ffd54a','#fff'],140,.7); addGlow(.4);
+    pop(f.x,f.y-48,'きらきら旗 ×5','#27e6ff',14,1);
+  } else if(state==='cue'){
+    addScore(10,f.x,f.y,'#9a8fc7',13); missSfx(); pop(f.x,f.y-26,'金は出なかった…（δ '+d.toFixed(1)+'）','#27e6ff',13,1.4);
+    burst(f.x,f.y,8,['#27e6ff'],70,.6);
+  } else {
+    addScore(10,f.x,f.y,'#fff',12+Math.min(c/4,6)); chime(c);
+    burst(f.x,f.y,6+big*.8,['#ff3fa4','#27e6ff','#fff'],70+big*6,.5+big*.012); if(c>=10) addShake(Math.min(1+c*.08,4));
+  }
+  if(c>0&&c%10===0){ pop(S.player.x,S.player.y-34,c+' COMBO!','#ff3fa4',18,1); addGlow(.5); }
+  else if(c>=5&&c%5===0){ pop(S.player.x,S.player.y-34,c+' コンボ','#ff3fa4',15,.8); }
+  void V0;
+}
+function breakCombo(msg){ if(R.combo>=5) { pop(S.player.x,S.player.y-30,msg||'コンボきれ…','#27e6ff',14,.9); missSfx(); } R.combo=0; R.comboT=0; }
+
+/* ？ボックス（論文2） */
+function spawnBox(p){
+  const pr=p||[.25,.5,.75][Math.floor(rnd()*3)];
+  const pl=S.player; let x,y,k=0;
+  do{ x=34+rnd()*(W-68); y=40+rnd()*(H-80); k++; }while(Math.hypot(x-pl.x,y-pl.y)<90&&k<30);
+  S.box={x,y,p:pr,life:10,t:-1};
+}
+const boxKey=p=>Math.round(p*100);
+const uncertainty=p=>p*(1-p);                 // 不確実さ p(1−p)
+const intensity=(p,u)=>u*4*uncertainty(p);   // 50% で最大(1.0)
+function rollBox(p){ return rnd()<p; }        // 表示どおりの確率
+function resolveBox(b){
+  const st=R.boxStats[boxKey(b.p)]; st.open++;
+  const win=rollBox(b.p);
+  const state='box'+boxKey(b.p);
+  if(win){
+    st.hit++; reward(state,R_BOX);
+    if(!quiet){ R.score+=300; R.combo+=3; R.maxCombo=Math.max(R.maxCombo,R.combo); R.comboT=COMBO_T;
+      superFanfare(); burst(b.x,b.y,50,['#ffd54a','#ff3fa4','#27e6ff','#fff'],230,1); addShake(6); addGlow(.8);
+      pop(b.x,b.y-20,'スーパーボーナス！ +300','#ffd54a',18,1.4); }
+    else { R.score+=300; R.combo+=3; R.maxCombo=Math.max(R.maxCombo,R.combo); R.comboT=COMBO_T; }
+  } else {
+    reward(state,0); if(!quiet){ missSfx(); pop(b.x,b.y-20,'はずれ…','#9a8fc7',15,1.1); burst(b.x,b.y,10,['#665b99'],60,.6); }
+  }
+  return win;
+}
+
+/* ===== ルーレット（論文3） ===== */
+const WEDGES=(()=>{ const defs=[['magnet','磁石','🧲',40,true,'#ff3fa4'],['miss','ざんねん','',80,false,'#241552'],['shield','コンボ保護','🛡️',40,true,'#27e6ff'],['miss','ざんねん','',80,false,'#2c1a63'],['more','旗ぞうりょう','🚩',40,true,'#ffd54a'],['miss','ざんねん','',80,false,'#241552']];
+  let a=0; return defs.map(d=>{ const w={id:d[0],name:d[1],icon:d[2],deg:d[3],win:d[4],col:d[5],start:a,end:a+d[3]}; a+=d[3]; return w; }); })();
+const NEAR_DEG=8, WHEEL_W=288;  // 288°/s = 0.8 回転/秒
+function wedgeIndexAt(ang){ ang=((ang%360)+360)%360; for(let i=0;i<WEDGES.length;i++) if(ang>=WEDGES[i].start&&ang<WEDGES[i].end) return i; return WEDGES.length-1; }
+function wheelOutcome(ang){
+  ang=((ang%360)+360)%360; const i=wedgeIndexAt(ang), w=WEDGES[i];
+  if(w.win) return {idx:i,win:true,id:w.id,near:false};
+  const prev=WEDGES[(i+WEDGES.length-1)%WEDGES.length], next=WEDGES[(i+1)%WEDGES.length];
+  const dS=prev.win?ang-w.start:Infinity, dE=next.win?w.end-ang:Infinity;
+  return {idx:i,win:false,id:null,near:Math.min(dS,dE)<=NEAR_DEG};
+}
+function startWheel(){ S.wheel={ang:rnd()*360,spinning:true,res:null,lastTick:0,target:null}; S.resultT=0; $('stopBtn').hidden=false; }
+function updateWheelAng(dt){ const w=S.wheel; if(!w||!w.spinning) return; w.ang=(w.ang+WHEEL_W*dt)%360; const tk=Math.floor(w.ang/20); if(tk!==w.lastTick){ w.lastTick=tk; tick(); } }
+function stopWheel(){
+  const w=S.wheel; if(S.mode!=='wheel'||!w||!w.spinning) return null;
+  w.spinning=false; const o=wheelOutcome(w.ang); w.res=o; R.wheelRes=o; S.resultT=0; $('stopBtn').hidden=true;
+  if(o.win){ S.nextBuff[o.id]=true; winSfx(); burst(W/2,170,40,['#ffd54a','#ff3fa4','#27e6ff'],200,1); addShake(3); }
+  else if(o.near){ R.nearMiss++; S.nearMissTotal++; nearSfx(); }
+  else missSfx();
+  return o;
+}
+
+/* ===== 更新 ===== */
+const inp={x:0,y:0}, keys={}; let hookMove=null;
+function inputVec(){
+  if(hookMove) return [hookMove.x,hookMove.y];
+  if(S.stick){ const dx=S.stick.x-S.stick.ox, dy=S.stick.y-S.stick.oy, l=Math.hypot(dx,dy); if(l>4){ const m=Math.min(1,l/36); return [dx/l*m,dy/l*m]; } return [0,0]; }
+  let x=(keys.arrowright||keys.d?1:0)-(keys.arrowleft||keys.a?1:0), y=(keys.arrowdown||keys.s?1:0)-(keys.arrowup||keys.w?1:0);
+  if(x&&y){ x*=.7071; y*=.7071; } return [x,y];
+}
+function update(dt){
+  S.t+=dt;
+  S.meter*=Math.exp(-dt/.8); S.shake=Math.max(0,S.shake-dt*14); S.glow=Math.max(0,S.glow-dt*1.8); S.glowCool=Math.max(0,S.glowCool-dt);
+  for(let i=S.parts.length-1;i>=0;i--){ const q=S.parts[i]; q.life-=dt; if(q.life<=0){ S.parts.splice(i,1); continue; } q.x+=q.vx*dt; q.y+=q.vy*dt; q.vx*=.96; q.vy=q.vy*.96+60*dt; }
+  for(let i=S.pops.length-1;i>=0;i--){ const q=S.pops[i]; q.life-=dt; q.y-=22*dt; if(q.life<=0) S.pops.splice(i,1); }
+  if(S.overlay==='break'){ if(S.auto){ S.breakT+=dt; if(S.breakT>4) closeBreak(true); } return; }
+  if(S.overlay==='notes') return;
+  switch(S.mode){
+    case 'ready': S.readyT-=dt; if(S.readyT<=0) S.mode='play'; break;
+    case 'play': updatePlay(dt); break;
+    case 'wheel': updateWheel(dt); break;
+    case 'report': S.reportT+=dt; if((S.auto||S.bot)&&S.reportT>1.8) nextRound(); break;
+  }
+}
+function updatePlay(dt){
+  R.elapsed+=dt;
+  const p=S.player;
+  let ix=0,iy=0;
+  if(S.auto||S.bot){ const m=AI.move(dt); ix=m[0]; iy=m[1]; } else { const m=inputVec(); ix=m[0]; iy=m[1]; }
+  const l=Math.hypot(ix,iy); if(l>1){ ix/=l; iy/=l; }
+  p.vx=ix*SPEED; p.vy=iy*SPEED; p.x=clamp(p.x+p.vx*dt,PR,W-PR); p.y=clamp(p.y+p.vy*dt,PR,H-PR);
+  if(l>.1) p.face=Math.atan2(iy,ix);
+  p.inv=Math.max(0,p.inv-dt);
+  // 敵
+  for(const e of S.enemies){
+    if(e.kind==='chase'){ const dx=p.x-e.x, dy=p.y-e.y, d=Math.hypot(dx,dy)||1; e.x+=dx/d*e.sp*dt; e.y+=dy/d*e.sp*dt; }
+    else { e.x+=e.vx*dt; e.y+=e.vy*dt; if(e.x<ER){ e.x=ER; e.vx=Math.abs(e.vx); } if(e.x>W-ER){ e.x=W-ER; e.vx=-Math.abs(e.vx); } if(e.y<ER){ e.y=ER; e.vy=Math.abs(e.vy); } if(e.y>H-ER){ e.y=H-ER; e.vy=-Math.abs(e.vy); } }
+    if(p.inv<=0&&Math.hypot(e.x-p.x,e.y-p.y)<PR+ER-2){
+      if(S.buffs.shield){ S.buffs.shield=false; p.inv=1.2; pop(p.x,p.y-26,'ガード！','#27e6ff',15,1); burst(p.x,p.y,16,['#27e6ff'],120,.6); tone(880,.2,'triangle',.12); }
+      else { R.hits++; breakCombo('ぶつかった！'); p.inv=1.2; hitSfx(); addShake(5); burst(p.x,p.y,14,['#ff5a3c','#fff'],120,.5); }
+    }
+  }
+  // 旗
+  const mag=S.buffs.magnet;
+  for(let i=S.flags.length-1;i>=0;i--){ const f=S.flags[i], dx=p.x-f.x, dy=p.y-f.y, d=Math.hypot(dx,dy);
+    if(mag&&d<80&&d>1){ f.x+=dx/d*230*dt; f.y+=dy/d*230*dt; }
+    if(d<PR+FR+2){ S.flags.splice(i,1); pickFlag(f); spawnFlag(); } }
+  fillFlags();
+  // ？ボックス
+  if(!S.box){ R.boxTimer-=dt; if(R.boxTimer<=0&&R.elapsed<ROUND_T-6) spawnBox(); }
+  else { const b=S.box;
+    if(b.t<0){ b.life-=dt; if(b.life<=0){ S.box=null; R.boxTimer=5+rnd()*4; }
+      else if(Math.hypot(b.x-p.x,b.y-p.y)<PR+16){ b.t=0; chargeStart(); R.ramps.push({t0:R.elapsed,p:b.p}); pop(b.x,b.y-26,'ドキドキ…','#ffd54a',14,1); } }
+    else { b.t+=dt; const I=intensity(b.p,Math.min(1,b.t/BOX_T)); S.ramp=I; chargeSet(I);
+      if(b.t>=BOX_T){ chargeStop(); S.ramp=0; const bx=b; S.box=null; R.boxTimer=6+rnd()*5; resolveBox(bx); } } }
+  // コンボのタイムアウト
+  if(R.combo>0){ R.comboT-=dt; if(R.comboT<=0) breakCombo('コンボきれ…'); }
+  if(R.elapsed>=ROUND_T) endRound();
+}
+function updateWheel(dt){
+  const w=S.wheel;
+  if(w.spinning){ if(S.auto||S.bot) AI.wheel(dt); updateWheelAng(dt); if((S.auto||S.bot)&&AI.wheelStopNow(dt)) stopWheel(); }
+  else { S.resultT+=dt; if(S.resultT>((S.auto||S.bot)?.7:1.8)) showReport(); }
+}
+function step(dt){ S.manual=true; quiet=true; try{ const n=Math.max(1,Math.ceil(dt/(1/60)-1e-9)), h=dt/n; for(let i=0;i<n;i++) update(h); } finally { quiet=false; } }
+
+/* ===== AI（オート：TAS 風の最短・最適） ===== */
+const AI={
+  wedge:0, stopArm:null, humanDir:[0,0], pend:[], thinkT:0,
+  reset(){ this.pend=[]; this.thinkT=0; this.humanDir=[0,0]; },
+  move(dt){ return (S.bot==='human')?this.humanMove(dt):this.tasMove(); },
+  /* 敵の未来位置（ドリフターは壁の反射まで先読み） */
+  drifterTraj(h,N){
+    const out=[]; for(const e of S.enemies){ if(e.kind==='chase'){ out.push(null); continue; }
+      let x=e.x,y=e.y,vx=e.vx,vy=e.vy; const tr=[]; for(let k=0;k<=N;k++){ tr.push([x,y]); x+=vx*h; y+=vy*h;
+        if(x<ER){ x=ER; vx=Math.abs(vx); } if(x>W-ER){ x=W-ER; vx=-Math.abs(vx); } if(y<ER){ y=ER; vy=Math.abs(vy); } if(y>H-ER){ y=H-ER; vy=-Math.abs(vy); } }
+      out.push(tr); }
+    return out;
+  },
+  evalDir(dx,dy,tgt,traj,h,N){
+    const p=S.player; let px=p.x,py=p.y,minClear=1e9,minD=Math.hypot(tgt.x-px,tgt.y-py);
+    const cs=S.enemies.map(e=>e.kind==='chase'?[e.x,e.y,e.sp]:null);
+    for(let k=1;k<=N;k++){
+      px=clamp(px+dx*SPEED*h,PR,W-PR); py=clamp(py+dy*SPEED*h,PR,H-PR);
+      for(let j=0;j<S.enemies.length;j++){ let ex,ey;
+        if(cs[j]){ const c=cs[j], ddx=px-c[0], ddy=py-c[1], dd=Math.hypot(ddx,ddy)||1; c[0]+=ddx/dd*c[2]*h; c[1]+=ddy/dd*c[2]*h; ex=c[0]; ey=c[1]; }
+        else { ex=traj[j][k][0]; ey=traj[j][k][1]; }
+        const cl=Math.hypot(ex-px,ey-py)-(PR+ER); if(cl<minClear) minClear=cl; }
+      const d=Math.hypot(tgt.x-px,tgt.y-py); if(d<minD) minD=d;
+    }
+    return {minClear,minD,px,py};
+  },
+  targets(){
+    const p=S.player, out=[];
+    const nn=(f)=>{ let m=1e9; for(const g of S.flags){ if(g!==f){ const d=Math.hypot(g.x-f.x,g.y-f.y); if(d<m) m=d; } } return m>1e8?0:m; };
+    for(const f of S.flags){ const d=Math.hypot(f.x-p.x,f.y-p.y), w=f.kind==='cue'&&S.round>=2&&R.cueIdx+1!==R.omitAt?2.4:1;
+      out.push({x:f.x,y:f.y,cost:(d+.5*nn(f))/w,d}); }
+    const b=S.box;
+    if(b&&b.t<0){ const d=Math.hypot(b.x-p.x,b.y-p.y); if(d/SPEED<b.life-.4) out.push({x:b.x,y:b.y,cost:d/(1+8*b.p),d,box:true}); }
+    out.sort((a,c)=>a.cost-c.cost); return out;
+  },
+  tasMove(){
+    const p=S.player, tg=this.targets(); if(!tg.length) return [0,0];
+    const h=.04, N=18, traj=this.drifterTraj(h,N), SAFE=12;
+    const cand=[]; for(let i=0;i<32;i++){ const a=i/32*6.2832; cand.push([Math.cos(a),Math.sin(a)]); }
+    let best=null;
+    for(let ti=0;ti<Math.min(4,tg.length);ti++){
+      const t=tg[ti], d0=t.d||1, dir=[(t.x-p.x)/d0,(t.y-p.y)/d0];
+      const list=[dir].concat(cand);
+      let bs=null;
+      for(const c of list){ const r=this.evalDir(c[0],c[1],t,traj,h,N);
+        if(r.minClear<SAFE) { if(!bs||(bs.safe===false&&r.minClear>bs.clear)) bs={dir:c,safe:false,clear:r.minClear,minD:r.minD}; continue; }
+        if(!bs||bs.safe===false||r.minD<bs.minD-1.5) bs={dir:c,safe:true,clear:r.minClear,minD:r.minD}; }
+      // 立ち止まる案
+      const still=this.evalDir(0,0,t,traj,h,N); if(still.minClear>=SAFE&&(!bs||!bs.safe)) bs={dir:[0,0],safe:true,clear:still.minClear,minD:still.minD};
+      if(!bs) continue;
+      const progress=t.d-bs.minD;
+      bs.score=bs.safe?progress:-1000+bs.clear;
+      if(!best||bs.score>best.score) best=bs;
+      if(bs.safe&&(bs.minD<=20||progress>=.85*SPEED*N*h)) break;
+    }
+    return best?best.dir:[0,0];
+  },
+  /* 人間を想定したボット：反応 0.3 秒おくれ・ランダム誤差・予測なし */
+  humanMove(dt){
+    this.thinkT-=dt;
+    if(this.thinkT<=0){ this.thinkT=.3; const p=S.player; let tgt=null,bd=1e9;
+      for(const f of S.flags){ const d=Math.hypot(f.x-p.x,f.y-p.y); if(d<bd){ bd=d; tgt=f; } }
+      if(S.box&&S.box.t<0){ const d=Math.hypot(S.box.x-p.x,S.box.y-p.y); if(d<170&&S.box.p>=.5){ tgt=S.box; } }
+      let vx=0,vy=0; if(tgt){ const d=Math.hypot(tgt.x-p.x,tgt.y-p.y)||1; vx=(tgt.x-p.x)/d; vy=(tgt.y-p.y)/d; }
+      for(const e of S.enemies){ const dx=p.x-e.x, dy=p.y-e.y, d=Math.hypot(dx,dy); if(d<80){ const k=(80-d)/80*2.2; vx+=dx/d*k; vy+=dy/d*k; } }
+      const a=Math.atan2(vy,vx)+(rnd()+rnd()+rnd()-1.5)*.7, sp=.85+rnd()*.15;
+      this.pend.push({t:S.t+.3,dir:(tgt||vx||vy)?[Math.cos(a)*sp,Math.sin(a)*sp]:[0,0]}); }
+    while(this.pend.length&&this.pend[0].t<=S.t){ this.humanDir=this.pend.shift().dir; }
+    return this.humanDir;
+  },
+  /* ルーレット：当たりの中央でぴたりと止める（ボットは反応おくれと誤差つき） */
+  wheel(dt){
+    const w=S.wheel; if(w.target==null){ const wins=WEDGES.filter(x=>x.win); const pick=wins[(S.round-1)%wins.length]; w.target=(pick.start+pick.end)/2;
+      w.humanErr=(rnd()+rnd()+rnd()-1.5)*.18; }
+  },
+  wheelStopNow(dt){
+    const w=S.wheel; if(w.target==null) return false;
+    if(S.bot==='human'){
+      if(!w.armed){ const diff=((w.target-WHEEL_W*.3-w.ang)%360+360)%360; if(diff<WHEEL_W*dt){ w.armed=true; w.stopT=.3+w.humanErr; } return false; }
+      w.stopT-=dt; return w.stopT<=0;
+    }
+    const diff=((w.target-w.ang)%360+360)%360; return diff<WHEEL_W*dt;
+  }
+};
+
+/* ===== 画面（HTML） ===== */
+function setAuto(v){
+  S.auto=!!v; $('autoBtn').setAttribute('aria-pressed',S.auto?'true':'false');
+  if(S.auto){ AI.reset(); if(S.mode==='title') startGame(); else if(S.mode==='report'&&S.reportT>.3) S.reportT=0; }
+}
+function humanInput(){ if(S.auto) setAuto(false); }
+function setSound(v){ S.sound=!!v; lsSet('noujiru.sound',v?'1':'0'); $('sndBtn').setAttribute('aria-pressed',v?'true':'false'); $('sndBtn').textContent=v?'🔊 音 ON':'🔇 音 OFF'; if(!v) chargeStop(); }
+function setFx(v){ S.fx=!!v; lsSet('noujiru.fx',v?'1':'0'); $('fxBtn').setAttribute('aria-pressed',v?'true':'false'); $('fxBtn').textContent=v?'✨ エフェクト控えめ：ON':'✨ エフェクト控えめ'; }
+function bestLine(){ $('bestLine').textContent=S.best.score?`ベスト：${S.best.score}点　最大コンボ ${S.best.combo}　最大 δ +${(+S.best.delta).toFixed(1)}`:'ベスト記録はまだありません'; }
+function toTitle(){ S.mode='title'; S.overlay=null; chargeStop(); S.box=null; S.ramp=0; $('scrReport').hidden=true; $('scrTitle').hidden=false; $('stopBtn').hidden=true; S.flags=[]; S.enemies=[]; S.titleIdle=0; bestLine(); }
+function openNotes(){ S.overlay='notes'; $('notes').hidden=false; $('notes').scrollTop=0; $('notesClose').focus({preventScroll:true}); }
+function closeNotes(){ S.overlay=null; $('notes').hidden=true; }
+function closeBreak(auto){ S.overlay=null; $('brk').hidden=true; S.playSec=0; S.breakT=0; }
+function nextRound(){ startRound(); }
+const f1=v=>(v>=0?'+':'')+v.toFixed(1);
+function showReport(){
+  S.mode='report'; S.reportT=0;
+  const m=R.maxD, fd=R.flagD, avg=a=>a.length?a.reduce((s,v)=>s+v,0)/a.length:0;
+  const first=fd.slice(0,3), last=fd.slice(-3);
+  const row=k=>{ const s=R.boxStats[k]; return `<tr><td>${k}%</td><td>${s.open}</td><td>${s.hit}</td><td>${Math.round(4*uncertainty(k/100)*100)}%</td></tr>`; };
+  const rec=R.score>=S.best.score&&R.score>0;
+  $('scrReport').innerHTML=`
+    <h2>🧠 脳汁レポート<span>ラウンド ${S.round}</span></h2>
+    <ul class="stats">
+      <li><span>スコア${rec?'（ベスト更新！）':''}</span><b>${R.score}</b></li>
+      <li><span>最大コンボ</span><b>${R.maxCombo}</b></li>
+      <li><span>いちばん大きかった予測誤差 δ<small>${m?`${m.t.toFixed(1)}秒　r=${m.r} の${m.state==='cue'?'きらきら旗':m.state.startsWith('box')?'ハテナボックス':m.r>=R_GOLD?'予想外ボーナス':'旗'}`:'まだなし'}</small></span><b>${m?f1(m.d):'-'}</b></li>
+      <li><span>ふつうの旗の δ<small>くりかえすと予想（V）が合ってきて 0 に近づく</small></span><b>${fd.length>=2?f1(avg(first))+' → '+f1(avg(last)):'-'}</b></li>
+      <li><span>ニアミス（ルーレット）</span><b>${R.nearMiss}回</b></li>
+    </ul>
+    <h3>？ボックス（盛り上がり度 ∝ p(1−p)、50% が最大）</h3>
+    <table class="bx"><tr><th>確率</th><th>開けた数</th><th>当たり</th><th>ための盛り上がり</th></tr>${row(25)}${row(50)}${row(75)}</table>
+    <h3>今日の脳汁グラフ（δ の時系列）</h3>
+    <canvas id="rcv"></canvas>
+    <p class="small">ピンクは予想より良かった（δ＞0）、シアンは予想より悪かった（δ＜0）。実際の脳を測っているわけではなく、論文1のモデルによる計算です。</p>
+    <div class="row">
+      <button id="nextBtn" class="big" type="button" style="font-size:17px;padding:10px 28px">つぎのラウンド →</button>
+      <button class="btn notesOpen" type="button">📖 論文メモ</button>
+      <button id="titleBtn" class="btn" type="button">タイトルへ</button>
+    </div>
+    <a href="../">← ゲーム一覧にもどる</a>`;
+  $('scrReport').hidden=false; $('scrReport').scrollTop=0;
+  $('nextBtn').onclick=()=>{ humanInput(); nextRound(); };
+  $('titleBtn').onclick=()=>{ humanInput(); toTitle(); };
+  $('scrReport').querySelectorAll('.notesOpen').forEach(b=>b.onclick=()=>{ humanInput(); openNotes(); });
+  requestAnimationFrame(()=>drawReportGraph());
+  if(S.playSec>=900){ S.overlay='break'; S.breakT=0; $('brk').hidden=false; }
+}
+$('brkSkip').onclick=()=>closeBreak(false);
+$('brkRest').onclick=()=>{ closeBreak(false); setAuto(false); toTitle(); };
+function drawReportGraph(){
+  const c=$('rcv'); if(!c) return; const r=c.getBoundingClientRect(); if(!r.width) return;
+  const dpr=Math.min(devicePixelRatio||1,2); c.width=Math.round(r.width*dpr); c.height=Math.round(r.height*dpr);
+  const g=c.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0);
+  drawGraph(g,8,8,r.width-16,r.height-16,R.hist,ROUND_T,R.ramps);
+}
+
+/* ===== δ メーター／グラフの描画 ===== */
+function drawGraph(g,x,y,w,h,hist,tMax,ramps){
+  const mid=y+h/2, sc=(h/2-4)/5.5;
+  g.save(); g.strokeStyle='rgba(154,143,199,.35)'; g.lineWidth=1; g.beginPath(); g.moveTo(x,mid); g.lineTo(x+w,mid); g.stroke();
+  g.fillStyle='rgba(154,143,199,.7)'; g.font='9px sans-serif'; g.textAlign='left'; g.fillText('δ=0',x+2,mid-2);
+  if(ramps) for(const rp of ramps){ const x0=x+rp.t0/tMax*w, x1=x0+BOX_T/tMax*w, hh=4*uncertainty(rp.p)*sc*3; g.fillStyle='rgba(255,213,74,.22)'; g.beginPath(); g.moveTo(x0,mid); g.lineTo(x1,mid-hh); g.lineTo(x1,mid); g.closePath(); g.fill(); }
+  for(const e of hist){ const px=x+clamp(e.t/tMax,0,1)*w, py=mid-clamp(e.d,-5.5,5.5)*sc, col=e.d>=0?(e.d>2.5?'#ffd54a':'#ff3fa4'):'#27e6ff';
+    g.strokeStyle=col; g.fillStyle=col; g.lineWidth=2; g.beginPath(); g.moveTo(px,mid); g.lineTo(px,py); g.stroke(); g.beginPath(); g.arc(px,py,Math.abs(e.d)>2?3.2:1.8,0,6.283); g.fill(); }
+  g.restore();
+}
+function drawPanel(){
+  const wpx=dcv.clientWidth, hpx=dcv.clientHeight; if(!wpx||!hpx) return;
+  const dpr=Math.min(devicePixelRatio||1,2);
+  if(dcv.width!==Math.round(wpx*dpr)||dcv.height!==Math.round(hpx*dpr)){ dcv.width=Math.round(wpx*dpr); dcv.height=Math.round(hpx*dpr); }
+  const g=dctx; g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,wpx,hpx);
+  const pad=8, w=wpx-pad*2, big=hpx>220, fs=big?13:11;
+  g.textBaseline='alphabetic';
+  g.fillStyle='#9a8fc7'; g.font='700 '+fs+'px sans-serif'; g.textAlign='left'; g.fillText('ドーパミン予測誤差メーター（モデル）',pad,pad+fs);
+  g.textAlign='right'; g.fillStyle='#ef9ae0'; g.fillText('δ = r − V',wpx-pad,pad+fs);
+  // 数式の数値
+  const d=S.delta, has=S.lastState!=='';
+  g.textAlign='left'; g.font='800 '+(big?18:15)+'px sans-serif';
+  const ty=pad+fs+(big?26:19);
+  g.fillStyle='#efe9ff';
+  const stName={flag:'旗',cue:'きらきら旗',box25:'？25%',box50:'？50%',box75:'？75%'}[S.lastState]||'';
+  g.fillText(has?`r ${S.lastR.toFixed(1)} − V ${S.lastV.toFixed(1)} =`:'旗を取ると計算が出るよ',pad,ty);
+  if(has){ const tw=g.measureText(`r ${S.lastR.toFixed(1)} − V ${S.lastV.toFixed(1)} = `).width; g.fillStyle=d>=0?'#ff3fa4':'#27e6ff'; g.fillText('δ '+f1(d),pad+tw,ty);
+    g.fillStyle='#9a8fc7'; g.font='700 '+fs+'px sans-serif'; g.textAlign='right'; g.fillText(stName,wpx-pad,ty); }
+  // メーター（中央が 0）
+  const my=ty+(big?14:9), mh=big?20:13, half=w/2;
+  g.fillStyle='rgba(255,255,255,.07)'; g.fillRect(pad,my,w,mh);
+  const mv=clamp(S.meter/5,-1,1);
+  if(mv!==0){ g.fillStyle=mv>0?'#ff3fa4':'#27e6ff'; g.shadowColor=g.fillStyle; g.shadowBlur=S.fx?0:8; if(mv>0) g.fillRect(pad+half,my,half*mv,mh); else g.fillRect(pad+half+half*mv,my,-half*mv,mh); g.shadowBlur=0; }
+  g.fillStyle='#efe9ff'; g.fillRect(pad+half-1,my-2,2,mh+4);
+  // ため（不確実さ）と V
+  const ry=my+mh+(big?10:6), rh=big?12:8;
+  g.fillStyle='rgba(255,255,255,.07)'; g.fillRect(pad,ry,w*.5-4,rh); g.fillStyle='#ffd54a'; g.fillRect(pad,ry,(w*.5-4)*clamp(S.ramp,0,1),rh);
+  g.fillStyle='rgba(255,255,255,.07)'; g.fillRect(pad+w*.5+4,ry,w*.5-4,rh); g.fillStyle='#8a7bff'; g.fillRect(pad+w*.5+4,ry,(w*.5-4)*clamp(td.V.flag/5,0,1),rh);
+  g.font='700 '+(big?11:9)+'px sans-serif'; g.fillStyle='#9a8fc7'; g.textAlign='left';
+  g.fillText('ため（不確実さ p(1−p)）',pad,ry+rh+(big?13:10)); g.fillText('V＝つぎの旗の予想 '+td.V.flag.toFixed(2),pad+w*.5+4,ry+rh+(big?13:10));
+  // グラフ
+  const gy=ry+rh+(big?20:15), gh=hpx-gy-pad;
+  if(gh>20){ const gg=Math.min(gh,big?250:gh); drawGraph(g,pad,gy,w,gg,R.hist,ROUND_T,R.ramps);
+    if(big){ g.font='700 12px sans-serif'; g.textAlign='left'; let ly=gy+gg+22; const L=[['#ff3fa4','ピンク：予想より良かった（δ＞0）'],['#27e6ff','シアン：予想より悪かった（δ＜0）'],['#ffd54a','金：予想外ボーナス／ハテナの「ため」'],['#9a8fc7','いつもの旗はくりかえすと δ が 0 に近づく'],['#9a8fc7','実際の脳を測っているわけではなく、モデルです']];
+      for(const [c,t] of L){ g.fillStyle=c; g.fillText(t,pad,ly); ly+=20; } } }
+}
+
+/* ===== アリーナの描画 ===== */
+function rr(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+let view={s:1,dpr:1};
+function fitArena(){
+  const wrap=$('arenaWrap'), cw=wrap.clientWidth, ch=wrap.clientHeight; if(!cw||!ch) return;
+  const s=Math.min(cw/W,ch/H); view.s=s; view.dpr=Math.min(devicePixelRatio||1,2);
+  cv.style.width=Math.floor(W*s)+'px'; cv.style.height=Math.floor(H*s)+'px';
+  cv.width=Math.round(W*s*view.dpr); cv.height=Math.round(H*s*view.dpr);
+}
+function drawFlag(f,t){
+  const bob=Math.sin(t*4+f.ph)*1.5;
+  ctx.save(); ctx.translate(f.x,f.y+bob);
+  if(f.kind==='cue'){
+    ctx.strokeStyle='rgba(39,230,255,.8)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(0,0,15+Math.sin(t*3)*1.5,0,6.283); ctx.stroke();
+    ctx.fillStyle='#fff'; for(let i=0;i<4;i++){ const a=t*1.4+i*1.5708; ctx.fillRect(Math.cos(a)*15-1.2,Math.sin(a)*15-1.2,2.4,2.4); }
+  }
+  ctx.strokeStyle='#cfc6ff'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(0,9); ctx.lineTo(0,-10); ctx.stroke();
+  ctx.fillStyle=f.kind==='cue'?'#27e6ff':'#ff3fa4'; ctx.shadowColor=ctx.fillStyle; ctx.shadowBlur=S.fx?0:8;
+  ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(12,-6); ctx.lineTo(0,-1); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+function drawEnemy(e,t){
+  ctx.save(); ctx.translate(e.x,e.y);
+  const col=e.kind==='chase'?'#ff9f1c':'#ff5a3c';
+  ctx.fillStyle=col; ctx.shadowColor=col; ctx.shadowBlur=S.fx?0:10;
+  ctx.beginPath(); const n=e.kind==='chase'?10:0;
+  if(n){ for(let i=0;i<n*2;i++){ const a=i/(n*2)*6.283+t*.8, r=i%2?ER-3:ER+3; ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r); } ctx.closePath(); } else ctx.arc(0,0,ER,0,6.283);
+  ctx.fill(); ctx.shadowBlur=0;
+  ctx.fillStyle='#fff'; ctx.fillRect(-6,-4,4,5); ctx.fillRect(2,-4,4,5); ctx.fillStyle='#2a0a30'; ctx.fillRect(-5,-2,2.4,3); ctx.fillRect(3,-2,2.4,3);
+  ctx.strokeStyle='#2a0a30'; ctx.lineWidth=1.6; ctx.beginPath(); ctx.moveTo(-7,-7); ctx.lineTo(-2,-4); ctx.moveTo(7,-7); ctx.lineTo(2,-4); ctx.stroke();
+  ctx.restore();
+}
+function drawPlayer(t){
+  const p=S.player; if(p.inv>0&&Math.floor(t*10)%2===0&&S.mode==='play') return;
+  ctx.save(); ctx.translate(p.x,p.y);
+  if(S.buffs.shield){ ctx.strokeStyle='rgba(39,230,255,.9)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,0,19,0,6.283); ctx.stroke(); }
+  const g=ctx.createLinearGradient(-9,0,9,0); g.addColorStop(0,'#27e6ff'); g.addColorStop(1,'#9b5cff');
+  ctx.fillStyle=g; ctx.shadowColor='#ff3fa4'; ctx.shadowBlur=S.fx?0:12+Math.min(R.combo,30)*.5;
+  rr(ctx,-9,-13,18,26,9); ctx.fill(); ctx.shadowBlur=0;
+  const fx=Math.cos(p.face)*1.6, fy=Math.sin(p.face)*1.2;
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(-3.5,-5,3.2,0,6.283); ctx.arc(3.5,-5,3.2,0,6.283); ctx.fill();
+  ctx.fillStyle='#10062e'; ctx.beginPath(); ctx.arc(-3.5+fx,-5+fy,1.5,0,6.283); ctx.arc(3.5+fx,-5+fy,1.5,0,6.283); ctx.fill();
+  ctx.strokeStyle='#10062e'; ctx.lineWidth=1.3; ctx.beginPath(); ctx.arc(0,1,3,.2,2.9); ctx.stroke();
+  ctx.restore();
+}
+function drawBox(b,t){
+  const ch=b.t>=0, I=ch?intensity(b.p,Math.min(1,b.t/BOX_T)):0;
+  ctx.save(); ctx.translate(b.x,b.y);
+  if(ch){
+    const sh=S.fx?0:I*2; ctx.translate((Math.random()-.5)*sh,(Math.random()-.5)*sh);
+    const rg=ctx.createRadialGradient(0,0,4,0,0,24+I*70); rg.addColorStop(0,'rgba(255,213,74,'+(.25+.5*I)+')'); rg.addColorStop(1,'rgba(255,63,164,0)');
+    ctx.fillStyle=rg; ctx.beginPath(); ctx.arc(0,0,24+I*70,0,6.283); ctx.fill();
+    ctx.strokeStyle='rgba(255,213,74,'+(.3+.5*I)+')'; ctx.lineWidth=2; const nr=Math.round(8+I*8);
+    for(let i=0;i<nr;i++){ const a=i/nr*6.283+t*.6; ctx.beginPath(); ctx.moveTo(Math.cos(a)*(20+I*6),Math.sin(a)*(20+I*6)); ctx.lineTo(Math.cos(a)*(26+I*40),Math.sin(a)*(26+I*40)); ctx.stroke(); }
+  }
+  const fade=(!ch&&b.life<2)?(Math.sin(t*5)>0?1:.45):1;
+  ctx.globalAlpha=fade; ctx.fillStyle='#3a1b8a'; ctx.strokeStyle=b.p===.5?'#ffd54a':'#27e6ff'; ctx.lineWidth=2.5; ctx.shadowColor=ctx.strokeStyle; ctx.shadowBlur=S.fx?0:10;
+  rr(ctx,-14,-14,28,28,6); ctx.fill(); ctx.stroke(); ctx.shadowBlur=0;
+  ctx.fillStyle='#fff'; ctx.font='900 20px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('?',0,1);
+  ctx.font='800 11px sans-serif'; ctx.fillStyle=b.p===.5?'#ffd54a':'#27e6ff'; ctx.fillText(boxKey(b.p)+'%',0,-22);
+  ctx.restore();
+}
+function drawWheel(t){
+  const w=S.wheel, cx=W/2, cy=215, r=124;
+  ctx.save(); ctx.textAlign='center'; ctx.textBaseline='middle';
+  if(w.spinning){ ctx.fillStyle='#27e6ff'; ctx.font='900 18px sans-serif'; ctx.fillText('ラウンドしゅうりょう！',cx,34); ctx.fillStyle='#efe9ff'; ctx.font='800 14px sans-serif'; ctx.fillText('報酬ルーレット：自分のタイミングで止めよう',cx,62); }
+  for(const s of WEDGES){
+    const a0=s.start*Math.PI/180-Math.PI/2, a1=s.end*Math.PI/180-Math.PI/2;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,a0,a1); ctx.closePath(); ctx.fillStyle=s.col; ctx.globalAlpha=s.win?.88:1; ctx.fill(); ctx.globalAlpha=1;
+    ctx.strokeStyle='#07041a'; ctx.lineWidth=2; ctx.stroke();
+    const am=(a0+a1)/2, lx=cx+Math.cos(am)*r*.66, ly=cy+Math.sin(am)*r*.66;
+    if(s.win){ ctx.fillStyle='#10062e'; ctx.font='20px sans-serif'; ctx.fillText(s.icon,lx,ly-8); ctx.font='800 11px sans-serif'; ctx.fillText((s.deg/3.6).toFixed(1)+'%',lx,ly+10); }
+    else { ctx.fillStyle='#6f63a8'; ctx.font='700 11px sans-serif'; ctx.fillText('ざんねん',lx,ly-6); ctx.fillText((s.deg/3.6).toFixed(1)+'%',lx,ly+8); }
+  }
+  ctx.strokeStyle='rgba(255,255,255,.35)'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(cx,cy,r+3,0,6.283); ctx.stroke();
+  // 針
+  const na=w.ang*Math.PI/180-Math.PI/2;
+  ctx.save(); ctx.translate(cx,cy); ctx.rotate(na);
+  ctx.fillStyle='#fff'; ctx.shadowColor='#fff'; ctx.shadowBlur=S.fx?0:10; ctx.beginPath(); ctx.moveTo(r+10,0); ctx.lineTo(r-22,-7); ctx.lineTo(0,-3); ctx.lineTo(0,3); ctx.lineTo(r-22,7); ctx.closePath(); ctx.fill(); ctx.restore();
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(cx,cy,8,0,6.283); ctx.fill();
+  // 凡例
+  ctx.font='700 12px sans-serif'; ctx.fillStyle='#cfc6ff';
+  ctx.fillText('🧲磁石 11.1%　🛡️コンボ保護 11.1%　🚩旗ぞうりょう 11.1%',cx,cy+r+20);
+  ctx.fillStyle='#ffd54a'; ctx.fillText('当たり合計 33.3%（扇形の面積＝確率）',cx,cy+r+38);
+  if(w.res){
+    const o=w.res; ctx.font='900 26px sans-serif'; ctx.lineWidth=5; ctx.strokeStyle='#07041a';
+    const txt=o.win?(WEDGES[o.idx].name+' ゲット！'):o.near?'ニアミス！おしい！':'ざんねん…';
+    ctx.fillStyle=o.win?'#ffd54a':o.near?'#ff3fa4':'#9a8fc7'; ctx.strokeText(txt,cx,44); ctx.fillText(txt,cx,44);
+    if(o.win){ ctx.font='700 12px sans-serif'; ctx.fillStyle='#efe9ff'; ctx.fillText('つぎのラウンドで強化！',cx,cy+r+58); }
+  }
+  ctx.restore();
+}
+function draw(){
+  const t=S.t, s=view.s*view.dpr;
+  ctx.setTransform(s,0,0,s,0,0);
+  ctx.fillStyle='#0a0524'; ctx.fillRect(0,0,W,H);
+  ctx.save();
+  if(S.shake>0&&!S.fx) ctx.translate((Math.random()-.5)*S.shake,(Math.random()-.5)*S.shake);
+  ctx.strokeStyle='rgba(130,100,255,.13)'; ctx.lineWidth=1; ctx.beginPath(); for(let x=0;x<=W;x+=40){ ctx.moveTo(x,0); ctx.lineTo(x,H); } for(let y=0;y<=H;y+=40){ ctx.moveTo(0,y); ctx.lineTo(W,y); } ctx.stroke();
+  if(S.mode==='wheel'){ drawWheel(t); }
+  else if(S.mode==='play'||S.mode==='ready'){
+    if(S.box) drawBox(S.box,t);
+    for(const f of S.flags) drawFlag(f,t);
+    for(const e of S.enemies) drawEnemy(e,t);
+    drawPlayer(t);
+    if(S.stick&&S.mode==='play'){ ctx.strokeStyle='rgba(255,255,255,.35)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(S.stick.ox,S.stick.oy,36,0,6.283); ctx.stroke();
+      const dx=S.stick.x-S.stick.ox, dy=S.stick.y-S.stick.oy, l=Math.hypot(dx,dy), k=l>36?36/l:1; ctx.fillStyle='rgba(255,63,164,.55)'; ctx.beginPath(); ctx.arc(S.stick.ox+dx*k,S.stick.oy+dy*k,14,0,6.283); ctx.fill(); }
+  }
+  for(const q of S.parts){ ctx.globalAlpha=clamp(q.life/q.max,0,1); ctx.fillStyle=q.col; ctx.fillRect(q.x-q.r/2,q.y-q.r/2,q.r,q.r); } ctx.globalAlpha=1;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  for(const q of S.pops){ ctx.globalAlpha=clamp(q.life/(q.max*.5),0,1); ctx.font='900 '+q.size+'px sans-serif'; ctx.lineWidth=4; ctx.strokeStyle='#07041a'; ctx.strokeText(q.text,q.x,q.y); ctx.fillStyle=q.col; ctx.fillText(q.text,q.x,q.y); } ctx.globalAlpha=1;
+  if(S.mode==='ready'){ ctx.font='900 34px sans-serif'; ctx.lineWidth=6; ctx.strokeStyle='#07041a'; ctx.strokeText('ROUND '+S.round,W/2,H/2-60); ctx.fillStyle='#ff3fa4'; ctx.fillText('ROUND '+S.round,W/2,H/2-60);
+    ctx.font='700 13px sans-serif'; ctx.fillStyle='#efe9ff'; ctx.fillText(S.round===1?'ドラッグで動く／矢印キー・WASD。旗をあつめてコンボ！':S.round===2?'きらきら旗に注目。金色が出るはず…？':'お邪魔キャラにぶつかるとコンボが切れるよ',W/2,H/2-30); }
+  ctx.restore();
+  // 縁のグロー（コンボぶん＋イベント。全画面フラッシュはしない）
+  const cg=S.mode==='play'?Math.min(R.combo,30)/30:0, ga=(S.fx?.4:1)*(cg*.35+S.glow*.5);
+  if(ga>.01){ ctx.save(); ctx.lineWidth=5; ctx.strokeStyle=`rgba(${S.glow>.2?'255,213,74':'255,63,164'},${ga})`; ctx.shadowColor='#ff3fa4'; ctx.shadowBlur=0; ctx.strokeRect(2.5,2.5,W-5,H-5); ctx.restore(); }
+}
+function hud(){
+  const set=(id,v)=>{ const e=$(id); if(e.textContent!==String(v)) e.textContent=v; };
+  set('hTime',S.mode==='play'||S.mode==='ready'?Math.ceil(Math.max(0,ROUND_T-R.elapsed)):S.mode==='title'?ROUND_T:0);
+  set('hScore',S.total+(R.closed?0:R.score));
+  set('hCombo',R.combo); $('hCombo').classList.toggle('hot',R.combo>=10);
+  set('hRound',S.round||'-');
+  const bl=[]; if(S.buffs.magnet)bl.push('🧲 磁石'); if(S.buffs.shield)bl.push('🛡️ コンボ保護'); if(S.buffs.more)bl.push('🚩 旗ぞうりょう');
+  const html=bl.map(x=>'<span>'+x+'</span>').join(''); const bb=$('buffs'); if(bb.dataset.h!==html){ bb.dataset.h=html; bb.innerHTML=html; }
+}
+
+/* ===== 入力 ===== */
+function worldPos(e){ const r=cv.getBoundingClientRect(); return [(e.clientX-r.left)/r.width*W,(e.clientY-r.top)/r.height*H]; }
+cv.addEventListener('pointerdown',e=>{ ac(); if(S.mode!=='play'&&S.mode!=='ready') return; humanInput(); hookMove=null; const [x,y]=worldPos(e); S.stick={ox:x,oy:y,x,y,id:e.pointerId}; try{ cv.setPointerCapture(e.pointerId); }catch(_){ } e.preventDefault(); });
+cv.addEventListener('pointermove',e=>{ if(S.stick&&S.stick.id===e.pointerId){ const [x,y]=worldPos(e); S.stick.x=x; S.stick.y=y; } });
+const endStick=e=>{ if(S.stick&&S.stick.id===e.pointerId) S.stick=null; };
+cv.addEventListener('pointerup',endStick); cv.addEventListener('pointercancel',endStick);
+addEventListener('keydown',e=>{
+  const k=e.key.toLowerCase();
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  if(k==='o'){ ac(); setAuto(!S.auto); e.preventDefault(); return; }
+  if(['arrowleft','arrowright','arrowup','arrowdown','a','d','w','s'].includes(k)){ if(S.overlay) return; keys[k]=true; hookMove=null; humanInput(); e.preventDefault(); }
+  else if((k===' '||k==='enter')&&S.mode==='wheel'&&!S.overlay){ ac(); humanInput(); stopWheel(); e.preventDefault(); }
+});
+addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; });
+addEventListener('blur',()=>{ for(const k in keys) keys[k]=false; S.stick=null; });
+$('stopBtn').addEventListener('pointerdown',e=>{ ac(); humanInput(); stopWheel(); e.preventDefault(); });
+$('stopBtn').addEventListener('click',e=>e.preventDefault());
+$('autoBtn').onclick=()=>{ ac(); setAuto(!S.auto); };
+$('sndBtn').onclick=()=>{ ac(); setSound(!S.sound); };
+$('fxBtn').onclick=()=>setFx(!S.fx);
+$('notesBtn').onclick=()=>{ if(S.overlay==='notes') closeNotes(); else openNotes(); };
+$('notesClose').onclick=closeNotes;
+document.querySelectorAll('.notesOpen').forEach(b=>b.onclick=openNotes);
+$('startBtn').onclick=()=>{ ac(); startGame(); };
+$('autoStartBtn').onclick=()=>{ ac(); setAuto(true); };
+
+/* ===== メインループ ===== */
+let last=performance.now();
+function loop(now){
+  const raw=Math.min(.25,(now-last)/1000); last=now; const dt=Math.min(.05,raw);
+  if(!S.manual) update(dt);
+  if(document.visibilityState==='visible'){
+    if(S.mode==='title'){ S.titleIdle+=raw; if(S.titleIdle>120) S.playSec=0; } else if(!S.overlay||S.overlay==='notes') S.playSec+=raw;
+  }
+  draw(); hud(); drawPanel();
+  requestAnimationFrame(loop);
+}
+new ResizeObserver(()=>{ fitArena(); if(S.mode==='report') drawReportGraph(); }).observe($('arenaWrap'));
+addEventListener('resize',fitArena);
+setSound(S.sound); setFx(S.fx); bestLine(); fitArena();
+requestAnimationFrame(loop);
+
+/* ===== テストフック ===== */
+function scratch(fn){ const sv={tdv:Object.assign({},td.V),R,m:S.mode,bx:S.box,q:quiet,ns:S.nearMissTotal,nb:Object.assign({},S.nextBuff),w:S.wheel}; R=newRound(); quiet=true;
+  try{ return fn(); } finally { td.V=sv.tdv; R=sv.R; S.mode=sv.m; S.box=sv.bx; quiet=sv.q; S.nearMissTotal=sv.ns; S.nextBuff=sv.nb; S.wheel=sv.w; } }
+window.__noujiru={
+  get mode(){ return S.mode; }, get time(){ return Math.max(0,ROUND_T-R.elapsed); }, get elapsed(){ return R.elapsed; },
+  get score(){ return S.total+(R.closed?0:R.score); }, get roundScore(){ return R.score; },
+  get combo(){ return R.combo; }, get maxCombo(){ return R.maxCombo; },
+  get V(){ return td.V.flag; }, get delta(){ return S.delta; }, get boxes(){ return S.box?[{x:S.box.x,y:S.box.y,p:S.box.p,charging:S.box.t>=0}]:[]; },
+  get nearMiss(){ return S.nearMissTotal; }, get nearMissRound(){ return R.nearMiss; },
+  get round(){ return S.round; }, get auto(){ return S.auto; }, get buffs(){ return Object.assign({},S.buffs); }, get next(){ return Object.assign({},S.nextBuff); },
+  get R(){ return R; }, get S(){ return S; }, td, WEDGES, AI,
+  step, setAuto, setSeed,
+  manual(v=true){ S.manual=v; },
+  move(x,y){ hookMove=(x==null)?null:{x:+x||0,y:+y||0}; if(x!=null&&!S.bot) humanInput(); },
+  stopWheel,
+  start(){ startGame(); }, next(){ nextRound(); }, toTitle, openNotes, closeNotes,
+  setBot(k){ S.bot=k||null; AI.reset(); },
+  setPlaySec(n){ S.playSec=n; },
+  get playSec(){ return S.playSec; },
+  setWheelAngle(a){ if(S.wheel) S.wheel.ang=a; },
+  debug:{
+    teleport(x,y){ S.player.x=x; S.player.y=y; },
+    placeFlag(kind,x,y){ S.flags.push({x,y,kind:kind||'normal',ph:0}); },
+    spawnBox(p,x,y){ spawnBox(p); if(x!=null){ S.box.x=x; S.box.y=y; } return S.box; },
+    forceGold(){ S.forceGold=true; },
+    endRound(){ R.elapsed=ROUND_T; endRound(); },
+    showReport(){ showReport(); },
+    reward(state,r){ const d=reward(state,r); return d; },
+    addCombo(n){ for(let i=0;i<n;i++){ R.combo++; } R.maxCombo=Math.max(R.maxCombo,R.combo); R.comboT=COMBO_T; }
+  },
+  sim:{
+    box(p,n){ return scratch(()=>{ let hit=0; const b={x:0,y:0,p}; for(let i=0;i<n;i++) if(resolveBox(b)) hit++; return {p,n,hit,rate:hit/n}; }); },
+    wheel(n){ return scratch(()=>{ S.mode='wheel'; let win=0,near=0,byId={magnet:0,shield:0,more:0}; const sv=S.nearMissTotal;
+        for(let i=0;i<n;i++){ startWheel(); updateWheelAng(.4+rnd()*3); const o=stopWheel(); if(o.win){ win++; byId[o.id]++; } else if(o.near) near++; }
+        return {n,win,near,rate:win/n,nearRate:near/n,byId}; }); },
+    area(){ return WEDGES.filter(x=>x.win).reduce((s,x)=>s+x.deg,0)/360; }
+  }
+};
+})();
+</script>
+<!-- zoom guard: ピンチ・ダブルタップでズームしない -->
+<script>(function(){var p=function(e){e.preventDefault();};['gesturestart','gesturechange','gestureend'].forEach(function(t){document.addEventListener(t,p,{passive:false});});document.addEventListener('touchmove',function(e){if(e.touches&&e.touches.length>1)e.preventDefault();},{passive:false});document.addEventListener('dblclick',function(e){var t=e.target;if(t&&t.closest&&t.closest('input,textarea,select,[contenteditable]'))return;e.preventDefault();},{passive:false});})();</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>
