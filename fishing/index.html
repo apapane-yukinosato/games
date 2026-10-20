@@ -52,6 +52,8 @@ body{background:var(--bg);color:#fff;
 .act{font:inherit;font-weight:800;font-size:15px;min-width:92px;min-height:46px;border:0;border-radius:14px;background:#f0762e;color:#fff;box-shadow:0 4px 0 #b9531a;cursor:pointer}
 .act.b{background:#2e8fe0;box-shadow:0 4px 0 #1d6fb8}
 .act:active{transform:translateY(3px);box-shadow:0 1px 0 #333}
+.act:disabled{opacity:.4;filter:grayscale(.5)}
+#rcBtn{min-width:70px;font-size:12px}
 #acts{display:flex;gap:6px}
 #reel{position:absolute;right:8px;bottom:8px;width:112px;height:112px;z-index:4;touch-action:none;border-radius:50%}
 #reelCv{width:100%;height:100%;display:block}
@@ -87,7 +89,7 @@ body{background:var(--bg);color:#fff;
     <div id="rodWrap" hidden><span>竿</span><input type="range" id="rodSl" min="0" max="110" value="55" orient="vertical" aria-label="竿の角度"><span id="rodVal">55°</span></div>
     <div id="ctl">
       <div id="lureBar"></div>
-      <div id="acts"><button class="act b" id="twBtn">チョン</button><button class="act" id="hkBtn">合わせ！</button></div>
+      <div id="acts"><button class="act b" id="rcBtn">仕掛けを回収</button><button class="act b" id="twBtn">チョン</button><button class="act" id="hkBtn">合わせ！</button></div>
     </div>
     <button class="mini" id="reelMode">リール:手動</button>
     <div id="reel"><canvas id="reelCv" width="224" height="224"></canvas></div>
@@ -459,6 +461,14 @@ function landLure(){
   // spooking fish right under the splash
   for(const f of W_.fish) if(Math.hypot(f.x-L.x,f.y-L.y)<1.3&&spot==='lake'&&f.cd<T&&rnd()<.35){ f.cd=T+6; }
 }
+function recallRig(){
+  if(mode!=='play'||spot==='sabiki'||phase==='landed') return false;
+  if(phase==='cast'&&(sub==='ready'||sub==='pause')) return false;
+  const tg=phase==='cast'&&sub==='tangle';
+  say('仕掛けを回収',1,'#9fe8a8'); sfx('tick'); lure=null; bite=null; F=null; lureHome();
+  if(tg&&phase==='cast'&&sub==='pause') pauseT=Math.min(pauseT,.3);
+  return true;
+}
 function lureHome(){ lure=null; nextCast(); }
 function nextCast(){
   bite=null; F=null; if(S) S.junkId=null;
@@ -498,7 +508,7 @@ function lam(f){
 }
 function moveLure(dist){
   const L=lure, d=Math.hypot(L.x,L.y);
-  if(d<=dist+1.8){ lureHome(); return; }
+  if(d<=dist+1.8){ say('回収',.8,'#9fe8a8'); lureHome(); return; }
   const s=(d-dist)/d; L.x*=s; L.y*=s; L.mvT=T;
 }
 function twitch(mag){
@@ -530,8 +540,7 @@ function waitUpdate(dt){
     const sv=SINKV[L.type]||1;
     if(!L.tanaLocked) L.dep=Math.min(DEPTH_MAX,L.dep+sv*dt);
     else L.dep=Math.min(DEPTH_MAX,L.dep+sv*.6*dt);
-    if(rate>.05){ L.dep=Math.max(.2,L.dep-rate*.5*dt); L.tanaLocked=true; L.twT=Math.max(L.twT,T-.5); }
-    if(rate>.6&&L.dep<.9){ lureHome(); return; }
+    if(rate>.05){ L.dep=Math.max(.2,L.dep-rate*.5*dt); L.tanaLocked=true; L.twT=Math.max(L.twT,T-.5); moveLure(rate*2.4*dt); if(!lure) return; }
   }
   if(S.junkId){ if(T>=L.junkAt&&L.st==='water') startJunkBite(); return; }
   // chase + bite
@@ -1368,6 +1377,7 @@ function setUI(){
   $('reelMode').style.display=play?'block':'none';
   $('ctl').style.display=play?'flex':'none';
   $('hkBtn').style.display=(ang&&!sensor.live)?'block':'none';
+  $('rcBtn').style.display=ang?'block':'none'; $('rcBtn').disabled=!(ang&&!(phase==='cast'&&(sub==='ready'||sub==='pause'))&&phase!=='landed');
   $('twBtn').textContent=spot==='sabiki'?'コマセ':'チョン';
   $('twBtn').style.display=(play&&!(spot==='sabiki'&&sensor.live))?'block':'none';
   $('rodWrap').hidden=!(ang&&!sensor.live);
@@ -1491,6 +1501,7 @@ reelEl.addEventListener('pointermove',e=>{ if(reelDown) rgMove(e.clientX,e.clien
 const reelUp=()=>{ reelDown=false; rin.hold=false; rgp.length=0; };
 reelEl.addEventListener('pointerup',reelUp); reelEl.addEventListener('pointercancel',reelUp);
 $('reelMode').addEventListener('click',()=>{ unlock(); setReelMode(reelMode==='auto'?'manual':'auto'); $('reelMode').blur(); });
+$('rcBtn').addEventListener('click',()=>{ unlock(); if(recallRig()) setUI(); });
 $('twBtn').addEventListener('click',()=>{ unlock(); if(spot==='sabiki') shake(1); else if(phase==='cast'&&sub==='tangle') tangleTap(); else twitch(1); });
 $('hkBtn').addEventListener('click',()=>{ unlock(); hookAt(.45,T); });
 $('rodSl').addEventListener('input',e=>{ rod.tgt=+e.target.value; $('rodVal').textContent=Math.round(rod.tgt)+'°'; });
@@ -1657,6 +1668,7 @@ function autoStep(dt){
 // ================= update loop =================
 function angUpdate(dt){
   fishWander(dt);
+  if((phase==='wait'||phase==='bite')&&!lure){ bite=null; nextCast(); return; }
   if(photoRec&&photoRec.junk&&!photoRec.revealed&&T>=photoRec.revealAt) revealJunk(photoRec);
   switch(phase){
    case 'cast':
@@ -1698,7 +1710,7 @@ window.__fishing={
   get auto(){return auto;}, get sensor(){return sensor;}, get reelMode(){return reelMode;}, get rodDeg(){return rod.deg;}, get reelRate(){return reel.rate;}, get T(){return T;}, get best(){return best;}, get zukan(){return zuk;}, get junkZ(){return junkZ;},
   step(dt){ let r=dt; while(r>1e-9){ const d=Math.min(1/30,r); update(d); r-=d; } },
   cast(power,dir){ return doCast(power,dir||0,false); }, hook(s){ hookAt(s,T); }, reel(r){ rin.test=(r==null?null:r); }, rod(a){ rod.tgt=a; rod.deg=a; },
-  twitch(){ twitch(1); }, shake(){ shake(1); }, setAuto, motion:motionEv, keep(b){ keepFish(b); },
+  recall(){ return recallRig(); }, twitch(){ twitch(1); }, shake(){ shake(1); }, setAuto, motion:motionEv, keep(b){ keepFish(b); },
   start(sp,o){ o=o||{}; if(o.time) timeSel=o.time; if(o.wx) wxSel=o.wx; if(o.lure) lureSel=o.lure; if(o.jig) jigSel=o.jig; spot=sp||spot; return startGame(spot); },
   setHuman(b){ AI.human=!!b; }, setRodOnly(b){ AI.rodOnly=!!b; }, setReelMode, setSens(i){ sensIdx=i; },
   force(k){ if(k==='bite') return forceBite(); if(k==='jump'&&F){ F.mode='warn'; F.mt=.65; return true; } if(k==='junk'){ S.junkId=pickJunk(spot); if(lure) lure.junkAt=T; return true; } if(k==='run'&&F){ F.mode='run'; F.mt=1.5; return true; } return false; },
