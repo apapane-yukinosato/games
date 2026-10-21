@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
-<meta name="description" content="ヴァンサバ風の操作で、脳汁ジェムを集めてなぎ倒せ！ 報酬系の論文をもとにしたサバイバーアクション。実際の脳を測るものではありません。">
+<meta name="description" content="脳の中を旅して、ドーパミンを集めてストレスをなぎ倒せ！ 報酬系の論文をもとにしたアクション。実際の脳を測るものではありません。">
 <title>脳汁ラボ ドーパミン・ラッシュ</title>
 <link rel="apple-touch-icon" href="../icon-180.png">
 <link rel="icon" href="data:,">
@@ -35,7 +35,8 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offse
 .scr p{margin:0;font-size:13px;line-height:1.6;max-width:430px}
 .scr .warn{font-size:12px;color:var(--gold);background:rgba(255,213,74,.08);border:1px solid rgba(255,213,74,.35);border-radius:10px;padding:6px 10px}
 .scr .small{font-size:11px;color:var(--mute)}
-.scr .brain svg{width:84px;height:84px;filter:drop-shadow(0 0 8px var(--pink))}
+.scr .brain svg{width:96px;height:96px;filter:drop-shadow(0 0 8px var(--cyan))}
+#scrTitle{background:rgba(7,4,26,.82)}
 .big{font-size:20px;font-weight:900;padding:12px 36px;border-radius:999px;border:0;background:linear-gradient(90deg,var(--pink),#9b5cff);color:#fff;box-shadow:0 0 18px var(--pink)}
 .btn{font-size:14px;font-weight:800;padding:9px 16px;border-radius:999px;border:1px solid var(--cyan);background:var(--panel);color:var(--ink)}
 .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
@@ -48,13 +49,25 @@ table.bx{border-collapse:collapse;width:100%;max-width:430px;font-size:12px}
 table.bx th,table.bx td{border-bottom:1px solid var(--line);padding:4px 5px;text-align:center}
 table.bx th{color:var(--mute);font-weight:700}
 #rcv{width:100%;max-width:430px;height:140px;background:var(--panel);border:1px solid var(--line);border-radius:10px}
-#cards{display:grid;gap:8px;width:100%;max-width:440px}
-.card2{display:flex;align-items:center;gap:12px;text-align:left;width:100%;background:var(--panel);border:2px solid var(--cyan);border-radius:14px;padding:12px 14px;min-height:76px}
-.card2 .ic{font-size:34px;flex:none;width:44px;text-align:center}
+#neuron{position:relative;width:100%;max-width:440px}
+#soma{position:relative;z-index:2;width:78px;height:78px;margin:0 auto 6px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900;line-height:1.1;background:radial-gradient(circle at 38% 35%,#fff7 0,#5fe9ff 18%,#6a4cff 62%,#2a1470 100%);box-shadow:0 0 18px #27e6ff99,0 0 0 4px #27e6ff22;color:#fff;text-shadow:0 1px 4px #000a}
+#soma small{font-size:10px;font-weight:800;opacity:.9}
+#soma b{font-size:20px}
+#nsvg{position:absolute;left:0;top:0;width:100%;height:100%;z-index:1;pointer-events:none;overflow:visible}
+#nsvg path{fill:none;stroke:#5fe9ff;stroke-width:3;stroke-linecap:round;opacity:.7}
+#nsvg path.tw{stroke-width:1.5;opacity:.4}
+#nsvg path.fl{stroke:#fff;stroke-width:3.5;stroke-dasharray:6 90;opacity:.9;animation:nfl 1.6s linear infinite}
+#nsvg circle{fill:#ffd54a;opacity:.95}
+body.fxlow #nsvg path.fl{animation:none;stroke-dasharray:none;opacity:0}
+@keyframes nfl{from{stroke-dashoffset:96}to{stroke-dashoffset:0}}
+#cards{display:grid;gap:12px;width:100%;position:relative;z-index:2;padding-left:42px}
+.card2{display:flex;align-items:center;gap:12px;text-align:left;width:100%;background:rgba(22,12,62,.92);border:2px solid var(--cyan);border-radius:34px 16px 34px 16px;padding:12px 16px 12px 14px;min-height:78px;box-shadow:0 0 12px #27e6ff44}
+.card2 .ic{font-size:32px;flex:none;width:44px;height:44px;line-height:44px;text-align:center;border-radius:50%;background:radial-gradient(circle,#27e6ff33,#27e6ff08);}
 .card2 b{display:block;font-size:16px}
 .card2 small{display:block;color:var(--mute);font-size:12px;line-height:1.4;margin-top:2px}
 .card2 em{font-style:normal;color:var(--gold);font-size:12px;font-weight:800}
 .card2.evo{border-color:var(--gold);box-shadow:0 0 16px var(--gold);background:#2a1a05}
+.card2.evo .ic{background:radial-gradient(circle,#ffd54a44,#ffd54a08)}
 .card2.boost{border-color:var(--pink)}
 #wheelPanel{display:flex;flex-direction:column;align-items:center;gap:8px}
 #wcv{width:min(300px,78vw);height:min(300px,78vw)}
@@ -86,15 +99,20 @@ table.bx th{color:var(--mute);font-weight:700}
 
     <section class="scr" id="scrTitle">
       <div class="brain" aria-hidden="true">
-        <svg viewBox="0 0 100 100" fill="none" stroke="#ff3fa4" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M50 18c-6-8-20-7-24 3-9 1-14 11-9 19-5 6-3 16 5 20 1 9 11 14 19 9 3 3 7 4 9 4z" />
-          <path d="M50 18c6-8 20-7 24 3 9 1 14 11 9 19 5 6 3 16-5 20-1 9-11 14-19 9-3 3-7 4-9 4z" stroke="#27e6ff"/>
-          <path d="M50 18v66M33 36c6 1 9 5 9 10M67 36c-6 1-9 5-9 10M30 62c6-1 10-4 12-9M70 62c-6-1-10-4-12-9" stroke-width="2.5" opacity=".7"/>
+        <svg viewBox="0 0 100 100" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M50 66 L50 80 L62 88 L74 80" stroke="#27e6ff" stroke-width="3.5" opacity=".8"/>
+          <circle cx="76" cy="79" r="6" fill="#4aa8ff" stroke="none"/>
+          <circle cx="22" cy="34" r="8" fill="#ff7ad0" stroke="none"/><circle cx="78" cy="34" r="8" fill="#ff7ad0" stroke="none"/>
+          <path d="M50 12 L84 31 L84 69 L50 88 L16 69 L16 31 Z" fill="#3d2ba8" stroke="#27e6ff" stroke-width="4"/>
+          <path d="M50 24 L74 37 M74 63 L50 76 M26 63 L26 37" stroke="#fff" stroke-width="2" opacity=".35"/>
+          <circle cx="39" cy="46" r="6" fill="#fff" stroke="none"/><circle cx="61" cy="46" r="6" fill="#fff" stroke="none"/>
+          <circle cx="40" cy="48" r="2.6" fill="#10062e" stroke="none"/><circle cx="60" cy="48" r="2.6" fill="#10062e" stroke="none"/>
+          <path d="M42 60 Q50 67 58 60" stroke="#10062e" stroke-width="2.6"/>
         </svg>
       </div>
       <h2>脳汁ラボ<span>ドーパミン・ラッシュ</span></h2>
-      <p>5分間のサバイバー・アクション。画面のどこをさわっても、そこがスティック。攻撃は自動！ストレスや睡魔の大群をなぎ倒し、脳汁ジェムを集めてレベルアップ。</p>
-      <p class="warn">※ このゲームは、あなたの実際のドーパミンを測るものではありません。実際の脳を測っているわけではありません。画面のメーターは、論文の TD 学習モデルでゲーム内の出来事を計算した「モデル」です。</p>
+      <p>脳の中の報酬系の神経回路を、光る分子「ドーパくん」になって旅しよう（5分間）。画面のどこをさわっても、そこがスティック。攻撃は自動！ストレスホルモンや眠気の大群をなぎ倒し、ドーパミン小胞を集めてレベルアップ。</p>
+      <p class="warn">※ このゲームは、あなたの実際のドーパミンを測るものではありません。実際の脳を測っているわけではありません。画面のメーターは、論文の TD 学習モデルでゲーム内の出来事を計算した「モデル」です。脳の部位名や物質名は実在しますが、ゲームの中での働きは演出です。</p>
       <button id="startBtn" class="big" type="button">はじめる</button>
       <div class="row">
         <button id="autoStartBtn" class="btn" type="button">🤖 オートで見る</button>
@@ -108,7 +126,7 @@ table.bx th{color:var(--mute);font-weight:700}
     <section class="scr dim" id="scrLevel" hidden>
       <h2 id="lvTitle">LEVEL UP!</h2>
       <p class="small" id="lvMsg">強化を1つえらぼう</p>
-      <div id="cards"></div>
+      <div id="neuron"><svg id="nsvg" aria-hidden="true"></svg><div id="soma" aria-hidden="true"><small>LEVEL</small><b id="somaLv">2</b></div><div id="cards"></div></div>
       <button id="rollBtn" class="btn" type="button">🎰 リロール・ルーレット（自分で止める）</button>
       <div id="wheelPanel" hidden>
         <canvas id="wcv" width="300" height="300"></canvas>
@@ -128,19 +146,19 @@ table.bx th{color:var(--mute);font-weight:700}
     <div class="card" style="border-color:var(--gold)">
       <h3>だいじなおことわり</h3>
       このゲームは、あなたの実際のドーパミンを測るものではありません。<b>実際の脳を測っているわけではありません。</b>画面の「ドーパミン予測誤差メーター」は、論文1の考え方（TD 学習モデル）で、ゲームの中の出来事から計算した「モデル」です。<br>
-      宝箱やルーレットの確率は、表示どおりの本当の確率で決めています。ニアミスをわざと増やすことはしていません。お金や課金はなく、アイテムやポイントはゲームの中だけのものです。
+      カプセルやルーレットの確率は、表示どおりの本当の確率で決めています。ニアミスをわざと増やすことはしていません。お金や課金はなく、アイテムやポイントはゲームの中だけのものです。
     </div>
     <div class="card">
-      <h3>1. 予測誤差（脳汁ジェム・金ジェム）</h3>
+      <h3>1. 予測誤差（ドーパミン小胞・ドーパミン・バースト）</h3>
       <cite>Schultz, W., Dayan, P., Montague, P. R. (1997). A neural substrate of prediction and reward. <i>Science</i>, 275, 1593–1599.</cite>
       ドーパミンニューロンの反応は、報酬そのものではなく「報酬の予測誤差」（予想より良い／悪い）を表しているように見えます。予想どおりの報酬には反応が小さくなり、予想した報酬がないと反応が下がります。<br>
-      <span class="game">ゲームでは：</span>δ = r − V（r はもらった報酬、V は予想）。V は <code>V ← V + α·δ</code>（α = 0.12）で少しずつ更新します。ふつうの青ジェム（r = 1）は、くりかえすと δ が小さくなります。8% の確率で混ざる金ジェム（r = 5、拾うまで色は分かりません）は大きなプラス。右上の小さなグラフが δ の時間変化で、大きいときだけ「δ +4.1！」と表示します。
+      <span class="game">ゲームでは：</span>δ = r − V（r はもらった報酬、V は予想）。V は <code>V ← V + α·δ</code>（α = 0.12）で少しずつ更新します。ふつうの青い光の粒「ドーパミン小胞」（r = 1）は、くりかえすと δ が小さくなります。8% の確率で混ざる金の粒「ドーパミン・バースト」（予想外の一斉発火。r = 5、拾うまで色は分かりません）は大きなプラス。拾った瞬間、近くのニューロンが波のように光ります。右上の小さなグラフが δ の時間変化で、大きいときだけ「δ +4.1！」と表示します。<br>ボス「受容体の慣れ（ダウンレギュレーション）」は、この考え方とのつながりを演出したものです。同じ刺激がつづくと反応が小さくなっていくように、同じ武器で攻撃しつづけるとダメージが減っていきます（最大 60% ダウン。使うのをやめるとゆっくりもどる）。
     </div>
     <div class="card">
-      <h3>2. 不確実さ（ボスの宝箱）</h3>
+      <h3>2. 不確実さ（ボスのシナプス小胞のカプセル）</h3>
       <cite>Fiorillo, C. D., Tobler, P. N., Schultz, W. (2003). Discrete coding of reward probability and uncertainty by dopamine neurons. <i>Science</i>, 299, 1898–1902.</cite>
       報酬の確率に応じた反応とは別に、不確実さに比例して、報酬の時刻に向けてじわじわ高まる反応が見つかりました。不確実さは、確率 50% のときにいちばん大きくなります。<br>
-      <span class="game">ゲームでは：</span>ボスを倒すと、25%・50%・75% の表示つき宝箱が落ちます。開けるまでの約2秒の「ため」で、光と音が <code>p(1−p)</code> に比例してじわじわ高まります（50% が最大）。当たりは強化3つ、はずれはジェムが少しだけ。確率は表示どおりです。
+      <span class="game">ゲームでは：</span>ボスを倒すと、25%・50%・75% の表示つきの「シナプス小胞のカプセル」が落ちます。開けるまでの約2秒の「ため」で、光と音が <code>p(1−p)</code> に比例してじわじわ高まります（50% が最大）。当たりは強化3つ、はずれはジェムが少しだけ。確率は表示どおりです。
     </div>
     <div class="card">
       <h3>3. ニアミスと自分の操作（リロール・ルーレット）</h3>
@@ -152,7 +170,14 @@ table.bx th{color:var(--mute);font-weight:700}
       <h3>4. ビデオゲームとドーパミン（ゲームのループ）</h3>
       <cite>Koepp, M. J., Gunn, R. N., Lawrence, A. D., et al. (1998). Evidence for striatal dopamine release during a video game. <i>Nature</i>, 393, 266–268.</cite>
       PET という方法の研究です。戦車を操作して旗を集めるビデオゲーム（金銭報酬つき）をしている間に、線条体でドーパミンが放出されたことを示す証拠が得られました。成績とも関係していました。<br>
-      <span class="game">ゲームでは：</span>この研究へのオマージュとして、動き回って集める遊びを土台にしました。撃破・ジェム・レベルなど、成績に結びついたごほうびが、たえず手に入るループです。
+      <span class="game">ゲームでは：</span>この研究へのオマージュとして、動き回って集める遊びを土台にしました。撃破・ドーパミン小胞・レベルなど、成績に結びついたごほうびが、たえず手に入るループです。
+    </div>
+    <div class="card">
+      <h3>5. 脳の旅のメモ（用語について）</h3>
+      <b>脳の部位名や物質名は実在しますが、ゲームの中での働きは演出です。</b>実際の脳のしくみを説明するものではありません。<br>
+      <span class="game">エリア：</span>腹側被蓋野（VTA）…ドーパミンをつくる神経細胞が多いと考えられている場所／中脳辺縁系の道…VTA から側坐核などへのびる、軸索の束の通り道／側坐核…報酬ややる気と関係があると考えられている場所／扁桃体…不安や感情と関係があると考えられている場所／前頭前野…計画や判断と関係があると考えられている場所。<br>
+      <span class="game">敵：</span>コルチゾール（ストレスに関わるホルモン）、アデノシン（眠気に関わる物質）、通知ノイズ、マンネリは、ゲームのためのキャラクターです。<br>
+      <span class="game">操作する光：</span>「ドーパくん」は、ドーパミン分子（ベンゼン環と側鎖）をかわいくデフォルメしたキャラです。背景の神経細胞・軸索・シナプスや、光のパルスの動きも演出で、実際の神経活動の再現ではありません。
     </div>
     <div class="card" style="border-color:var(--pink)">
       <h3>じょうずに付き合おう</h3>
@@ -197,29 +222,36 @@ td.reset();
 /* ===== 定義 ===== */
 const WIDS=['beam','aura','boom','bomb'], PIDS=['speed','magnet','atk','cdr','reward'];
 const WDEF={
-  beam:{name:'脳波ビーム',icon:'🧠',evo:'脳波レーザー',evoP:'atk',desc:'近くの敵へビームを撃つ。レベルで本数・貫通UP'},
-  aura:{name:'セロトニンオーラ',icon:'🌀',evo:'セロトニン・フィールド',evoP:'cdr',desc:'まわりの敵をじわじわ攻撃してスローに'},
-  boom:{name:'ドーパミン・ブーメラン',icon:'🪃',evo:'ドーパミン・ストーム',evoP:'reward',desc:'敵をつらぬいて飛び、もどってくる'},
-  bomb:{name:'エンドルフィン・ボム',icon:'💥',evo:'エンドルフィン・ビッグバン',evoP:'magnet',desc:'敵の群れに投げこむ爆弾。ドカン！'}};
+  beam:{name:'スパイク・ビーム',icon:'⚡',evo:'バースト発火',evoP:'atk',desc:'近くの敵へ活動電位のビームを撃つ。レベルで本数・貫通UP'},
+  aura:{name:'シナプス・パルス',icon:'🌊',evo:'同期発火フィールド',evoP:'cdr',desc:'まわりに神経伝達物質の波紋。敵をじわじわ攻撃してスローに'},
+  boom:{name:'樹状突起ウィップ',icon:'🌿',evo:'報酬予測エラー・ストーム',evoP:'reward',desc:'枝分かれした光のムチが敵をつらぬいて弧を描き、もどってくる'},
+  bomb:{name:'ニューロ・バースト',icon:'🎇',evo:'脳汁ビッグバン',evoP:'magnet',desc:'敵の群れで発火が連鎖して広がる。ドカン！'}};
 const PDEF={
-  speed:{name:'運動神経',icon:'👟',desc:'いどうが 8% はやくなる'},
-  magnet:{name:'ひきよせ',icon:'🧲',desc:'ジェムをすいよせる範囲 +30%'},
-  atk:{name:'ニューロン強化',icon:'⚡',desc:'こうげき力 +15%'},
-  cdr:{name:'瞬発力',icon:'⏱️',desc:'クールダウン −8%'},
-  reward:{name:'報酬予測',icon:'🔮',desc:'ジェムの経験値 +12%'}};
+  speed:{name:'ミエリン鞘',icon:'💨',desc:'いどうが 8% はやくなる（信号が速く伝わるイメージ）'},
+  magnet:{name:'受容体アップ',icon:'🧲',desc:'ドーパミン小胞をすいよせる範囲 +30%'},
+  atk:{name:'長期増強',icon:'📈',desc:'こうげき力 +15%'},
+  cdr:{name:'神経可塑性',icon:'🔄',desc:'クールダウン −8%'},
+  reward:{name:'報酬予測',icon:'🔮',desc:'小胞の経験値 +12%'}};
 const ETYPES={
-  stress:{name:'ストレス',emoji:'😡',r:12,sp:52,hp:4,dmg:3,gems:1},
-  sleep:{name:'睡魔',emoji:'😴',r:13,sp:38,hp:8,dmg:4,gems:1},
-  notify:{name:'スマホ通知',emoji:'📱',r:10,sp:92,hp:2.5,dmg:3,gems:1},
-  yaruki:{name:'やる気ナシ',emoji:'😑',r:15,sp:34,hp:24,dmg:5,gems:2}};
-const BOSSES=[{name:'月曜の朝',emoji:'😫',hp:260},{name:'しめきり',emoji:'⏰',hp:700},{name:'炎上',emoji:'🔥',hp:1500},{name:'寝不足の王',emoji:'🥱',hp:3000}];
+  stress:{name:'コルチゾール',r:12,sp:52,hp:4,dmg:3,gems:1},
+  sleep:{name:'アデノシン',r:13,sp:38,hp:8,dmg:4,gems:1},
+  notify:{name:'通知ノイズ',r:10,sp:92,hp:2.5,dmg:3,gems:1},
+  yaruki:{name:'マンネリ',r:15,sp:34,hp:24,dmg:5,gems:2}};
+const BOSSES=[{name:'月曜の朝のコルチゾール大王',short:'コルチゾール大王',hp:260},{name:'アデノシンの大波',short:'アデノシンの大波',hp:700},{name:'受容体の慣れ（ダウンレギュレーション）',short:'受容体の慣れ',hp:1900},{name:'炎上シグナル',short:'炎上シグナル',hp:3600}];
+const AREAS=[
+  {name:'腹側被蓋野（VTA）',sub:'ドーパミンをつくる神経細胞が多いと考えられている場所',bg:[10,6,36],ln:[110,125,255],so:[110,170,255],pu:[160,240,255],dens:.42,bun:0},
+  {name:'中脳辺縁系の道',sub:'VTA からのびる、軸索の束の通り道',bg:[5,16,40],ln:[70,155,255],so:[70,205,235],pu:[175,255,240],dens:.55,bun:1},
+  {name:'側坐核',sub:'報酬ややる気と関係があると考えられている場所',bg:[32,6,38],ln:[255,95,195],so:[255,125,205],pu:[255,205,238],dens:.86,bun:0},
+  {name:'扁桃体のほとり',sub:'不安や感情と関係があると考えられている場所',bg:[36,10,20],ln:[255,145,85],so:[255,115,95],pu:[255,225,160],dens:.62,bun:0},
+  {name:'前頭前野',sub:'計画や判断と関係があると考えられている場所',bg:[5,28,30],ln:[85,235,175],so:[95,245,205],pu:[215,255,232],dens:.8,bun:0}];
+const areaOf=t=>Math.max(0,Math.min(4,Math.floor(t/60)));
 const xpNeed=L=>Math.round(8+L*7+L*L*.6);
 
 /* ===== 状態 ===== */
 const S={ mode:'title', overlay:null, t:0, auto:false, bot:null, manual:false,
   sound:lsGet('noujiru.sound','1')!=='0',
   fx:lsGet('noujiru.fx',(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)?'1':'0')==='1',
-  player:{x:0,y:0,hp:150,maxHp:150,inv:0,face:0,flip:1}, enemies:[], gems:[], projs:[], parts:[], pops:[], rings:[], chests:[],
+  player:{x:0,y:0,hp:150,maxHp:150,inv:0,face:0,flip:1}, enemies:[], gems:[], projs:[], parts:[], pops:[], rings:[], chests:[], fires:[], flashes:[], nbursts:[], nT:0, act:0, areaIdx:-1, areaBanner:null, bgCur:JSON.parse(JSON.stringify(AREAS[0])),
   W:null, P:null, cards:[], lvl:null, chest:null, wheel:null,
   meter:0, ramp:0, delta:0, lastR:0, lastV:0, bigD:null, shake:0, nearMissTotal:0, runs:0, playSec:0, titleIdle:0, breakT:0, reportT:0,
   view:{w:390,h:700,Z:1,dpr:1},
@@ -265,11 +297,11 @@ function addShake(a){ if(!S.fx) S.shake=Math.max(S.shake,a); }
 function startGame(){
   S.runs++; R=newRun(); td.reset(); freshKit(); S.meter=0; S.delta=0; S.lastR=0; S.lastV=0; S.bigD=null; S.nearMissTotal=0; S.ramp=0;
   Object.assign(S.player,{x:0,y:0,hp:150,maxHp:150,inv:1,face:0});
-  S.enemies=[]; S.gems=[]; S.projs=[]; S.parts=[]; S.pops=[]; S.rings=[]; S.chests=[]; S.chest=null; S.lvl=null; chargeStop();
+  S.enemies=[]; S.gems=[]; S.projs=[]; S.parts=[]; S.pops=[]; S.rings=[]; S.chests=[]; S.fires=[]; S.flashes=[]; S.nbursts=[]; S.areaIdx=-1; S.areaBanner=null; S.chest=null; S.lvl=null; chargeStop();
   S.mode='play'; hookMove=null; joy.on=false;
   $('scrReport').hidden=true; $('scrTitle').hidden=true; $('scrLevel').hidden=true; $('chestOk').hidden=true;
   if(S.auto||S.bot) AI.reset();
-  pop(0,-60,'脳波ビーム スタート！','#27e6ff',16,1.4);
+  pop(0,-60,'スパイク・ビーム スタート！','#27e6ff',16,1.4);
 }
 function endRun(dead){
   if(R.closed) return; R.closed=true; R.dead=dead; R.cleared=!dead; chargeStop();
@@ -295,8 +327,9 @@ function collectGem(g){
   R.combo++; R.maxCombo=Math.max(R.maxCombo,R.combo); R.chainT=.9; R.gems++;
   const {r,d}=gemReward(), gold=r===R_GOLD;
   R.xp+=r*xpMul(); chime(R.combo);
-  if(gold){ R.golds++; burst(g.x,g.y,26,['#ffd54a','#fff2a8','#ff3fa4'],170,.8); ring(g.x,g.y,40,'#ffd54a',.5); pop(g.x,g.y-14,'金ジェム ×5','#ffd54a',15,1); arpeggio(); addShake(2); }
+  if(gold){ R.golds++; burst(g.x,g.y,26,['#ffd54a','#fff2a8','#ff3fa4'],170,.8); ring(g.x,g.y,40,'#ffd54a',.5); ring(g.x,g.y,S.fx?120:230,'#ffe98a',.55); pop(g.x,g.y-14,'ドーパミン・バースト！ ×5','#ffd54a',15,1.1); arpeggio(); addShake(2); neuralBurst(g.x,g.y); }
   else if(R.combo%10===0) { burst(g.x,g.y,4,['#27e6ff','#fff'],60,.4); }
+  synFlash(g.x,g.y,gold);
   if(R.combo%25===0) pop(S.player.x,S.player.y-34,R.combo+' GEM!','#27e6ff',16,.9);
   checkLevel();
 }
@@ -319,7 +352,7 @@ function resolveChest(){
   const c=S.chest; chargeStop(); S.ramp=0;
   const win=chestOutcome(c.p); c.res=win?'win':'lose'; c.okT=0;
   if(win){ const got=grantUpgrades(3); c.msg='スーパー！ 強化 '+got.length+' つ：'+got.join('、'); superFanfare(); burst(c.x,c.y,30,['#ffd54a','#ff3fa4','#27e6ff'],200,1); }
-  else { R.xp+=8; checkLevel(); c.msg='はずれ…ジェムが少しだけ（+8）'; missSfx(); }
+  else { R.xp+=8; checkLevel(); c.msg='はずれ…小胞が少しだけ（+8）'; missSfx(); }
   $('chestOk').hidden=false;
 }
 function grantUpgrades(n){
@@ -354,18 +387,33 @@ function cardView(c){
   if(c.kind==='w'){ const d=WDEF[c.id], w=S.W[c.id], nl=Math.min(8,w.lv+c.gain); return {ic:d.icon,t:d.name,tag:w.lv===0?'NEW! Lv'+nl:'Lv '+w.lv+' → '+nl,d:d.desc,cls:c.boost?'boost':''}; }
   if(c.kind==='p'){ const d=PDEF[c.id], nl=Math.min(5,S.P[c.id]+c.gain); return {ic:d.icon,t:d.name,tag:S.P[c.id]===0?'NEW! Lv'+nl:'Lv '+S.P[c.id]+' → '+nl,d:d.desc,cls:c.boost?'boost':''}; }
   if(c.kind==='evo'){ const d=WDEF[c.id]; return {ic:d.icon,t:'進化：'+d.evo,tag:'EVOLUTION!',d:d.name+' Lv8 ＋ '+PDEF[d.evoP].name+' で進化。とてつもなく強い！',cls:'evo'}; }
-  return {ic:'💖',t:'いやし',tag:'HP ぜんかい',d:'HPが全回復して、ジェムも少しもらえる',cls:''};
+  return {ic:'💖',t:'いやし',tag:'HP ぜんかい',d:'HPが全回復して、小胞も少しもらえる',cls:''};
 }
 function startLevelUp(){
   S.mode='levelup'; S.lvl={rolled:false,wheelOn:false,resT:0,aiT:0,res:null}; S.cards=drawCards(false); S.player.inv=Math.max(S.player.inv,1);
   lvSfx(); joy.on=false; showLevelUI(); $('lvTitle').textContent='LEVEL UP!  Lv '+R.level; $('lvMsg').textContent='強化を1つえらぼう（キー 1・2・3）';
 }
 function showLevelUI(){
-  $('scrLevel').hidden=false; $('wheelPanel').hidden=!S.lvl.wheelOn; $('cards').hidden=S.lvl.wheelOn; $('rollBtn').hidden=S.lvl.rolled||S.lvl.wheelOn;
+  $('scrLevel').hidden=false; $('wheelPanel').hidden=!S.lvl.wheelOn; $('neuron').hidden=S.lvl.wheelOn; $('rollBtn').hidden=S.lvl.rolled||S.lvl.wheelOn;
   const box=$('cards'); box.innerHTML='';
   S.cards.forEach((c,i)=>{ const v=cardView(c), b=document.createElement('button'); b.type='button'; b.className='card2 '+v.cls;
     b.innerHTML=`<span class="ic">${v.ic}</span><span><b>${v.t}</b><em>${v.tag}</em><small>${v.d}</small></span>`; b.onclick=()=>{ humanInput(); pickCard(i); }; box.appendChild(b); });
+  $('somaLv').textContent=R.level; if(!S.lvl.wheelOn) requestAnimationFrame(layoutNeuron);
 }
+// ニューロンの細胞体から3本の枝がのびて、先が選択肢
+function layoutNeuron(){
+  const nv=$('neuron'), sv=$('nsvg'), so=$('soma'); if(!nv||nv.hidden) return;
+  const nr=nv.getBoundingClientRect(), sr=so.getBoundingClientRect(); if(!nr.width) return;
+  const sx=sr.left+sr.width/2-nr.left, sy=sr.top+sr.height-nr.top-6; let h='';
+  const bs=$('cards').querySelectorAll('.card2'); let k=0;
+  bs.forEach(b=>{ const r=b.getBoundingClientRect(), ex=r.left-nr.left+2, ey=r.top+r.height/2-nr.top, mx=Math.max(8,ex-30);
+    const d=`M${sx.toFixed(1)} ${sy.toFixed(1)} C${sx.toFixed(1)} ${(sy+(ey-sy)*.55).toFixed(1)} ${mx.toFixed(1)} ${(ey-18).toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`;
+    h+=`<path d="${d}"/><path class="fl" d="${d}" style="animation-delay:${-(k*.5)}s"/>`;
+    h+=`<path class="tw" d="M${(mx+6).toFixed(1)} ${(ey-12).toFixed(1)} q-10 -4 -16 -14 M${(mx+6).toFixed(1)} ${(ey-12).toFixed(1)} q-8 6 -14 6"/>`;
+    h+=`<circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="5"/>`; k++; });
+  sv.setAttribute('viewBox',`0 0 ${nr.width.toFixed(1)} ${nr.height.toFixed(1)}`); sv.innerHTML=h;
+}
+addEventListener('resize',()=>{ if(S.mode==='levelup') layoutNeuron(); });
 function pickCard(i){
   if(S.mode!=='levelup'||S.lvl.wheelOn) return; const c=S.cards[i]; if(!c) return;
   applyCard(c); R.pending--; $('scrLevel').hidden=true;
@@ -407,12 +455,12 @@ function halfView(){ return [S.view.w/S.view.Z/2, S.view.h/S.view.Z/2]; }
 function edgePoint(a){ const [hw,hh]=halfView(), c=Math.cos(a), s=Math.sin(a), t=Math.min((hw+40)/(Math.abs(c)||1e-6),(hh+40)/(Math.abs(s)||1e-6)); return [S.player.x+c*t,S.player.y+s*t]; }
 function spawnEnemy(type,x,y){
   const d=ETYPES[type], hpm=1+R.elapsed/22+Math.pow(R.elapsed/100,2)*3;
-  S.enemies.push({x,y,t:type,r:d.r,sp:d.sp*(1+rnd()*.12),hp:d.hp*hpm,maxhp:d.hp*hpm,dmg:d.dmg,dying:-1,slow:0,tB:0,boss:-1,flash:0});
+  S.enemies.push({x,y,t:type,r:d.r,sp:d.sp*(1+rnd()*.12),hp:d.hp*hpm,maxhp:d.hp*hpm,dmg:d.dmg,dying:-1,slow:0,tB:0,boss:-1,flash:0,ph:rnd()});
 }
 function spawnBoss(i){
   const b=BOSSES[i], [x,y]=edgePoint(rnd()*6.283);
-  const hp=b.hp; S.enemies.push({x,y,t:'boss',r:28,sp:46+i*5,hp,maxhp:hp,dmg:9+i*2,dying:-1,slow:0,tB:0,boss:i,flash:0});
-  pop(S.player.x,S.player.y-70,'BOSS：'+b.name,'#ff3fa4',20,2); addShake(3);
+  const hp=b.hp; S.enemies.push({x,y,t:'boss',r:28,sp:46+i*5,hp,maxhp:hp,dmg:9+i*2,dying:-1,slow:0,tB:0,boss:i,flash:0,ph:0,ad:{beam:0,aura:0,boom:0,bomb:0},adT:{beam:0,aura:0,boom:0,bomb:0}});
+  pop(S.player.x,S.player.y-70,'BOSS：'+b.short,'#ff3fa4',19,2); addShake(3);
 }
 function pickType(t){
   const w=[['stress',10]]; if(t>35) w.push(['sleep',6]); if(t>75) w.push(['notify',7]); if(t>120) w.push(['yaruki',3.5]);
@@ -428,8 +476,10 @@ function spawnWave(k){
 function nearestEnemies(n,maxD){ const p=S.player, arr=[];
   for(const e of S.enemies){ if(e.dying>=0) continue; const dx=e.x-p.x, dy=e.y-p.y, d2=dx*dx+dy*dy; if(d2<maxD*maxD) arr.push([d2,e]); }
   arr.sort((a,b)=>a[0]-b[0]); return arr.slice(0,n).map(a=>a[1]); }
-function hurt(e,dmg,delay){
-  if(e.dying>=0) return; e.hp-=dmg; e.flash=.09;
+function hurt(e,dmg,delay,wk){
+  if(e.dying>=0) return;
+  if(e.boss===2&&wk){ dmg*=1-e.ad[wk]; e.adT[wk]=1.6; }   // 受容体の慣れ：同じ攻撃がつづくと効きにくくなる
+  e.hp-=dmg; e.flash=.09;
   if(e.hp<=0) e.dying=Math.max(delay||0,.0001);
 }
 function finalizeKill(e){
@@ -438,7 +488,7 @@ function finalizeKill(e){
   const n=e.boss>=0?12:ETYPES[e.t].gems;
   for(let i=0;i<n;i++){ if(e.t==='notify'&&rnd()<.35) continue; if(S.gems.length>420){ R.xp+=1; checkLevel(); continue; }
     const a=Math.random()*6.283, s=40+Math.random()*(e.boss>=0?160:80); S.gems.push({x:e.x,y:e.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,att:false}); }
-  if(e.boss>=0){ R.bossKills++; spawnChest(e.x,e.y); pop(e.x,e.y-30,'ボスげきは！ 宝箱が落ちた','#ffd54a',16,1.6); ring(e.x,e.y,120,'#ff3fa4',.7); addShake(4); }
+  if(e.boss>=0){ R.bossKills++; spawnChest(e.x,e.y); pop(e.x,e.y-30,'ボスげきは！ カプセルが落ちた','#ffd54a',16,1.6); ring(e.x,e.y,120,'#ff3fa4',.7); addShake(4); }
 }
 function massCheck(){
   const t=R.elapsed; while(R.recent.length&&R.recent[0]<t-.6) R.recent.shift();
@@ -460,10 +510,10 @@ function fireWeapons(dt){
   w=W.boom; if(w.lv>0){
     if(w.evo){ w.rot+=dt*3.2; const n=6, rad=105, dmg=(14+3*w.lv)*am*1.4;
       for(let i=0;i<n;i++){ const a=w.rot+i*6.283/n, bx=p.x+Math.cos(a)*rad, by=p.y+Math.sin(a)*rad;
-        for(const e of S.enemies){ if(e.dying>=0||e.tB>0) continue; const dx=e.x-bx, dy=e.y-by; if(dx*dx+dy*dy<(e.r+16)*(e.r+16)){ hurt(e,dmg,.02); e.tB=.22; } } } }
+        for(const e of S.enemies){ if(e.dying>=0||e.tB>0) continue; const dx=e.x-bx, dy=e.y-by; if(dx*dx+dy*dy<(e.r+16)*(e.r+16)){ hurt(e,dmg,.02,'boom'); e.tB=.22; } } } }
     else { w.cd-=dt; if(w.cd<=0){ const L=w.lv, n=1+Math.floor((L+1)/3), tg=nearestEnemies(1,380); w.cd=(1.9-.08*L)*cm;
       const base=tg.length?Math.atan2(tg[0].y-p.y,tg[0].x-p.x):rnd()*6.283;
-      for(let i=0;i<n;i++){ const a=base+(i-(n-1)/2)*.5; S.projs.push({k:'boom',x:p.x,y:p.y,vx:Math.cos(a)*310,vy:Math.sin(a)*310,ph:0,trav:0,range:150+8*L,dmg:(8+3*L)*am,r:14,rot:0}); } tone(300,.1,'triangle',.05); } } }
+      for(let i=0;i<n;i++){ const a=base+(i-(n-1)/2)*.5; S.projs.push({k:'boom',x:p.x,y:p.y,vx:Math.cos(a)*310,vy:Math.sin(a)*310,ph:0,trav:0,range:150+8*L,dmg:(8+3*L)*am,r:14,rot:0,side:i%2?1:-1}); } tone(300,.1,'triangle',.05); } } }
   // ボム
   w=W.bomb; if(w.lv>0){ w.cd-=dt; if(w.cd<=0){
     const L=w.lv, n=1+Math.floor(L/3)+(w.evo?2:0), tg=nearestEnemies(40,300); w.cd=(2.5-.12*L)*cm*(w.evo?.7:1);
@@ -471,7 +521,7 @@ function fireWeapons(dt){
       S.projs.push({k:'bomb',sx:p.x,sy:p.y,tx:e.x+(rnd()-.5)*30,ty:e.y+(rnd()-.5)*30,t:-i*.12,dur:.55,dmg:(12+5*L)*am*(w.evo?1.8:1),rad:(48+6*L)*(w.evo?2.1:1)}); } } else w.cd=.2; } }
   // オーラ
   w=W.aura; if(w.lv>0){ w.cd-=dt; if(w.cd<=0){ w.cd=.45*(w.evo?.8:1)*cm; const L=w.lv, rad=(46+7*L)*(w.evo?1.7:1), dmg=(2.5+1.5*L)*am*(w.evo?2:1);
-    for(const e of S.enemies){ if(e.dying>=0) continue; const dx=e.x-p.x, dy=e.y-p.y; if(dx*dx+dy*dy<(rad+e.r)*(rad+e.r)){ hurt(e,dmg,.01); e.slow=.6; } }
+    for(const e of S.enemies){ if(e.dying>=0) continue; const dx=e.x-p.x, dy=e.y-p.y; if(dx*dx+dy*dy<(rad+e.r)*(rad+e.r)){ hurt(e,dmg,.01,'aura'); e.slow=.6; } }
     if(w.evo) p.hp=Math.min(p.maxHp,p.hp+.8); } }
 }
 function auraRadius(){ const w=S.W.aura; return w.lv>0?(46+7*w.lv)*(w.evo?1.7:1):0; }
@@ -479,18 +529,24 @@ function updateProjs(dt){
   const p=S.player;
   for(let i=S.projs.length-1;i>=0;i--){ const q=S.projs[i];
     if(q.k==='beam'){ q.x+=q.vx*dt; q.y+=q.vy*dt; q.life-=dt; let dead=q.life<=0;
-      if(!dead) for(const e of S.enemies){ if(e.dying>=0) continue; const dx=e.x-q.x, dy=e.y-q.y, rr=e.r+q.r; if(dx*dx+dy*dy<rr*rr&&q.hit.indexOf(e)<0){ q.hit.push(e); hurt(e,q.dmg); q.pierce--; if(q.pierce<0){ dead=true; break; } } }
+      if(!dead) for(const e of S.enemies){ if(e.dying>=0) continue; const dx=e.x-q.x, dy=e.y-q.y, rr=e.r+q.r; if(dx*dx+dy*dy<rr*rr&&q.hit.indexOf(e)<0){ q.hit.push(e); hurt(e,q.dmg,0,'beam'); q.pierce--; if(q.pierce<0){ dead=true; break; } } }
       if(dead) S.projs.splice(i,1); }
     else if(q.k==='boom'){ q.rot+=dt*14; const sp=310;
       if(q.ph===0){ q.x+=q.vx*dt; q.y+=q.vy*dt; q.trav+=sp*dt; if(q.trav>=q.range) q.ph=1; }
       else { const dx=p.x-q.x, dy=p.y-q.y, d=Math.hypot(dx,dy)||1; q.vx=dx/d*sp*1.15; q.vy=dy/d*sp*1.15; q.x+=q.vx*dt; q.y+=q.vy*dt; if(d<16){ S.projs.splice(i,1); continue; } }
-      for(const e of S.enemies){ if(e.dying>=0||e.tB>0) continue; const dx=e.x-q.x, dy=e.y-q.y, rr=e.r+q.r; if(dx*dx+dy*dy<rr*rr){ hurt(e,q.dmg); e.tB=.28; } } }
+      for(const e of S.enemies){ if(e.dying>=0||e.tB>0) continue; const dx=e.x-q.x, dy=e.y-q.y, rr=e.r+q.r; if(dx*dx+dy*dy<rr*rr){ hurt(e,q.dmg,0,'boom'); e.tB=.28; } } }
     else if(q.k==='bomb'){ q.t+=dt; if(q.t>=q.dur){ explode(q); S.projs.splice(i,1); } }
   }
 }
+function fireChain(x,y,rad,evo){   // 見た目だけ：発火が連鎖して広がる（ダメージは範囲そのまま）
+  const hops=evo?7:4, pts=[[x,y]]; let cx=x, cy=y; const used=new Set();
+  for(let h=0;h<hops;h++){ let b=null, bd=1e9; for(const e of S.enemies){ if(e.dying>=0||used.has(e)) continue; const d=Math.hypot(e.x-cx,e.y-cy); if(d<bd&&d<rad*.9+30&&d>6){ bd=d; b=e; } } if(!b) break; used.add(b); pts.push([b.x,b.y]); cx=b.x; cy=b.y; }
+  S.fires.push({pts,t:0,life:.4,rad,evo:!!evo}); if(S.fires.length>10) S.fires.shift();
+}
 function explode(q){
-  boomSfx(); ring(q.tx,q.ty,q.rad,'#ff9f1c',.45); burst(q.tx,q.ty,14,['#ff9f1c','#ffd54a','#ff3fa4'],140,.5); addShake(1.5);
-  for(const e of S.enemies){ if(e.dying>=0) continue; const dx=e.x-q.tx, dy=e.y-q.ty, d=Math.hypot(dx,dy); if(d<q.rad+e.r) hurt(e,q.dmg,(d/q.rad)*.28); }
+  boomSfx(); ring(q.tx,q.ty,q.rad,'#ff7ae0',.45); burst(q.tx,q.ty,14,['#ff7ae0','#ffd54a','#27e6ff'],140,.5); addShake(1.5);
+  fireChain(q.tx,q.ty,q.rad,S.W.bomb.evo);
+  for(const e of S.enemies){ if(e.dying>=0) continue; const dx=e.x-q.tx, dy=e.y-q.ty, d=Math.hypot(dx,dy); if(d<q.rad+e.r) hurt(e,q.dmg,(d/q.rad)*.28,'bomb'); }
 }
 
 /* ===== 入力 ===== */
@@ -512,6 +568,7 @@ function update(dt){
   for(let i=S.pops.length-1;i>=0;i--){ const q=S.pops[i]; q.life-=dt; q.y-=24*dt; if(q.life<=0) S.pops.splice(i,1); }
   for(let i=S.rings.length-1;i>=0;i--){ const q=S.rings[i]; q.life-=dt; q.r+=(q.r1-q.r)*Math.min(1,dt*7); if(q.life<=0) S.rings.splice(i,1); }
   R.kdisp+=(R.kills-R.kdisp)*Math.min(1,dt*8);
+  updateNeural(dt);
   if(S.overlay==='break'){ if(S.auto){ S.breakT+=dt; if(S.breakT>4) closeBreak(); } return; }
   if(S.overlay==='notes') return;
   switch(S.mode){
@@ -542,6 +599,7 @@ function updatePlay(dt){
   for(let i=S.enemies.length-1;i>=0;i--){ const e=S.enemies[i];
     if(e.dead){ S.enemies[i]=S.enemies[S.enemies.length-1]; S.enemies.pop(); continue; }
     e.flash=Math.max(0,e.flash-dt); e.tB=Math.max(0,e.tB-dt); e.slow=Math.max(0,e.slow-dt);
+    if(e.boss===2){ for(const k in e.ad){ if(e.adT[k]>0){ e.adT[k]-=dt; e.ad[k]=Math.min(.6,e.ad[k]+.09*dt); } else e.ad[k]=Math.max(0,e.ad[k]-.12*dt); } }
     if(e.dying>=0){ e.dying-=dt; if(e.dying<=0) finalizeKill(e); continue; }
     const dx=p.x-e.x, dy=p.y-e.y, d=Math.hypot(dx,dy)||1, sp=e.sp*(e.slow>0?.62:1);
     e.x+=dx/d*sp*dt; e.y+=dy/d*sp*dt;
@@ -658,9 +716,9 @@ function setAuto(v){
 }
 function humanInput(){ if(S.auto) setAuto(false); }
 function setSound(v){ S.sound=!!v; lsSet('noujiru.sound',v?'1':'0'); $('sndBtn').setAttribute('aria-pressed',v?'true':'false'); $('sndBtn').textContent=v?'🔊':'🔇'; if(!v) chargeStop(); }
-function setFx(v){ S.fx=!!v; lsSet('noujiru.fx',v?'1':'0'); $('fxBtn').setAttribute('aria-pressed',v?'true':'false'); }
+function setFx(v){ S.fx=!!v; lsSet('noujiru.fx',v?'1':'0'); $('fxBtn').setAttribute('aria-pressed',v?'true':'false'); document.body.classList.toggle('fxlow',S.fx); }
 function bestLine(){ $('bestLine').textContent=S.best.score?`ベスト：${S.best.score}点　撃破 ${S.best.kills}　最大 δ +${(+S.best.delta).toFixed(1)}`:'ベスト記録はまだありません'; }
-function toTitle(){ S.mode='title'; S.overlay=null; chargeStop(); S.chest=null; S.lvl=null; S.ramp=0; $('scrReport').hidden=true; $('scrLevel').hidden=true; $('chestOk').hidden=true; $('scrTitle').hidden=false; S.enemies=[]; S.gems=[]; S.projs=[]; S.chests=[]; S.titleIdle=0; bestLine(); }
+function toTitle(){ S.mode='title'; S.overlay=null; chargeStop(); S.chest=null; S.lvl=null; S.ramp=0; $('scrReport').hidden=true; $('scrLevel').hidden=true; $('chestOk').hidden=true; $('scrTitle').hidden=false; S.enemies=[]; S.gems=[]; S.projs=[]; S.chests=[]; S.fires=[]; S.flashes=[]; S.nbursts=[]; S.titleIdle=0; bestLine(); }
 function openNotes(){ S.overlay='notes'; $('notes').hidden=false; $('notes').scrollTop=0; $('notesClose').focus({preventScroll:true}); }
 function closeNotes(){ S.overlay=null; $('notes').hidden=true; }
 function closeBreak(){ S.overlay=null; $('brk').hidden=true; S.playSec=0; S.breakT=0; }
@@ -676,13 +734,13 @@ function showReport(){
     <ul class="stats">
       <li><span>スコア${rec?'（ベスト更新！）':''}</span><b>${sc}</b></li>
       <li><span>撃破数 / レベル</span><b>${R.kills} / Lv ${R.level}</b></li>
-      <li><span>最大連続ジェム<small>金ジェム ${R.golds} 個（拾うまで色は分からない 8%）</small></span><b>${R.maxCombo}</b></li>
-      <li><span>いちばん大きかった予測誤差 δ<small>${m?`${mmss(m.t)}　r=${m.r} の${m.state.startsWith('box')?'宝箱':m.r>=R_GOLD?'金ジェム':'ジェム'}　（δ = r − V）`:'まだなし'}</small></span><b>${m?f1(m.d):'-'}</b></li>
-      <li><span>ふつうのジェムの δ<small>くりかえすと予想（V）が合ってきて 0 に近づく</small></span><b>${gd.length>=20?f1(avg(gd.slice(0,10)))+' → '+f1(avg(gd.slice(-10))):'-'}</b></li>
+      <li><span>最大連続小胞<small>ドーパミン・バースト ${R.golds} 回（拾うまで色は分からない 8%）</small></span><b>${R.maxCombo}</b></li>
+      <li><span>いちばん大きかった予測誤差 δ<small>${m?`${mmss(m.t)}　r=${m.r} の${m.state.startsWith('box')?'カプセル':m.r>=R_GOLD?'ドーパミン・バースト':'小胞'}　（δ = r − V）`:'まだなし'}</small></span><b>${m?f1(m.d):'-'}</b></li>
+      <li><span>ふつうの小胞の δ<small>くりかえすと予想（V）が合ってきて 0 に近づく</small></span><b>${gd.length>=20?f1(avg(gd.slice(0,10)))+' → '+f1(avg(gd.slice(-10))):'-'}</b></li>
       <li><span>ルーレット / ニアミス<small>ひきなおしの当たり ${R.rolls.win} / ${R.rolls.n} 回</small></span><b>${R.nearMiss}回</b></li>
       <li><span>進化した武器</span><b style="font-size:13px;white-space:normal;text-align:right">${R.evolved.length?R.evolved.join('、'):'なし'}</b></li>
     </ul>
-    <h3>ボスの宝箱（盛り上がり度 ∝ p(1−p)、50% が最大）</h3>
+    <h3>ボスのカプセル（盛り上がり度 ∝ p(1−p)、50% が最大）</h3>
     <table class="bx"><tr><th>確率</th><th>開けた数</th><th>当たり</th><th>ための盛り上がり</th></tr>${row(25)}${row(50)}${row(75)}</table>
     <h3>今日の脳汁グラフ（δ の時系列）</h3>
     <canvas id="rcv"></canvas>
@@ -721,58 +779,271 @@ function drawGraph(g,x,y,w,h,hist,t0,t1,ramps,labels){
 }
 
 /* ===== 描画 ===== */
-const sprC={};
-function spr(emoji,px){ const k=emoji+px; if(sprC[k]) return sprC[k]; const c=document.createElement('canvas'); c.width=c.height=px; const g=c.getContext('2d'); g.font=(px*.8)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(emoji,px/2,px/2+px*.04); return sprC[k]=c; }
-function gemSpr(col){ const k='gem'+col; if(sprC[k]) return sprC[k]; const c=document.createElement('canvas'); c.width=c.height=16; const g=c.getContext('2d'); g.fillStyle=col; g.beginPath(); g.moveTo(8,1); g.lineTo(14,8); g.lineTo(8,15); g.lineTo(2,8); g.closePath(); g.fill(); g.fillStyle='rgba(255,255,255,.55)'; g.beginPath(); g.moveTo(8,3); g.lineTo(11,8); g.lineTo(8,8); g.closePath(); g.fill(); return sprC[k]=c; }
+// ベクター描画のスプライト（100×100 の座標で描いて、キャッシュする）
+function mk(px,fn){ const c=document.createElement('canvas'); c.width=c.height=px; const g=c.getContext('2d'); g.scale(px/100,px/100); g.lineJoin='round'; g.lineCap='round'; fn(g); return c; }
+function eyeW(g,x,y,r,px,py,pr){ g.fillStyle='#fff'; g.beginPath(); g.arc(x,y,r,0,6.2832); g.fill(); g.fillStyle='#1a0a2e'; g.beginPath(); g.arc(x+px,y+py,pr,0,6.2832); g.fill(); }
+function spike(g,cx,cy,n,r0,r1,rot){ g.beginPath(); for(let i=0;i<n*2;i++){ const a=rot+i/(n*2)*6.2832, r=i%2?r0:r1, x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r; if(i) g.lineTo(x,y); else g.moveTo(x,y); } g.closePath(); }
+function radial(g,cx,cy,r,c0,c1){ const gr=g.createRadialGradient(cx-r*.3,cy-r*.35,r*.1,cx,cy,r); gr.addColorStop(0,c0); gr.addColorStop(1,c1); return gr; }
+function drawCortisol(g,cx,cy,k,crown){   // コルチゾール：とげとげで怒っている赤いかたまり
+  g.save(); g.translate(cx,cy); g.scale(k,k);
+  spike(g,0,0,11,34,45,-1.57); g.fillStyle=radial(g,0,0,45,'#ff9a6a','#d0222c'); g.fill(); g.strokeStyle='#6e0f18'; g.lineWidth=3.2; g.stroke();
+  eyeW(g,-12,-3,8.5,1,2,3.8); eyeW(g,12,-3,8.5,-1,2,3.8);
+  g.strokeStyle='#3a0610'; g.lineWidth=5; g.beginPath(); g.moveTo(-23,-17); g.lineTo(-6,-9); g.moveTo(23,-17); g.lineTo(6,-9); g.stroke();
+  g.lineWidth=3.4; g.beginPath(); g.arc(0,24,9,3.6,5.8); g.stroke();
+  g.strokeStyle='#ffe2dc'; g.lineWidth=2.4; g.beginPath(); g.moveTo(20,-30); g.lineTo(26,-24); g.moveTo(26,-30); g.lineTo(20,-24); g.stroke();
+  if(crown){ g.fillStyle='#ffd54a'; g.strokeStyle='#8a5a00'; g.lineWidth=2.6; g.beginPath(); g.moveTo(-17,-44); g.lineTo(-20,-64); g.lineTo(-8,-54); g.lineTo(0,-68); g.lineTo(8,-54); g.lineTo(20,-64); g.lineTo(17,-44); g.closePath(); g.fill(); g.stroke(); }
+  g.restore();
+}
+function drawAdeno(g){   // アデノシン：ねむそうなもちもち
+  g.save(); g.translate(50,52);
+  g.beginPath(); g.ellipse(0,2,43,38,0,0,6.2832); g.fillStyle=radial(g,0,0,44,'#cbc8ff','#5b55d6'); g.fill(); g.strokeStyle='#2c2789'; g.lineWidth=3.2; g.stroke();
+  g.strokeStyle='#1b1850'; g.lineWidth=3.6; g.beginPath(); g.arc(-15,-3,8,.15,2.99); g.stroke(); g.beginPath(); g.arc(15,-3,8,.15,2.99); g.stroke();
+  g.fillStyle='#2a1650'; g.beginPath(); g.ellipse(0,19,7,9,0,0,6.2832); g.fill();
+  g.fillStyle='rgba(200,230,255,.55)'; g.strokeStyle='rgba(255,255,255,.9)'; g.lineWidth=1.8; g.beginPath(); g.arc(24,9,7,0,6.2832); g.fill(); g.stroke();
+  g.font='900 24px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.lineWidth=4; g.strokeStyle='#2c2789'; g.strokeText('z',30,-30); g.fillStyle='#fff'; g.fillText('z',30,-30);
+  g.restore();
+}
+function drawNoise(g,f){   // 通知ノイズ：ちらつくギザギザ
+  g.save(); g.translate(50,50); g.rotate(f?.14:-.1); g.beginPath();
+  for(let i=0;i<16;i++){ const a=i/16*6.2832, r=(i&1?30:44)+(f?(i%3)*3:((i+1)%3)*3), x=Math.cos(a)*r, y=Math.sin(a)*r; if(i) g.lineTo(x,y); else g.moveTo(x,y); } g.closePath();
+  const gr=g.createLinearGradient(0,-44,0,44); gr.addColorStop(0,'#fffbb0'); gr.addColorStop(1,'#ffb81c'); g.fillStyle=gr; g.fill(); g.strokeStyle='#8a5200'; g.lineWidth=3.2; g.stroke();
+  eyeW(g,-11,-5,9,f?2:-2,0,3.2); eyeW(g,11,-5,9,f?2:-2,0,3.2);
+  g.strokeStyle='#5a2d00'; g.lineWidth=3.2; g.beginPath(); g.moveTo(-14,15); g.lineTo(-7,23); g.lineTo(-1,15); g.lineTo(5,23); g.lineTo(11,15); g.lineTo(15,21); g.stroke();
+  g.restore();
+}
+function drawManneri(g){   // マンネリ：灰色で無表情
+  g.save(); g.translate(50,50); g.beginPath(); g.arc(0,0,42,0,6.2832); g.fillStyle=radial(g,0,0,42,'#cfcfdb','#6c6c7c'); g.fill(); g.strokeStyle='#3f3f4d'; g.lineWidth=3.2; g.stroke();
+  g.save(); g.clip(); g.strokeStyle='rgba(40,40,60,.22)'; g.lineWidth=2.4; g.setLineDash([7,6]); for(const y of [-30,-21,24,33]){ g.beginPath(); g.moveTo(-44,y); g.lineTo(44,y); g.stroke(); } g.restore();
+  g.fillStyle='#22222c'; g.beginPath(); g.arc(-14,-1,3.4,0,6.2832); g.arc(14,-1,3.4,0,6.2832); g.fill();
+  g.strokeStyle='#2c2c38'; g.lineWidth=3; g.beginPath(); g.moveTo(-21,-9); g.lineTo(-8,-9); g.moveTo(8,-9); g.lineTo(21,-9); g.moveTo(-9,19); g.lineTo(9,19); g.stroke();
+  g.restore();
+}
+function drawWaveBoss(g){   // アデノシンの大波
+  g.beginPath(); g.ellipse(50,62,42,34,0,0,6.2832); g.fillStyle=radial(g,50,60,44,'#9fc6ff','#3a46c8'); g.fill(); g.strokeStyle='#1d2494'; g.lineWidth=3.2; g.stroke();
+  g.beginPath(); g.moveTo(10,56); g.bezierCurveTo(6,22,40,2,68,12); g.bezierCurveTo(92,22,96,50,86,60); g.bezierCurveTo(86,42,74,34,62,38); g.bezierCurveTo(50,42,52,52,48,58); g.closePath();
+  g.fillStyle='#cfe6ff'; g.fill(); g.stroke();
+  g.fillStyle='#fff'; for(const [x,y,r] of [[24,26,4],[40,14,3.6],[58,12,3.4],[78,24,4],[88,42,3]]){ g.beginPath(); g.arc(x,y,r,0,6.2832); g.fill(); }
+  g.strokeStyle='#14186a'; g.lineWidth=3.6; g.beginPath(); g.arc(33,62,8,.15,2.99); g.stroke(); g.beginPath(); g.arc(61,62,8,.15,2.99); g.stroke();
+  g.fillStyle='#14186a'; g.beginPath(); g.ellipse(47,80,8,6,0,0,6.2832); g.fill();
+  g.font='900 22px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.lineWidth=4; g.strokeStyle='#1d2494'; g.strokeText('z',82,70); g.fillStyle='#fff'; g.fillText('z',82,70);
+}
+function drawReceptor(g){   // 受容体の慣れ：ぐったりした受容体
+  g.strokeStyle='#2f8f72'; g.lineWidth=9; g.beginPath(); g.moveTo(34,34); g.lineTo(21,10); g.moveTo(66,34); g.lineTo(79,10); g.stroke();
+  g.fillStyle='#7be0b8'; g.lineWidth=2.4; g.strokeStyle='#1d6650'; for(const x of [21,79]){ g.beginPath(); g.arc(x,9,7,0,6.2832); g.fill(); g.stroke(); }
+  const gr=g.createLinearGradient(0,22,0,94); gr.addColorStop(0,'#9af5d2'); gr.addColorStop(1,'#3fae8c'); g.fillStyle=gr; g.strokeStyle='#1d6650'; g.lineWidth=3.2;
+  g.beginPath(); g.moveTo(50,22); g.arcTo(76,22,76,60,24); g.arcTo(76,94,50,94,24); g.arcTo(24,94,24,60,24); g.arcTo(24,22,50,22,24); g.closePath(); g.fill(); g.stroke();
+  g.fillStyle='#14463a'; g.beginPath(); g.arc(50,30,9,0,3.1416); g.fill();
+  g.strokeStyle='rgba(20,70,58,.35)'; g.lineWidth=2.6; g.beginPath(); g.moveTo(28,46); g.lineTo(72,46); g.moveTo(26,84); g.lineTo(74,84); g.stroke();
+  eyeW(g,39,58,7.5,0,1.5,3.2); eyeW(g,61,58,7.5,0,1.5,3.2);
+  g.fillStyle='#62cfa7'; g.strokeStyle='#14463a'; g.lineWidth=2.4; for(const x of [39,61]){ g.beginPath(); g.arc(x,58,8,3.1416,6.2832); g.closePath(); g.fill(); g.stroke(); }
+  g.beginPath(); g.moveTo(42,76); g.lineTo(58,76); g.stroke();
+}
+function drawFlame(g){   // 炎上シグナル
+  g.beginPath(); g.moveTo(50,4); g.bezierCurveTo(58,26,88,40,86,68); g.bezierCurveTo(84,88,66,96,50,96); g.bezierCurveTo(34,96,16,88,14,68); g.bezierCurveTo(12,50,28,40,34,24); g.bezierCurveTo(40,32,44,24,50,4); g.closePath();
+  const gr=g.createLinearGradient(0,4,0,96); gr.addColorStop(0,'#ffe24a'); gr.addColorStop(.5,'#ff7a1c'); gr.addColorStop(1,'#d6232f'); g.fillStyle=gr; g.fill(); g.strokeStyle='#7a1010'; g.lineWidth=3; g.stroke();
+  g.fillStyle='rgba(255,240,150,.5)'; g.beginPath(); g.moveTo(50,42); g.bezierCurveTo(58,54,72,60,70,76); g.bezierCurveTo(68,88,58,92,50,92); g.bezierCurveTo(42,92,32,88,30,76); g.bezierCurveTo(28,64,42,56,50,42); g.fill();
+  eyeW(g,38,66,7.5,1,1.5,3.4); eyeW(g,62,66,7.5,-1,1.5,3.4);
+  g.strokeStyle='#4a0a0a'; g.lineWidth=4.5; g.beginPath(); g.moveTo(28,54); g.lineTo(44,60); g.moveTo(72,54); g.lineTo(56,60); g.stroke();
+  g.fillStyle='#4a0a0a'; g.beginPath(); g.ellipse(50,82,8,6,0,0,6.2832); g.fill();
+  g.strokeStyle='#ff3fa4'; g.lineWidth=3; for(const r of [8,14,20]){ g.beginPath(); g.arc(74,28,r,-2.1,-.1); g.stroke(); }
+}
+const eC={};
+function eSpr(key,f){ const k=key+(f||0); if(eC[k]) return eC[k]; const big=key[0]==='b';
+  return eC[k]=mk(big?176:96,g=>{ switch(key){
+    case 'stress': drawCortisol(g,50,50,.98,false); break; case 'sleep': drawAdeno(g); break; case 'notify': drawNoise(g,f); break; case 'yaruki': drawManneri(g); break;
+    case 'b0': drawCortisol(g,50,60,.78,true); break; case 'b1': drawWaveBoss(g); break; case 'b2': drawReceptor(g); break; case 'b3': drawFlame(g); } }); }
+function gemSpr(){ if(eC.gem) return eC.gem; return eC.gem=mk(48,g=>{   // ドーパミン小胞：青い光の粒
+  const gl=g.createRadialGradient(50,50,4,50,50,50); gl.addColorStop(0,'rgba(120,200,255,.7)'); gl.addColorStop(1,'rgba(60,140,255,0)'); g.fillStyle=gl; g.beginPath(); g.arc(50,50,50,0,6.2832); g.fill();
+  g.strokeStyle='rgba(200,235,255,.95)'; g.lineWidth=5; g.beginPath(); g.arc(50,50,24,0,6.2832); g.stroke();
+  g.fillStyle=radial(g,50,50,22,'#ffffff','#3aa0ff'); g.beginPath(); g.arc(50,50,20,0,6.2832); g.fill(); }); }
+function vesSpr(){ if(eC.ves) return eC.ves; return eC.ves=mk(128,g=>{   // シナプス小胞のカプセル
+  const gl=g.createRadialGradient(50,50,20,50,50,50); gl.addColorStop(0,'rgba(255,213,74,.35)'); gl.addColorStop(1,'rgba(255,213,74,0)'); g.fillStyle=gl; g.beginPath(); g.arc(50,50,50,0,6.2832); g.fill();
+  g.fillStyle='rgba(40,20,100,.7)'; g.beginPath(); g.arc(50,50,38,0,6.2832); g.fill();
+  const sg=g.createLinearGradient(12,12,88,88); sg.addColorStop(0,'#5fe9ff'); sg.addColorStop(1,'#ff7ad0'); g.strokeStyle=sg; g.lineWidth=5; g.stroke();
+  g.strokeStyle='rgba(255,255,255,.3)'; g.lineWidth=2; g.beginPath(); g.arc(50,50,31,0,6.2832); g.stroke();
+  const cs=['#ffd54a','#ff7ad0','#5fe9ff']; for(let i=0;i<11;i++){ const a=i*2.4, r=6+((i*37)%22); g.fillStyle=cs[i%3]; g.beginPath(); g.arc(50+Math.cos(a)*r,50+Math.sin(a)*r,3.6+(i%3),0,6.2832); g.fill(); }
+  g.strokeStyle='rgba(255,255,255,.65)'; g.lineWidth=3.4; g.beginPath(); g.arc(50,50,30,3.6,4.5); g.stroke(); }); }
 function resize(){
   const wrap=$('arenaWrap'), w=wrap.clientWidth, h=wrap.clientHeight; if(!w||!h) return;
   const dpr=Math.min(devicePixelRatio||1,2); cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
   S.view={w,h,dpr,Z:clamp(Math.min(w,h)/430,.8,1.4)};
 }
 function rr(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+
+/* ===== 神経ネットワークの背景（手続き生成・無限・3層の視差）===== */
+// 細胞体・樹状突起・軸索・シナプスを、セルごとのハッシュから描く。コンボが続くと光のパルスが増えて明るくなる。光は小さく局所的。
+const NL=[{par:.28,C:300,al:.38,lw:1,sc:.8},{par:.58,C:215,al:.6,lw:1.2,sc:.95},{par:1,C:175,al:.95,lw:1.5,sc:1.1}];
+function hh(ix,iy,s){ let h=(Math.imul(ix|0,374761393)^Math.imul(iy|0,668265263)^Math.imul(s|0,1274126177))|0; h=Math.imul(h^(h>>>13),1274126177); h^=h>>>16; return (h>>>0)/4294967296; }
+const gC=new Map();
+function somaOf(li,ix,iy){ const C=NL[li].C, s0=li*100; return [(ix+.18+.64*hh(ix,iy,s0+1))*C,(iy+.18+.64*hh(ix,iy,s0+2))*C]; }
+function cellGeom(li,ix,iy){
+  const key=((li*8192+ix+4096)*8192)+iy+4096; let g=gC.get(key); if(g) return g;
+  if(gC.size>1200) gC.clear();
+  const L=NL[li], C=L.C, s0=li*100, [sx,sy]=somaOf(li,ix,iy);
+  g={ix,iy,sx,sy,rk:hh(ix,iy,s0+3),sr:(3.5+hh(ix,iy,s0+4)*3.5)*L.sc,den:[],nodes:[],ax:null};
+  const nb=3+Math.floor(hh(ix,iy,s0+5)*3), base=hh(ix,iy,s0+6)*6.2832;
+  for(let i=0;i<nb;i++){
+    const a=base+i/nb*6.2832+(hh(ix,iy,s0+7+i)-.5)*.6, len=C*(.13+.1*hh(ix,iy,s0+20+i)), mx=sx+Math.cos(a)*len, my=sy+Math.sin(a)*len;
+    g.den.push([sx,sy,mx,my]);
+    for(let j=0;j<2;j++){ const sg=j?1:-1, a2=a+sg*(.45+.3*hh(ix,iy,s0+30+i*2+j)), l2=len*(.6+.5*hh(ix,iy,s0+45+i)), ex=mx+Math.cos(a2)*l2, ey=my+Math.sin(a2)*l2; g.den.push([mx,my,ex,ey]); g.nodes.push([ex,ey]); }
+  }
+  const ang=Math.floor(hh(ix,iy,s0+60)*8)*Math.PI/4, dx=Math.round(Math.cos(ang)), dy=Math.round(Math.sin(ang));
+  const [tx,ty]=somaOf(li,ix+dx,iy+dy), srN=(3.5+hh(ix+dx,iy+dy,s0+4)*3.5)*L.sc, dd=Math.hypot(tx-sx,ty-sy)||1, ux=(tx-sx)/dd, uy=(ty-sy)/dd;
+  const x0=sx+ux*g.sr, y0=sy+uy*g.sr, x1=tx-ux*srN, y1=ty-uy*srN, off=(hh(ix,iy,s0+61)-.5)*dd*.5;
+  g.ax={x0,y0,x1,y1,cx:(x0+x1)/2-uy*off,cy:(y0+y1)/2+ux*off,nx:-uy,ny:ux,rk:Math.max(g.rk,hh(ix+dx,iy+dy,s0+3)),per:5+hh(ix,iy,s0+62)*5,off:hh(ix,iy,s0+63)};
+  g.nodes.push([x1,y1],[sx,sy]);
+  gC.set(key,g); return g;
+}
+const rgbs=(a,al)=>'rgba('+(a[0]|0)+','+(a[1]|0)+','+(a[2]|0)+','+al.toFixed(3)+')';
+let lastFlash=-1;
+function synFlash(x,y,gold){   // プレイヤーの近くのシナプスが、ジェムを拾うたびにパッと光る
+  if(S.t-lastFlash<.05||!S.bgCur) return; lastFlash=S.t;
+  const L=NL[2], ixc=Math.floor(x/L.C), iyc=Math.floor(y/L.C), c=[];
+  for(let iy=iyc-1;iy<=iyc+1;iy++) for(let ix=ixc-1;ix<=ixc+1;ix++){ const g=cellGeom(2,ix,iy); if(S.bgCur.dens-g.rk<.1) continue; for(const n of g.nodes){ const d=Math.hypot(n[0]-x,n[1]-y); if(d<150) c.push([d,n]); } }
+  if(!c.length) return; c.sort((a,b)=>a[0]-b[0]); const n=c[Math.floor(rnd()*Math.min(3,c.length))][1];
+  S.flashes.push({x:n[0],y:n[1],life:.45,max:.45,g:!!gold}); if(S.flashes.length>12) S.flashes.shift();
+}
+function neuralBurst(x,y){ S.nbursts.push({x,y,t:0}); if(S.nbursts.length>3) S.nbursts.shift(); }   // ドーパミン・バースト：近くのニューロンが一斉に光る
+function updateNeural(dt){
+  const ai=S.mode==='title'?0:areaOf(R.elapsed);
+  if(ai!==S.areaIdx){ S.areaIdx=ai; if(S.mode!=='title'&&S.mode!=='report') S.areaBanner={i:ai,t:0}; }
+  const k=Math.min(1,dt*1.2), T=AREAS[ai], c=S.bgCur;
+  for(const key of ['bg','ln','so','pu']) for(let i=0;i<3;i++) c[key][i]+=(T[key][i]-c[key][i])*k;
+  c.dens+=(T.dens-c.dens)*k; c.bun+=(T.bun-c.bun)*k;
+  const live=S.mode==='play'||S.mode==='levelup'||S.mode==='chest', tgt=(live?clamp(R.combo/40,0,1):0)*(S.fx?.5:1);
+  S.act+=(tgt-S.act)*Math.min(1,dt*(tgt>S.act?3:.6));
+  S.nT+=dt*(1+S.act*2.2);
+  if(S.areaBanner){ S.areaBanner.t+=dt; if(S.areaBanner.t>4) S.areaBanner=null; }
+  for(let i=S.flashes.length-1;i>=0;i--){ S.flashes[i].life-=dt; if(S.flashes[i].life<=0) S.flashes.splice(i,1); }
+  for(let i=S.nbursts.length-1;i>=0;i--){ S.nbursts[i].t+=dt; if(S.nbursts[i].t>.8) S.nbursts.splice(i,1); }
+  for(let i=S.fires.length-1;i>=0;i--){ S.fires[i].t+=dt; if(S.fires[i].t>S.fires[i].life) S.fires.splice(i,1); }
+}
+function drawNeural(cx,cy){
+  const {w,h,Z}=S.view, c=S.bgCur, act=S.act, dens=c.dens, ln=c.ln, so=c.so, pu=c.pu, bgc=c.bg, bun=c.bun, fxm=S.fx?.55:1;
+  for(let li=0;li<3;li++){
+    const L=NL[li], px=cx*L.par, py=cy*L.par, hw=w/Z/2, hgt=h/Z/2, mg=L.C*1.25;
+    const ix0=Math.floor((px-hw-mg)/L.C), ix1=Math.floor((px+hw+mg)/L.C), iy0=Math.floor((py-hgt-mg)/L.C), iy1=Math.floor((py+hgt+mg)/L.C);
+    ctx.save(); ctx.translate(w/2,h/2); ctx.scale(Z,Z); ctx.translate(-px,-py); ctx.lineCap='round';
+    const front=li===2;
+    for(let iy=iy0;iy<=iy1;iy++) for(let ix=ix0;ix<=ix1;ix++){
+      const g=cellGeom(li,ix,iy), a=clamp((dens-g.rk)*5,0,1)*L.al;
+      // 軸索（となりの細胞体へ）
+      const ax=g.ax, aA=clamp((dens-ax.rk)*5,0,1)*L.al;
+      if(aA>.03){
+        ctx.strokeStyle=rgbs(ln,(.34+.18*act)*aA); ctx.lineWidth=L.lw*1.3; ctx.beginPath(); ctx.moveTo(ax.x0,ax.y0); ctx.quadraticCurveTo(ax.cx,ax.cy,ax.x1,ax.y1); ctx.stroke();
+        if(bun>.05){ ctx.strokeStyle=rgbs(ln,.22*bun*aA); ctx.lineWidth=L.lw; ctx.beginPath(); for(const o of [-9,-4.5,4.5,9]){ ctx.moveTo(ax.x0+ax.nx*o,ax.y0+ax.ny*o); ctx.quadraticCurveTo(ax.cx+ax.nx*o,ax.cy+ax.ny*o,ax.x1+ax.nx*o,ax.y1+ax.ny*o); } ctx.stroke(); }
+        // 活動電位のパルス
+        const q=S.nT/ax.per+ax.off, n=Math.floor(q), ph=q-n;
+        if(ph<.42&&hh(ix,iy,7000+(n&4095))<(.3+.7*act)){
+          const u=ph/.42, bright=(.55+.45*act)*aA*fxm;
+          const bz=(u)=>{ const m=1-u; return [m*m*ax.x0+2*m*u*ax.cx+u*u*ax.x1, m*m*ax.y0+2*m*u*ax.cy+u*u*ax.y1]; };
+          const [hx,hy]=bz(u), [tx,ty]=bz(Math.max(0,u-.13));
+          ctx.strokeStyle=rgbs(pu,.7*bright); ctx.lineWidth=L.lw*1.8; ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(hx,hy); ctx.stroke();
+          ctx.fillStyle=rgbs(pu,.22*bright); ctx.beginPath(); ctx.arc(hx,hy,5.5*L.sc,0,6.2832); ctx.fill();
+          ctx.fillStyle=rgbs([255,255,255],.9*bright); ctx.beginPath(); ctx.arc(hx,hy,1.8*L.sc,0,6.2832); ctx.fill();
+        }
+      }
+      if(a<.03) continue;
+      // 樹状突起
+      ctx.strokeStyle=rgbs(ln,.5*a); ctx.lineWidth=L.lw; ctx.beginPath(); for(const d of g.den){ ctx.moveTo(d[0],d[1]); ctx.lineTo(d[2],d[3]); } ctx.stroke();
+      if(front){ ctx.fillStyle=rgbs(so,.55*a); ctx.beginPath(); for(const nd of g.nodes){ ctx.moveTo(nd[0]+1.8,nd[1]); ctx.arc(nd[0],nd[1],1.8,0,6.2832); } ctx.fill(); }
+      // 細胞体
+      const sr=g.sr, gl=1+act*.7;
+      ctx.fillStyle=rgbs(so,.1*a*gl); ctx.beginPath(); ctx.arc(g.sx,g.sy,sr*2.7,0,6.2832); ctx.fill();
+      ctx.fillStyle=rgbs(so,.2*a*gl); ctx.beginPath(); ctx.arc(g.sx,g.sy,sr*1.7,0,6.2832); ctx.fill();
+      ctx.fillStyle=rgbs(so,.85*a); ctx.beginPath(); ctx.arc(g.sx,g.sy,sr,0,6.2832); ctx.fill();
+      ctx.fillStyle=rgbs(bgc,.8*a); ctx.beginPath(); ctx.arc(g.sx+sr*.15,g.sy+sr*.1,sr*.42,0,6.2832); ctx.fill();
+      if(front){   // ドーパミン・バースト：近くのニューロンが波のように一斉に光る
+        for(const b of S.nbursts){ const d=Math.hypot(g.sx-b.x,g.sy-b.y); if(d>(S.fx?150:260)) continue; const tt=b.t-d/1400; if(tt>0&&tt<.5){ const k=Math.sin(tt/.5*Math.PI)*a*fxm;
+          ctx.fillStyle='rgba(255,226,120,'+(.5*k).toFixed(3)+')'; ctx.beginPath(); ctx.arc(g.sx,g.sy,sr*3.4+6,0,6.2832); ctx.fill();
+          ctx.fillStyle='rgba(255,255,255,'+(.9*k).toFixed(3)+')'; ctx.beginPath(); ctx.arc(g.sx,g.sy,sr*.9,0,6.2832); ctx.fill();
+          ctx.strokeStyle='rgba(255,226,120,'+(.6*k).toFixed(3)+')'; ctx.lineWidth=1.6; ctx.beginPath(); for(const d2 of g.den){ ctx.moveTo(d2[0],d2[1]); ctx.lineTo(d2[2],d2[3]); } ctx.stroke(); } }
+      }
+    }
+    if(front){   // シナプスのフラッシュ
+      for(const f of S.flashes){ const k=f.life/f.max, r=(f.g?20:13)*(1.3-k*.4);
+        ctx.fillStyle=rgbs(f.g?[255,226,120]:pu,.38*k*fxm); ctx.beginPath(); ctx.arc(f.x,f.y,r,0,6.2832); ctx.fill();
+        ctx.fillStyle='rgba(255,255,255,'+(.9*k*fxm).toFixed(3)+')'; ctx.beginPath(); ctx.arc(f.x,f.y,3,0,6.2832); ctx.fill(); }
+    }
+    ctx.restore();
+  }
+}
+function zig(g,x0,y0,x1,y1,n,amp,seed){ const dx=x1-x0, dy=y1-y0, l=Math.hypot(dx,dy)||1, nx=-dy/l, ny=dx/l; g.moveTo(x0,y0); for(let i=1;i<n;i++){ const u=i/n, o=((i&1)?1:-1)*amp*(.65+.35*Math.sin(seed+i*3.1)); g.lineTo(x0+dx*u+nx*o,y0+dy*u+ny*o); } g.lineTo(x1,y1); }
+function twig(g,x,y,a,l,depth){ const ex=x+Math.cos(a)*l, ey=y+Math.sin(a)*l; g.moveTo(x,y); g.lineTo(ex,ey); if(depth>0){ twig(g,ex,ey,a-.6,l*.6,depth-1); twig(g,ex,ey,a+.6,l*.6,depth-1); } }
+function whipPath(g,p,tx,ty,side,off){   // 樹状突起ウィップ：弧を描くムチ＋枝分かれ
+  const dx=tx-p.x, dy=ty-p.y, l=Math.hypot(dx,dy)||1, nx=-dy/l, ny=dx/l, cxp=(p.x+tx)/2+nx*off*side, cyp=(p.y+ty)/2+ny*off*side;
+  g.moveTo(p.x,p.y); g.quadraticCurveTo(cxp,cyp,tx,ty);
+  for(const u of [.5,.72,.9]){ const m=1-u, bx=m*m*p.x+2*m*u*cxp+u*u*tx, by=m*m*p.y+2*m*u*cyp+u*u*ty, tg=Math.atan2(2*m*(cyp-p.y)+2*u*(ty-cyp),2*m*(cxp-p.x)+2*u*(tx-cxp));
+    twig(g,bx,by,tg+(u<.8?-1:1)*.9,10+u*6,1); }
+  twig(g,tx,ty,Math.atan2(dy,dx)-.5,10,1); twig(g,tx,ty,Math.atan2(dy,dx)+.5,10,1);
+}
+function drawDopa(p,t){   // ドーパくん：ベンゼン環に側鎖（OH ×2 とエチルアミンのしっぽ）をかわいくデフォルメ
+  ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(Math.sin(t*5)*.06);
+  const gl=ctx.createRadialGradient(0,0,4,0,0,32); gl.addColorStop(0,'rgba(120,210,255,.28)'); gl.addColorStop(1,'rgba(120,210,255,0)'); ctx.fillStyle=gl; ctx.beginPath(); ctx.arc(0,0,32,0,6.2832); ctx.fill();
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.strokeStyle='#27e6ff'; ctx.lineWidth=2.6; ctx.beginPath(); ctx.moveTo(0,10); ctx.lineTo(-5,16); ctx.lineTo(3,21); ctx.lineTo(-2,26); ctx.stroke();
+  ctx.fillStyle='#4aa8ff'; ctx.strokeStyle='#d8f0ff'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.arc(-2,27,3.4,0,6.2832); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle='#27e6ff'; ctx.lineWidth=2.2; ctx.beginPath(); ctx.moveTo(-9,-5); ctx.lineTo(-13,-8.5); ctx.moveTo(9,-5); ctx.lineTo(13,-8.5); ctx.stroke();
+  ctx.fillStyle='#ff7ad0'; ctx.beginPath(); ctx.arc(-14,-9.5,3.6,0,6.2832); ctx.arc(14,-9.5,3.6,0,6.2832); ctx.fill();
+  const r=11.5; ctx.beginPath(); for(let i=0;i<6;i++){ const a=-1.5708+i*1.0472; const x=Math.cos(a)*r, y=Math.sin(a)*r; if(i) ctx.lineTo(x,y); else ctx.moveTo(x,y); } ctx.closePath();
+  const g=ctx.createLinearGradient(-10,-10,10,10); g.addColorStop(0,'#5fe9ff'); g.addColorStop(1,'#8a5cff'); ctx.fillStyle=g; ctx.shadowColor='#27e6ff'; ctx.shadowBlur=S.fx?0:10; ctx.fill(); ctx.shadowBlur=0; ctx.strokeStyle='#d8f6ff'; ctx.lineWidth=1.6; ctx.stroke();
+  const fx=Math.cos(p.face)*1.6, fy=Math.sin(p.face)*1.2;
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(-4,-3,3.3,0,6.2832); ctx.arc(4,-3,3.3,0,6.2832); ctx.fill();
+  ctx.fillStyle='#10062e'; ctx.beginPath(); ctx.arc(-4+fx,-3+fy,1.6,0,6.2832); ctx.arc(4+fx,-3+fy,1.6,0,6.2832); ctx.fill();
+  ctx.strokeStyle='#10062e'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.arc(0,3,3,.2,2.9); ctx.stroke();
+  ctx.restore();
+}
 function drawWorld(){
   const {w,h,Z}=S.view, p=S.player, t=S.t;
   let cx=p.x, cy=p.y; if(S.shake>0&&!S.fx){ cx+=(Math.random()-.5)*S.shake; cy+=(Math.random()-.5)*S.shake; }
+  drawNeural(cx,cy);
   ctx.save(); ctx.translate(w/2,h/2); ctx.scale(Z,Z); ctx.translate(-cx,-cy);
-  const hw=w/Z/2+40, hh=h/Z/2+40, x0=p.x-hw, x1=p.x+hw, y0=p.y-hh, y1=p.y+hh;
-  // 床
-  const T=90; ctx.strokeStyle='rgba(130,100,255,.10)'; ctx.lineWidth=1; ctx.beginPath();
-  for(let x=Math.floor(x0/T)*T;x<x1;x+=T){ ctx.moveTo(x,y0); ctx.lineTo(x,y1); } for(let y=Math.floor(y0/T)*T;y<y1;y+=T){ ctx.moveTo(x0,y); ctx.lineTo(x1,y); } ctx.stroke();
-  ctx.fillStyle='rgba(150,120,255,.22)';
-  for(let ix=Math.floor(x0/T);ix<=x1/T;ix++) for(let iy=Math.floor(y0/T);iy<=y1/T;iy++){ const hs=(Math.imul(ix,374761393)+Math.imul(iy,668265263))>>>0; if(hs%5===0){ const ox=(hs>>>3)%70+10, oy=(hs>>>9)%70+10; ctx.beginPath(); ctx.arc(ix*T+ox,iy*T+oy,1.8+(hs%3),0,6.283); ctx.fill(); } }
-  // オーラ
-  const ar=auraRadius(); if(ar>0&&(S.mode==='play'||S.mode==='levelup'||S.mode==='chest')){ const g=ctx.createRadialGradient(p.x,p.y,ar*.3,p.x,p.y,ar); g.addColorStop(0,'rgba(39,230,255,0)'); g.addColorStop(1,'rgba(39,230,255,'+(S.W.aura.evo?.26:.16)+')'); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p.x,p.y,ar,0,6.283); ctx.fill(); ctx.strokeStyle='rgba(39,230,255,.4)'; ctx.lineWidth=1.5; ctx.stroke(); }
-  // 宝箱
-  for(const c of S.chests){ ctx.save(); ctx.translate(c.x,c.y); ctx.shadowColor='#ffd54a'; ctx.shadowBlur=S.fx?0:14; ctx.drawImage(spr('🎁',64),-18,-18+Math.sin(t*3)*2,36,36); ctx.shadowBlur=0; ctx.fillStyle='#ffd54a'; ctx.font='800 12px sans-serif'; ctx.textAlign='center'; ctx.fillText(boxKey(c.p)+'%',0,-24); ctx.restore(); }
-  // ジェム
-  const gs=gemSpr('#3aa0ff'); for(const g of S.gems){ if(g.x<x0||g.x>x1||g.y<y0||g.y>y1) continue; ctx.drawImage(gs,g.x-6,g.y-6,12,12); }
+  const hw=w/Z/2+40, hh2=h/Z/2+40, x0=p.x-hw, x1=p.x+hw, y0=p.y-hh2, y1=p.y+hh2;
+  // シナプス・パルス（周囲の波紋）
+  const ar=auraRadius(); if(ar>0&&(S.mode==='play'||S.mode==='levelup'||S.mode==='chest')){ const evo=S.W.aura.evo, nr=evo?4:3;
+    const g=ctx.createRadialGradient(p.x,p.y,ar*.2,p.x,p.y,ar); g.addColorStop(0,'rgba(39,230,255,0)'); g.addColorStop(1,'rgba(39,230,255,'+(evo?.14:.08)+')'); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p.x,p.y,ar,0,6.2832); ctx.fill();
+    ctx.strokeStyle=evo?'#ffe98a':'#7ff3ff'; ctx.lineWidth=2;
+    for(let k=0;k<nr;k++){ const u=(t*(evo?.7:.55)+k/nr)%1; ctx.globalAlpha=(1-u)*(evo?.65:.5); ctx.beginPath(); ctx.arc(p.x,p.y,ar*(.2+.8*u),0,6.2832); ctx.stroke(); }
+    ctx.globalAlpha=.25; ctx.lineWidth=1.2; ctx.beginPath(); ctx.arc(p.x,p.y,ar,0,6.2832); ctx.stroke(); ctx.globalAlpha=.8; ctx.fillStyle=evo?'#fff2b0':'#b8ffff';
+    ctx.beginPath(); const nd=evo?22:12; for(let i=0;i<nd;i++){ const a=i*2.399+t*.5, rr2=ar*(.2+.8*((i*.173+t*.25)%1)), x=p.x+Math.cos(a)*rr2, y=p.y+Math.sin(a)*rr2; ctx.moveTo(x+1.9,y); ctx.arc(x,y,1.9,0,6.2832); } ctx.fill(); ctx.globalAlpha=1; }
+  // カプセル（シナプス小胞）
+  const vs=vesSpr();
+  for(const c of S.chests){ ctx.save(); ctx.translate(c.x,c.y); ctx.drawImage(vs,-26,-26+Math.sin(t*3)*2,52,52); ctx.fillStyle='#ffd54a'; ctx.font='800 12px sans-serif'; ctx.textAlign='center'; ctx.lineWidth=3; ctx.strokeStyle='#07041a'; ctx.strokeText(boxKey(c.p)+'%',0,-30); ctx.fillText(boxKey(c.p)+'%',0,-30); ctx.restore(); }
+  // ドーパミン小胞
+  const gs=gemSpr(); for(const g of S.gems){ if(g.x<x0||g.x>x1||g.y<y0||g.y>y1) continue; ctx.drawImage(gs,g.x-8,g.y-8,16,16); }
   // 敵
   for(const e of S.enemies){ if(e.x<x0-40||e.x>x1+40||e.y<y0-40||e.y>y1+40) continue;
-    const em=e.boss>=0?BOSSES[e.boss].emoji:ETYPES[e.t].emoji, s=e.r*2.7;
-    if(e.boss>=0){ ctx.strokeStyle='rgba(255,63,164,.6)'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(e.x,e.y,e.r+6+Math.sin(t*4)*2,0,6.283); ctx.stroke(); }
+    const isB=e.boss>=0, s=e.r*(isB?3.4:2.7), im=isB?eSpr('b'+e.boss):eSpr(e.t,e.t==='notify'&&!S.fx?(Math.floor(t*5+e.ph*2)&1):0);
+    if(isB){ ctx.strokeStyle='rgba(255,63,164,.6)'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(e.x,e.y,e.r+10+Math.sin(t*4)*2,0,6.2832); ctx.stroke();
+      if(e.boss===2&&e.dying<0){ ctx.lineWidth=5; let q=0; for(const k of ['beam','aura','boom','bomb']){ const a0=-1.5708+q*1.5708; q++; ctx.strokeStyle='rgba(95,233,255,.45)'; ctx.beginPath(); ctx.arc(e.x,e.y,e.r+17,a0+.1,a0+1.47); ctx.stroke();
+        const f=e.ad[k]/.6; if(f>0.01){ ctx.strokeStyle='rgba(150,150,170,.95)'; ctx.beginPath(); ctx.arc(e.x,e.y,e.r+17,a0+.1,a0+.1+1.37*f); ctx.stroke(); } } } }
     if(e.dying>=0) ctx.globalAlpha=.55; else if(e.flash>0) ctx.globalAlpha=.7;
-    ctx.drawImage(spr(em,64),e.x-s/2,e.y-s/2,s,s); ctx.globalAlpha=1;
-    if(e.boss>=0&&e.dying<0){ ctx.fillStyle='rgba(0,0,0,.6)'; ctx.fillRect(e.x-30,e.y-e.r-14,60,6); ctx.fillStyle='#ff3fa4'; ctx.fillRect(e.x-30,e.y-e.r-14,60*clamp(e.hp/e.maxhp,0,1),6); } }
+    ctx.drawImage(im,e.x-s/2,e.y-s/2,s,s); ctx.globalAlpha=1;
+    if(isB&&e.dying<0){ ctx.fillStyle='rgba(0,0,0,.6)'; ctx.fillRect(e.x-30,e.y-e.r-18,60,6); ctx.fillStyle='#ff3fa4'; ctx.fillRect(e.x-30,e.y-e.r-18,60*clamp(e.hp/e.maxhp,0,1),6); } }
   // 弾
+  ctx.lineCap='round'; ctx.lineJoin='round';
   for(const q of S.projs){
-    if(q.k==='beam'){ ctx.strokeStyle='#27e6ff'; ctx.lineWidth=q.r*.9; ctx.lineCap='round'; ctx.shadowColor='#27e6ff'; ctx.shadowBlur=S.fx?0:8; ctx.beginPath(); ctx.moveTo(q.x-q.vx*.035,q.y-q.vy*.035); ctx.lineTo(q.x,q.y); ctx.stroke(); ctx.shadowBlur=0; }
-    else if(q.k==='boom'){ ctx.save(); ctx.translate(q.x,q.y); ctx.rotate(q.rot); ctx.drawImage(spr('🪃',64),-16,-16,32,32); ctx.restore(); }
+    if(q.k==='beam'){ const evo=q.r>6, L=evo?48:34, ux=q.vx/480, uy=q.vy/480;   // スパイク・ビーム：細いジグザグの電気
+      ctx.beginPath(); zig(ctx,q.x-ux*L,q.y-uy*L,q.x,q.y,evo?8:6,evo?5:3.4,q.x*.05+q.y*.03);
+      ctx.strokeStyle=evo?'rgba(255,122,224,.4)':'rgba(39,230,255,.38)'; ctx.lineWidth=evo?8:5.5; ctx.stroke(); ctx.strokeStyle=evo?'#fff0fb':'#eaffff'; ctx.lineWidth=evo?2.4:1.8; ctx.stroke(); }
+    else if(q.k==='boom'){ const off=Math.min(70,Math.hypot(q.x-p.x,q.y-p.y)*.45); ctx.beginPath(); whipPath(ctx,p,q.x,q.y,(q.ph===0?1:-1)*(q.side||1),off);
+      ctx.strokeStyle='rgba(140,255,120,.3)'; ctx.lineWidth=7; ctx.stroke(); ctx.strokeStyle='#b8ff9a'; ctx.lineWidth=2.4; ctx.stroke(); ctx.fillStyle='#f0ffe0'; ctx.beginPath(); ctx.arc(q.x,q.y,4.5,0,6.2832); ctx.fill(); }
     else if(q.k==='bomb'&&q.t>=0){ const u=q.t/q.dur, bx=q.sx+(q.tx-q.sx)*u, by=q.sy+(q.ty-q.sy)*u-Math.sin(u*Math.PI)*70;
-      ctx.strokeStyle='rgba(255,159,28,.5)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(q.tx,q.ty,q.rad,0,6.283); ctx.stroke(); ctx.fillStyle='#ff9f1c'; ctx.beginPath(); ctx.arc(bx,by,7,0,6.283); ctx.fill(); ctx.fillStyle='#fff'; ctx.fillRect(bx-2,by-9,4,4); } }
-  if(S.W.boom.evo&&S.W.boom.lv>0){ for(let i=0;i<6;i++){ const a=S.W.boom.rot+i*6.283/6; ctx.save(); ctx.translate(p.x+Math.cos(a)*105,p.y+Math.sin(a)*105); ctx.rotate(a*3); ctx.drawImage(spr('🪃',64),-18,-18,36,36); ctx.restore(); } }
+      ctx.strokeStyle='rgba(255,122,224,.45)'; ctx.lineWidth=1.5; ctx.setLineDash([4,5]); ctx.beginPath(); ctx.arc(q.tx,q.ty,q.rad,0,6.2832); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle='rgba(255,122,224,.3)'; ctx.beginPath(); ctx.arc(bx,by,10,0,6.2832); ctx.fill(); ctx.fillStyle='#ffd0f4'; ctx.beginPath(); ctx.arc(bx,by,5,0,6.2832); ctx.fill(); } }
+  if(S.W.boom.evo&&S.W.boom.lv>0){   // 報酬予測エラー・ストーム：6本の枝が回る
+    ctx.beginPath(); for(let i=0;i<6;i++){ const a=S.W.boom.rot+i*6.2832/6; whipPath(ctx,p,p.x+Math.cos(a)*105,p.y+Math.sin(a)*105,1,38); }
+    ctx.strokeStyle='rgba(255,226,120,.3)'; ctx.lineWidth=7; ctx.stroke(); ctx.strokeStyle='#fff2b0'; ctx.lineWidth=2.2; ctx.stroke();
+    ctx.fillStyle='#fff'; ctx.beginPath(); for(let i=0;i<6;i++){ const a=S.W.boom.rot+i*6.2832/6, x=p.x+Math.cos(a)*105, y=p.y+Math.sin(a)*105; ctx.moveTo(x+5,y); ctx.arc(x,y,5,0,6.2832); } ctx.fill(); }
+  // ニューロ・バーストの連鎖
+  for(const f of S.fires){ const k=1-f.t/f.life; ctx.beginPath(); for(let i=1;i<f.pts.length;i++){ if(f.t/f.life<(i-1)/f.pts.length*.5) break; zig(ctx,f.pts[i-1][0],f.pts[i-1][1],f.pts[i][0],f.pts[i][1],5,5,i*2+f.pts[i][0]*.1); }
+    ctx.strokeStyle='rgba(255,122,224,'+(.45*k).toFixed(3)+')'; ctx.lineWidth=6; ctx.stroke(); ctx.strokeStyle='rgba(255,245,255,'+(.95*k).toFixed(3)+')'; ctx.lineWidth=1.8; ctx.stroke();
+    ctx.fillStyle='rgba(255,226,120,'+(.8*k).toFixed(3)+')'; ctx.beginPath(); for(let i=0;i<f.pts.length;i++){ const x=f.pts[i][0], y=f.pts[i][1], r=4+(1-k)*10; ctx.moveTo(x+r,y); ctx.arc(x,y,r,0,6.2832); } ctx.fill(); }
   // プレイヤー
-  if(!(p.inv>0&&Math.floor(t*12)%2===0&&S.mode==='play')){
-    ctx.save(); ctx.translate(p.x,p.y); if(S.P.magnet>0){} 
-    const g=ctx.createLinearGradient(-9,0,9,0); g.addColorStop(0,'#27e6ff'); g.addColorStop(1,'#9b5cff');
-    ctx.fillStyle=g; ctx.shadowColor='#ff3fa4'; ctx.shadowBlur=S.fx?0:10; rr(ctx,-9,-13,18,26,9); ctx.fill(); ctx.shadowBlur=0;
-    const fx=Math.cos(p.face)*1.6, fy=Math.sin(p.face)*1.2;
-    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(-3.5,-5,3.2,0,6.283); ctx.arc(3.5,-5,3.2,0,6.283); ctx.fill();
-    ctx.fillStyle='#10062e'; ctx.beginPath(); ctx.arc(-3.5+fx,-5+fy,1.5,0,6.283); ctx.arc(3.5+fx,-5+fy,1.5,0,6.283); ctx.fill();
-    ctx.strokeStyle='#10062e'; ctx.lineWidth=1.3; ctx.beginPath(); ctx.arc(0,1,3,.2,2.9); ctx.stroke();
-    ctx.restore(); }
-  ctx.fillStyle='rgba(0,0,0,.55)'; ctx.fillRect(p.x-14,p.y+17,28,4); ctx.fillStyle=p.hp>35?'#4be08a':'#ff5a3c'; ctx.fillRect(p.x-14,p.y+17,28*clamp(p.hp/p.maxHp,0,1),4);
+  if(!(p.inv>0&&Math.floor(t*12)%2===0&&S.mode==='play')) drawDopa(p,t);
+  ctx.fillStyle='rgba(0,0,0,.55)'; ctx.fillRect(p.x-14,p.y+32,28,4); ctx.fillStyle=p.hp>35?'#4be08a':'#ff5a3c'; ctx.fillRect(p.x-14,p.y+32,28*clamp(p.hp/p.maxHp,0,1),4);
   // リング・粒・文字
-  for(const q of S.rings){ ctx.globalAlpha=clamp(q.life/q.max,0,1)*.8; ctx.strokeStyle=q.col; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(q.x,q.y,q.r,0,6.283); ctx.stroke(); } ctx.globalAlpha=1;
+  for(const q of S.rings){ ctx.globalAlpha=clamp(q.life/q.max,0,1)*.8; ctx.strokeStyle=q.col; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(q.x,q.y,q.r,0,6.2832); ctx.stroke(); } ctx.globalAlpha=1;
   for(const q of S.parts){ ctx.globalAlpha=clamp(q.life/q.max,0,1); ctx.fillStyle=q.col; ctx.fillRect(q.x-q.r/2,q.y-q.r/2,q.r,q.r); } ctx.globalAlpha=1;
   ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.lineJoin='round';
   for(const q of S.pops){ ctx.globalAlpha=clamp(q.life/(q.max*.45),0,1); ctx.font='900 '+q.size+'px sans-serif'; ctx.lineWidth=4; ctx.strokeStyle='#07041a'; ctx.strokeText(q.text,q.x,q.y); ctx.fillStyle=q.col; ctx.fillText(q.text,q.x,q.y); } ctx.globalAlpha=1;
@@ -790,11 +1061,16 @@ function drawHUD(){
   const {w,h}=S.view, g=ctx;
   if(S.mode==='title'||S.mode==='report') return;
   // 経験値バー
-  g.fillStyle='rgba(0,0,0,.45)'; g.fillRect(0,0,w,9);
-  const need=xpNeed(R.level), gr=g.createLinearGradient(0,0,w,0); gr.addColorStop(0,'#27e6ff'); gr.addColorStop(1,'#ff3fa4'); g.fillStyle=gr; g.fillRect(0,0,w*clamp(R.xp/need,0,1),9);
+  // 脳汁ゲージ：軸索の形（ミエリン鞘のつぶつぶ）の細いバー
+  const need=xpNeed(R.level), fr=clamp(R.xp/need,0,1), fw=(w-8)*fr, gr=g.createLinearGradient(0,0,w,0); gr.addColorStop(0,'#27e6ff'); gr.addColorStop(1,'#ff3fa4');
+  g.strokeStyle='rgba(130,140,255,.4)'; g.lineWidth=2; g.beginPath(); g.moveTo(4,5); g.lineTo(w-4,5); g.stroke();
+  g.strokeStyle=gr; g.lineWidth=2.4; g.beginPath(); g.moveTo(4,5); g.lineTo(4+fw,5); g.stroke();
+  for(let sx=8;sx<w-12;sx+=30){ const sw=Math.min(24,w-12-sx); g.fillStyle='rgba(70,60,160,.7)'; rr(g,sx,1.5,sw,7,3.5); g.fill();
+    const pf=clamp((4+fw-sx)/sw,0,1); if(pf>0){ g.fillStyle=gr; g.save(); rr(g,sx,1.5,sw,7,3.5); g.clip(); g.fillRect(sx,0,sw*pf,10); g.restore(); } }
+  g.fillStyle='#fff'; g.beginPath(); g.arc(4+fw,5,3.2+(fr>0?Math.sin(S.t*8)*.6:0),0,6.2832); g.fill();
   g.textBaseline='middle'; g.lineJoin='round'; g.font='900 15px sans-serif'; g.lineWidth=4; g.strokeStyle='rgba(7,4,26,.9)';
   const put=(t,x,al,col)=>{ g.textAlign=al; g.strokeText(t,x,24); g.fillStyle=col||'#fff'; g.fillText(t,x,24); };
-  put('Lv '+R.level,8,'left','#27e6ff'); put(mmss(ROUND_T-R.elapsed),w/2,'center'); put('撃破 '+Math.round(R.kdisp),w-8,'right','#ffd54a');
+  put('Lv '+R.level,8,'left','#27e6ff'); { const lw=g.measureText('Lv '+R.level).width; g.font='800 9px sans-serif'; g.textAlign='left'; g.fillStyle='#9fb0ff'; g.fillText('脳汁ゲージ',14+lw,25); g.font='900 15px sans-serif'; } put(mmss(ROUND_T-R.elapsed),w/2,'center'); put('撃破 '+Math.round(R.kdisp),w-8,'right','#ffd54a');
   // 武器アイコン
   g.font='13px sans-serif'; g.textAlign='left'; let ix=8; const iy=h-18;
   for(const id of WIDS){ const wp=S.W[id]; if(wp.lv>0){ g.fillStyle='rgba(18,10,48,.7)'; rr(g,ix,iy-12,44,24,8); g.fill(); g.fillStyle=wp.evo?'#ffd54a':'#fff'; g.fillText(WDEF[id].icon+(wp.evo?'★':wp.lv),ix+5,iy); ix+=48; } }
@@ -804,8 +1080,15 @@ function drawHUD(){
   const mv=clamp(S.meter/5,-1,1); g.fillStyle='rgba(255,255,255,.1)'; g.fillRect(gx+4,gy+gh-2,gw-8,4); if(mv){ g.fillStyle=mv>0?'#ff3fa4':'#27e6ff'; const hw2=(gw-8)/2; if(mv>0) g.fillRect(gx+4+hw2,gy+gh-2,hw2*mv,4); else g.fillRect(gx+4+hw2+hw2*mv,gy+gh-2,-hw2*mv,4); }
   g.fillStyle='#9a8fc7'; g.font='700 9px sans-serif'; g.textAlign='left'; g.fillText('δ',gx+5,gy+8);
   // ボスHP
-  const bs=S.enemies.find(e=>e.boss>=0&&e.dying<0); if(bs){ const bw=Math.min(240,w*.6); g.fillStyle='rgba(0,0,0,.6)'; g.fillRect(w/2-bw/2,42,bw,9); g.fillStyle='#ff3fa4'; g.fillRect(w/2-bw/2,42,bw*clamp(bs.hp/bs.maxhp,0,1),9); g.fillStyle='#fff'; g.font='800 11px sans-serif'; g.textAlign='center'; g.fillText('BOSS '+BOSSES[bs.boss].name,w/2,62); }
-  for(const c of S.chests) arrowTo(c.x,c.y,'#ffd54a','宝箱');
+  const bs=S.enemies.find(e=>e.boss>=0&&e.dying<0); if(bs){ const bw=Math.min(240,w*.6); g.fillStyle='rgba(0,0,0,.6)'; g.fillRect(w/2-bw/2,42,bw,9); g.fillStyle='#ff3fa4'; g.fillRect(w/2-bw/2,42,bw*clamp(bs.hp/bs.maxhp,0,1),9); g.fillStyle='#fff'; g.font='800 11px sans-serif'; g.textAlign='center'; g.fillText('BOSS '+BOSSES[bs.boss].name,w/2,62);
+    if(bs.boss===2){ const ma=Math.max(bs.ad.beam,bs.ad.aura,bs.ad.boom,bs.ad.bomb); g.font='700 10px sans-serif'; g.fillStyle='#bfe9d6'; g.fillText(ma>.03?'同じ攻撃に慣れてきた… 最大 '+Math.round(ma*100)+'% ダウン（ちがう武器で！）':'同じ攻撃をつづけると効きにくくなる',w/2,76); } }
+  // エリア名
+  if(S.areaBanner){ const b=S.areaBanner, u=b.t, al=u<.4?u/.4:u>3.2?Math.max(0,1-(u-3.2)/.8):1, A=AREAS[b.i];
+    g.save(); g.globalAlpha=clamp(al,0,1); g.textAlign='center'; g.textBaseline='middle'; g.lineJoin='round';
+    g.font='800 11px sans-serif'; g.lineWidth=3; g.strokeStyle='rgba(7,4,26,.9)'; g.fillStyle='#27e6ff'; g.strokeText('AREA '+(b.i+1)+' / 5',w/2,h*.15); g.fillText('AREA '+(b.i+1)+' / 5',w/2,h*.15);
+    g.font='900 21px sans-serif'; g.lineWidth=5; g.strokeText(A.name,w/2,h*.15+24); g.fillStyle=rgbs(A.pu,1); g.fillText(A.name,w/2,h*.15+24);
+    g.font='700 11px sans-serif'; g.lineWidth=3; g.strokeText(A.sub,w/2,h*.15+46); g.fillStyle='#d8d0ff'; g.fillText(A.sub,w/2,h*.15+46); g.restore(); }
+  for(const c of S.chests) arrowTo(c.x,c.y,'#ffd54a','カプセル');
   // 大きな δ
   if(S.bigD){ const b=S.bigD, u=b.t/1.1, sc=u<.15?.6+u/.15*.6:1.2-u*.2, al=u<.7?1:1-(u-.7)/.3;
     g.save(); g.globalAlpha=clamp(al,0,1); g.translate(w/2,h*.3); g.scale(sc,sc); g.font='900 40px sans-serif'; g.textAlign='center'; g.lineWidth=7; g.strokeStyle='#07041a';
@@ -823,9 +1106,9 @@ function drawChest(){
   const rg=g.createRadialGradient(cx,cy,10,cx,cy,rad); rg.addColorStop(0,'rgba(255,213,74,'+(.3+.5*I)+')'); rg.addColorStop(1,'rgba(255,63,164,0)'); g.fillStyle=rg; g.beginPath(); g.arc(cx,cy,rad,0,6.283); g.fill();
   g.strokeStyle='rgba(255,213,74,'+(.3+.5*I)+')'; g.lineWidth=2; const nr=Math.round(10+I*10);
   for(let i=0;i<nr;i++){ const a=i/nr*6.283+t*.5; g.beginPath(); g.moveTo(cx+Math.cos(a)*60,cy+Math.sin(a)*60); g.lineTo(cx+Math.cos(a)*(80+I*110),cy+Math.sin(a)*(80+I*110)); g.stroke(); }
-  const sh=S.fx||c.res?0:I*4, sz=84+I*36; g.drawImage(spr('🎁',64),cx-sz/2+(Math.random()-.5)*sh,cy-sz/2+(Math.random()-.5)*sh,sz,sz);
+  const sh=S.fx||c.res?0:I*4, sz=84+I*36; g.drawImage(vesSpr(),cx-sz/2+(Math.random()-.5)*sh,cy-sz/2+(Math.random()-.5)*sh,sz,sz);
   g.textAlign='center'; g.textBaseline='middle'; g.lineJoin='round'; g.lineWidth=6; g.strokeStyle='#07041a';
-  g.font='900 26px sans-serif'; const t1='ボスの宝箱  当たり '+boxKey(c.p)+'%'; g.strokeText(t1,cx,cy-sz/2-40); g.fillStyle='#ffd54a'; g.fillText(t1,cx,cy-sz/2-40);
+  g.font='900 '+(w<420?20:26)+'px sans-serif'; const t1='シナプス小胞のカプセル  当たり '+boxKey(c.p)+'%'; g.strokeText(t1,cx,cy-sz/2-40); g.fillStyle='#ffd54a'; g.fillText(t1,cx,cy-sz/2-40);
   if(!c.res){ g.font='800 18px sans-serif'; g.fillStyle='#fff'; g.strokeText('ドキドキ…',cx,cy+sz/2+30); g.fillText('ドキドキ…',cx,cy+sz/2+30);
     const bw=Math.min(260,w*.7); g.fillStyle='rgba(255,255,255,.15)'; g.fillRect(cx-bw/2,cy+sz/2+52,bw,10); g.fillStyle='#ffd54a'; g.fillRect(cx-bw/2,cy+sz/2+52,bw*clamp(I,0,1),10);
     g.font='700 11px sans-serif'; g.fillStyle='#cfc6ff'; g.fillText('盛り上がり ∝ p(1−p)（50% が最大）',cx,cy+sz/2+76); }
@@ -848,7 +1131,7 @@ function drawWheelPanel(){
   if(w.res){ const o=w.res; g.font='900 22px sans-serif'; g.lineWidth=5; g.strokeStyle='#07041a'; const txt=o.win?'ひきなおし！':o.near?'ニアミス！おしい！':'ざんねん…'; g.fillStyle=o.win?'#ffd54a':o.near?'#ff3fa4':'#9a8fc7'; g.strokeText(txt,cx,20); g.fillText(txt,cx,20); }
 }
 function draw(){
-  const {w,h,dpr}=S.view; ctx.setTransform(dpr,0,0,dpr,0,0); ctx.fillStyle='#0a0524'; ctx.fillRect(0,0,w,h);
+  const {w,h,dpr}=S.view; ctx.setTransform(dpr,0,0,dpr,0,0); ctx.fillStyle=rgbs(S.bgCur.bg,1); ctx.fillRect(0,0,w,h);
   drawWorld(); drawHUD(); drawWheelPanel();
 }
 
@@ -906,7 +1189,7 @@ window.__noujiru={
   get score(){ return runScore(); }, get kills(){ return R.kills; }, get level(){ return R.level; }, get hp(){ return S.player.hp; },
   get combo(){ return R.combo; }, get maxCombo(){ return R.maxCombo; },
   get V(){ return td.V.gem; }, get delta(){ return S.delta; }, get boxes(){ return S.chests.map(c=>({x:c.x,y:c.y,p:c.p})); },
-  get nearMiss(){ return S.nearMissTotal; }, get auto(){ return S.auto; }, get enemyCount(){ return S.enemies.length; },
+  get area(){ return S.areaIdx; }, get nearMiss(){ return S.nearMissTotal; }, get auto(){ return S.auto; }, get enemyCount(){ return S.enemies.length; },
   get W(){ return S.W; }, get P(){ return S.P; }, get R(){ return R; }, get S(){ return S; }, get cards(){ return S.cards; }, get joy(){ return joy; },
   td, WEDGES, AI,
   step, setAuto, setSeed, manual(v=true){ S.manual=v; },
