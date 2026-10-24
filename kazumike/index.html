@@ -566,9 +566,16 @@ function updBoss(dt){
 // ---------- stage flow
 ST.forEach(s=>{ s.sp=s.sp.map(a=>Array.isArray(a)?{x:a[0],t:a[1],done:false,spawned:false}:a); });
 let resp="new", story=null, clearShown=false, autoT=0;
-function beginStage(i,how){
-  S=ST[i]; G.stage=i; how=how||'new';
+// ステージ切りかえ時に前ステージの状態（ボス・弾・エフェクト・アリーナ・カメラ・バナー）をすべて消す
+function resetWorld(){
   en=[]; shots=[]; zones=[]; fx=[]; items=[]; pops=[]; B=null; hitstop=0; flash=0; shake=0;
+  arena=false; camx=0; banner=null; cpPop=0; clearT=0; clearShown=false; dieT=0; bossIntro=0; hint=0; P=null;
+}
+function prepStage(i,how){ // 会話つきでステージに入る口：会話中も前の面を映さない
+  resetWorld(); S=ST[i]; showStory(PRE[i],()=>beginStage(i,how||'new'));
+}
+function beginStage(i,how){
+  resetWorld(); S=ST[i]; G.stage=i; how=how||'new';
   if(how==='new'){ camx=0; arena=false; cpReached=false; G.score=G.startScore; G.stageStart=G.time; cpScore=G.score; resp='new'; }
   else if(how==='cp'){ camx=Math.max(0,S.cp-Math.round(VW*.38)); arena=false; G.score=cpScore; }
   else { camx=S.bossX; arena=true; G.score=cpScore; }
@@ -613,9 +620,9 @@ function toOver(){
   mode='over'; autoT=0; rec.hi=Math.max(rec.hi,G.score); saveRec(); show('scrOver');
   $('#retryBtn').textContent=resp==='new'?'もういちど':(resp==='arena'?'ボス戦からやり直す':'中間地点からやり直す');
 }
-function toTitle(){ mode='title'; auto=auto; hide('scrOver','scrClear','scrEnd'); closeStory(); S=ST[0]; P=null; B=null; en=[]; shots=[]; zones=[]; camx=0; renderTitle(); show('scrTitle'); }
+function toTitle(){ mode='title'; hide('scrOver','scrClear','scrEnd'); closeStory(); resetWorld(); S=ST[0]; renderTitle(); show('scrTitle'); }
 const fmt=t=>{ t=Math.max(0,t||0); const m=Math.floor(t/60), s=t-m*60; return m+':'+(s<10?'0':'')+s.toFixed(1); };
-function startGame(i){ G=newG(); G.stage=i; G.startScore=0; hide('scrTitle'); S=ST[i]; showStory(PRE[i],()=>beginStage(i,'new')); }
+function startGame(i){ G=newG(); G.stage=i; G.startScore=0; hide('scrTitle'); prepStage(i); }
 function show(...ids){ ids.forEach(id=>{ const e=document.getElementById(id); if(e) e.hidden=false; }); }
 function hide(...ids){ ids.forEach(id=>{ const e=document.getElementById(id); if(e) e.hidden=true; }); }
 function renderTitle(){
@@ -719,7 +726,7 @@ $('#sndBtn').onclick=()=>{ gest=true; setSnd(!sndOn); };
 $('#startBtn').onclick=()=>{ ac(); startGame(0); };
 $('#dlg').addEventListener('pointerdown',e=>{ e.preventDefault(); storyNext(); });
 $('#skip').onclick=()=>endStory();
-$('#nextBtn').onclick=()=>{ hide('scrClear'); const n=G.stage+1; G.startScore=G.score; S=ST[n]; showStory(PRE[n],()=>beginStage(n,'new')); };
+$('#nextBtn').onclick=()=>{ hide('scrClear'); const n=G.stage+1; G.startScore=G.score; prepStage(n); };
 $('#retryBtn').onclick=()=>{ hide('scrOver'); beginStage(G.stage,resp); };
 $('#restartBtn').onclick=()=>{ hide('scrOver'); beginStage(G.stage,'new'); };
 $('#toTitleBtn').onclick=toTitle; $('#endTitleBtn').onclick=toTitle;
@@ -1152,7 +1159,7 @@ window.__kazumike={
   omoPhase(n){ B.p=n; B.trans=0; B.t=-.5; B.q=[]; B.open=0; if(n>1){ B.hp=B.mhp=n===2?26:30; } },
   story(i,post){ hide("scrTitle"); G=newG(); G.stage=i; S=ST[i]; showStory(post?POST[i]:PRE[i],()=>{}); }, end(){ G.score=46520; G.time=300; showEnd(); },
   dbgAI(v){ DBGAI=!!v; }, seed(n){ _s=n>>>0; },
-  start(i,opt){ opt=opt||{}; G=newG(); G.stage=i; G.startScore=0; hide('scrTitle'); S=ST[i]; closeStory(); if(opt.story) showStory(PRE[i],()=>beginStage(i,'new')); else beginStage(i,'new'); if(opt.arena){ P.x=S.bossX+60; camx=S.bossX-100; enterArena(); } },
+  start(i,opt){ opt=opt||{}; G=newG(); G.stage=i; G.startScore=0; hide('scrTitle'); S=ST[i]; closeStory(); if(opt.story) prepStage(i); else beginStage(i,'new'); if(opt.arena){ P.x=S.bossX+60; camx=S.bossX-100; enterArena(); } },
   skip(){ if(story) endStory(); },
   dbg(){ return {pr:pRect(),ib:B?BOSS[B.k].touch(B):0,bx:B?Math.round(B.x-P.x):null,en:en.map(e=>[e.t,Math.round(e.x-P.x),Math.round(e.y),e.st]),shots:shots.map(s=>[Math.round(s.x-P.x),Math.round(s.y),Math.round(s.vx),s.w||s.r]),zones:zones.map(z=>[Math.round(z.x-P.x),Math.round(z.t*100)/100,z.tele]),inv:P.inv,face:P.face,on:P.on,py:Math.round(P.y)}; },
   hurt(){ hurtP(1,P.x+10); }, heal(){ P.hp=MAXHP; },
