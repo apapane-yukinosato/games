@@ -314,13 +314,14 @@ function deliver(v,type,x,y){
 }
 function mkSlot(o){
   const defs=o.defs, muts=o.muts||[];
-  const Mo={defs,muts,gold:!!o.gold,boss:!!defs[0].boss,inter:!!defs[0].inter,nope:muts.includes('nope'),state:'run',t:0,res:null,gapT:0,stampT:0,touched:false,views:[],
-    level:o.level||0,side:Math.random()<.5?1:-1,n:(R?R.n:0)+1,hue:Math.floor(Math.random()*360),fresh:false,stamp:''};
+  const Mo={defs,muts,gold:!!o.gold,boss:!!defs[0].boss,inter:!!defs[0].inter,nope:muts.includes('nope'),t:0,res:null,gapT:0,stampT:0,touched:false,views:[],
+    level:o.level||0,state:'card',cardT:0,shrinkT:0,side:Math.random()<.5?1:-1,n:(R?R.n:0)+1,hue:Math.floor(Math.random()*360),fresh:false,stamp:''};
   const rects=viewRects(defs.length);
   defs.forEach((d,i)=>{ if(!prog.seen[d.id]){ Mo.fresh=true; } Mo.views.push(mkView(d,rects[i],Mo)); prog.seen[d.id]=1; });
   muts.forEach(m=>{ prog.mseen[m]=1; });
   LS.set('prog',prog);
   Mo.dur=Math.max(...Mo.views.map(v=>v.dur));
+  Mo.cardDur=(S.auto&&!S.bot)?.25:S.bot?.5:clamp(.6-.02*Mo.level,.4,.6);
   if(Mo.nope) Mo.cmd='さわるな！';
   else if(defs.length===2) Mo.cmd=defs[0].cmd.replace(/[！？…]+$/,'')+'＆'+defs[1].cmd;
   else Mo.cmd=defs[0].cmd;
@@ -374,9 +375,7 @@ function nextSlot(){
   R.recent.push(def.id); if(R.recent.length>4) R.recent.shift();
   M=mkSlot({defs,muts,gold,level:R.level});
   if(muts.length) R.ev.mut++; if(M.gold) R.ev.gold++; if(M.boss) R.ev.boss++;
-  if(M.boss){ banner('BOSS!!','#ff4d6d',def.name,'',1.4); sfx('boss'); }
-  else if(M.gold){ banner('✨ RARE GOLD ✨','#ffd23f','得点 ×10','',1.4); sfx('win'); }
-  else if(muts.length){ const m=MUTS.find(x=>x.id===muts[0]); banner(m.icon+' '+m.name,m.col,muts.length>1?'＋ '+MUTS.find(x=>x.id===muts[1]).name:'ルール変化！','',1.0); }
+  if(M.boss) sfx('boss'); else if(M.gold) sfx('win'); else sfx('whoosh');
   if(M.fresh&&!M.boss) popText('📖 はじめて！',CW/2,TOP+GH-30,'#2ee6d6',22,1.4);
 }
 
@@ -462,8 +461,9 @@ function viewUpdate(v,dt){
   if(v.res===null&&v.t>=v.dur) v.res=v.def.survive?'win':'fail';
 }
 function playUpdate(dt){
+  if(M.state==='card'){ M.cardT+=dt; if(M.cardT>=M.cardDur){ M.state='run'; M.shrinkT=0; sfx('tick'); } return; }
   if(M.state==='run'){
-    M.t+=dt;
+    M.t+=dt; M.shrinkT+=dt;
     for(const v of M.views) viewUpdate(v,dt);
     if(M.nope){ if(M.touched) endSlot('fail'); else if(M.t>=M.dur) endSlot('win'); return; }
     if(M.views.some(v=>v.res==='fail')) endSlot('fail');
@@ -524,6 +524,50 @@ function drawSlot(c){
   if(R.fever>0){ const gr=c.createLinearGradient(0,0,CW,0); for(let i=0;i<=6;i++) gr.addColorStop(i/6,`hsl(${(i*60+S.time*60)%360},95%,60%)`); c.strokeStyle=gr; c.strokeRect(3,TOP+3,CW-6,GH-6); c.globalAlpha=.10; c.fillStyle=gr; c.fillRect(0,TOP,CW,GH); c.globalAlpha=1; }
   else if(m.boss){ c.strokeStyle='#ff4d6d'; c.globalAlpha=.7+.3*Math.sin(S.time*3); c.strokeRect(3,TOP+3,CW-6,GH-6); c.globalAlpha=1; }
   drawHud(c);
+  drawCard(c);
+}
+
+const HINTS={slash:'👉 スワイプ',coinflick:'👉 スワイプ',arrows:'👉 スワイプ',slide:'👉 ドラッグ',pet:'✋ こする',scratch:'✋ こする',crank:'✋ ぐるぐる',dash:'👇 長押し',trace:'☝ なぞる',maze:'☝ なぞる',stars:'☝ ドラッグ',dodge:'☝ ドラッグ',catch:'☝ ドラッグ',door:'👆 連打',sneeze:'👆 連打',chest:'👆 連打',inflate:'👆 連打',boss_tap:'👆 連打',boss_bullet:'☝ ドラッグ'};
+function fitSize(txt_,maxW,maxS){ return clamp(Math.floor(maxW/Math.max(1,txt_.length)),36,maxS); }
+function drawCard(c){
+  const m=M, inCard=m.state==='card'; const sp=inCard?0:(m.state==='gap'?1:clamp(m.shrinkT/.22,0,1)); if(sp>=1) return;
+  const e=sp*sp*(3-2*sp), a=1-e, t=inCard?m.cardT:m.cardDur;
+  c.save();
+  c.globalAlpha=.84*a; c.fillStyle='#0b0620'; c.fillRect(0,TOP,GW,GH);
+  const cx=CW/2, cy0=TOP+GH*.47;
+  c.globalAlpha=.10*a; c.fillStyle='#fff';
+  for(let i=0;i<28;i++){ const an=i*TAU/28+S.time*.12, w=.035; c.beginPath(); c.moveTo(cx+Math.cos(an)*70,cy0+Math.sin(an)*70); c.lineTo(cx+Math.cos(an-w)*520,cy0+Math.sin(an-w)*520); c.lineTo(cx+Math.cos(an+w)*520,cy0+Math.sin(an+w)*520); c.closePath(); c.fill(); }
+  c.globalAlpha=1;
+  const k=inCard?(t<.14?lerp(.4,1.16,t/.14):t<.28?lerp(1.16,1,(t-.14)/.14):1):1;
+  const two=m.defs.length===2, cmds=two?m.defs.map(d=>d.cmd):[m.cmd];
+  const size=two?fitSize(cmds[0]+cmds[1],GW-40,80)*1:fitSize(m.cmd,GW-36,124);
+  const sizes=two?cmds.map(x=>fitSize(x,GW-40,96)):[size];
+  const hudSize=m.cmd.length<=4?40:m.cmd.length<=6?36:m.cmd.length<=8?30:25;
+  const cy=lerp(cy0,48,e), sc=k*lerp(1,two?.3:hudSize/size,e);
+  c.translate(cx,cy); c.scale(sc,sc);
+  const ex=clamp(1-e*2.2,0,1);
+  const col=m.gold?'#ffd23f':m.boss?'#ff7a8a':m.nope?'#fff':`hsl(${m.hue},95%,72%)`;
+  // backdrop bands
+  const bandH=(two?sizes[0]*2.3:size*1.25), bandW=GW+40;
+  c.globalAlpha=ex;
+  if(m.nope){ c.save(); c.beginPath(); c.rect(-bandW/2,-bandH/2,bandW,bandH); c.clip(); c.fillStyle='#d8142e'; c.fillRect(-bandW/2,-bandH/2,bandW,bandH); c.fillStyle='#ffd23f'; for(let x=-bandW;x<bandW;x+=60){ c.beginPath(); c.moveTo(x,-bandH/2); c.lineTo(x+30,-bandH/2); c.lineTo(x+30-bandH*.5,bandH/2); c.lineTo(x-bandH*.5,bandH/2); c.closePath(); c.fill(); } c.fillStyle='rgba(120,0,16,.78)'; c.fillRect(-bandW/2,-bandH/2,bandW,bandH); c.restore(); }
+  else if(R.fever>0){ const gr=c.createLinearGradient(-bandW/2,0,bandW/2,0); for(let i=0;i<=6;i++) gr.addColorStop(i/6,`hsla(${(i*60+S.time*60)%360},95%,60%,.55)`); c.fillStyle=gr; c.fillRect(-bandW/2,-bandH/2,bandW,bandH); }
+  else if(m.boss){ c.fillStyle='rgba(190,20,50,.55)'; c.fillRect(-bandW/2,-bandH/2,bandW,bandH); }
+  if(m.gold){ c.strokeStyle='#ffd23f'; c.lineWidth=8; c.strokeRect(-bandW/2+14,-bandH/2-6,bandW-28,bandH+12); c.fillStyle='rgba(255,210,60,.18)'; c.fillRect(-bandW/2+14,-bandH/2-6,bandW-28,bandH+12); }
+  c.globalAlpha=1;
+  // top label
+  let label=null, lcol='#fff';
+  if(m.nope){ label='⚠ ひっかけ注意 ⚠'; lcol='#ffe45c'; } else if(m.boss){ label='BOSS'; lcol='#ff4d6d'; } else if(m.gold){ label='✨ RARE GOLD ×10 ✨'; lcol='#ffd23f'; } else if(R.fever>0){ label='🌈 FEVER ×2'; lcol='#ffb3ec'; }
+  if(label){ c.globalAlpha=ex; txt(c,label,0,-bandH/2-(m.boss?24:20),m.boss?56:30,lcol,{sw:7}); c.globalAlpha=1; }
+  // command(s)
+  if(two){ txt(c,cmds[0],0,-sizes[0]*.62,sizes[0],col,{sw:Math.max(8,sizes[0]*.14)}); txt(c,cmds[1],0,sizes[1]*.62,sizes[1],`hsl(${(m.hue+140)%360},95%,72%)`,{sw:Math.max(8,sizes[1]*.14)}); }
+  else { c.save(); c.shadowColor='rgba(0,0,0,.6)'; c.shadowBlur=18; c.shadowOffsetY=8; txt(c,m.cmd,0,0,size,col,{sw:Math.max(8,size*.14)}); c.restore(); }
+  // mutators + hint
+  c.globalAlpha=ex;
+  let y=(two?sizes[0]*1.25+sizes[1]*.2:size*.78);
+  m.muts.forEach(id=>{ const mu=MUTS.find(x=>x.id===id); if(id==='nope') return; txt(c,mu.icon+' '+mu.name,0,y,34,mu.col,{sw:8}); y+=44; });
+  if(!two&&!m.inter){ const h=m.nope?'✋ さわらない！':(HINTS[m.defs[0].id]||'👆 タップ'); txt(c,h,0,y+4,26,'#fff',{sw:6}); }
+  c.restore();
 }
 function drawHud(c){
   const m=M;
@@ -540,7 +584,7 @@ function drawHud(c){
   const cmd=m.cmd, len=cmd.length; const size=len<=4?40:len<=6?36:len<=8?30:25;
   const col=m.gold?'#ffd23f':m.boss?'#ff7a8a':m.nope?'#ff4f9a':`hsl(${m.hue},95%,72%)`;
   const pop=m.state==='run'?clamp(1+Math.max(0,.3-m.t)*1.6,1,1.5):1;
-  c.save(); c.translate(CW/2,48); c.scale(pop,pop); txt(c,cmd,0,0,size,col); c.restore();
+  if(m.state!=='card'&&m.shrinkT>=.22||m.state==='gap'){ c.save(); c.translate(CW/2,48); c.scale(pop,pop); txt(c,cmd,0,0,size,col); c.restore(); }
   // tags
   let tx=CW/2; const tags=[]; if(m.boss) tags.push(['BOSS','#ff4d6d']); if(m.gold) tags.push(['GOLD ×10','#ffd23f']); m.muts.forEach(id=>{ const mu=MUTS.find(x=>x.id===id); tags.push([mu.icon+mu.name,mu.col]); });
   if(tags.length){ c.font=`900 12px ${FONT}`; const ws=tags.map(t=>c.measureText(t[0]).width+16); let tot=ws.reduce((a,b)=>a+b,0)+6*(tags.length-1); let x=CW/2-tot/2;
@@ -1380,9 +1424,9 @@ function runOne(ids,muts,o){
   S.auto=!o.bot&&o.auto!==false;
   playSlot(ids,muts,o);
   const maxT=(o.maxT||40);
-  let guard=0; while(M.state==='run'&&M.t<maxT&&guard++<60*maxT+50){ step(1/60); if(o.render&&guard%7===0) render(); }
+  let guard=0; while(M.state!=='gap'&&M.t<maxT&&guard++<60*maxT+80){ step(1/60); if(o.render&&guard%7===0) render(); }
   if(o.render) render();
-  if(M.state==='run') endSlot('fail');
+  if(M.state!=='gap'){ M.state='run'; endSlot('fail'); }
   const r={res:M.res,t:+M.t.toFixed(2),dur:+M.dur.toFixed(2),err:S.err?String(S.err.message||S.err):null,id:[].concat(ids).join('+'),muts:(muts||[]).join('+'),views:M.views.map(v=>v.res)};
   S.bot=null; return r;
 }
