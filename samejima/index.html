@@ -1,0 +1,970 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="description" content="2001年ごろの匿名掲示板で「知ってるふり」だけで語られた架空の事件。7日間で真相を調べる、レトロ掲示板の推理アドベンチャー。">
+<title>その話はやめろ ―鮫島事件―</title>
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" href="data:,">
+<style>
+html,body{touch-action:manipulation}
+:root{--win:#c0c0c0;--bbs:#efefef;--ink:#000;--name:#008000;--link:#0000ee;--red:#b00000;--blue:#000080;--dk:#808080;--hl:#fff7c4;--depth:0}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:#5a6b6b;color:var(--ink);overflow:hidden;overscroll-behavior:none}
+body{font-family:"MS PGothic","MS Pゴシック","IPAMonaPGothic","Mona","Osaka-Mono","Hiragino Kaku Gothic ProN","Yu Gothic",monospace;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;font-size:14px;line-height:1.35}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:2px dotted #000;outline-offset:1px}
+#app{position:relative;height:100vh;height:100dvh;max-width:760px;margin:0 auto;display:flex;flex-direction:column;background:var(--win);border-left:2px solid #fff;border-right:2px solid #404040;padding-top:env(safe-area-inset-top,0px);transition:filter 3s}
+#top{position:relative;z-index:40;display:flex;align-items:center;gap:6px;padding:3px 6px;background:linear-gradient(90deg,#000080,#1084d0);color:#fff;flex:none}
+#top a{color:#fff;text-decoration:none;font-size:13px;font-weight:700;white-space:nowrap}
+#top h1{flex:1;margin:0;text-align:center;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini{font-size:12px;font-weight:700;border:2px outset #eee;background:var(--win);padding:2px 7px;white-space:nowrap;line-height:1.3;color:#000}
+.mini:active{border-style:inset}
+.mini[aria-pressed=true]{background:#ffe66b}
+#sndBtn[aria-pressed=false]{color:#666}
+#bar{display:flex;gap:6px;align-items:center;padding:2px 6px;font-size:11px;background:var(--win);border-bottom:1px solid var(--dk);flex:none}
+#addr{flex:1;min-width:0;background:#fff;border:2px inset #ddd;padding:1px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#333}
+#clock{white-space:nowrap;font-variant-numeric:tabular-nums}
+#meters{display:grid;grid-template-columns:auto 1fr 1fr;gap:4px 8px;align-items:center;padding:4px 6px;font-size:12px;background:var(--win);flex:none}
+#dayinfo{font-weight:700;white-space:nowrap}
+.mt{display:flex;align-items:center;gap:4px;min-width:0}
+.mt span{white-space:nowrap}
+.gauge{flex:1;height:10px;border:2px inset #ddd;background:#fff;min-width:30px}
+.gauge i{display:block;height:100%;width:0;transition:width .5s}
+#gDepth i{background:#a00}
+#gTrust i{background:#0a6}
+#viewWrap{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;margin:0 4px;border:2px inset #ddd;background:var(--bbs)}
+#view{flex:1;overflow-y:auto;overflow-x:hidden;padding:6px 6px 24px;-webkit-user-select:text;user-select:text;overscroll-behavior:contain}
+#newres{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);background:#ffe66b;border:2px outset #fff;padding:2px 10px;font-size:12px;font-weight:700;pointer-events:none;opacity:0;transition:opacity .25s;white-space:nowrap}
+#newres.on{opacity:1}
+#panel{flex:none;padding:6px 6px calc(8px + env(safe-area-inset-bottom,0px));background:var(--win);max-height:46%;overflow-y:auto}
+.pbtns{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.pbtns.two{grid-template-columns:1fr 1fr;margin-top:4px}
+.pbtn{border:2px outset #f4f4f4;background:var(--win);padding:7px 2px;font-weight:700;font-size:13px;text-align:center;line-height:1.25;min-height:44px}
+.pbtn:active:not(:disabled){border-style:inset}
+.pbtn:disabled{color:#888;cursor:default}
+.pbtn.wide{grid-column:1/-1;text-align:left;padding:6px 8px;font-weight:400}
+.pbtn small{display:block;font-weight:400;font-size:11px;color:#444}
+.plist{display:flex;flex-direction:column;gap:4px}
+.phead{font-size:12px;margin-bottom:4px;color:#222}
+.fakein{border:2px inset #ddd;background:#fff;padding:3px 6px;margin-bottom:5px;font-size:12px;color:#777;min-height:24px}
+.fakein b{color:#a00;font-weight:400}
+/* 掲示板 */
+dl.res{margin:0 0 8px}
+dl.res dt{font-size:12px;color:#222}
+dl.res dt .no{color:#000}
+dl.res dt .nm{color:var(--name);font-weight:700}
+dl.res dt .nm.kote{color:#800}
+dl.res dd{margin:2px 0 0 14px;font-size:14px;word-break:break-word}
+dl.res.me{background:var(--hl);border-left:3px solid #d9a900;padding:2px 4px}
+dl.res.hint dd{}
+dl.res.same dt .id{color:#a00;font-weight:700}
+dl.res .anc{color:var(--link)}
+.dayline{text-align:center;margin:10px 0;font-size:12px;color:#555;border-top:1px dashed #999;border-bottom:1px dashed #999;padding:2px 0}
+.sysline{font-size:12px;color:#444;margin:6px 0;white-space:pre-wrap}
+.doc{background:#fff;border:1px solid #999;padding:6px;margin-bottom:8px}
+.doc h3{margin:0 0 6px;font-size:14px;color:#000080}
+.err{font-family:monospace;color:#a00;white-space:pre-wrap;font-size:13px}
+.note{font-size:12px;color:#333;background:#ffffe0;border:1px solid #aa8;padding:4px 6px;margin:6px 0;white-space:pre-wrap}
+.kdlg{margin:4px 0;font-size:14px}
+.kdlg b{color:#800}
+.kdlg.you b{color:var(--name)}
+.gain{margin:8px 0;padding:5px 8px;border:2px solid #d9a900;background:#fff7c4;font-size:13px}
+.board{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:18px 20px;padding:4px 2px 10px}
+.board svg{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.cardx{position:relative;z-index:1;border:2px outset #fff;background:#fffbe8;padding:4px 5px;font-size:12px;cursor:pointer;min-height:70px}
+.cardx.sel{outline:3px solid #d00;background:#ffe9e9}
+.cardx.key{background:#e8f4ff}
+.cardx .w{font-weight:700;color:#800;font-size:12px}
+.cardx .c{margin:2px 0}
+.cardx .s{color:#036;font-size:11px;border-top:1px dotted #999;padding-top:2px}
+.rowline{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0}
+/* 画面（タイトル／結果） */
+#scr{position:absolute;inset:0;padding-top:calc(34px + env(safe-area-inset-top,0px));z-index:20;background:#000;color:#ddd;display:flex;flex-direction:column;overflow:hidden}
+#scr.title{background:#008080;color:#000}
+#scrIn{flex:1;overflow-y:auto;padding:12px 14px calc(14px + env(safe-area-inset-bottom,0px));-webkit-user-select:text;user-select:text}
+#scr .win{background:var(--win);color:#000;border:2px outset #fff;padding:0 0 10px;margin:6px auto;max-width:480px}
+#scr .win .tb{background:linear-gradient(90deg,#000080,#1084d0);color:#fff;font-weight:700;font-size:13px;padding:2px 6px}
+#scr .win .bd{padding:8px 10px}
+.aa{font-family:"MS PGothic","IPAMonaPGothic","Mona",monospace;white-space:pre;line-height:1.15;font-size:13px;overflow:hidden}
+.bigt{font-size:20px;font-weight:900;text-align:center;margin:6px 0;color:#000080;line-height:1.25}
+.bigbtn{display:block;width:100%;border:2px outset #fff;background:var(--win);padding:11px;font-weight:900;font-size:16px;margin:8px 0}
+.bigbtn:active{border-style:inset}
+.endlist{display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:12px;margin:6px 0}
+.endlist div{border:1px solid #999;background:#fff;padding:2px 5px}
+.endlist .no{color:#999}
+.endlist .ok{background:#e0ffe0}
+.rec{font-size:12px;margin:4px 0}
+.elines{max-width:520px;margin:0 auto}
+.elines .res{margin:0 0 10px;font-size:14px;color:#ccc}
+.elines .res .h{font-size:11px;color:#8c8}
+.elines .sys{margin:12px 0;color:#eee;line-height:1.6;white-space:pre-wrap}
+.elines .big{font-size:22px;font-weight:900;text-align:center;margin:18px 0 6px;color:#fff;line-height:1.3}
+.elines .sub{text-align:center;font-size:12px;color:#999;margin-bottom:10px}
+.elines .errb{font-family:monospace;color:#f66;white-space:pre-wrap;border:1px solid #f66;padding:6px;margin:10px 0}
+.elines>*{animation:fin .6s both}
+@keyframes fin{from{opacity:0}to{opacity:1}}
+#scr.melt .elines{filter:blur(0px);transition:filter 4s,opacity 4s}
+#scr.melt.m2 .elines{filter:blur(1.5px)}
+#scr.melt.m3 .elines{filter:blur(3px);opacity:.55}
+#ov{position:absolute;inset:0;z-index:30;background:#000;color:#9f9;display:flex;align-items:center;justify-content:center;text-align:center;font-family:monospace;padding:20px;white-space:pre-wrap;line-height:1.7}
+/* 深入りによる異変 */
+#app.d2 #view{text-shadow:0 0 1px rgba(150,0,0,.35)}
+#app.d4{filter:saturate(.6) contrast(1.05)}
+#app.d5{filter:saturate(.3) contrast(1.1) brightness(.92)}
+#app.d5 #view{background:#e2e0e0}
+#autolbl{font-size:11px;color:#064;font-weight:700;padding:0 6px 2px;background:var(--win);flex:none}
+@media (min-width:600px){body{font-size:15px}dl.res dd{font-size:15px}.pbtn{font-size:14px}}
+@media (prefers-reduced-motion:reduce){.elines>*{animation:none}}
+</style>
+</head>
+<body>
+<div id="app" class="d0">
+  <header id="top">
+    <a href="../" id="back">← 一覧</a>
+    <h1>その話はやめろ ―鮫島事件―</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false" title="Oキーでも切りかえ">🤖 オート</button>
+    <button class="mini" id="sndBtn" aria-pressed="true" aria-label="音">🔊</button>
+  </header>
+  <div id="bar"><span id="addr">http://nanashi.example/test/read.cgi/sameji/</span><span id="clock"></span></div>
+  <div id="meters">
+    <div id="dayinfo"></div>
+    <div class="mt"><span>深入り</span><div class="gauge" id="gDepth"><i></i></div></div>
+    <div class="mt"><span>信用</span><div class="gauge" id="gTrust"><i></i></div></div>
+  </div>
+  <div id="autolbl" hidden></div>
+  <div id="viewWrap"><main id="view"></main><div id="newres">▼ 新着レス</div></div>
+  <nav id="panel"></nav>
+  <div id="scr" hidden><div id="scrIn"></div></div>
+  <div id="ov" hidden></div>
+</div>
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s);
+const DAYS=7, ACTS=3;
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const br=s=>esc(s).replace(/\n/g,'<br>');
+
+/* ===== 保存 ===== */
+const SAVE_KEY='samejima_save_v1';
+let SV={end:{},bestTruth:0,snd:true,runs:0};
+try{ const o=JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); if(o&&typeof o==='object') SV=Object.assign(SV,o); }catch(e){}
+function save(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(SV)); }catch(e){} }
+
+/* ===== 乱数 ===== */
+let seed=(Date.now()^0x5bd1e995)>>>0;
+function rnd(){ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }
+const pick=a=>a[Math.floor(rnd()*a.length)];
+const ri=(a,b)=>a+Math.floor(rnd()*(b-a+1));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const ALN='abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const mkId=()=>{ let s=''; for(let i=0;i<8;i++) s+=ALN[Math.floor(rnd()*ALN.length)]; return s; };
+
+/* ===== データ ===== */
+const END_ORDER=['truth','teller','deep','rom','ban','timeup','grad'];
+const ENDS={
+ truth:{n:'真相エンド',sub:'お約束'},
+ teller:{n:'語り部エンド',sub:'伝説の語り部'},
+ deep:{n:'深入りエンド',sub:'存在しないID'},
+ rom:{n:'ROMエンド',sub:'半年ROMった'},
+ ban:{n:'アク禁エンド',sub:'書き込めません'},
+ timeup:{n:'時間切れエンド',sub:'結局わからず'},
+ grad:{n:'新参卒業エンド',sub:'◆トリップ授与'}
+};
+const KOTE=[
+ {id:'shira',nm:'◆しらたま',pl:'しらたま',desc:'古参。口ぐせは「その話はやめろ」',thr:35,card:'c1'},
+ {id:'logya',nm:'◆ログ屋',pl:'ログ屋',desc:'過去ログ収集家。几帳面',thr:45,card:'c2'},
+ {id:'kanri',nm:'◆元管理人',pl:'元管理人',desc:'礼儀にうるさい。昔を知る',thr:55,card:'c3'},
+ {id:'aoi',nm:'◆あおいさかな',pl:'あおいさかな',desc:'ビビり。「あれはマジでヤバい」',thr:40,card:'c4'},
+ {id:'kyomu',nm:'◆虚無僧Z',pl:'虚無僧Z',desc:'ネタ師。ほとんど嘘をつく',thr:70,card:'c5'}
+];
+const CARDS={
+ c1:{who:'しらたま',claim:'2001年の夏、とんでもない事件があったらしい。',src:'ログ屋から聞いた',link:'c2'},
+ c2:{who:'ログ屋',claim:'公安が絡んで、スレが消されたらしい。',src:'元管理人から聞いた',link:'c3'},
+ c3:{who:'元管理人',claim:'事件の舞台は「島」だったらしい。',src:'あおいさかなから聞いた',link:'c4'},
+ c4:{who:'あおいさかな',claim:'俺は何も知らない。ただ聞いただけ。',src:'しらたまから聞いた',link:'c1'},
+ c5:{who:'虚無僧Z',claim:'全部ノリだ。最初のスレを見りゃわかる。',src:'本人談（ネタ師）'},
+ g4:{who:'過去ログ',claim:'どのレスも「誰かに聞いた」としか書いていない。',src:'出典なし'},
+ d5:{who:'過去ログ',claim:'「伝説の鮫島スレ」が立ったのは2001年6月ごろ。',src:'日付の手がかり',key:'date'},
+ d7:{who:'過去ログ',claim:'「公安が来た」という噂は、2001年6月ごろに出始めた。',src:'日付の手がかり',key:'date'},
+ g6:{who:'過去ログ',claim:'島も公安も、古い書き込みには出てこない。',src:'出典なし'}
+};
+const EDGES=[['c1','c2'],['c2','c3'],['c3','c4'],['c4','c1']];
+const CYC=['c1','c2','c3','c4'];
+const LOGS=[
+ {t:'【伝説】鮫島事件を語るスレ Part3',st:'archive'},
+ {t:'鮫島事件ってなに？',st:'404'},
+ {t:'【悲報】鮫島スレ消えた件',st:'dat'},
+ {t:'鮫島の話はもうやめよう',st:'ok',card:'g4',body:[
+  ['鮫島の話はもうやめよう。'],['>>1 その話はやめろ'],['>>2 その話はやめろ'],['>>3 俺は何も知らない'],['>>4 誰かに聞いた話だけど…'],['>>5 俺も誰かに聞いた'],['>>6 結局、誰が最初に言い出したんだ？'],['>>7 ググれ']]},
+ {t:'2001年6月 スレ一覧（抜粋）',st:'ok',card:'d5',body:[
+  ['06/03 ラーメンの話をするスレ'],['06/06 今日の天気スレ'],['06/09 ■■■■■■■■■■■■■■（タイトルが読めない）'],['06/12 ログ倉庫の使い方スレ'],['※古いレスに「このへんで『伝説の鮫島スレ』が立った」とある。']]},
+ {t:'島ってどこだよ',st:'ok',card:'g6',body:[
+  ['島ってどこの島だよ'],['>>1 しらん。誰かが言ってた'],['>>2 最初のころは島の話なんて出てなかったろ'],['>>3 公安もな。いつの間にか足されてた'],['>>4 噂ってそういうもんだ']]},
+ {t:'ログ倉庫の使い方',st:'ok',memo:'ログ倉庫の検索には「正確なスレタイ」と「だいたいの日付」が必要。',body:[
+  ['ログ倉庫の使い方'],['検索には、正確なスレタイと、だいたいの日付が必要です。'],['スレタイがうろ覚えの場合は、見つかりません。']]},
+ {t:'【速報】公安が来たらしい',st:'ok',card:'d7',body:[
+  ['公安が来たらしい'],['>>1 ソースは？'],['>>2 友達の友達から聞いた'],['>>3 2001年6月ごろから、そういう噂が出てるよな'],['>>4 来てないだろ。ただの噂だって']]},
+ {t:'【緊急】みんなで口をそろえよう',st:'dat'}
+];
+const FIRST_IDX=9; // 新着検索結果（条件で出現）
+const HINTS=[
+ 'コテのログ屋って奴は、古いスレに詳しいぞ。',
+ 'コテ連中は、みんな「誰かから聞いた」って言うよな。で、その誰かは誰から聞いたんだ？',
+ '過去ログは「2001年6月」のあたりなら、まだ読めるのが残ってるらしい。',
+ '倉庫の検索には正確なスレタイが要る。コテの話を線でつなぐ（まとめる）と、見えてくるかも。',
+ '元管理人は礼儀にうるさい。煽ったら口をきいてくれないぞ。',
+ 'どのコテも一次情報は持ってない。ぐるぐる回ってるだけ…ってことはないよな？',
+ '虚無僧Zは嘘つきだが、信用されて、しかも深入りしてるやつには本音を漏らす。',
+ '島とか公安とか、後から足されたんじゃないのか。'
+];
+const POSTS=[
+ {id:'polite',ic:'🙇',label:'ていねいに聞く',text:'はじめまして。鮫島事件について教えていただけませんか？',tr:10,dp:3,ban:0,lg:0,hint:.5},
+ {id:'sage',ic:'🤫',label:'sageて様子見',text:'sage。とりあえず見てます。',tr:3,dp:-2,ban:0,lg:0,hint:.25},
+ {id:'aori',ic:'💢',label:'煽る',text:'どうせ何もない釣りスレだろｗｗｗ',tr:-15,dp:1,ban:3,lg:0,hint:.05},
+ {id:'shittaka',ic:'😏',label:'知ったかぶりをする',text:'ああ、あの鮫島事件ね。知ってる知ってる（知らない）',tr:-6,dp:3,ban:1,lg:0,hint:.2},
+ {id:'shoko',ic:'📎',label:'証拠を出す',text:'',tr:2,dp:10,ban:0,lg:0,hint:.45,needCard:true},
+ {id:'tsuikyuu',ic:'🔍',label:'追及する',text:'最初に書いたのは誰だ？ 知ってるやつは全部話せ。',tr:-8,dp:12,ban:0,lg:0,hint:.3},
+ {id:'sousaku',ic:'📖',label:'それっぽい伝説を書く',text:'実は2001年の夏、ある島でな…（それっぽい作り話）',tr:-3,dp:3,ban:0,lg:2,hint:.1},
+ {id:'rom',ic:'🙈',label:'半年ROMる',text:'',tr:2,dp:-8,ban:0,lg:0,hint:0,rom:true}
+];
+const POOL={
+ polite:['ていねいに聞くとは感心だ。でもその話はやめろ','半年ROMれ。…と言いたいが、お前は悪くない','ググれ。…出てこないけどな','おい…本気で知りたいのか','礼儀正しい新参は久しぶりだ。だから言う、深入りするな','コテ連中に聞いてみ。気に入られれば何か話してくれる'],
+ sage:['sage進行ありがたい','静かに見守る新参、好き','ROMってるだけでもいいぞ','進行が穏やかでいい','…（見ているだけ）'],
+ aori:['荒らし乙','スルー推奨','うわぁ…釣りか？','通報しました','つまらん。帰れ','IDチェック済み。覚えたぞ'],
+ shittaka:['知ったか乙','じゃあ言ってみろ','嘘つくな','お前、絶対知らないだろ','知ってるなら語れよ','おい…やめろ…'],
+ shoko:['お、証拠だと？','それ、どこで拾った','出典も書け','マジか…それはヤバい','おい…それ消えてなかったのか'],
+ tsuikyuu:['追及厨キター','落ち着け','最初に書いたやつなんて覚えてない','聞くな。聞かれると困るやつがいる','おい…本当にやめろ','俺は何も知らない'],
+ sousaku:['…それ、俺も聞いたことある','マジ？初耳だけど信じる','いや、そんな話だった気もする','語り部降臨','保存した','…その話はやめろ'],
+ flavor:['半年ROMれ','ググれ','消されるぞ','あれはマジでヤバい','俺は何も知らない','その話はやめろ','おい…','ここでその名前を出すな']
+};
+const SAMEID=['おい、お前と俺、同じIDだぞ','さっきから、誰と話してるんだ？','そのIDは俺のだ','書き込んだ覚えがないんだが…'];
+const NAMES=['名無しさん＠ななし中。','名無しさん＠夜更かし中。','名無しさん＠ネット中。','名無しさん＠接続中。'];
+const WD=['日','月','火','水','木','金','土'];
+
+/* ===== 状態 ===== */
+let G=null;           // 1プレイの状態
+let scr='title';      // 'title'|'play'|'ending'|'result'
+let pmode='menu', vmode='thread';
+let auto=false, A={t:0,wait:.3,target:'truth'};
+const Q=[]; let qT=0, ovT=0, fxT=0;
+let endLines=[], endIdx=0, endT=0, endId=null;
+let lastGain=null, vdata={}, boardSel=null, boardNote='';
+let autoRuns=0;
+
+function newRun(){
+  const my=mkId();
+  const res=[]; for(let i=0;i<6;i++) res.push({id:mkId(),nm:pick(NAMES)});
+  G={day:1,act:0,depth:0,trust:50,ban:0,legend:0,rom:0,
+   thread:false,posts:[],n:0,cards:{},order:[],keys:{date:false,title:false},links:[],
+   cycleFound:false,firstRead:false,kAsked:{},hintIdx:0,memo:[],logSeen:{},
+   myId:my,res:res,pendingEnd:null,disc:false,ended:null,totalActs:0,sec:0,truthDay:0};
+  Q.length=0; vmode='thread'; pmode='menu'; boardSel=null; boardNote=''; lastGain=null; vdata={};
+}
+
+/* ===== 時刻 ===== */
+function tstr(sec){
+  if(G.depth>=50) return '2001/06/15(金) 03:33:33';
+  const sc=G.sec||0;
+  const m=(G.day-1)*1440+20*60+G.act*80+Math.floor(sc/60);
+  const d=new Date(Date.UTC(2001,5,14)+m*60000);
+  const p=n=>String(n).padStart(2,'0');
+  return d.getUTCFullYear()+'/'+p(d.getUTCMonth()+1)+'/'+p(d.getUTCDate())+'('+WD[d.getUTCDay()]+') '+p(d.getUTCHours())+':'+p(d.getUTCMinutes())+':'+p(sec==null?sc%60:sec);
+}
+
+/* ===== 音 ===== */
+let AC=null, master=null, dr=null;
+function ac(){
+  if(!SV.snd) return null;
+  try{
+    if(!AC){ AC=new (window.AudioContext||window.webkitAudioContext)(); master=AC.createGain(); master.gain.value=.55; master.connect(AC.destination); }
+    if(AC.state==='suspended') AC.resume().catch(()=>{});
+  }catch(e){ return null; }
+  return AC;
+}
+function tone(f,d,type,v,t0,f2){
+  const a=ac(); if(!a) return;
+  const t=a.currentTime+(t0||0), o=a.createOscillator(), g=a.createGain();
+  o.type=type||'square'; o.frequency.setValueAtTime(f,t); if(f2) o.frequency.linearRampToValueAtTime(f2,t+d);
+  g.gain.setValueAtTime(v||.05,t); g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t+d+.02);
+}
+function noise(d,v,fc,t0){
+  const a=ac(); if(!a) return;
+  const t=a.currentTime+(t0||0), n=Math.floor(a.sampleRate*d), b=a.createBuffer(1,n,a.sampleRate), x=b.getChannelData(0);
+  for(let i=0;i<n;i++) x[i]=(Math.random()*2-1)*(1-i/n);
+  const s=a.createBufferSource(); s.buffer=b;
+  const f=a.createBiquadFilter(); f.type='bandpass'; f.frequency.value=fc||1800; f.Q.value=1.2;
+  const g=a.createGain(); g.gain.value=v||.05;
+  s.connect(f); f.connect(g); g.connect(master); s.start(t);
+}
+const sfx={
+ type(){ tone(1500+Math.random()*300,.03,'square',.035); tone(900,.025,'square',.025,.045); },
+ click(){ tone(700,.05,'square',.04); },
+ ok(){ tone(660,.08,'square',.05); tone(990,.12,'square',.05,.08); },
+ bad(){ tone(180,.2,'sawtooth',.06,0,120); },
+ card(){ tone(880,.07,'triangle',.07); tone(1320,.14,'triangle',.07,.07); },
+ day(){ tone(523,.15,'sine',.06); tone(392,.25,'sine',.06,.15); },
+ dial(){
+  tone(1300,.2,'sine',.05,0); tone(2100,.4,'sine',.05,.25);
+  for(let i=0;i<16;i++) tone(500+Math.random()*2200,.07,'square',.025,.75+i*.055);
+  noise(.7,.05,1700,.7); noise(.4,.04,2600,1.5);
+ },
+ end(){ tone(330,.5,'sine',.07); tone(247,.9,'sine',.07,.3); }
+};
+function droneStart(){
+  const a=ac(); if(!a||dr) return;
+  const mk=(f,type)=>{ const o=a.createOscillator(); o.type=type; o.frequency.value=f; return o; };
+  const o1=mk(55,'sawtooth'), o2=mk(55.3,'sawtooth'), o3=mk(77.8,'sine'), lfo=mk(.18,'sine');
+  const fl=a.createBiquadFilter(); fl.type='lowpass'; fl.frequency.value=180;
+  const g=a.createGain(); g.gain.value=0; const g3=a.createGain(); g3.gain.value=0;
+  const lg=a.createGain(); lg.gain.value=20;
+  lfo.connect(lg); lg.connect(fl.frequency);
+  o1.connect(fl); o2.connect(fl); fl.connect(g); o3.connect(g3); g.connect(master); g3.connect(master);
+  [o1,o2,o3,lfo].forEach(o=>o.start());
+  dr={o1,o2,o3,lfo,fl,g,g3,a};
+  droneUpdate();
+}
+function droneUpdate(){
+  if(!dr) return;
+  const d=G?G.depth:0, t=dr.a.currentTime;
+  dr.g.gain.linearRampToValueAtTime(.035+d/100*.05,t+1);
+  dr.g3.gain.linearRampToValueAtTime(Math.max(0,(d-30)/70)*.05,t+1);
+  dr.o2.frequency.linearRampToValueAtTime(55+.3+d/100*3,t+1);
+  dr.fl.frequency.linearRampToValueAtTime(160+d*5,t+1);
+  dr.lfo.frequency.linearRampToValueAtTime(.18+d/100*.9,t+1);
+}
+function droneStop(){
+  if(!dr) return;
+  const d=dr; dr=null;
+  try{ d.g.gain.linearRampToValueAtTime(0,d.a.currentTime+.6); d.g3.gain.linearRampToValueAtTime(0,d.a.currentTime+.6); setTimeout(()=>{ [d.o1,d.o2,d.o3,d.lfo].forEach(o=>{try{o.stop();}catch(e){}}); },800); }catch(e){}
+}
+function setSnd(on){
+  SV.snd=!!on; save();
+  const b=$('#sndBtn'); b.setAttribute('aria-pressed',String(SV.snd)); b.textContent=SV.snd?'🔊':'🔇';
+  if(!SV.snd) droneStop(); else if(scr==='play') droneStart();
+}
+
+/* ===== 掲示板 ===== */
+function moji(s,p){
+  const MJ='縺繧荳蜷譁蟄逕ｿ鬮ｻ';
+  return [...s].map(c=>/[\s>。、…！？ｗ]/.test(c)?c:(rnd()<p?MJ[Math.floor(rnd()*MJ.length)]:c)).join('');
+}
+function addPost(o){
+  G.n++; G.sec+=ri(4,45);
+  const p=Object.assign({n:G.n,nm:pick(NAMES),id:mkId(),date:tstr(),text:'',mine:false,hint:false,same:false},o);
+  G.posts.push(p); return p;
+}
+function resHTML(p){
+  const nm=p.nm.indexOf('◆')===0?`<b class="nm kote">${esc(p.nm)}</b>`:`<b class="nm">${esc(p.nm)}</b>`;
+  const txt=br(p.text).replace(/(&gt;&gt;\d+)/g,'<span class="anc">$1</span>');
+  return `<dl class="res${p.mine?' me':''}${p.same?' same':''}"><dt><span class="no">${p.n}</span> ：${nm} ：${esc(p.date)} ID:<span class="id">${esc(p.id)}</span></dt><dd>${txt}</dd></dl>`;
+}
+function makeReplies(o,myNo){
+  const out=[]; const t=G.trust;
+  const pool=POOL[o.id]||POOL.flavor;
+  let n=ri(2,3)+(t>70?1:0); if(o.rom) n=0;
+  for(let i=0;i<n;i++){
+    let s=rnd()<.25?pick(POOL.flavor):pick(pool);
+    if(rnd()<.45) s='>>'+myNo+' '+s;
+    out.push({text:s});
+  }
+  if(G.ban>=3 && rnd()<.8) out.push({text:'…次はアク禁だぞ。'});
+  if(!o.rom && G.hintIdx<HINTS.length && rnd()<o.hint+t/400){
+    const h=HINTS[G.hintIdx++]; G.memo.push(h); out.push({text:h,hint:true});
+  }
+  if(G.depth>=35 && rnd()<.5) out.push({text:pick(SAMEID),same:true});
+  return out;
+}
+function queueReplies(list){
+  for(const r of list){
+    let tx=r.text;
+    if(G.depth>=65) tx=moji(tx,r.hint?(G.depth-60)/600:(G.depth-60)/180);
+    Q.push({nm:r.same?'名無しさん＠ななし中。':pick(G.res).nm,id:r.same?G.myId:pick(G.res).id,text:tx,same:!!r.same,hint:!!r.hint});
+  }
+  qT=0;
+}
+function flushQ(){
+  while(Q.length){ const r=Q.shift(); addPost(r); }
+  qT=0; renderView(true); renderMeters(); renderPanel(); checkPending();
+}
+function revealOne(){
+  const r=Q.shift(); if(!r) return;
+  addPost(r); sfx.type();
+  if(vmode==='thread') renderView(true);
+}
+
+/* ===== 行動の共通処理 ===== */
+function spend(){ G.act++; G.totalActs++; }
+function checkEnd(){
+  if(G.pendingEnd) return;
+  if(G.firstRead&&G.cycleFound){ G.truthDay=G.day; G.pendingEnd='truth'; return; }
+  if(G.ban>=6){ G.pendingEnd='ban'; return; }
+  if(G.legend>=6){ G.pendingEnd='teller'; return; }
+  if(G.depth>=100){ G.pendingEnd='deep'; return; }
+  if(G.trust>=95){ G.pendingEnd='grad'; return; }
+}
+function afterAction(){
+  G.depth=clamp(G.depth,0,100); G.trust=clamp(G.trust,0,100);
+  checkEnd();
+  if(!G.pendingEnd && G.act>=ACTS){
+    G.day++; G.act=0; G.kAsked={}; G.ban=Math.max(0,G.ban-1); G.sec=0;
+    if(G.day>DAYS){ G.pendingEnd=G.rom>=3?'rom':'timeup'; }
+    else { G.posts.push({day:G.day,n:0}); sfx.day(); }
+  }
+  if(!G.pendingEnd && G.depth>=80 && !G.disc){ G.disc=true; ovT=auto?.35:2.2; showOv(); sfx.dial(); }
+  droneUpdate(); renderAll();
+  if(!Q.length) checkPending();
+}
+function checkPending(){
+  if(G&&G.pendingEnd&&!Q.length&&scr==='play'&&ovT<=0){ const e=G.pendingEnd; G.pendingEnd=null; G.ended=e; showEnding(e); }
+}
+function showOv(){
+  const o=$('#ov'); o.hidden=false;
+  o.textContent='接続が切れました。\n\nダイヤルアップ接続中…\nピー ヒョロロロ ガーーー\n\n※しばらくお待ちください';
+}
+function busy(){ return !!(Q.length||ovT>0||G.pendingEnd||G.ended||scr!=='play'); }
+
+/* ---- 書き込み ---- */
+function doPost(id){
+  if(busy()) return false;
+  const o=POSTS.find(p=>p.id===id); if(!o) return false;
+  let text=o.text;
+  if(o.needCard){
+    const ids=Object.keys(G.cards).filter(c=>CARDS[c]);
+    if(!ids.length) return false;
+    const c=CARDS[pick(ids)];
+    text='証言がある。「'+c.claim.replace(/。$/,'')+'」（'+c.who+'）これについて何か知らないか？';
+  }
+  if(o.rom) text='（半年ROMることにした）';
+  const first=!G.thread;
+  if(first){ G.thread=true; G.posts.push({sys:'スレッドを立てました：【質問】鮫島事件って何？'}); }
+  spend();
+  G.trust+=o.tr; G.depth+=o.dp; G.ban+=o.ban; G.legend+=o.lg; if(o.rom) G.rom++;
+  const mine=addPost({nm:'名無しさん＠ななし中。',id:G.myId,text:o.rom?'（ROM中）':text,mine:true});
+  sfx.click();
+  vmode='thread'; pmode='menu';
+  queueReplies(makeReplies(o,mine.n));
+  if(auto) flushQ0();
+  afterAction();
+  return true;
+}
+function flushQ0(){ while(Q.length) addPost(Q.shift()); }
+
+/* ---- 過去ログ ---- */
+function logList(){
+  const l=LOGS.map((x,i)=>({i,t:x.t,seen:G.logSeen[i]||''}));
+  if(G.keys.date&&G.keys.title) l.push({i:FIRST_IDX,t:'伝説の鮫島スレについて語ろう',seen:G.logSeen[FIRST_IDX]||'',fresh:true});
+  return l;
+}
+function doLog(i){
+  if(busy()) return false;
+  const first=(i===FIRST_IDX);
+  if(first&&!(G.keys.date&&G.keys.title)) return false;
+  if(!first&&!LOGS[i]) return false;
+  spend(); pmode='menu'; vmode='log'; lastGain=null;
+  if(first){
+    G.logSeen[i]='ok'; G.depth+=5; G.firstRead=true; vdata={title:'伝説の鮫島スレについて語ろう',first:true};
+    sfx.ok();
+  } else {
+    const L=LOGS[i]; vdata={title:L.t,st:L.st,body:L.body||null};
+    if(L.st==='ok'){
+      G.logSeen[i]='ok'; G.depth+=6; sfx.ok();
+      if(L.card&&!G.cards[L.card]){ addCard(L.card); lastGain='証言カード「'+CARDS[L.card].claim+'」を手に入れた'; if(CARDS[L.card].key) G.keys[CARDS[L.card].key]=true; }
+      if(L.memo&&G.memo.indexOf(L.memo)<0) G.memo.push(L.memo);
+    } else { G.logSeen[i]=L.st; G.depth+=2; sfx.bad(); }
+  }
+  afterAction(); return true;
+}
+function addCard(id){ if(G.cards[id]) return; G.cards[id]=true; G.order.push(id); sfx.card(); }
+
+/* ---- コテハン ---- */
+function doKote(kid){
+  if(busy()) return false;
+  const k=KOTE.find(x=>x.id===kid); if(!k) return false;
+  if(G.kAsked[kid]) return false;
+  spend(); G.kAsked[kid]=true; pmode='menu'; vmode='kote'; lastGain=null;
+  const lines=[['you','鮫島事件について、教えてもらえませんか。']];
+  const has=!!G.cards[k.card];
+  if(has){
+    lines.push(['k',pick(['もう話したろ。それ以上は知らん。','…同じことしか言えないぞ。','その話はやめろ、と言ったはずだ。'])]);
+    G.depth+=1;
+  } else if(kid==='kyomu'){
+    if(G.trust<k.thr){
+      lines.push(['k',pick(['島？公安？全部ほんとだぜ（大嘘）','実は俺が最初の被害者でな…（作り話）','鮫島は実在する。俺の隣に座ってる。'])]);
+      lines.push(['sys','― 冗談ばかりで、本音は聞けなかった（信用が足りない？）']);
+      G.depth+=3;
+    } else if(G.depth<30){
+      lines.push(['k','お前はまだ浅い。もっと探ってから来い。']);
+      lines.push(['sys','― 本音を話すには、もっと事件を調べている必要がありそうだ']);
+      G.depth+=3;
+    } else {
+      lines.push(['k','……しょうがねえな。全部ノリだよ。誰も本当のことなんか知らねえ。']);
+      lines.push(['k','最初のスレを見りゃ分かる。俺の言葉なんか信じるな、自分の目で見ろ。']);
+      gainKote(k); G.depth+=8;
+    }
+  } else if(G.trust>=k.thr){
+    const T={
+     shira:['ああ…2001年の夏にさ、とんでもない事件があったんだと。ログ屋から聞いた話だけどな。','…その話はやめろ、って言いたいところだが。お前なら、まあいい。'],
+     logya:['公安が絡んで、スレが消された。そう聞いてる。元管理人から聞いた話だがね。','過去ログは2001年6月の頃のなら、まだ読めるのが残ってるよ。'],
+     kanri:['事件の舞台は「島」だったらしい。あおいさかなが見たと言っていたよ。','君は礼儀を知っているね。昔の掲示板はそうだった。'],
+     aoi:['お、俺は何も知らない…！ただ、しらたまがそう言ってたんだ…。','あれはマジでヤバい、って。そう聞いただけ…']
+    }[kid];
+    T.forEach(s=>lines.push(['k',s])); gainKote(k); G.depth+=8;
+  } else {
+    const low=G.trust<k.thr-20;
+    lines.push(['k',low?pick(['半年ROMれ。','ググれ。','…誰だお前。','コテに話しかける前に、礼儀を覚えてこい。']):pick(['…その話はやめろ。','今は話す気分じゃない。','もう少し、お前のことを知ってからだ。','おい…ちょっと待て。'])]);
+    lines.push(['sys','― 住人の信用がまだ足りないようだ']);
+    G.depth+=3;
+  }
+  vdata={kote:k,lines};
+  if(lastGain) sfx.ok(); else sfx.click();
+  afterAction(); return true;
+}
+function gainKote(k){ addCard(k.card); lastGain='証言カード「'+CARDS[k.card].claim+'」（'+CARDS[k.card].who+'）を手に入れた'; }
+
+/* ---- まとめる ---- */
+function hasLink(a,b){ return G.links.some(l=>(l[0]===a&&l[1]===b)||(l[0]===b&&l[1]===a)); }
+function boardLink(a,b){
+  if(a===b||!G.cards[a]||!G.cards[b]) return false;
+  const i=G.links.findIndex(l=>(l[0]===a&&l[1]===b)||(l[0]===b&&l[1]===a));
+  if(i>=0) G.links.splice(i,1); else G.links.push([a,b]);
+  return true;
+}
+function boardSubmit(){
+  if(busy()) return false;
+  spend(); G.depth+=4; boardNote=''; lastGain=null;
+  const have=CYC.filter(c=>G.cards[c]).length;
+  const isEdge=(a,b)=>EDGES.some(e=>(e[0]===a&&e[1]===b)||(e[0]===b&&e[1]===a));
+  const wrong=G.links.filter(l=>!isEdge(l[0],l[1])).length;
+  const correct=EDGES.filter(e=>hasLink(e[0],e[1])).length;
+  if(G.cycleFound){
+    boardNote='もう循環はつかんでいる。あとは最初のスレを探すだけだ。'; sfx.click();
+  } else if(correct===4&&wrong===0){
+    G.cycleFound=true; G.keys.title=true; sfx.ok();
+    boardNote='つながった。\nしらたま → ログ屋 → 元管理人 → あおいさかな → しらたま…\n出典をたどると、ぐるっと元の人に戻ってくる。誰も一次情報を持っていない。\n\nこの噂の「いちばん最初」は、きっと名無しの書いたスレそのものだ。\nスレタイは『伝説の鮫島スレについて語ろう』。';
+    if(!G.keys.date) boardNote+='\n（でも、いつ立ったスレなのか分からない。日付の手がかりが要る）';
+    else boardNote+='\nログ倉庫の検索結果に、新しいスレが出た。';
+  } else if(wrong>0){
+    G.trust-=4; sfx.bad();
+    boardNote='余計な線がある。引くのは「だれの話か」と「その出典の人」の間だけ。\n（まとめ厨乙、と住人に笑われた。信用ちょっとダウン）';
+  } else if(have<4){
+    sfx.bad(); boardNote='線が途中で切れている…。まだ、だれかの話が足りない。\n（集まっている出典つきの証言：'+have+'/4）';
+  } else {
+    sfx.bad(); boardNote='まだ、つながっていない出典がある。カードの「出典」の人を探して線で結ぼう。（正しい線：'+correct+'/4）';
+  }
+  afterAction(); return true;
+}
+function sleepDay(){
+  if(busy()) return false;
+  G.totalActs++;
+  G.act=ACTS; pmode='menu';
+  afterAction(); return true;
+}
+
+/* ===== 描画 ===== */
+function renderAll(){ renderMeters(); renderView(true); renderPanel(); }
+function renderMeters(){
+  if(!G) return;
+  const left=Math.max(0,ACTS-G.act);
+  $('#dayinfo').textContent=Math.min(G.day,DAYS)+'日目/'+DAYS+' '+'●'.repeat(left)+'○'.repeat(ACTS-left);
+  $('#gDepth i').style.width=G.depth+'%';
+  $('#gTrust i').style.width=G.trust+'%';
+  $('#clock').textContent=tstr().slice(2);
+  const lv=G.depth>=80?5:G.depth>=65?4:G.depth>=50?3:G.depth>=35?2:G.depth>=20?1:0;
+  let c=''; for(let i=0;i<=lv;i++) c+='d'+i+' ';
+  $('#app').className=c.trim();
+  const al=$('#autolbl');
+  if(auto&&scr!=='title'){ al.hidden=false; al.textContent='🤖 オート中：目標「'+ENDS[A.target].n+'」（Oキーで手動にもどる）'; } else al.hidden=true;
+}
+function postsHTML(){
+  const L=G.posts.slice(-70);
+  return L.map(p=>p.day?`<div class="dayline">―― ${p.day}日目 ――</div>`:p.sys?`<div class="sysline">${esc(p.sys)}</div>`:resHTML(p)).join('');
+}
+function renderView(bottom){
+  if(!G||scr==='title') return;
+  const v=$('#view'); let h='';
+  if(vmode==='thread'){
+    if(!G.thread){
+      h=`<div class="doc"><h3>ななしちゃんねる ― 雑談板</h3>
+      <div class="sysline">あなたは、この掲示板に来たばかりの新参。\nあちこちで「伝説の鮫島スレ」「鮫島事件はヤバい」という言葉を見かけるのに、だれも中身を教えてくれない。\n\n気になって、夜も眠れない。\n7日（1日3回の行動）のうちに、鮫島事件の正体を調べよう。\n\n✏️ まずは「書き込む」でスレを立ててみよう。</div></div>`;
+    } else h=postsHTML();
+    if(Q.length) h+='';
+  } else if(vmode==='log'){
+    h=`<div class="doc"><h3>過去ログ倉庫：${esc(vdata.title||'')}</h3>`;
+    if(vdata.st==='archive') h+='<div class="err">このスレッドは過去ログ倉庫に格納されています。\n（読み込めません）</div>';
+    else if(vdata.st==='404') h+='<div class="err">404 Not Found\nお探しのスレッドは見つかりません。</div>';
+    else if(vdata.st==='dat') h+='<div class="err">dat落ちしています。\nこのスレッドはすでに落ちました。</div>';
+    else if(vdata.first) h+=['伝説の鮫島スレについて語ろう','>>1 で、何の話？','>>2 さあ。知ってるふりして乗っとけ（ｗ','>>3 あー、あれね。知ってる知ってる。でも言えないなあ…','>>4 それそれ、その感じ。「その話はやめろ」って言っとけば雰囲気出る','>>5 なんか本当にありそうでワロタ'].map((t,i)=>`<dl class="res"><dt><span class="no">${i+1}</span> ：<b class="nm">名無しさん＠ななし中。</b> ：2001/06/09(土) 02:1${i}:4${i} ID:${mkId()}</dt><dd>${esc(t).replace(/(&gt;&gt;\d+)/g,'<span class="anc">$1</span>')}</dd></dl>`).join('');
+    else (vdata.body||[]).forEach((b,i)=>{ h+=`<dl class="res"><dt><span class="no">${i+1}</span> ：<b class="nm">名無しさん＠ななし中。</b></dt><dd>${esc(b[0]).replace(/(&gt;&gt;\d+)/g,'<span class="anc">$1</span>')}</dd></dl>`; });
+    h+='</div>';
+    if(vdata.first) h+='<div class="note">本文は、タイトルだけだった。\n事件の中身は、最初から何もなかった――。</div>';
+    if(lastGain) h+=`<div class="gain">📎 ${esc(lastGain)}</div>`;
+  } else if(vmode==='kote'){
+    const k=vdata.kote;
+    h=`<div class="doc"><h3>${esc(k.nm)}に話しかけた</h3>`+vdata.lines.map(l=>l[0]==='sys'?`<div class="sysline">${esc(l[1])}</div>`:`<div class="kdlg ${l[0]==='you'?'you':''}"><b>${l[0]==='you'?'あなた':esc(k.nm)}</b>：${br(l[1])}</div>`).join('')+'</div>';
+    if(lastGain) h+=`<div class="gain">📎 ${esc(lastGain)}</div>`;
+  } else if(vmode==='board'){
+    h=`<div class="sysline">カードを2枚タップすると線でつなげます（もう一度で消えます）。\n「だれの話か」と「その出典の人」をつなごう。つないだら「結論を出す」で行動1回。</div>`;
+    if(boardNote) h+=`<div class="note">${br(boardNote)}</div>`;
+    if(!G.order.length) h+='<div class="note">証言カードがまだありません。コテハンに聞いたり、過去ログを読んだりして集めよう。</div>';
+    else h+='<div class="board" id="board"><svg id="lines"></svg>'+G.order.map(id=>{
+      const c=CARDS[id];
+      return `<div class="cardx${boardSel===id?' sel':''}${c.key?' key':''}" data-c="${id}"><div class="w">${esc(c.who)}</div><div class="c">${esc(c.claim)}</div><div class="s">出典：${esc(c.src)}</div></div>`;
+    }).join('')+'</div>';
+  } else if(vmode==='memo'){
+    h='<div class="doc"><h3>📝 メモ（これまでのヒント）</h3>';
+    h+=G.memo.length?G.memo.map(m=>`<div class="kdlg">・${esc(m)}</div>`).join(''):'<div class="sysline">まだヒントはない。スレに書き込むと、たまに役立つレスがつく。</div>';
+    h+='</div><div class="doc"><h3>わかっていること</h3>'
+     +`<div class="kdlg">・証言カード：${G.order.length}枚</div>`
+     +`<div class="kdlg">・出典の循環：${G.cycleFound?'見つけた':'まだ'}</div>`
+     +`<div class="kdlg">・日付の手がかり：${G.keys.date?'ある':'まだ'}　スレタイ：${G.keys.title?'わかった':'まだ'}</div></div>`;
+  }
+  v.innerHTML=h;
+  if(vmode==='board') drawLines();
+  if(bottom&&vmode==='thread') v.scrollTop=v.scrollHeight; else if(bottom) v.scrollTop=0;
+}
+function drawLines(){
+  const b=$('#board'), s=$('#lines'); if(!b||!s) return;
+  s.setAttribute('width',b.offsetWidth); s.setAttribute('height',b.offsetHeight);
+  let h='';
+  const ctr=id=>{ const e=b.querySelector('[data-c="'+id+'"]'); return e?[e.offsetLeft+e.offsetWidth/2,e.offsetTop+e.offsetHeight/2]:null; };
+  G.links.forEach(l=>{ const a=ctr(l[0]), c=ctr(l[1]); if(a&&c) h+=`<line x1="${a[0]}" y1="${a[1]}" x2="${c[0]}" y2="${c[1]}" stroke="#c00" stroke-width="3" stroke-linecap="round"/><circle cx="${a[0]}" cy="${a[1]}" r="4" fill="#c00"/><circle cx="${c[0]}" cy="${c[1]}" r="4" fill="#c00"/>`; });
+  s.innerHTML=h;
+}
+function renderPanel(){
+  if(!G||scr==='title') return;
+  const p=$('#panel'), bz=busy(); let h='';
+  const dis=bz?' disabled':'';
+  if(pmode==='menu'){
+    h=`<div class="pbtns">
+    <button class="pbtn" data-a="m:post"${dis}>✏️<br>${G.thread?'書き込む':'スレを立てる'}</button>
+    <button class="pbtn" data-a="m:log"${dis}>📂<br>過去ログ</button>
+    <button class="pbtn" data-a="m:kote"${dis}>👤<br>コテハン</button>
+    <button class="pbtn" data-a="m:board"${dis}>📌<br>まとめる</button></div>
+    <div class="pbtns two"><button class="pbtn" data-a="m:memo">📝 メモ・カード</button><button class="pbtn" data-a="m:sleep"${dis}>💤 今日はもう寝る</button></div>`;
+  } else if(pmode==='post'){
+    const pre=G.depth>=20?'<b>その話はやめろ</b>':'<span>（書き込む内容をえらぼう）</span>';
+    h=`<div class="fakein">${pre}</div><div class="plist">`+POSTS.map(o=>{
+      const off=bz||(o.needCard&&!G.order.some(c=>CARDS[c]));
+      const sub=o.needCard?'証言カードを見せる':o.rom?'しばらくROMる':o.text;
+      return `<button class="pbtn wide" data-a="p:${o.id}"${off?' disabled':''}>${o.ic} <b>${o.label}</b><small>${esc(sub)}</small></button>`;
+    }).join('')+`<button class="pbtn" data-a="back">← もどる</button></div>`;
+  } else if(pmode==='log'){
+    h='<div class="phead">ログ倉庫を検索：読めるスレはどれ？</div><div class="plist">'+logList().map(l=>{
+      const st=l.seen==='ok'?'✔読んだ':l.seen?'✖読めない':'';
+      return `<button class="pbtn wide" data-a="l:${l.i}"${bz?' disabled':''}>${l.fresh?'★新着 ':''}${esc(l.t)} <small>${st}</small></button>`;
+    }).join('')+'<button class="pbtn" data-a="back">← もどる</button></div>';
+  } else if(pmode==='kote'){
+    h='<div class="phead">だれに聞く？（1人1日1回）</div><div class="plist">'+KOTE.map(k=>{
+      const done=G.kAsked[k.id];
+      return `<button class="pbtn wide" data-a="k:${k.id}"${bz||done?' disabled':''}><b>${esc(k.nm)}</b>${G.cards[k.card]?' 📎':''}<small>${esc(k.desc)}${done?'（今日は済）':''}</small></button>`;
+    }).join('')+'<button class="pbtn" data-a="back">← もどる</button></div>';
+  } else if(pmode==='board'){
+    h=`<div class="pbtns two" style="margin-top:0"><button class="pbtn" data-a="submit"${dis}>📌 結論を出す<br><small>（行動1回）</small></button><button class="pbtn" data-a="back">← とじる</button></div>`;
+  } else if(pmode==='memo'){
+    h=`<div class="pbtns two" style="margin-top:0"><button class="pbtn" data-a="m:board">📌 カードをつなぐ</button><button class="pbtn" data-a="back">← とじる</button></div>`;
+  }
+  p.innerHTML=h;
+}
+
+/* ===== 入力 ===== */
+function onPanel(a){
+  if(!G||scr!=='play') return;
+  if(a==='back'){ pmode='menu'; if(vmode==='board'||vmode==='memo') vmode='thread'; renderView(true); renderPanel(); return; }
+  if(a==='m:post'){ pmode='post'; vmode='thread'; renderView(true); renderPanel(); return; }
+  if(a==='m:log'){ pmode='log'; renderPanel(); return; }
+  if(a==='m:kote'){ pmode='kote'; renderPanel(); return; }
+  if(a==='m:board'){ pmode='board'; vmode='board'; renderView(true); renderPanel(); return; }
+  if(a==='m:memo'){ pmode='memo'; vmode='memo'; renderView(true); renderPanel(); return; }
+  if(a==='m:sleep'){ sleepDay(); return; }
+  if(a==='submit'){ boardSubmit(); return; }
+  if(a.indexOf('p:')===0) doPost(a.slice(2));
+  else if(a.indexOf('l:')===0) doLog(+a.slice(2));
+  else if(a.indexOf('k:')===0) doKote(a.slice(2));
+}
+$('#panel').addEventListener('click',e=>{ const b=e.target.closest('[data-a]'); if(b&&!b.disabled){ sfx.click(); onPanel(b.dataset.a); } });
+$('#view').addEventListener('click',e=>{
+  const c=e.target.closest('[data-c]');
+  if(c&&vmode==='board'&&G){
+    const id=c.dataset.c; sfx.click();
+    if(!boardSel) boardSel=id; else if(boardSel===id) boardSel=null; else { boardLink(boardSel,id); boardSel=null; }
+    renderView(false); return;
+  }
+  if(Q.length) flushQ();
+});
+addEventListener('resize',()=>{ if(vmode==='board') drawLines(); });
+
+/* ===== エンディング ===== */
+function endingScript(id){
+  const me=G?G.myId:'Xy7aB3kQ';
+  const R=(h,t)=>['res',h,t];
+  const SYS=t=>['sys',t];
+  switch(id){
+  case 'truth': return [
+   SYS('検索結果の一番下に、見たことのないスレがひとつ増えていた。\n「伝説の鮫島スレについて語ろう」 ― 2001/06/09 ―'),
+   R('1 名無しさん＠ななし中。','伝説の鮫島スレについて語ろう'),
+   R('2 名無しさん＠夜更かし中。','>>1 で、何の話？'),
+   R('3 名無しさん＠ネット中。','>>2 さあ。知ってるふりして乗っとけ（ｗ'),
+   R('4 名無しさん＠接続中。','あー、あれね。知ってる知ってる。でも言えないなあ…'),
+   R('5 名無しさん＠ななし中。','>>4 それそれ、その感じ。「その話はやめろ」って言っとけば雰囲気出る'),
+   SYS('事件は、最初からどこにもなかった。\n中身のない「お約束」に、みんなが少しずつ尾ひれをつけた。\n公安も、島も、消えたスレも。出典をたどれば、ぐるりと元に戻ってくるだけ。'),
+   SYS('―― 数日後 ――'),
+   R('1000 名無しさん＠新参 ID:newbie01','鮫島事件って何？'),
+   R('1001 名無しさん＠ななし中。 ID:'+me,'…その話はやめろ'),
+   ['big','TRUE END　真相エンド'],['sub','「お約束」は、こうして次の新参に引き継がれていく。']];
+  case 'teller': return [
+   SYS('あなたは、それっぽい話を書いた。\n島。公安。消されたスレ。'),
+   R('21 名無しさん＠ななし中。','…それ、俺も聞いたことある'),
+   R('22 名無しさん＠夜更かし中。','保存した'),
+   R('23 名無しさん＠ネット中。','>>21 ソースは？'),
+   R('24 名無しさん＠接続中。','>>23 友達の友達から聞いた'),
+   R('25 名無しさん＠ななし中。','さっき別のスレでも見たぞ、その話'),
+   SYS('いつの間にか、あなたの書き込みが「出典」として引用されている。\n伝説は、あなたの手を離れて育っていく。'),
+   ['big','語り部エンド'],['sub','出典をたどると、いちばん最初にあなたがいる。']];
+  case 'deep': return [
+   SYS('画面の端が、少しずつ欠けていく。'),
+   ['glitch','文字が、だんだん読めなくなっていく。'],
+   ['glitch','その話はやめろ　その話はやめろ　その話はやめろ'],
+   SYS('回線の切れる音がした。'),
+   ['glitch','縺昴�隧ｱ縺ｯ繧�ａ繧'],
+   SYS('名前欄に、自分のIDを入れようとした。'),
+   ['errb','ERROR：このIDは存在しません。\nID:'+me],
+   ['big','深入りエンド'],['sub','調べすぎた名無しは、いつの間にかログから消えていた。']];
+  case 'rom': return [
+   SYS('怖くなって、ブラウザを閉じた。'),
+   R('(ROM中)','…'),
+   SYS('半年後。\nそのスレは、dat落ちしていた。\n結局なにも分からなかったけれど、夜はまた静かになった。'),
+   ['big','ROMエンド'],['sub','半年ROMれ。それが一番かしこい。']];
+  case 'ban': return [
+   SYS('書き込みボタンを押した。'),
+   ['errb','ERROR：書き込みできません。\nあなたのホストはアクセス禁止にされています。'],
+   SYS('住人たちは、もう誰もあなたに返信しない。\nスレの流れは、あなたを置いて進んでいく。'),
+   ['big','アク禁エンド'],['sub','煽りすぎには、ご注意を。']];
+  case 'timeup': return [
+   SYS('7日が過ぎた。\n結局、鮫島事件が何なのかは分からなかった。'),
+   SYS('でも、次の新参に聞かれたら、きっとこう答えるだろう。'),
+   R('1 名無しさん＠ななし中。 ID:'+me,'ググれ'),
+   ['big','時間切れエンド'],['sub','調べ方を変えれば、見えてくるものがあるかもしれない。']];
+  case 'grad': return [
+   SYS('礼儀正しい書き込みを重ねたあなたに、住人たちは名前をくれた。'),
+   R('88 ◆しらたま','◆あなた　ようこそ、こっち側へ'),
+   SYS('でも、鮫島事件の中身は、結局だれも教えてくれなかった。'),
+   SYS('―― 数日後 ――'),
+   R('1000 名無しさん＠新参 ID:newbie02','鮫島事件って何？'),
+   R('1001 ◆あなた','半年ROMれ'),
+   ['big','新参卒業エンド'],['sub','あなたは、教える側になった。']];
+  }
+  return [];
+}
+function showEnding(id){
+  scr='ending'; endId=id; droneStop(); sfx.end();
+  SV.end[id]=(SV.end[id]||0)+1; SV.runs=(SV.runs||0)+1;
+  if(id==='truth'){ const d=G.truthDay||G.day; if(!SV.bestTruth||d<SV.bestTruth) SV.bestTruth=d; }
+  save();
+  endLines=endingScript(id); endIdx=0; endT=0;
+  const s=$('#scr'); s.hidden=false; s.className=id==='deep'?'melt':'';
+  $('#scrIn').innerHTML='<div class="elines" id="elines"></div>';
+  $('#scrIn').scrollTop=0;
+  renderMeters();
+  if(auto){ while(endIdx<endLines.length) addEndLine(true); showResult(); }
+}
+function addEndLine(quiet){
+  const l=endLines[endIdx++]; if(!l) return;
+  const el=$('#elines'); let h='';
+  if(l[0]==='res') h=`<div class="res"><div class="h">${esc(l[1])}</div>${br(l[2])}</div>`;
+  else if(l[0]==='sys') h=`<div class="sys">${br(l[1])}</div>`;
+  else if(l[0]==='glitch') h=`<div class="sys">${esc(l[1])}</div>`;
+  else if(l[0]==='errb') h=`<div class="errb">${br(l[1])}</div>`;
+  else if(l[0]==='big') h=`<div class="big">${esc(l[1])}</div>`;
+  else if(l[0]==='sub') h=`<div class="sub">${esc(l[1])}</div>`;
+  el.insertAdjacentHTML('beforeend',h);
+  if(!quiet&&l[0]!=='big'&&l[0]!=='sub') sfx.type();
+  if(endId==='deep'){ const s=$('#scr'); if(endIdx>=3) s.classList.add('m2'); if(endIdx>=6) s.classList.add('m3'); }
+  $('#scrIn').scrollTop=$('#scrIn').scrollHeight;
+}
+function endListHTML(){
+  return '<div class="endlist">'+END_ORDER.map(k=>SV.end[k]?`<div class="ok">✔ ${ENDS[k].n}</div>`:`<div class="no">？？？エンド</div>`).join('')+'</div>';
+}
+function recHTML(){
+  const n=END_ORDER.filter(k=>SV.end[k]).length;
+  return `<div class="rec">エンディング回収：<b>${n}/${END_ORDER.length}</b>　真相エンド最短：<b>${SV.bestTruth?SV.bestTruth+'日目':'―'}</b></div>`;
+}
+function showResult(){
+  scr='result';
+  const e=ENDS[endId];
+  $('#elines').insertAdjacentHTML('afterend',`<div class="win" style="margin-top:14px"><div class="tb">結果</div><div class="bd">
+   <div class="bigt" style="font-size:17px">${esc(e.n)}『${esc(e.sub)}』</div>
+   <div class="rec">${endId==='truth'?'真相にたどりついた日：'+(G.truthDay||G.day)+'日目　':''}行動した回数：${G.totalActs}回</div>
+   ${endListHTML()}${recHTML()}
+   <button class="bigbtn" id="again">もういちど調べる</button>
+   <a class="bigbtn" style="text-align:center;text-decoration:none;color:#000" href="../">← ゲーム一覧にもどる</a></div></div>`);
+  $('#again').addEventListener('click',()=>startRun());
+  $('#scrIn').scrollTop=$('#scrIn').scrollHeight;
+}
+
+/* ===== タイトル ===== */
+function showTitle(){
+  scr='title'; droneStop();
+  const s=$('#scr'); s.hidden=false; s.className='title';
+  $('#scrIn').innerHTML=`<div class="win"><div class="tb">ななしちゃんねる ― ブラウザ</div><div class="bd">
+  <div class="aa" aria-hidden="true">          /\\
+         /  \\       ＿＿
+ ~~~~~~~/~~~~\\~~~~~/　　＼~~~~
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      (　´_ゝ｀)　…その話はやめろ</div>
+  <div class="bigt">その話はやめろ<br>―鮫島事件―</div>
+  <div class="sysline" style="color:#222">2001年ごろの、匿名掲示板。<br>どのスレにも「伝説の鮫島スレ」の名前が出てくる。みんな知ってるふりをして、だれも中身を語らない。<br><br>新参のあなたは、気になって眠れない。<b>7日間</b>（1日3回の行動）で、鮫島事件の正体を調べよう。</div>
+  <button class="bigbtn" id="startBtn">📞 ダイヤルアップで接続する</button>
+  ${endListHTML()}${recHTML()}
+  <details style="font-size:12px;margin-top:6px"><summary>あそびかた</summary>
+  <div class="sysline">・1日3回、行動を選ぶ：✏️書き込む／📂過去ログ／👤コテハン／📌まとめる\n・住人の「信用」が高いと、コテハンは口が軽くなる。煽ると下がる\n・調べるほど「深入り」が上がる。上がりすぎると…\n・証言カードの「出典」を線でつなぐと、見えてくるものがある\n・🤖オート（Oキー）で、真相までの最短手順を見られる</div></details>
+  <div class="sysline" style="font-size:11px;color:#444;margin-top:8px">※この物語はフィクションです。「ななしちゃんねる」は架空の掲示板で、実在の人物・団体・作品とは関係ありません。</div>
+  </div></div>`;
+  $('#startBtn').addEventListener('click',()=>startRun());
+  $('#scrIn').scrollTop=0;
+  $('#autolbl').hidden=true;
+}
+function startRun(){
+  newRun(); scr='play'; endId=null;
+  $('#scr').hidden=true;
+  if(auto) A.target=autoTarget();
+  if(!auto){ ovT=1.7; $('#ov').hidden=false; $('#ov').textContent='ダイヤルアップ接続中…\n\nピー ヒョロロロ ガーーー\n\n接続しました（33600bps）'; }
+  sfx.dial(); droneStart(); droneUpdate();
+  G.posts.push({sys:'―― ななしちゃんねる 雑談板 に接続しました ――'});
+  renderAll();
+}
+
+/* ===== オート ===== */
+function autoTarget(){ for(const e of END_ORDER) if(!SV.end[e]) return e; return 'truth'; }
+function autoLink(){
+  G.links=G.links.filter(l=>EDGES.some(e=>(e[0]===l[0]&&e[1]===l[1])||(e[0]===l[1]&&e[1]===l[0])));
+  EDGES.forEach(e=>{ if(!hasLink(e[0],e[1])) boardLink(e[0],e[1]); });
+}
+function planTruth(){
+  const ks=[KOTE[1],KOTE[0],KOTE[2],KOTE[3]];
+  const need=ks.filter(k=>!G.cards[k.card]);
+  const maxThr=need.reduce((m,k)=>Math.max(m,k.thr),0);
+  if(G.trust<maxThr) return doPost('polite');
+  for(const k of ks) if(!G.cards[k.card]&&!G.kAsked[k.id]) return doKote(k.id);
+  if(!G.keys.date) return doLog(4);
+  if(!G.cycleFound){ autoLink(); vmode='board'; return boardSubmit(); }
+  return doLog(FIRST_IDX);
+}
+function autoAct(){
+  const t=A.target;
+  if(t==='truth') return planTruth();
+  if(t==='teller') return doPost('sousaku');
+  if(t==='ban') return doPost('aori');
+  if(t==='deep') return doPost('tsuikyuu');
+  if(t==='grad') return doPost('polite');
+  if(t==='rom') return G.rom<3?doPost('rom'):sleepDay();
+  return sleepDay();
+}
+function autoTick(){
+  if(scr==='title'){ startRun(); return; }
+  if(scr==='ending'){ while(endIdx<endLines.length) addEndLine(true); showResult(); return; }
+  if(scr==='result'){ startRun(); return; }
+  if(!G||G.ended) return;
+  if(Q.length){ flushQ(); return; }
+  if(ovT>0){ ovT=0; $('#ov').hidden=true; checkPending(); return; }
+  if(busy()) return;
+  if(!autoAct()) sleepDay();
+}
+function setAuto(on){
+  auto=!!on;
+  const b=$('#autoBtn'); b.setAttribute('aria-pressed',String(auto));
+  A.t=0; A.wait=(scr==='result')?1.1:.3;
+  if(auto) A.target=autoTarget();
+  if(G&&scr==='play') renderMeters(); else $('#autolbl').hidden=true;
+}
+
+/* ===== ループ・イベント ===== */
+function sub(dt){
+  if(ovT>0){ ovT-=dt; if(ovT<=0){ ovT=0; $('#ov').hidden=true; checkPending(); renderPanel(); } }
+  if(scr==='play'&&G){
+    if(Q.length){ qT-=dt; if(qT<=0){ revealOne(); qT=.75; if(!Q.length){ renderPanel(); renderMeters(); checkPending(); } } }
+    $('#newres').classList.toggle('on',Q.length>0);
+    if(Q.length) $('#newres').textContent='▼ 新着レス（のこり'+Q.length+'件・タップでスキップ）';
+  }
+  if(scr==='ending'){
+    endT-=dt;
+    while(endT<=0&&endIdx<endLines.length){ addEndLine(); endT+=(endId==='deep'?1.5:1.0); }
+    if(endIdx>=endLines.length&&scr==='ending') showResult();
+  }
+  if(auto){
+    A.t+=dt;
+    const w=scr==='result'?1.1:.3;
+    if(A.t>=w){ A.t=0; autoTick(); }
+  }
+}
+function step(dt){ while(dt>0){ const d=Math.min(dt,.1); sub(d); dt-=d; } }
+let last=0;
+function frame(t){ const dt=Math.min(.1,Math.max(0,(t-last)/1000)); last=t; step(dt); requestAnimationFrame(frame); }
+
+$('#autoBtn').addEventListener('click',()=>{ setAuto(!auto); });
+$('#sndBtn').addEventListener('click',()=>{ setSnd(!SV.snd); if(SV.snd) sfx.click(); });
+addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  if(e.key==='o'||e.key==='O'){ setAuto(!auto); return; }
+  if(auto&&!['Tab','Shift','Control','Alt','Meta'].includes(e.key)) setAuto(false);
+});
+document.addEventListener('pointerdown',e=>{
+  if(!auto||!e.isTrusted) return;
+  if(e.target.closest('#autoBtn,#sndBtn,#back')) return;
+  if(e.target.closest('button,[data-c],[data-a]')) setAuto(false);
+},true);
+document.addEventListener('visibilitychange',()=>{ last=performance.now(); });
+
+window.__samejima={
+  state(){ if(!G) return {scr}; return {scr,day:G.day,act:G.act,depth:G.depth,trust:G.trust,ban:G.ban,legend:G.legend,rom:G.rom,thread:G.thread,cards:Object.keys(G.cards),keys:Object.assign({},G.keys),links:G.links.map(l=>l.slice()),cycleFound:G.cycleFound,firstRead:G.firstRead,kAsked:Object.assign({},G.kAsked),memo:G.memo.slice(),logSeen:Object.assign({},G.logSeen),pendingEnd:G.pendingEnd,ended:G.ended,endId,totalActs:G.totalActs,truthDay:G.truthDay,busy:busy(),auto,target:A.target,vmode,pmode,logs:logList()}; },
+  save(){ return JSON.parse(JSON.stringify(SV)); },
+  resetSave(){ SV={end:{},bestTruth:0,snd:SV.snd,runs:0}; save(); },
+  seed(n){ seed=n>>>0; },
+  step, setAuto, setSnd, start:startRun, title:showTitle, flush:flushQ,
+  post:doPost, log:doLog, kote:doKote, link:boardLink, submit:boardSubmit, sleep:sleepDay,
+  setStat(o){ if(!G) return; Object.assign(G,o); afterAction(); },
+  END_ORDER, FIRST_IDX, POSTS:POSTS.map(p=>p.id), KOTE:KOTE.map(k=>({id:k.id,card:k.card})), EDGES,
+  cardOf(id){ return CARDS[id]; }
+};
+
+setSnd(SV.snd);
+showTitle();
+requestAnimationFrame(t=>{ last=t; requestAnimationFrame(frame); });
+})();
+</script>
+<!-- zoom guard: ピンチ・ダブルタップでズームしない -->
+<script>(function(){var p=function(e){e.preventDefault();};['gesturestart','gesturechange','gestureend'].forEach(function(t){document.addEventListener(t,p,{passive:false});});document.addEventListener('touchmove',function(e){if(e.touches&&e.touches.length>1)e.preventDefault();},{passive:false});document.addEventListener('dblclick',function(e){var t=e.target;if(t&&t.closest&&t.closest('input,textarea,select,[contenteditable]'))return;e.preventDefault();},{passive:false});})();</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>
