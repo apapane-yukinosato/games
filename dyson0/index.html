@@ -24,7 +24,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .mini{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--card);cursor:pointer;white-space:nowrap}
 .mini[aria-pressed=true]{background:var(--red);border-color:var(--red)}
 #wrap{position:relative;border-radius:14px;overflow:hidden;background:#000}
-#cv{display:block;width:100%;aspect-ratio:2/3;touch-action:none;transition:filter .9s}
+#cv{display:block;width:100%;touch-action:none;transition:filter .9s}
 #cv.flip{filter:invert(1) hue-rotate(180deg);transition:none}
 .ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,6,18,.72);padding:12px;z-index:3}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;width:100%;max-width:400px;max-height:100%;overflow:auto;text-align:center}
@@ -56,7 +56,8 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 #logList{font-size:12px;line-height:1.6;text-align:left;max-height:300px;overflow:auto;margin-top:6px}
 #logList p{margin:0 0 6px}#logList b{color:var(--gold)}
 .keys{font-size:11px;color:var(--mute);text-align:center;margin-top:8px}
-@media (pointer:coarse){.keys{display:none}}
+@media (pointer:coarse),(hover:none){.k-pc{display:none}}
+@media (pointer:fine) and (hover:hover){.k-sp{display:none}}
 </style>
 <link rel="apple-touch-icon" href="../icon-180.png">
 <link rel="icon" type="image/png" href="../icon-180.png">
@@ -98,7 +99,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
       </div>
     </div>
   </div>
-  <p class="keys">PC：マウスでタップ／ドラッグ（スワイプ）　Oキー オート　スペース 会話を送る</p>
+  <p class="keys"><span class="k-pc">PC：マウスでクリック／ドラッグ（スワイプ）　Oキー オート　スペース 会話を送る</span><span class="k-sp">タップで手をはじく・スワイプで払いのける</span></p>
 </div>
 <script>
 (()=>{
@@ -107,7 +108,7 @@ const $=id=>document.getElementById(id);
 let seed=(Date.now()%2147483646)+1; const rnd=()=>{ seed=seed*16807%2147483647; return (seed-1)/2147483646; };
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const pick=a=>a[Math.floor(rnd()*a.length)];
-const W=360,H=540,CX=180,CY=300,REACH=54;
+const W=360,CX=180,REACH=54; let H=540,CY=300;
 const FONT='"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic","Noto Sans CJK JP",sans-serif';
 const F=(w,s)=>`${w} ${s}px ${FONT}`;
 const cv=$('cv'), g=cv.getContext('2d');
@@ -365,7 +366,10 @@ function person(x,y,s,o,mood){
 
 /* backgrounds */
 function sky(a,b,h){ const gr=g.createLinearGradient(0,0,0,h); gr.addColorStop(0,a); gr.addColorStop(1,b); g.fillStyle=gr; g.fillRect(0,0,W,h); }
-function bgDraw(k,t){
+const TOPC={campus:'#BFE3F5',morning:'#FFE9A8',park:'#CDEBFA',sunset:'#FFB060',dusk:'#4A3A6A',night:'#0C0818',home:'#F6E2BC',office:'#D8DCE8',atm:'#10101A'};
+const BOTC={campus:'#78B060',morning:'#C8B090',park:'#7CC060',sunset:'#8A5A4A',dusk:'#34304A',night:'#1E1830',home:'#C99A62',office:'#8A8F9C',atm:'#10101A'};
+function bgDraw(k,t){ g.fillStyle=BOTC[k]||'#04030C'; g.fillRect(0,0,W,H); g.fillStyle=TOPC[k]||'#04030C'; g.fillRect(0,0,W,H*.5); g.save(); g.translate(0,Math.round((H-540)*.5)); bgRaw(k,t); g.restore(); }
+function bgRaw(k,t){
   t=t||0; g.fillStyle=({campus:'#78B060',morning:'#C8B090',park:'#7CC060',sunset:'#8A5A4A',dusk:'#34304A'})[k]||'#000'; g.fillRect(0,0,W,H);
   if(k==='home'){ g.fillStyle='#F6E2BC'; g.fillRect(0,0,W,H); g.fillStyle='#C99A62'; g.fillRect(0,360,W,H-360); g.fillStyle='#8EC6E8'; rr(250,60,80,90,6); g.fill(); g.strokeStyle='#8A5A2A'; g.lineWidth=4; g.stroke(); g.beginPath(); g.moveTo(290,60); g.lineTo(290,150); g.moveTo(250,105); g.lineTo(330,105); g.stroke(); g.fillStyle='#A8743A'; rr(30,330,120,24,6); g.fill(); }
   else if(k==='campus'){ sky('#BFE3F5','#F4F8E8',300); g.fillStyle='#D8C8A8'; g.fillRect(20,120,150,200); g.fillRect(200,160,140,160); g.fillStyle='#8EC6E8'; for(let i=0;i<3;i++) for(let j=0;j<3;j++){ g.fillRect(34+i*44,136+j*52,30,36); } g.fillStyle='#78B060'; g.fillRect(0,320,W,H-320); g.fillStyle='#4A8A3A'; g.beginPath(); g.arc(310,290,34,0,7); g.fill(); }
@@ -400,13 +404,15 @@ function propDraw(p,age,mage,t,ln){
 /* talk scene */
 function drawTalk(){
   const T=G.talk, sc=T.sc, ln=sc.lines[T.i]; bgDraw(sc.bg,G.clock);
-  if(T.prop) propDraw(T.prop,sc.age,sc.mage,G.clock,ln);
+  const dH=H-540; if(T.prop){ g.save(); g.translate(0,Math.round(dH*.3)); propDraw(T.prop,sc.age,sc.mage,G.clock,ln); g.restore(); }
+  g.save(); g.translate(0,dH);
   const sp=ln.c, rc=T.rc;
   const dim=(a,f)=>f();
   const dOn=sp==='daison', rOn=sp!=='daison'&&sp!=='n';
   if(sp!=='voice'&&rc!=='voice'){}
   dim(dOn||sp==='n'?1:.55,()=>person(104,288,dOn||sp==='n'?1.5:1.36,personOf('daison',sc.age),dOn?ln.m||'n':'n'));
   if(rc){ if(rc==='voice'){ dim(rOn?1:.5,()=>voices(262,300,G.clock)); } else dim(rOn?1:.55,()=>person(258,288,rOn?1.5:1.36,personOf(rc,sc.mage),rOn?ln.m||'n':'n')); }
+  g.restore();
   if(T.fx>0){ g.fillStyle='rgba(255,255,255,'+Math.min(.8,T.fx*2)+')'; g.fillRect(0,0,W,H); txt('パチーン！',180,170,40,'#E0433D','800','center','#fff'); }
 }
 function voices(x,y,t){ for(let i=0;i<5;i++){ const a=t*1.2+i*1.26, rx=x+Math.cos(a)*38, ry=y+Math.sin(a*1.3)*30; g.fillStyle='#F2C23A'; g.beginPath(); g.arc(rx,ry,17,0,7); g.fill(); g.strokeStyle='#B8860B'; g.lineWidth=3; g.stroke(); txt('¥',rx,ry,16,'#8A5A00'); }
@@ -476,10 +482,10 @@ function drawPlay(){
   for(const p of G.parts){ g.globalAlpha=clamp(p.life*2,0,1); g.fillStyle='#F2C23A'; g.beginPath(); g.arc(p.x,p.y,4,0,7); g.fill(); g.globalAlpha=1; }
   for(const f of G.fx){ g.globalAlpha=clamp(f.life*2,0,1); txt(f.s,f.x,f.y,f.size,f.col,'800','center','#222'); g.globalAlpha=1; }
   hud();
-  if(G.t<1.6&&G.cardAlpha>0){ // chapter title card
+  if(G.t<1.6&&G.cardAlpha>0){ g.save(); g.translate(0,CY-300);
     const a=G.t<1.1?1:Math.max(0,1-(G.t-1.1)*2); g.globalAlpha=a; g.fillStyle='rgba(10,6,18,.82)'; g.fillRect(0,150,W,200);
     txt(G.ch===5?'最終章':'第'+G.ch+'章',CX,180,18,'#F2C23A'); txt(c.n,CX,214,34,'#fff','800','center','#000');
-    if(G.ch<5) txt(c.age+'さい',CX,248,16,'#ddd'); pair(CX,285,24,'#F2C23A'); g.globalAlpha=1; }
+    if(G.ch<5) txt(c.age+'さい',CX,248,16,'#ddd'); pair(CX,285,24,'#F2C23A'); g.globalAlpha=1; g.restore(); }
   if(G.t<6&&c.hint&&!G.rev){ const a=G.t<5?1:6-G.t; g.globalAlpha=a; g.fillStyle='rgba(10,6,18,.75)'; rr(10,H-48,W-20,38,10); g.fill(); g.font=F('800',12); wrapC(c.hint,CX,H-29,W-40,16,12,'#fff'); g.globalAlpha=1; }
   if(G.rev&&G.t<5){ g.globalAlpha=G.t<4?1:5-G.t; g.fillStyle='rgba(10,6,18,.75)'; rr(10,H-48,W-20,38,10); g.fill(); wrapC('タップ・スワイプで、のびてくる手を ぜんぶ吸い返せ！',CX,H-29,W-40,16,12,'#fff'); g.globalAlpha=1; }
   if(G.flash>0){ g.fillStyle='rgba(255,255,255,'+Math.min(.9,G.flash)+')'; g.fillRect(0,0,W,H); }
@@ -501,27 +507,27 @@ function hud(){
 const VC={1:{c1:'#1F7A5A',v:[1,5,10,50,100]},2:{}};
 function coinCol(v){ return v>=500?'#E8C040':v>=100?'#D0D4D8':v>=50?'#C8CCD0':v>=10?'#C07A3A':v>=5?'#D8B050':'#B8B8B8'; }
 function drawVend(){
-  const V=G.vend;
+  const V=G.vend, GY0=V.gy0, GY1=V.gy1, MX=88, MY=H-88;
   sky('#FF9A50','#FFD890',300); g.fillStyle='#FF6A3A'; g.beginPath(); g.arc(300,250,50,Math.PI,2*Math.PI); g.fill();
   // machine (side/front, cropped)
-  g.fillStyle='#2F6AB0'; g.fillRect(0,0,W,300); g.fillStyle='#E04A3A'; g.fillRect(0,10,W,22); txt('つめた〜い',CX,21,13,'#fff'); g.fillStyle='#1E4A80'; g.fillRect(0,288,W,12);
+  g.fillStyle='#2F6AB0'; g.fillRect(0,0,W,GY0); g.fillStyle='#E04A3A'; g.fillRect(0,10,W,22); txt('つめた〜い',CX,21,13,'#fff'); g.fillStyle='#1E4A80'; g.fillRect(0,GY0-12,W,12); if(GY0>260){ g.fillStyle='#255A9A'; rr(14,172,W-28,GY0-196,8); g.fill(); g.fillStyle='#10203A'; g.fillRect(CX-40,172+(GY0-196)/2-4,80,8); }
   for(let i=0;i<6;i++){ g.fillStyle='#FFE890'; g.fillRect(14+i*57,50,46,100); g.fillStyle=['#E04A3A','#3A8AE0','#46C07A','#F2C23A','#8A5AE0','#E08A3A'][i]; rr(22+i*57,70,30,62,6); g.fill(); }
-  g.fillStyle='#1A1428'; g.fillRect(0,300,W,110); // gap
-  g.fillStyle='#7A5238'; g.fillRect(0,410,W,H-410);
-  g.fillStyle='#5A3A28'; for(let i=0;i<14;i++) g.fillRect(i*30+((i*13)%9),420+(i*11)%100,18,3);
+  g.fillStyle='#1A1428'; g.fillRect(0,GY0,W,GY1-GY0); // gap
+  g.fillStyle='#7A5238'; g.fillRect(0,GY1,W,H-GY1);
+  g.fillStyle='#5A3A28'; for(let i=0;i<14;i++) g.fillRect(i*30+((i*13)%9),GY1+10+(i*11)%Math.max(20,H-GY1-20),18,3);
   // items
   for(const it of V.items){ if(it.got) continue; const d=Math.hypot(it.x-V.lx,it.y-V.ly); let a=clamp((V.R+16-d)/22,0,1);
     const tw=it.kind==='coin'?.25*Math.max(0,Math.sin(G.clock*4+it.x)):0; if(a<=0&&tw<=0) continue;
     g.globalAlpha=Math.max(a,tw); drawItem(it); g.globalAlpha=1; }
   // light
   g.save(); g.globalCompositeOperation='lighter'; const gr=g.createRadialGradient(V.lx,V.ly,4,V.lx,V.ly,V.R); gr.addColorStop(0,'rgba(255,240,170,.75)'); gr.addColorStop(1,'rgba(255,220,120,0)'); g.fillStyle=gr; g.beginPath(); g.arc(V.lx,V.ly,V.R,0,7); g.fill();
-  const bm=g.createLinearGradient(86,452,V.lx,V.ly); bm.addColorStop(0,'rgba(255,240,170,.35)'); bm.addColorStop(1,'rgba(255,240,170,.05)'); g.fillStyle=bm; g.beginPath(); g.moveTo(86,452); g.lineTo(V.lx-V.R*.6,V.ly+V.R*.6); g.lineTo(V.lx+V.R*.6,V.ly-V.R*.6); g.closePath(); g.fill(); g.restore();
+  const bm=g.createLinearGradient(MX-2,MY,V.lx,V.ly); bm.addColorStop(0,'rgba(255,240,170,.35)'); bm.addColorStop(1,'rgba(255,240,170,.05)'); g.fillStyle=bm; g.beginPath(); g.moveTo(MX-2,MY); g.lineTo(V.lx-V.R*.6,V.ly+V.R*.6); g.lineTo(V.lx+V.R*.6,V.ly-V.R*.6); g.closePath(); g.fill(); g.restore();
   // reaching hands
   for(const hd of V.hands){ const p=hd.t<.12?hd.t/.12:Math.max(0,1-(hd.t-.12)/.15); const hy=H+30-(H+30-hd.y)*p; g.fillStyle='#F2C8A0'; g.strokeStyle='#8A5A3A'; g.lineWidth=2; g.fillRect(hd.x-9,hy,18,H-hy); g.beginPath(); g.arc(hd.x,hy,13,0,7); g.fill(); g.stroke(); }
   // mai
-  const o=personOf('mai',G.vendLv===1?5:15); g.save(); g.globalAlpha=1; person(52,496,.62,{...o,skin:'#3A2A40',hair:'#1A1020',cloth:'#2A2038'},'n'); g.restore();
-  g.fillStyle='#FFE890'; g.beginPath(); g.arc(88,452,6,0,7); g.fill();
-  if(V.say>0){ const bx=96,by=470; g.fillStyle='#fff'; rr(bx,by,110,28,12); g.fill(); txt(V.msg,bx+55,by+14,13,'#C02A60'); }
+  const o=personOf('mai',G.vendLv===1?5:15); g.save(); g.globalAlpha=1; person(52,H-44,.62,{...o,skin:'#3A2A40',hair:'#1A1020',cloth:'#2A2038'},'n'); g.restore();
+  g.fillStyle='#FFE890'; g.beginPath(); g.arc(MX,MY,6,0,7); g.fill();
+  if(V.say>0){ const bx=96,by=H-70; g.fillStyle='#fff'; rr(bx,by,110,28,12); g.fill(); txt(V.msg,bx+55,by+14,13,'#C02A60'); }
   for(const f of G.fx){ g.globalAlpha=clamp(f.life*2,0,1); txt(f.s,f.x,f.y,f.size,f.col,'800','center','#222'); g.globalAlpha=1; }
   // hud
   g.fillStyle='rgba(20,14,30,.78)'; g.fillRect(0,0,W,52);
@@ -540,46 +546,47 @@ function drawItem(it){
 }
 
 /* ================= infinite loop (Droste) ================= */
-function room(d){
+function room(d){ const RH=400*Math.min(1.5,Math.max(1,H/540)), t0=-RH/2;
   const pal=['#3A2A5A','#5A2A3A','#2A4A5A','#4A4A2A','#2A3A6A','#5A3A2A','#3A5A4A','#4A2A5A'][((d%8)+8)%8];
-  g.fillStyle=pal; rr(-150,-200,300,400,26); g.fill(); g.strokeStyle='#F2C23A'; g.lineWidth=4; g.stroke();
-  g.fillStyle='rgba(255,255,255,.08)'; g.fillRect(-150,120,300,80);
+  g.fillStyle=pal; rr(-150,t0,300,RH,26); g.fill(); g.strokeStyle='#F2C23A'; g.lineWidth=4; g.stroke();
+  g.fillStyle='rgba(255,255,255,.08)'; g.fillRect(-150,t0+RH-80,300,80);
   // future dyson (cape) hands power to dyson
-  person(-102,110,.5,personOf('future',38),'n'); person(102,110,.5,personOf('daison',38),'shock');
-  g.fillStyle='rgba(255,230,120,.8)'; g.beginPath(); g.arc(0,140,7,0,7); g.fill();
-  g.strokeStyle='rgba(255,230,120,.8)'; g.lineWidth=3; g.beginPath(); g.moveTo(-80,140); g.lineTo(80,140); g.stroke();
+  const py=t0+RH-90; person(-102,py,.5,personOf('future',38),'n'); person(102,py,.5,personOf('daison',38),'shock');
+  g.fillStyle='rgba(255,230,120,.8)'; g.beginPath(); g.arc(0,py+30,7,0,7); g.fill();
+  g.strokeStyle='rgba(255,230,120,.8)'; g.lineWidth=3; g.beginPath(); g.moveTo(-80,py+30); g.lineTo(80,py+30); g.stroke();
 }
 function drawLoop(){
   const t=G.loopT, ratio=.42, z=(t*.22)%1, sc=Math.pow(1/ratio,z);
   g.fillStyle='#08060F'; g.fillRect(0,0,W,H);
   const ph=clamp((t-2.5)/4.5,0,1), phi=ph*ph*(3-2*ph)*.55;
-  g.save(); g.translate(CX,CY-20); g.scale(sc*.9,sc*.9); g.rotate(z*phi);
+  g.save(); g.translate(CX,H/2-10); g.scale(sc*.9,sc*.9); g.rotate(z*phi);
   // draw from the biggest level inward
   g.scale(1/ratio,1/ratio); g.rotate(-phi);
   for(let k=0;k<10;k++){ room(k-1); g.scale(ratio,ratio); g.rotate(phi); }
   g.restore();
   // swirl on top, grows near the end
-  const va=clamp((t-4.5)/2.5,0,1); if(va>0){ g.globalAlpha=va*.8; vortex(CX,CY-20,230,t*.9,'#F2C23A'); g.globalAlpha=1; }
+  const va=clamp((t-4.5)/2.5,0,1); if(va>0){ g.globalAlpha=va*.8; vortex(CX,H/2-10,Math.max(230,H*.45),t*.9,'#F2C23A'); g.globalAlpha=1; }
   // repeating questions
   let tt=.6, iv=1.3, i=0; const lines=[];
   while(tt<t&&i<40){ lines.push([tt,i]); tt+=iv; iv=Math.max(.12,iv*.82); i++; }
   for(const [ts,k] of lines){ const age=t-ts; if(age>1.6) continue; const size=Math.max(10,22-k*.9), a=Math.min(1,age*4)*Math.max(0,1-age/1.6);
-    const px=CX+Math.sin(k*2.3)*(80+k*2), py=110+((k*97)%330); g.globalAlpha=a; txt('そのダイソンは、誰から？',px,py,size,'#fff','800','center','#000'); g.globalAlpha=1; }
+    const px=CX+Math.sin(k*2.3)*(80+k*2), py=110+((k*97)%(H-210)); g.globalAlpha=a; txt('そのダイソンは、誰から？',px,py,size,'#fff','800','center','#000'); g.globalAlpha=1; }
   txt('じゃあ…あの異世界の俺は、誰から力をもらった？',CX,74,12,'#bbb');
-  if(t>6){ g.globalAlpha=clamp((t-6)/1.2,0,1); txt('0',CX,CY-20,120,'#F2C23A','800','center','#000'); g.globalAlpha=1; }
+  if(t>6){ g.globalAlpha=clamp((t-6)/1.2,0,1); txt('0',CX,H/2-10,120,'#F2C23A','800','center','#000'); g.globalAlpha=1; }
 }
 
 /* ================= logo ================= */
 function drawLogo(){
   g.fillStyle='#08060F'; g.fillRect(0,0,W,H); const t=G.clock;
   for(let i=0;i<50;i++){ g.fillStyle='rgba(255,255,255,'+(.2+.5*Math.abs(Math.sin(t*.7+i)))+')'; g.fillRect((i*83)%360,(i*127)%540,2,2); }
+  g.save(); g.translate(0,Math.round((H-540)*.45));
   g.save(); g.translate(CX,200);
   g.beginPath(); g.ellipse(0,0,78,106,0,0,7); g.clip();
   vortex(0,0,130,t*.8,'rgba(242,194,58,.85)'); g.restore();
   g.strokeStyle='#F2C23A'; g.lineWidth=16; g.beginPath(); g.ellipse(CX,200,78,106,0,0,7); g.stroke();
   g.strokeStyle='#8A5AE0'; g.lineWidth=4; g.beginPath(); g.ellipse(CX,200,92,120,0,0,7); g.stroke();
   txt('マネーダイソン0',CX,350,30,'#F2C23A','800','center','#000'); txt('〜 吸われる側の男 〜',CX,386,16,'#fff');
-  txt('吸引力のコア：無限後退',CX,420,13,'#B890FF'); pair(CX,462,18,'#F4EEE2');
+  txt('吸引力のコア：無限後退',CX,420,13,'#B890FF'); pair(CX,462,18,'#F4EEE2'); g.restore();
 }
 
 /* ================= game state & logic ================= */
@@ -629,12 +636,13 @@ function runStep(){
 /* ----- vending machine ----- */
 function startVend(lv){ G.vendLv=lv; startTalk(lv===1?'c1vi':'c2vi',()=>beginVend(lv)); }
 function beginVend(lv){
+  const gy0=300+Math.round((H-540)*.25), gy1=gy0+110+Math.round((H-540)*.45), R=62+Math.max(0,Math.round((H-540)*.05));
   const items=[]; const nCoin=lv===1?13:9, vals=[1,1,5,5,10,10,10,50,50,100,100]; let big=false;
-  const place=(kind,v)=>{ for(let k=0;k<60;k++){ const x=26+rnd()*308, y=335+rnd()*58; if(items.every(o=>Math.hypot(o.x-x,o.y-y)>34)){ const it={x,y,kind,v:v||0}; if(kind==='bug'){ it.vx=(rnd()<.5?-1:1)*(14+rnd()*14); } items.push(it); return; } } };
+  const place=(kind,v)=>{ for(let k=0;k<60;k++){ const x=26+rnd()*308, y=gy0+35+rnd()*(gy1-gy0-52); if(items.every(o=>Math.hypot(o.x-x,o.y-y)>34)){ const it={x,y,kind,v:v||0}; if(kind==='bug'){ it.vx=(rnd()<.5?-1:1)*(14+rnd()*14); } items.push(it); return; } } };
   for(let i=0;i<nCoin;i++){ let v=pick(vals); if(!big&&rnd()<.12){ v=500; big=true; } place('coin',v); }
   ['gum','button','cap','gum'].slice(0,lv===1?4:3).forEach(k=>place(k));
   for(let i=0;i<3;i++) place('bug');
-  G.vend={t:0,T:lv===1?20:12,total:0,items,lx:CX,ly:365,tx:CX,ty:365,R:62,hands:[],say:0,msg:'',cd:0,endT:0,lv};
+  G.vend={t:0,T:lv===1?20:12,total:0,items,gy0,gy1,lx:CX,ly:(gy0+gy1)/2,tx:CX,ty:(gy0+gy1)/2,R,hands:[],say:0,msg:'',cd:0,endT:0,lv};
   setMode('vend');
 }
 function vendCollect(it){
@@ -651,7 +659,7 @@ function updateVend(dt){
   const botOn=G.auto||G.bot;
   if(botOn){ // TAS: shortest route, grab every coin, never touch bugs
     V.cd-=dt; const left=V.items.filter(o=>!o.got&&o.kind==='coin');
-    if(left.length){ left.sort((a,b)=>Math.abs(a.x-V.lx)-Math.abs(b.x-V.lx)); const it=left[0]; V.tx=it.x; V.ty=clamp(it.y,330,395);
+    if(left.length){ left.sort((a,b)=>Math.abs(a.x-V.lx)-Math.abs(b.x-V.lx)); const it=left[0]; V.tx=it.x; V.ty=clamp(it.y,V.gy0+30,V.gy1-15);
       const sp=G.auto?2400:600; const dx=V.tx-V.lx, dy=V.ty-V.ly, d=Math.hypot(dx,dy); if(d>1){ const m=Math.min(d,sp*dt); V.lx+=dx/d*m; V.ly+=dy/d*m; }
       if(Math.hypot(it.x-V.lx,it.y-V.ly)<10&&V.cd<=0){ vendCollect(it); V.cd=G.auto?.1:.25; } }
   } else { V.lx+=(V.tx-V.lx)*Math.min(1,dt*14); V.ly+=(V.ty-V.ly)*Math.min(1,dt*14); }
@@ -864,7 +872,7 @@ cv.addEventListener('pointerdown',e=>{
   ac(); const p=pt(e); if(G.auto&&G.mode!=='title') setAuto(false);
   if(G.mode==='talk'){ talkNext(); return; }
   if(G.mode==='loop'){ endLoop(); return; }
-  if(G.mode==='vend'){ const V=G.vend; V.tx=p.x; V.ty=clamp(p.y,330,398); if(!V.touched){ V.touched=1; } vendTap(p.x,p.y); DRAG={vend:true}; try{ cv.setPointerCapture(e.pointerId); }catch(_){} return; }
+  if(G.mode==='vend'){ const V=G.vend; V.tx=p.x; V.ty=clamp(p.y,V.gy0+30,V.gy1-12); if(!V.touched){ V.touched=1; } vendTap(p.x,p.y); DRAG={vend:true}; try{ cv.setPointerCapture(e.pointerId); }catch(_){} return; }
   if(G.mode!=='play') return;
   const h=nearestHand(p,18); DRAG={h,x0:p.x,y0:p.y,used:false};
   try{ cv.setPointerCapture(e.pointerId); }catch(_){}
@@ -872,7 +880,7 @@ cv.addEventListener('pointerdown',e=>{
 });
 cv.addEventListener('pointermove',e=>{
   const p=pt(e);
-  if(G.mode==='vend'){ const V=G.vend; if(!G.auto){ V.tx=p.x; V.ty=clamp(p.y,330,398); } return; }
+  if(G.mode==='vend'){ const V=G.vend; if(!G.auto){ V.tx=p.x; V.ty=clamp(p.y,V.gy0+30,V.gy1-12); } return; }
   if(G.mode!=='play'||!DRAG) return;
   if(G.rev){ const h=nearestHand(p,10); if(h) actTap(h); return; }
   if(DRAG.used) return; const dx=p.x-DRAG.x0, dy=p.y-DRAG.y0; if(Math.hypot(dx,dy)<26) return;
@@ -907,6 +915,14 @@ window.__dyson0={
 };
 
 /* ----- boot ----- */
+function resize(){
+  const keys=document.querySelector('.keys'); const kh=keys&&getComputedStyle(keys).display!=='none'?keys.offsetHeight+10:0;
+  const cssW=Math.min(520,innerWidth-20), top=$('wrap').getBoundingClientRect().top+scrollY;
+  const availH=innerHeight-top-28-kh; let nh=clamp(Math.round(W*availH/cssW),480,800);
+  if(nh!==H){ H=nh; CY=Math.round(H*.555); cv.height=H; }
+  cv.style.aspectRatio=W+'/'+H;
+}
+addEventListener('resize',resize); addEventListener('orientationchange',resize); resize();
 setMute(muted); showTitle();
 let last=0; function frame(ts){ const dt=Math.min(.05,(ts-last)/1000||0); last=ts; step(dt); render(); requestAnimationFrame(frame); }
 requestAnimationFrame(frame);
