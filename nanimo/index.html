@@ -1,0 +1,1146 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="description" content="「何もしてないのに壊れた」と言い張る社員を、ログ・メール・履歴の証拠で追いつめる情シスの取調べ推理ゲーム。">
+<title>何もしてないのにパソコンが壊れた</title>
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" href="data:,">
+<style>
+html,body{touch-action:manipulation}
+:root{--bg:#161b2a;--bg2:#1e2538;--panel:#262f47;--line:#3a4663;--ink:#eef1f8;--mute:#9aa6c4;--acc:#ffcf4a;--red:#ff5a5f;--blue:#4aa3ff;--ok:#46d19a;--paper:#f4f6fa;--pink:#ff8fb1}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:#0e1220;color:var(--ink);overflow:hidden;overscroll-behavior:none}
+body{font-family:"Hiragino Sans","Yu Gothic","Meiryo",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;font-size:14px;line-height:1.45}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,a:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+#app{position:relative;height:100vh;height:100dvh;max-width:720px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg);padding-top:env(safe-area-inset-top,0px);overflow:hidden}
+#hd{flex:none;display:flex;align-items:center;gap:6px;padding:6px 8px;background:#0f1424;border-bottom:1px solid var(--line);z-index:30}
+#hd a{color:var(--acc);text-decoration:none;font-weight:800;font-size:13px;white-space:nowrap}
+#hd h1{flex:1;margin:0;text-align:center;font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini{font-size:12px;font-weight:800;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:5px 8px;white-space:nowrap;min-height:32px}
+.mini[aria-pressed=true]{background:var(--acc);color:#222;border-color:var(--acc)}
+#sndBtn[aria-pressed=false]{color:var(--mute)}
+#main{position:relative;flex:1;min-height:0}
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
+.scroll{overflow-y:auto;overscroll-behavior:contain;-webkit-user-select:text;user-select:text}
+.btn{display:block;width:100%;padding:12px 10px;border-radius:12px;background:var(--acc);color:#251c00;font-weight:900;font-size:15px;text-align:center;min-height:46px;box-shadow:0 3px 0 #b8902a}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #b8902a}
+.btn.sub{background:var(--panel);color:var(--ink);box-shadow:0 3px 0 #10162a;border:1px solid var(--line)}
+.btn.red{background:var(--red);color:#fff;box-shadow:0 3px 0 #a02a30}
+.btn:disabled{opacity:.4;box-shadow:none}
+/* title */
+#sTitle{padding:14px 14px 20px;gap:10px}
+.logo{text-align:center;padding:10px 0 2px}
+.logo small{display:block;color:var(--acc);font-weight:800;letter-spacing:.1em;font-size:12px}
+.logo h2{margin:4px 0;font-size:25px;line-height:1.25;font-weight:900}
+.logo h2 em{font-style:normal;color:var(--red)}
+.logo p{margin:2px 0 0;color:var(--mute);font-size:12px}
+.cases{display:flex;flex-direction:column;gap:8px}
+.case{display:flex;align-items:center;gap:10px;text-align:left;padding:10px 12px;border-radius:12px;background:var(--panel);border:1px solid var(--line);min-height:56px}
+.case[disabled]{opacity:.45}
+.case .no{flex:none;width:34px;height:34px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-weight:900;color:var(--acc)}
+.case b{display:block;font-size:14px}
+.case small{color:var(--mute);font-size:11px}
+.case .rk{margin-left:auto;font-size:22px;font-weight:900;color:var(--acc);min-width:28px;text-align:center}
+.case .rk.none{color:var(--mute);font-size:14px}
+.tot{text-align:center;color:var(--mute);font-size:12px}
+.how{font-size:12px;color:var(--mute);background:var(--bg2);border-radius:10px;padding:8px 10px;line-height:1.6}
+/* ticket */
+#sTicket{padding:12px;gap:10px;background:#dfe5ee;color:#18202e}
+.tk{background:#fff;border-radius:10px;border:1px solid #c3cddc;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.tk .tkbar{display:flex;align-items:center;gap:8px;background:#2d6cdf;color:#fff;padding:7px 10px;font-weight:800;font-size:13px}
+.tk .tkbar span{margin-left:auto;background:#fff;color:#c0262d;border-radius:99px;padding:1px 9px;font-size:11px}
+.tk dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:3px 10px;padding:8px 10px;font-size:12px}
+.tk dt{color:#6a768b}
+.tk dd{margin:0;font-weight:700}
+.tk h3{margin:0;padding:8px 10px 0;font-size:15px}
+.tk .body{padding:6px 10px 12px;font-size:13px;line-height:1.6;white-space:pre-wrap}
+.memo{background:#fff8c4;border:1px solid #e3d77a;border-radius:6px;padding:8px 10px;font-size:12px;color:#4a4300;line-height:1.6}
+/* inv */
+#sInv{background:linear-gradient(135deg,#1f5f9a,#2c8cc4 55%,#58b7d6);}
+#desk{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:min-content;gap:10px 4px;padding:14px 10px;align-content:start}
+.ico{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border-radius:8px;color:#fff;font-size:11px;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.6);text-align:center;line-height:1.25}
+.ico i{font-style:normal;font-size:34px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.4))}
+.ico:active{background:rgba(255,255,255,.2)}
+.ico .cnt{font-weight:400;font-size:10px;opacity:.85}
+#task{flex:none;display:flex;align-items:center;gap:6px;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));background:#1b2740;border-top:1px solid #4a5c80}
+#task .st{font-weight:900;color:#7cc6ff;padding:0 6px;font-size:13px}
+#task .grow{flex:1;font-size:11px;color:#c7d3ea;line-height:1.3}
+#task .go{width:auto;padding:8px 12px;font-size:13px;min-height:40px}
+#win{position:absolute;inset:6px 6px 58px 6px;background:#eef1f6;color:#111;border-radius:8px;border:1px solid #1a2a48;box-shadow:0 8px 24px rgba(0,0,0,.5);display:flex;flex-direction:column;overflow:hidden}
+#win .tb{flex:none;display:flex;align-items:center;gap:6px;background:linear-gradient(90deg,#1f4e9a,#3b82d6);color:#fff;padding:5px 8px;font-weight:800;font-size:13px}
+#win .tb button{margin-left:auto;background:#d9453d;border-radius:4px;color:#fff;width:34px;height:26px;font-weight:900}
+#win .tabs{flex:none;display:flex;gap:2px;padding:4px 6px 0;background:#d8dfeb}
+#win .tabs button{padding:5px 12px;border-radius:6px 6px 0 0;background:#c5cee0;font-size:12px;font-weight:700}
+#win .tabs button[aria-selected=true]{background:#eef1f6}
+#lst{flex:none;max-height:44%;overflow-y:auto;border-bottom:2px solid #b7c2d6;background:#fff}
+.row{display:flex;gap:8px;align-items:flex-start;width:100%;text-align:left;padding:7px 8px;border-bottom:1px solid #e1e6ef;font-size:12px;min-height:40px}
+.row .ri{flex:none;font-size:16px}
+.row .rt{flex:1;min-width:0}
+.row .rt b{display:block;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .rt small{color:#6a768b;font-size:11px}
+.row[aria-selected=true]{background:#cfe3ff}
+.row .got{flex:none;color:#168f5f;font-weight:900;font-size:11px}
+#det{flex:1;min-height:0;overflow-y:auto;padding:8px 10px;-webkit-user-select:text;user-select:text}
+#det .meta{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:12px;margin-bottom:6px;padding:6px 8px;background:#f3f6fb;border-radius:6px;border:1px solid #d5dce9}
+#det .meta dt{color:#6a768b}#det .meta dd{margin:0;word-break:break-all}
+#det h4{margin:2px 0 6px;font-size:14px}
+#det p{margin:0 0 5px;font-size:13px;line-height:1.55;word-break:break-word}
+#det mark{background:#ffe27a;padding:0 2px;border-radius:2px}
+#det .big{font-size:40px;text-align:center;margin:4px 0}
+#det .add{margin-top:8px}
+.empty{padding:20px;text-align:center;color:#6a768b;font-size:13px}
+/* interrogation */
+#sInt{background:radial-gradient(ellipse at 50% 0,#2a3556,var(--bg) 70%)}
+#tl{flex:none;display:flex;justify-content:center;gap:3px;padding:6px 6px 2px}
+#tl button{width:29px;height:29px;border-radius:50%;border:2px solid var(--line);background:var(--bg2);color:var(--mute);font-weight:900;font-size:12px;display:grid;place-items:center;padding:0}
+#tl button.on{background:var(--acc);border-color:var(--acc);color:#251c00}
+#tlinfo{flex:none;text-align:center;font-size:11px;color:var(--acc);min-height:17px;padding:0 8px}
+#gg{flex:none;display:grid;grid-template-columns:auto 1fr 1fr;gap:6px;align-items:center;padding:3px 10px 4px;font-size:11px}
+.hearts{font-size:15px;letter-spacing:1px;white-space:nowrap}
+.gb{display:flex;align-items:center;gap:5px}
+.gb span{white-space:nowrap;color:var(--mute);font-weight:700}
+.bar{position:relative;flex:1;height:11px;border-radius:6px;background:var(--bg);border:1px solid var(--line);overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;width:0;transition:width .3s}
+.bar u{position:absolute;top:0;bottom:0;width:2px;background:#fff;text-decoration:none;opacity:.9}
+#gS i{background:linear-gradient(90deg,#4aa3ff,#ffcf4a)}
+#gH i{background:linear-gradient(90deg,#46d19a,#ffcf4a,#ff5a5f)}
+#gH.warn{border-color:var(--red)}
+#sceneW{flex:none;position:relative;margin:0 8px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#222b45}
+#cv{display:block;width:100%;height:auto;aspect-ratio:320/176}
+#bang{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%) rotate(-6deg);font-weight:900;font-size:44px;color:#fff;-webkit-text-stroke:3px #c0262d;paint-order:stroke fill;text-shadow:3px 3px 0 #c0262d;white-space:nowrap;pointer-events:none;opacity:0}
+#bang.pop{animation:pop .7s ease-out}
+@keyframes pop{0%{opacity:1;transform:translate(-50%,-50%) rotate(-6deg) scale(.4)}20%{opacity:1;transform:translate(-50%,-50%) rotate(-6deg) scale(1.15)}70%{opacity:1;transform:translate(-50%,-50%) rotate(-6deg) scale(1)}100%{opacity:0;transform:translate(-50%,-60%) rotate(-6deg) scale(1)}}
+.shake{animation:shk .38s linear}
+@keyframes shk{0%,100%{transform:translate(0,0)}15%{transform:translate(-7px,3px)}30%{transform:translate(6px,-4px)}45%{transform:translate(-5px,-2px)}60%{transform:translate(4px,3px)}80%{transform:translate(-2px,1px)}}
+.shake-s{animation:shk2 .25s linear}
+@keyframes shk2{0%,100%{transform:translate(0,0)}25%{transform:translate(-3px,1px)}50%{transform:translate(3px,-1px)}75%{transform:translate(-1px,1px)}}
+#speech{flex:1;min-height:0;display:flex;flex-direction:column;margin:6px 8px 0;border-radius:12px;background:#f6f1e2;color:#2b2416;border:3px solid #3c3220;position:relative}
+#spName{position:absolute;left:10px;top:-11px;background:#3c3220;color:#ffe9a8;font-weight:900;font-size:12px;padding:1px 10px;border-radius:99px}
+#spBody{flex:1;min-height:0;overflow-y:auto;padding:14px 12px 4px;font-size:15px;line-height:1.55;font-weight:600}
+#spBody .me{display:block;color:#7a5a1f;font-size:12.5px;font-weight:700;margin-bottom:3px}
+#spBody .warn{display:block;color:#c0262d;font-size:12.5px;font-weight:800;margin-top:4px}
+#spBody .lie{border-bottom:3px wavy #e0353d;text-decoration:underline wavy #e0353d;text-underline-offset:4px}
+#spBody .slip{display:block;font-size:12px;color:#8a1f26;font-weight:700;margin-top:4px}
+#spNav{flex:none;display:flex;align-items:center;gap:6px;padding:3px 8px 6px;font-size:12px;color:#6a5a3a;font-weight:800}
+#spNav button{width:38px;height:30px;border-radius:8px;background:#3c3220;color:#ffe9a8;font-weight:900}
+#spNav .tag{flex:1;text-align:center}
+#spNav .lock{color:#c0262d}
+#cmds{flex:none;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+#cmds .btn{padding:10px 4px;font-size:14px;min-height:48px}
+#cmds .wide{grid-column:1/-1}
+#cmds .btn small{display:block;font-weight:700;font-size:10px;opacity:.75}
+#sheet{position:absolute;left:0;right:0;bottom:0;max-height:78%;z-index:20;background:#1b2338;border-top:2px solid var(--acc);border-radius:16px 16px 0 0;display:flex;flex-direction:column;box-shadow:0 -10px 30px rgba(0,0,0,.5)}
+#sheet .sh{flex:none;display:flex;align-items:center;padding:8px 12px;font-weight:900}
+#sheet .sh button{margin-left:auto;width:34px;height:34px;border-radius:50%;background:var(--panel)}
+#sheet .sb{flex:1;overflow-y:auto;padding:0 10px 10px;display:grid;gap:6px}
+#sheet .foot{flex:none;padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px))}
+.pc{display:flex;align-items:center;gap:10px;text-align:left;padding:9px 10px;border-radius:10px;background:var(--panel);border:2px solid var(--line);min-height:50px;width:100%}
+.pc[aria-selected=true]{border-color:var(--acc);background:#3a3a24}
+.pc .pi{flex:none;font-size:22px;width:30px;text-align:center}
+.pc b{display:block;font-size:13px}
+.pc small{color:var(--mute);font-size:11px}
+.pc[disabled]{opacity:.4}
+.pc .risk{margin-left:auto;font-size:11px;color:var(--mute);white-space:nowrap}
+/* conf */
+#sConf{padding:10px 12px;gap:8px;background:radial-gradient(ellipse at 50% 0,#3a3f2a,var(--bg) 70%)}
+#sConf h3{margin:0;text-align:center;color:var(--acc);font-size:16px}
+#cfList{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:2px}
+.cfl{background:#f6f1e2;color:#2b2416;border-radius:10px;padding:7px 10px;font-weight:600;font-size:13.5px;line-height:1.5;animation:fin .3s}
+.cfl b{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#3c3220;color:#ffe9a8;font-size:11px;margin-right:6px}
+.cfl.last{background:var(--acc);font-weight:900;font-size:15px;text-align:center}
+@keyframes fin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+#cfCvW{flex:none;border-radius:12px;overflow:hidden;border:1px solid var(--line);max-height:30%}
+#cfCvW canvas{display:block;width:100%;height:auto;aspect-ratio:320/176;max-height:100%}
+/* result */
+#sRes{padding:14px;gap:10px;overflow-y:auto}
+.rank{text-align:center}
+.rank .r{font-size:84px;line-height:1;font-weight:900;color:var(--acc);text-shadow:0 4px 0 #6b5314}
+.rank .r.C{color:#9aa6c4;text-shadow:0 4px 0 #333}
+.rank p{margin:2px 0;color:var(--mute);font-size:12px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.stats div{background:var(--panel);border-radius:10px;padding:8px 4px;text-align:center;font-size:11px;color:var(--mute)}
+.stats b{display:block;font-size:20px;color:var(--ink)}
+.tip{background:#fff8c4;color:#4a4300;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.6;border:1px solid #e3d77a}
+.tip b{display:block;margin-bottom:3px;color:#7a5a00}
+.btns{display:grid;gap:8px}
+/* over */
+#over{position:absolute;inset:0;z-index:50;background:rgba(10,12,22,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;text-align:center}
+#over h2{margin:0;font-size:26px;color:var(--red)}
+#over p{margin:0;max-width:340px;line-height:1.7}
+#over .big{font-size:64px}
+#over .btns{width:100%;max-width:340px}
+#sTitle>*,#sTicket>*,#sRes>*{flex:none}
+@media (min-width:700px){#sceneW{margin:0 24px}#speech{margin:8px 24px 0}#gg,#tl{padding-left:24px;padding-right:24px}#cmds{padding-left:24px;padding-right:24px}}
+@media (max-height:640px){#cv{aspect-ratio:320/150}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="hd">
+    <a href="../" id="back">← 一覧</a>
+    <h1>何もしてないのにパソコンが壊れた</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false" title="Oキーでも切りかえ">🤖 オート</button>
+    <button class="mini" id="sndBtn" aria-pressed="true" aria-label="音">🔊</button>
+  </header>
+  <main id="main">
+    <section class="scr scroll" id="sTitle"></section>
+    <section class="scr scroll" id="sTicket" hidden></section>
+    <section class="scr" id="sInv" hidden></section>
+    <section class="scr" id="sInt" hidden></section>
+    <section class="scr" id="sConf" hidden></section>
+    <section class="scr" id="sRes" hidden></section>
+    <div id="over" hidden></div>
+  </main>
+</div>
+<script>
+(()=>{
+'use strict';
+/* ====================== データ ====================== */
+const APPS={
+  log:{n:'イベントビューア',ic:'📋'},
+  mail:{n:'メール',ic:'✉️',tabs:{in:'受信箱',out:'送信済み'}},
+  web:{n:'ネットぶらうざ',ic:'🌐',tabs:{h:'閲覧履歴',s:'検索履歴'}},
+  dl:{n:'ダウンロード',ic:'📥'},
+  trash:{n:'ごみ箱',ic:'🗑️'},
+  soft:{n:'インストール済みソフト',ic:'💽'},
+  body:{n:'本体チェック',ic:'🔎'},
+  net:{n:'ネットワーク機器',ic:'🖧'}
+};
+const E=(id,app,tab,ic,t,tm,meta,b,d)=>({id,app,tab,ic,t,tm,meta,b,d:!!d});
+const T=(t,a)=>({s:0,t,a});
+const L=(s,t,a,p,n,c,l)=>({s,t,a,p,n:n||0,c,l});
+
+const CASES=[
+/* ---------------- 1 Excelのマクロ ---------------- */
+{id:'macro',no:2041,title:'Excelのマクロ',sub:'経理のおばちゃんが「何もしてない」',date:'10/28',
+ who:{nm:'小野寺 トシ子',role:'経理課・57歳',kind:'veteran',pc:'KEIRI-07',
+  look:{skin:'#f1c9a5',hair:'#6b6b73',style:'perm',glasses:true,cloth:'#9a6fb0'},
+  m:{kb:.8,ms:.8,desk:.3,sigh:1.3,stare:.9,boss:.5,log:1.1},cryAt:88,cry:'silent',hm:1,decay:4},
+ subj:'PCが重い。変な画面も出る。私は何もしていません',prio:'高',
+ body:'朝からパソコンが重くて、仕事になりません。\n私は何もしていません。いつも通りに使っていただけです。\n月末の締めがあるので、急ぎでお願いします。',
+ open:'あらぁ、戸締さん。来てくれたの？　ほんとに私、何もしてないのよ。',
+ ev:[
+  E('mail1','mail','in','✉️','【至急】請求書送付のお願い','10/27 08:51',[['差出人','経理課-請求 <seikyu@nanimo-shoj1.co.jp>'],['宛先','小野寺 トシ子'],['添付','請求書_至急.xlsm (28KB)']],['いつもお世話になっております。','10月分の請求書を添付いたします。**至急**ご確認ください。','※マクロを有効にしてご覧ください。'],0),
+  E('mail2','mail','in','✉️','10月分 請求書のご送付','10/27 08:40',[['差出人','星野パーツ 経理 <seikyu@hoshino-parts.co.jp>'],['添付','請求書_10月.pdf']],['いつもお世話になっております。10月分の請求書をPDFでお送りします。'],1),
+  E('mail3','mail','out','✉️','Fw: 【至急】請求書送付のお願い','10/27 08:58',[['宛先','加藤 <kato@nanimo-shoji.co.jp>'],['添付','請求書_至急.xlsm (28KB)']],['加藤さん、これ見てくれる？','私のだとうまく開かないのよ。'],0),
+  E('dl1','dl','','📄','請求書_至急.xlsm','10/27 08:52',[['サイズ','28 KB'],['場所','ダウンロード'],['入手元','メールの添付ファイル（インターネットゾーン）'],['最終アクセス','10/27 08:54']],['マクロ有効ブック（.xlsm）','インターネットから取得したため、ブロックの解除が必要な状態でした。'],0),
+  E('dl2','dl','','📄','経費精算書_10月.xlsx','10/25 17:20',[['サイズ','41 KB'],['入手元','社内共有フォルダ']],['通常のブックです。'],1),
+  E('log1','log','','📋','Excel：ファイルを開き、コンテンツを有効化','10/27 08:54',[['レベル','情報'],['ソース','Office Security'],['イベントID','1201']],['08:54　「請求書_至急.xlsm」を開きました（保護ビュー）','08:55　保護ビューを解除：ユーザー操作『編集を有効にする』','08:55　**VBAマクロの実行を許可**：ユーザー操作『コンテンツの有効化』'],0),
+  E('log2','log','','⚠️','EXCEL.EXE が PowerShell を起動／CPU 98%','10/27 08:56',[['レベル','警告'],['ソース','プロセス監視'],['イベントID','4688']],['親プロセス：EXCEL.EXE','子プロセス：powershell.exe -enc JABz…（難読化）','CPU使用率 98%、メモリ使用率 91%。以後、動作が極端に重くなっています。'],0),
+  E('log3','log','','🛡️','ガードくん：脅威を検出（Trojan:Macro/Dropper.K）','10/27 08:56',[['レベル','警告'],['ソース','ガードくん（ウイルス対策）'],['イベントID','5007']],['脅威を検出しました。ユーザーの選択：','08:56　**あとで**　08:57　**あとで**　08:59　**あとで**','09:02　**あとで**　09:05　**あとで**（計5回）'],0),
+  E('log4','log','','🛑','ガードくん：リアルタイム保護が無効にされました','10/27 09:07',[['レベル','エラー'],['ソース','ガードくん（ウイルス対策）'],['イベントID','5001']],['リアルタイム保護が**無効**にされました。','操作者：ユーザー（小野寺）'],0),
+  E('log5','log','','✅','Windoze Update：3件の更新プログラムを正常にインストール','10/26 22:10',[['レベル','情報'],['ソース','Windoze Update'],['イベントID','19']],['累積更新プログラムの適用は正常に完了しました。'],1),
+  E('web1','web','h','🌐','サインイン - Exceed365（パスワードの再入力が必要です）','10/27 09:12',[['URL','exceed365-login.nanimo-shoj1.co.jp/verify'],['フォーム','送信あり（ID・パスワード）']],['「セッションが切れました。パスワードを再入力してください」','会社のアドレスとパスワードの入力欄があり、送信されています。','（ドメインが社内のものと違います）'],0),
+  E('trash1','trash','','📄','請求書_至急.xlsm','10/27 09:20',[['元の場所','ダウンロード'],['サイズ','28 KB'],['削除日時','10/27 09:20']],['ごみ箱に入っています。誰かが捨てた形跡です。'],0)
+ ],
+ st:[
+  T('何もしてないわよぉ。いつも通り、請求書の処理をしてただけ。','朝一番にメールを見て、請求書を処理するのが私の毎日なの。ずっとそうよ。'),
+  L(1,'怪しいメールなんて開いてないわ。取引先からの、ちゃんとした請求書のメールだけ。','「ちゃんとした取引先」ね…。受信箱の中身を、見てみましょうか。',['mail1'],0,'…「至急」って書いてあったから、つい開いちゃったの。差出人のアドレスなんて、見てなかったわ。','（アドレスなんて見てない…）'),
+  L(2,'添付ファイル？保存なんてしてないわよ。見ただけ。','「見ただけ」だとファイルは残らないはず。保存先を調べてみましょう。',['dl1'],0,'…ダウンロードに保存したわ。「請求書_至急.xlsm」。保存しないと見られない気がして。','（ちゃんと保存した覚えは…）'),
+  L(3,'怪しいから、そのファイルは開かなかったわよ？','開いていないなら、Excelの記録に何も残らないはずですね。',['log1'],6,'…ごめんなさい、開いたわ。気になって、つい。','（開かなかったとは言い切れない…）'),
+  L(4,'マクロ？ボタン？そんなの押してないわ。','「押していない」ボタンの記録は、Excelの履歴に残ります。',['log1'],16,'黄色いバーの「コンテンツの有効化」を押さないと読めないって…だから、押したのよ。','（黄色いバーが…）'),
+  L(5,'重くなったのは勝手によ。私が何かしたわけじゃないわ。','パソコンが重くなる直前に、何が起きたか調べましょう。',['log2'],23,'押したらすぐ、ファンがブォーッて鳴り出して…画面もカクカクになったの。','（押したら、すぐ…）'),
+  L(6,'ウイルスの警告なんて、一度も出てないわよ？','警告が出ていたなら、ウイルス対策ソフトの記録があるはずです。',['log3'],31,'出たわ…赤い画面で。「あとで」「あとで」って、5回くらい押したかしら。','（あの赤い画面は…）'),
+  L(7,'ウイルス対策ソフトは触ってないわ。難しいもの。','ウイルス対策ソフトの設定が変わっていないか、記録を見てみましょう。',['log4'],39,'だって、うるさいんだもの！　設定を開いて、保護を「オフ」にしたのよ。','（うるさかったから…）'),
+  L(8,'パスワード？そんなの入力してないわ。入れる理由がないもの。','もしパスワードを聞かれたなら、ブラウザの履歴に残っているかも。',['web1'],47,'「パスワードを再入力してください」って出たから…会社のIDとパスワードを、入れたわ。','（再入力しろと言われたから…）'),
+  L(9,'ほかの人には何も送ってないわよ。迷惑はかけてないわ。','送信済みメールにも、何か残っていませんか？',['mail3'],52,'…隣の加藤さんに「これ見てくれる？」って、請求書を転送したのよ。','（加藤さんには…）'),
+  L(10,'ファイル？もう無いわよ。最初から無かったんじゃないかしら。','「無い」ファイルは、どこへ行ったんでしょうね。',['trash1'],57,'怖くなって…ごみ箱に捨てたの。証拠が残ると思って。','（ごみ箱には…）')
+ ],
+ labs:['怪しいメールを開いた','添付をダウンロード','ファイルを開いた','コンテンツを有効化','PCが重くなった','警告を5回無視','対策ソフトを無効化','パスワードを入力','同僚に転送','ごみ箱に隠した'],
+ tip:'メールの添付は、差出人のドメインを確認してから。黄色いバーの「コンテンツの有効化」は押さない。ウイルス対策の警告は閉じずに、すぐ情シスへ。対策ソフトを切るのは絶対にやめてください。',
+ par:16,parP:5},
+
+/* ---------------- 2 コーヒー ---------------- */
+{id:'coffee',no:2042,title:'コーヒー',sub:'営業マンの画面が映らない',date:'10/28',
+ who:{nm:'三浦 剛',role:'営業課 主任・34歳',kind:'normal',pc:'NOTE-EIGYO-11',
+  look:{skin:'#f0c8a0',hair:'#2a2a30',style:'short',glasses:false,cloth:'#4a6fa5',tie:true},
+  m:{kb:1,ms:1,desk:1.2,sigh:.9,stare:1,boss:1,log:1},cryAt:85,cry:'cry',hm:1,decay:4},
+ subj:'ノートPCの画面が映らない。何もしてない',prio:'至急',
+ body:'朝、電源を入れたら画面が真っ暗。\n昨日の夜までは普通に動いてた。マジで何もしてない。\n10時の商談までに直してほしい。',
+ open:'あ、情シスさん！　頼む、10時の商談に間に合わせて！　俺は何もしてないんだよ、ほんとに！',
+ ev:[
+  E('mail1','mail','out','✉️','生きてる','10/27 21:28',[['宛先','桐生 <kiryu@nanimo-shoji.co.jp>']],['残業中。**缶コーヒー3本目**でテンションおかしい（笑）','PCの**すぐ横に置いて**作業してる。'],0),
+  E('mail2','mail','in','✉️','【新商品のご案内】秋のフェア','10/27 17:02',[['差出人','メーカー営業 <info@kirameki-foods.co.jp>']],['秋の新商品フェアのご案内です。'],1),
+  E('body1','body','','🖐️','キーボードのベタつき','現物',[['確認','指で触る']],['キーを押すと**ベタッ**と戻りが遅い。','Eキー・Rキー周辺に、**茶色いシミ**。キーの隙間から甘いにおいがする。'],0),
+  E('body2','body','','👃','においのチェック','現物',[['確認','鼻を近づける']],['**甘ったるいコーヒーのにおい**。その奥に**焦げた樹脂のにおい**。','机の下のゴミ箱に、茶色く染まった**ティッシュの山**と空き缶。'],0),
+  E('body3','body','','🔩','裏のネジ・ゴム足','現物',[['確認','裏返して見る']],['底面のネジが1本、**ゆるんで外れかけ**。ゴム足の隙間から**茶色い液体の跡**。','底面に、**振って叩いたような擦れ跡**。'],0),
+  E('body4','body','','📝','モニターの付箋','現物',[['確認','付箋を読む']],['「商談　10:00　田代商事」','「資料のコピー　30部」'],1),
+  E('log1','log','','⌨️','キーボード：入力異常（キーが連続入力）','10/27 21:31',[['レベル','警告'],['ソース','入力デバイス'],['イベントID','411']],['21:31　内蔵キーボード：「E」「R」「T」が**連続入力**され続けています。','（物理的にキーが押されたままの状態）'],0),
+  E('log2','log','','🔄','画面の向きの変更（180°）／AC電源接続中','10/27 21:36',[['レベル','情報'],['ソース','加速度センサー'],['イベントID','8601']],['21:36　本体が**上下反転**しました（180°）。','21:36　激しい揺れを検出（複数回）。','電源状態：**電源オン**・AC接続中'],0),
+  E('log3','log','','🌡️','温度センサー：吸気口付近が高温（CPU負荷 3%）','10/27 21:44',[['レベル','警告'],['ソース','サーマル管理'],['イベントID','21']],['CPU使用率は3%と低いのに、キーボード下の吸気口付近センサーが**88℃**。','本体の外側から強い熱が当たっていた可能性があります。'],0),
+  E('log4','log','','🔌','USBキーボード接続／切断 ×6、ディスプレイ出力喪失','10/27 22:40',[['レベル','エラー'],['ソース','USB／ディスプレイドライバー'],['イベントID','10110']],['21:52〜22:30　**USBキーボードの接続・切断が6回**。','22:40　ディスプレイ出力が失われました。','22:41　**電源ボタン長押しによる強制終了**を検出。'],0),
+  E('web1','web','s','🔍','ノートPC コーヒー こぼした 乾かし方 ドライヤー','10/27 21:58',[['検索ワード','ノートPC コーヒー こぼした 乾かし方 ドライヤー']],['検索結果から開いたページ：','「ドライヤーで乾かす」「お米に埋める」「逆さにして振る」'],0),
+  E('web2','web','s','🔍','水濡れ 保証 対象外 バレる','10/28 07:55',[['検索ワード','水濡れ 保証 対象外 バレる']],['同じ時刻の検索：「ノートPC 液晶 映らない 保証 無償」'],0),
+  E('dl1','dl','','📄','修理申込書_下書き.docx','10/28 08:10',[['サイズ','22 KB'],['場所','ダウンロード']],['【故障の原因】　**不明（何もしていない）**','【状況】　朝、電源を入れたら画面が映らなかった。'],0)
+ ],
+ st:[
+  T('昨日の夜は残業で、提案書を直してただけだよ。それだけ。','定時後、フロアに誰もいなくなってからな。静かで捗ったよ。…ほんと、それだけだ。'),
+  L(1,'飲み物？机には何も置いてなかったよ。','机に何もなかった…にしては、夜の送信記録が気になりますね。',['mail1'],0,'…缶コーヒーを飲んでた。微糖。眠気覚ましに3本目だった。','（缶は…机の端に…）'),
+  L(2,'キーボードに何かこぼした？まさか。きれいなもんだよ。','キーボードを、実際に触ってみましょうか。',['body1','log1'],0,'…こぼした。肘が当たって、缶ごとドバッと。キーボードの上に。','（缶が倒れ…いや）'),
+  L(3,'拭いたりもしてないよ。こぼしてないんだから。','ごみ箱の中も確認してみましょう。',['body2'],6,'慌ててティッシュで拭いた…でも、キーの隙間から中に入っていったみたいで。','（ティッシュ…）'),
+  L(4,'ノートを振る？子供じゃないんだ、そんなことしてないって。','本体の裏側に、何か跡は残っていませんか。',['log2','body3'],18,'「逆さにすれば出る」と思って…電源を入れたまま、裏返して…振った。','（逆さにすれば…）'),
+  L(5,'ドライヤー？会社にそんなもの無いだろ。','パソコンの温度センサーは、嘘をつきませんよ。',['log3'],26,'更衣室のドライヤーを借りた…熱風を、キーボードに近距離で当てたんだ。','（更衣室から…）'),
+  L(6,'外付けキーボード？使ってないよ。内蔵で普通に打ってた。','USBの接続記録を確認してみましょう。',['log4'],34,'内蔵のキーが効かなくなって…USBキーボードを差したり抜いたり。騙しだまし使ってた。','（内蔵が効かなくなって…）'),
+  L(7,'直し方を調べた？いや、壊れてないんだから調べないって。','検索履歴は、正直ですよ。',['web1'],42,'検索したよ…「ドライヤー」「米に埋める」…ネットの裏技を、片っ端から試した。','（米…は無かったけど）'),
+  L(8,'画面は急に消えたんだ。俺はその瞬間、何も触ってない。','画面が消えた前後の記録を、見てみましょう。',['log4'],49,'画面が消えたあと、焦って電源ボタンを連打して、充電器を抜き差しして…強制終了した。','（焦って、ボタンを…）'),
+  L(9,'保証？修理？別に…壊れてないから関係ないよ。','今朝のブラウザ、何を検索していました？',['web2'],55,'「水濡れ 保証 対象外 バレる」って、検索した…水濡れは保証外だって知ってたから。','（保証のことを…）'),
+  L(10,'修理は普通に出すよ。申込書にもそのまま書くさ。「何もしてない」ってな。','その申込書、下書きがありますよね。',['dl1'],60,'…申込書に「原因：不明（何もしていない）」って書いた。ほんとはコーヒーなのに。','（申込書の原因欄は…）')
+ ],
+ labs:['コーヒーを飲んでいた','キーボードにこぼした','ティッシュで拭いた','電源オンのまま振った','ドライヤーで乾かした','USBでごまかした','裏技を検索','強制終了した','保証を検索','原因を偽って申請'],
+ tip:'飲み物はパソコンのそばに置かない。こぼしたら、すぐ電源を切ってコンセントとバッテリーを外し、乾かさずに情シスへ。ドライヤーも、振るのも逆効果です。',
+ par:14,parP:3},
+
+/* ---------------- 3 Windows Updateの強制終了 ---------------- */
+{id:'update',no:2043,title:'更新の強制終了',sub:'総務の古川さんが起動しない',date:'10/27',
+ who:{nm:'古川 ミツ',role:'総務課・45歳',kind:'normal',pc:'SOUMU-02',
+  look:{skin:'#f3d1b3',hair:'#4a3328',style:'bob',glasses:false,cloth:'#d98a6a'},
+  m:{kb:1,ms:1,desk:.9,sigh:1.5,stare:1.1,boss:1,log:1},cryAt:82,cry:'cry',hm:1,decay:4},
+ subj:'起動しない。「更新を構成しています」のまま。何もしてない',prio:'中',
+ body:'月曜の朝から、青い画面のまま進みません。\n金曜の夜は、普通に帰っただけです。何もしていません。',
+ open:'情シスさん、パソコンが…青い画面のままで…。私、ほんとに何もしてないんです！',
+ ev:[
+  E('log1','log','','🔔','Windoze Update：再起動の延期（計27回）','10/14〜10/24',[['レベル','情報'],['ソース','Windoze Update'],['イベントID','43']],['再起動が必要な更新があります。ユーザーの選択：『**後で**』','10/14〜10/24　**計27回**延期されました。'],0),
+  E('log2','log','','⏳','更新のインストール開始（更新して終了）','10/24 17:56',[['レベル','情報'],['ソース','Windoze Update'],['イベントID','19']],['17:56　ユーザー選択：『**更新してシャットダウン**』','18:01　更新プログラム構成中…**進捗 20%**で停滞'],0),
+  E('log3','log','','💥','Kernel-Power 41：予期しないシャットダウン（×3）','10/24 18:03',[['レベル','重大'],['ソース','Kernel-Power'],['イベントID','41']],['システムは、正常にシャットダウンせずに再起動されました。','**18:03　18:24　18:42**（計3回）','原因：電源ボタン長押し／電源供給の遮断'],0),
+  E('log4','log','','🛠️','自動修復：スタートアップ修復を実行（失敗 ×5）','10/27 08:12',[['レベル','エラー'],['ソース','起動修復'],['イベントID','1000']],['08:12〜08:30　自動修復が**5回**失敗。','原因：更新の途中で中断されたため、システムファイルが不整合。'],0),
+  E('log5','log','','🧰','ファームウェア設定の変更：ブート順序','10/27 08:33',[['レベル','警告'],['ソース','ファームウェア'],['イベントID','200']],['08:33　**ブートデバイスの順序が変更**されました。','変更前：SSD → USB　変更後：USB → ネットワーク → SSD','操作者：ユーザー（キーボード操作）'],0),
+  E('log6','log','','🖨️','プリンター：用紙切れ','10/24 16:40',[['レベル','情報'],['ソース','印刷スプーラー']],['総務共有プリンターの用紙がなくなりました。'],1),
+  E('soft1','soft','','💽','更新プログラムの履歴：失敗 ×3','10/24〜10/27',[['区分','インストール済みの更新'],['状態','失敗 3件']],['累積更新プログラム（10月）　状態：**失敗**（0x800f0922）','累積更新プログラム（10月）　状態：**失敗**（再試行）','累積更新プログラム（10月）　状態：**失敗**（再試行）'],0),
+  E('body1','body','','🔌','電源ケーブルとタップ','現物',[['確認','机の下を見る']],['プラグ周りに、**ホコリが飛び散った跡**。電源ケーブルのツメが**折れかけ**。','コンセントタップは何度も**抜き差しされた跡**がある。'],0),
+  E('web1','web','s','🔍','Windoze 更新 終わらない 何分','10/24 17:58',[['検索ワード','Windoze 更新 終わらない 何分']],['続けて検索：「更新中 電源 切っても大丈夫」（18:02）'],0),
+  E('web2','web','s','🔍','鶏むね 作り置き 簡単','10/24 12:20',[['検索ワード','鶏むね 作り置き 簡単']],['昼休みの検索です。'],1),
+  E('mail1','mail','out','✉️','更新、遅いときは','10/27 09:05',[['宛先','林 <hayashi@nanimo-shoji.co.jp>']],['更新が遅いときは、**電源ボタン長押しで切っちゃって大丈夫**だよ。','私もそうしたら、すぐ直るから。'],0),
+  E('mail2','mail','in','✉️','【お願い】再起動が必要な更新があります','10/10 09:00',[['差出人','情報システム 戸締 <jouho@nanimo-shoji.co.jp>'],['宛先','全社員']],['更新を後回しにしないでください。','更新中は**電源を切らず**、終わるまでお待ちください。'],0),
+  E('mail3','mail','in','✉️','総務連絡：忘年会の幹事について','10/20 15:00',[['差出人','総務課長']],['忘年会の幹事を決めます。'],1),
+  E('dl1','dl','','📄','備品申請書.xlsx','10/22 11:00',[['サイズ','18 KB']],['通常のブックです。'],1)
+ ],
+ st:[
+  T('金曜の夕方は、いつも通り帰り支度をしただけです。','17時50分には片付けて、帰ろうとしたんです。電源は切って帰るのが総務のルールですし。'),
+  L(1,'更新の通知？そんなの、一度も出なかったと思います。','パソコンは、通知の記録も残しています。',['log1','mail2'],0,'…出てました。毎日。「後で」を押して、2週間くらい…27回も…。','（毎日出てたかも…）'),
+  L(2,'金曜に更新なんて始めてません。普通にシャットダウンしただけ。','金曜の夕方の、更新の記録を調べます。',['log2'],7,'帰る前に「更新して終了」を選びました。…その方が一石二鳥かなって。','（更新して…終了を…）'),
+  L(3,'待ち時間？ちゃんと待ちましたよ。ずっと画面の前で。','待っている間、何をしていたか見てみましょう。',['web1'],15,'20%から動かなくて…「更新 終わらない 何分」って検索しました。','（20%のまま動かなくて）'),
+  L(4,'途中で電源を切るなんて、そんな危ないこと絶対しません。','「予期しない」シャットダウンの記録があるはずです。',['log3'],23,'18時半の電車に間に合わなくて…電源ボタンを長押しして、切りました。','（電車の時間が…）'),
+  L(5,'再起動したら普通に立ち上がりました。更新も全部成功してます。','更新プログラムの履歴を見てみましょう。',['soft1'],30,'立ち上がったら、また「更新しています」になって…失敗の表示も何度か…。','（また更新が始まって…）'),
+  L(6,'そのあとは触ってません。ずっと待ってました。','電源まわりの、物理的な状態も見てみましょう。',['body1','log3'],37,'また進まなくて…今度はコンセントごと、引っこ抜きました。','（コンセントを…）'),
+  L(7,'もう一度切ったなんて、そんなことは…してません。','Kernel-Powerのログは、数えられますよ。',['log3'],45,'「元に戻しています」も待てなくて…3回目も、コンセントを抜きました。','（3回目は…）'),
+  L(8,'月曜に出社したら、もう壊れていました。触る前からです。','月曜の朝の記録を見てみましょう。',['log4'],53,'月曜の朝、自動修復が出て…何度も再起動したわ。余計に悪くなったと思う…。','（月曜に再起動を何度も…）'),
+  L(9,'同僚には何も言ってません。迷惑はかけてません。','送信済みメールは確認しましたか？',['mail1'],59,'「更新、遅いから電源切って大丈夫だよ」って…隣の席の人に教えちゃいました。','（林さんに…）'),
+  L(10,'BIOS？そんな難しい画面、触ってません。','設定が変更されていないか、記録を見ましょう。',['log5'],64,'直そうと思って、起動時に出た画面で色々押しました。ブートの順番も変えてしまったみたいです。','（色々押したら…）')
+ ],
+ labs:['通知を27回無視','更新して終了','遅くて検索','電源長押し(1回目)','更新が失敗の山','コンセント抜き(2回目)','3回目も抜いた','自動修復ループ','同僚に広めた','BIOSをいじった'],
+ tip:'「更新しています。電源を切らないでください」の間は、本当に電源を切らない。長く見えても、待つのが最短です。通知を後回しにせず、昼休みに再起動を。',
+ par:14,parP:3},
+
+/* ---------------- 4 無料の高速化ソフト ---------------- */
+{id:'cleaner',no:2044,title:'無料の高速化ソフト',sub:'若手のブラウザが広告だらけ',date:'10/28',
+ who:{nm:'佐伯 蓮',role:'企画部・入社2年目',kind:'young',pc:'KIKAKU-15',
+  look:{skin:'#f6d6bd',hair:'#3b2a22',style:'spiky',glasses:false,cloth:'#7bb0d4'},
+  m:{kb:1.1,ms:1.1,desk:1.3,sigh:1.6,stare:2.2,boss:1.4,log:1.1},cryAt:72,cry:'cry',hm:1.2,decay:4},
+ subj:'ブラウザが広告だらけで変。何もしてないっす',prio:'中',
+ body:'昨日の昼休み明けから、ブラウザの上に変なバーが増えて、\n検索すると知らないサイトばかり出ます。\n俺は何もしてないっす。',
+ open:'あ、お疲れ様です！　なんか急にパソコンがおかしくて…俺、何もしてないっす！',
+ ev:[
+  E('web1','web','s','🔍','パソコン 重い 直す 無料','10/27 12:48',[['検索ワード','パソコン 重い 直す 無料']],['検索結果の1番上に「広告」付きのページが表示されました。'],0),
+  E('web2','web','h','🌐','【公式】PC爆速クリーナー｜無料で今すぐ高速化','10/27 12:50',[['URL','pc-bakusoku.example/lp'],['経路','検索結果の広告をクリック']],['「あなたのPCは危険です！」「たった1クリックで爆速に」','［無料ダウンロード］ボタンをクリックしています。'],0),
+  E('web3','web','h','🌐','ハイパー検索ポータル','10/27 14:02',[['URL','search.hyper-bar.example'],['状態','ホームページが勝手に変更']],['ブラウザのホームページと検索エンジンが、このサイトに**書きかえられて**います。','以後、検索結果が広告だらけになっています。'],0),
+  E('web4','web','s','🔍','ラーメン 新宿 おすすめ','10/27 12:05',[['検索ワード','ラーメン 新宿 おすすめ']],['昼休みの検索です。'],1),
+  E('dl1','dl','','📄','PC爆速クリーナー_setup.exe','10/27 12:52',[['サイズ','3.1 MB'],['入手元','pc-bakusoku.example']],['インストーラです。デジタル署名なし（発行元不明）。'],0),
+  E('dl2','dl','','📦','企画書素材.zip','10/24 10:11',[['サイズ','12 MB'],['入手元','社内共有']],['社内の素材です。'],1),
+  E('log1','log','','📦','インストール記録：PC爆速クリーナー ほか3件を同時導入','10/27 12:55',[['レベル','情報'],['ソース','インストーラ'],['イベントID','1033']],['PC爆速クリーナー_setup.exe を実行。','同時に導入（**ユーザーが「同意する」**）：ハイパー検索バー／スマイルツールバー／動画変換マスターPro'],0),
+  E('log2','log','','🧹','PC爆速クリーナー：スキャン完了（4,382件の問題）','10/27 12:58',[['レベル','情報'],['ソース','PC爆速クリーナー']],['スキャン完了：**4,382件の問題**を検出（※大半は正常な項目）','［すべて修復］の画面が表示されました。'],0),
+  E('log3','log','','🗝️','レジストリの大量変更（4,382件を削除）','10/27 13:01',[['レベル','警告'],['ソース','レジストリ'],['イベントID','4657']],['PC爆速クリーナーが、**「すべてチェック」**の状態でレジストリ4,382件を削除。','重要なキーも含まれています。'],0),
+  E('log4','log','','🖨️','プリンター：接続エラー','10/26 15:00',[['レベル','警告'],['ソース','印刷スプーラー']],['共有プリンターに接続できませんでした。'],1),
+  E('soft1','soft','','💽','スマイルツールバー／ハイパー検索バー／動画変換マスターPro','10/27 12:55',[['区分','インストール済みソフト（新しい順）'],['数','3件増加']],['**スマイルツールバー**　発行元：不明','**ハイパー検索バー**　発行元：不明','**動画変換マスターPro**　発行元：不明（試用版）'],0),
+  E('mail1','mail','in','✉️','ご購入ありがとうございます：PC爆速クリーナー Pro','10/27 13:20',[['差出人','PC爆速クリーナー <no-reply@pc-bakusoku.example>']],['PC爆速クリーナー Pro版のご購入ありがとうございます。','お支払い金額：**9,800円**（クレジットカード）'],0),
+  E('mail2','mail','out','✉️','これ入れるとマジ速くなる','10/27 13:35',[['宛先','同期の田島 <tajima@nanimo-shoji.co.jp>']],['これ入れるとマジで速くなるよ！','**pc-bakusoku.example/lp** （無料だよ）'],0)
+ ],
+ st:[
+  T('ふつうに仕事してただけっす。資料作ったり、調べものしたり。','昨日の昼休み明けからっすかね。急にブラウザが広告だらけになって…。'),
+  L(1,'検索？してないっす。パソコンは自分で直せるタイプじゃないんで。','昼休みに、何か調べていませんでしたか？',['web1'],0,'…検索しました。「パソコン 重い 直す 無料」って。最近もっさりしてて。','（最近重くて…）'),
+  L(2,'広告なんて押さないっすよ。リテラシーあるんで。','検索結果の1番上、どこへ行きました？',['web2'],0,'一番上に出てきたのが公式っぽくて…「広告」って書いてあったけど、押しました。','（公式っぽかったから…）'),
+  L(3,'ダウンロード？ソフトなんて入れてないっすよ。','ダウンロードフォルダを見せてください。',['dl1'],8,'「PC爆速クリーナー」を、ダウンロードしました…無料って書いてあったので。','（無料って…）'),
+  L(4,'インストールも、してないっす。','インストールの記録が残っているはずです。',['log1'],17,'インストーラで「次へ」を連打しました…内容は読んでません。','（次へ、次へ、って…）'),
+  L(5,'スキャン？画面は見てないっす。勝手に動いてたんじゃ。','そのソフトの実行ログを見てみましょう。',['log2'],26,'起動したら「4,382件の問題が見つかりました！」って真っ赤で…怖くなりました。','（4,382件って…）'),
+  L(6,'何も削除してないっす。むしろ守ってる側っす。','レジストリに、変更の記録がありますよ。',['log3'],34,'「すべてチェック」して「修復」を押しました…レジストリって、よく分からないまま…。','（全部チェックして…）'),
+  L(7,'ツールバー？増えてないっす。見間違いじゃないっすか。','インストール済みソフトの一覧を見ましょう。',['soft1'],42,'再起動したら、ブラウザの上にツールバーが3つ増えてて…消し方が分からなくて。','（3つも増えて…）'),
+  L(8,'変なサイトも見てないっす。ホームページは最初からこうっす。','ブラウザの閲覧履歴に、手がかりが。',['web3'],51,'ホームページが勝手に変わって…検索したら変なポータルばかり…でも、そのまま使い続けました。','（そのまま使い続けて…）'),
+  L(9,'お金なんて払ってないっす。無料っすから。','メールの受信箱を、見てみましょう。',['mail1'],57,'「有料版にすると完全に直ります」って…自分のカードで9,800円、払っちゃいました。','（有料版に…）'),
+  L(10,'ほかの人には何も教えてないっす。迷惑はかけてません。','送信済みメールも調べていいですか？',['mail2'],64,'「これ入れると速くなるっすよ」って…同期にURL送っちゃいました。…すいません。','（同期にも…）')
+ ],
+ labs:['「無料で直す」を検索','広告をクリック','ソフトをダウンロード','同梱ソフトも同意','4,382件に動揺','全チェックで掃除','ツールバー3つ増加','乗っ取り画面を放置','9,800円で課金','同期にも拡散'],
+ tip:'「無料」「爆速」の高速化ソフトは入れない。広告の「公式」は偽物のことが多い。レジストリ掃除はむしろ壊れる原因です。重いと思ったら、まず情シスへ。',
+ par:13,parP:2},
+
+/* ---------------- 5 容量不足 ---------------- */
+{id:'disk',no:2045,title:'容量不足',sub:'企画部の課長代理がエラーだらけ',date:'10/28',
+ who:{nm:'村上 洋介',role:'企画部 課長代理・41歳',kind:'normal',pc:'KIKAKU-03',
+  look:{skin:'#efc59f',hair:'#222',style:'comb',glasses:true,cloth:'#5c6b7a',tie:true},
+  m:{kb:1,ms:1,desk:1,sigh:1,stare:1,boss:1.35,log:1},cryAt:84,cry:'silent',hm:1.05,decay:4},
+ subj:'起動中にエラーだらけ。何もしていない',prio:'高',
+ body:'今朝からパソコンの起動中に、\n「ファイルが見つかりません」というエラーが大量に出る。\n私は何もしていない。企画会議の資料が開けない。',
+ open:'ああ、情シスさん。いやね、急にエラーが出まくってね。私は本当に何もしてないんだが。',
+ ev:[
+  E('web1','web','s','🔍','Cドライブ 容量 増やす','10/27 18:41',[['検索ワード','Cドライブ 容量 増やす']],['続けて検索：「Cドライブ いっぱい 何を消す」（18:43）'],0),
+  E('web2','web','h','🌐','Cドライブがいっぱい…どのフォルダを消せば？｜みんなの知恵ぶくろ','10/27 18:45',[['URL','chiebukuro.example/q/1029384']],['ベストアンサー：「**Windowsフォルダが一番重いので、中の大きいものを消せば空きます**」','（回答者は匿名・根拠なし）'],0),
+  E('web3','web','s','🔍','企画書 テンプレート 無料','10/27 15:10',[['検索ワード','企画書 テンプレート 無料']],['通常の業務の検索です。'],1),
+  E('log1','log','','🗑️','大量のファイル削除：C:\\Windoze\\WinSxS（18.2GB）','10/27 18:52',[['レベル','警告'],['ソース','ファイルシステム'],['イベントID','4663']],['操作者：ユーザー（村上）','削除：**C:\\Windoze\\WinSxS　合計 18.2GB（24,318ファイル）**'],0),
+  E('log2','log','','🔐','UAC：管理者権限の昇格（許可）','10/27 18:53',[['レベル','情報'],['ソース','ユーザーアカウント制御'],['イベントID','4672']],['「この操作にはアクセス許可が必要です」→ユーザーが『**続行**』を選択。','続行後、保護されたシステムファイルが削除されました。'],0),
+  E('log3','log','','🔌','USBメモリ接続：企画共有（32GB）／大量ファイル移動','10/27 19:20',[['レベル','情報'],['ソース','USBストレージ'],['イベントID','20001']],['19:20　USBストレージ接続。','19:22〜19:41　**C:\\Program Files から USBへ移動（切り取り）11,204ファイル**','19:41　USBを取り外しました。'],0),
+  E('log4','log','','🧩','インストーラー：再インストール失敗（×6）','10/27 19:58',[['レベル','エラー'],['ソース','インストーラ'],['イベントID','1603']],['CADビューア・グラフツール・報告書作成ソフトの**再インストールを試行**。','全て失敗（元のファイルが見つかりません）。'],0),
+  E('log5','log','','♻️','「このPCを初期状態に戻す」：ウィザード起動→キャンセル','10/27 20:15',[['レベル','警告'],['ソース','回復環境'],['イベントID','900']],['20:15　初期化ウィザードが起動。『すべて削除』を選択。','20:16　処理の途中でキャンセル（一部のデータは既に削除）。'],0),
+  E('trash1','trash','','🗑️','ごみ箱：空（直前に18.2GB）','10/27 18:58',[['最終操作','「ごみ箱を空にする」'],['時刻','10/27 18:58']],['ごみ箱は**空**です。','18:58 に『ごみ箱を空にする』を実行（直前の容量：18.2GB）。'],0),
+  E('soft1','soft','','💽','サイズ順：Program Files が 9GB','10/27 19:10',[['区分','インストール済みソフト（サイズ順）']],['CADビューア　　2.4GB','グラフツール　2.1GB','報告書作成ソフト　1.8GB','…合計　**約9GB**'],0),
+  E('body1','body','','🔌','USBポートと引き出し','現物',[['確認','本体のUSBポートを見る']],['USBポート：**空**。本体にUSBメモリは挿さっていない。','机の引き出しの奥に、**USBメモリ「企画共有」**（ラベル付き）。'],0),
+  E('dl1','dl','','🎬','展示会動画_最終.mp4','10/20 09:30',[['サイズ','12.4 GB'],['場所','ダウンロード']],['実は、これが一番容量を食っていました。**本当の容量食い**。'],1),
+  E('mail1','mail','in','✉️','【お知らせ】ディスクの空き容量が少なくなっています','10/27 09:00',[['差出人','情報システム 戸締']],['空き容量が少なくなっています。**不要な大きな動画などを整理してください**。（Windowsフォルダは触らないでください）'],1)
+ ],
+ st:[
+  T('昨日は、企画書を作っていただけだよ。それだけだ。','新商品の企画書だ。画像を貼ったら、容量不足の通知が出てね。それは見たが…。'),
+  L(1,'検索？いや、パソコンのことは分からんから調べもしないよ。','容量不足の通知のあと、何か調べていませんか？',['web1'],0,'「Cドライブ 容量 増やす」と検索したよ。通知がしつこくてね。','（通知がしつこくて…）'),
+  L(2,'ネットの回答なんて信用しない主義だ。参考にしてない。','閲覧履歴で、どのページを開いたか確認しましょう。',['web2'],0,'「みんなの知恵ぶくろ」の回答に「Windowsフォルダを消せば空く」とあって…ベストアンサーだったんだ。','（ベストアンサーだったから…）'),
+  L(3,'システムのフォルダには触っていない。常識だろう？','ファイルの削除記録を、確認しましょう。',['log1'],13,'Windowsフォルダの中の、一番大きい「WinSxS」を…消したんだ。18GBも空くと思って。','（一番大きいやつを…）'),
+  L(4,'エラーが出たら、そこで止めたさ。無理はしない。','途中で、何か許可を求められませんでしたか？',['log2'],23,'「許可が必要です」と出たが、「続行」を押して、管理者の権限で強引に消した。','（「続行」を…）'),
+  L(5,'ごみ箱？見てもいないよ。','ごみ箱が今、どうなっているか見てみましょう。',['trash1'],34,'消したものはごみ箱に入るから、「ごみ箱を空にする」で、完全に消した。…戻せない、のか？','（ごみ箱を空にして…）'),
+  L(6,'ほかに大きいフォルダ？さあね。気にしてない。','大きいソフトの一覧を、見てみましょうか。',['soft1'],44,'サイズ順に見たら「Program Files」が9GBあって…これは移せばいいと思ったんだ。','（Program Filesが…）'),
+  L(7,'USBメモリなんて、使っていないよ。','USBの接続記録を調べます。',['log3'],55,'USBメモリに、Program Filesを丸ごと「切り取り」で移動した。1万ファイル以上。','（切り取って、貼り付けて…）'),
+  L(8,'USBメモリなら、ずっと挿しっぱなしだよ。','本体の状態を、直接見てみましょう。',['body1'],64,'移動が終わったらUSBを抜いて、引き出しにしまった。…中身が本体だとは思わなくてな。','（USBは引き出しに…）'),
+  L(9,'エラーが出ても、それ以上は何も触ってない。','インストーラーの記録は、どうでしょう。',['log4'],70,'ソフトを探して勝手に再インストールしようとしたが、全部失敗した。','（再インストールを…）'),
+  L(10,'初期化なんて、そんな大それたことをするわけがない。','最後の最後の記録を、見てみましょう。',['log5'],70,'最後に「このPCを初期状態に戻す」を押した。…途中でキャンセルしたが、データは…。','（最後に初期化を…）')
+ ],
+ labs:['「容量 増やす」を検索','知恵袋の回答を信用','WinSxSを削除','「続行」で強行','ごみ箱を空に','Program Filesを発見','USBへ切り取り','USBを抜いた','再インストール失敗','初期化に手を出した'],
+ tip:'Windowsフォルダの中は絶対に消さない。ごみ箱を空にする前に、本当に要らないか確認を。Program Filesは移動できません。容量不足は、大きな動画やダウンロードを整理するのが正解です。',
+ par:14,parP:3},
+
+/* ---------------- 6 ボス：部長 ---------------- */
+{id:'boss',no:2046,title:'ボス：部長',sub:'フロア全体のネットが止まった',date:'10/28',net:true,
+ who:{nm:'天童 威',role:'営業統括部長・58歳',kind:'boss',pc:'3F-BUCHO',
+  look:{skin:'#e8b996',hair:'#bdbdc4',style:'comb',glasses:false,cloth:'#33384a',tie:true,beard:true},
+  m:{kb:.7,ms:.7,desk:.6,sigh:1.5,stare:.5,boss:0,log:1.9},cryAt:70,cry:'rage',hm:1.3,decay:5},
+ subj:'【全社影響】3階フロア全体でネットが使えない',prio:'緊急',
+ body:'3階全体のネットが、10時過ぎから使えない。\nうちの部署は何もしていない。そちらの機器の不具合だろう。\nすぐに直しなさい。　天童',
+ open:'遅いぞ、情シス。3階全体が止まっているんだ。こっちは何もしていない。そっちの機器の問題だろう。',
+ ev:[
+  E('body1','body','','🧶','部長席の足元（LANケーブル）','現物',[['確認','机の下を見る']],['足元に、**長さ2mのLANケーブル**。結束バンドが**切られている**。','両端のツメに、**最近抜き差しした跡**。'],0),
+  E('body2','body','','📝','モニターの付箋','現物',[['確認','モニターの縁を見る']],['黄色い付箋が**モニターに貼りっぱなし**：','「Wi-Fi：TENDOU-HOME-5G　pass：**tendou1958**」'],0),
+  E('body3','body','','⛳','机の上の置物','現物',[['確認','机の上を見る']],['ゴルフコンペのトロフィーと、ホールインワンの記念ボール。'],1),
+  E('net1','net','','🖧','3F-SW02：ポート一覧（Port12・13がリンクアップ）','10:01',[['機器','3階 スイッチ 3F-SW02'],['確認','ポート状態']],['Port 1〜10：通常（PC・電話）','Port 11：上位スイッチへ','**Port 12：リンクアップ 10:01**（相手：不明）','**Port 13：リンクアップ 10:01**（相手：不明）'],0),
+  E('net2','net','','🔁','ループ検知（STP）：Port12 ⇄ Port13','10:01',[['機器','3F-SW02'],['種別','ネットワーク障害']],['10:01　**同一スイッチ内でループを検知**：Port 12 ⇄ Port 13','ケーブルの**両端が、同じスイッチに挿さって**います。'],0),
+  E('net3','net','','📈','トラフィック：ブロードキャストストーム','10:02',[['機器','3F-SW02'],['種別','トラフィック']],['10:02　ブロードキャストが**99%**に急増。','10:03　3階全フロアの通信が**停止**。'],0),
+  E('net4','net','','📡','未許可アクセスポイント：TENDOU-HOME-5G','先週〜',[['機器','無線LAN監視'],['種別','不審な機器']],['SSID：**TENDOU-HOME-5G**（社内に登録なし）','設置場所：3階 部長席付近。**有線で社内LANに接続**。'],0),
+  E('net5','net','','⚠️','不正DHCP：192.168.0.1 がIPを配布','10:00〜',[['機器','DHCP監視'],['種別','不正な応答']],['社内にないDHCPサーバー（192.168.0.1）が、営業課の端末**3台**にIPを配布。','正しいIPを取得できず、営業課の端末が**数日前から**不安定でした。'],0),
+  E('log1','log','','🔄','再起動 ×3（ユーザー操作）','10:03〜10:09',[['レベル','情報'],['ソース','システム'],['イベントID','1074']],['10:03　10:06　10:09　**ユーザー操作による再起動**（計3回）','理由コメント：「ネットが切れた」'],0),
+  E('web1','web','h','🌐','ゴルフレッスン動画（視聴 約2時間）','先週〜今日',[['URL','video-mihodai.example/golf'],['種別','動画見ホーダイ（個人契約）']],['平日の業務時間内に**約2時間分**視聴した履歴。','会議中の時間帯も含まれています。'],0),
+  E('mail1','mail','out','✉️','RE: 【通達】私物のネットワーク機器の持ち込み禁止について','9/30 17:45',[['宛先','情報システム'],['送信者','天童 部長']],['**了解した。　天童**','（元の通達：私物のルーター等の持ち込みを禁止します）'],0),
+  E('mail2','mail','out','✉️','ゴルフコンペのお知らせ','10/25 12:00',[['宛先','営業部全員']],['来月のコンペの幹事は私だ。参加者は返信するように。'],1)
+ ],
+ st:[
+  T('朝は普段どおり、自席で資料を見ていた。それだけだ。','9時半に出社して、メールを確認して…いつもどおりだ。何かしたなら言っている。'),
+  L(1,'足元のケーブル？知らんな。邪魔だとも思っていない。','足元を、見せてもらえますか。',['body1'],0,'…足元にLANケーブルが長いまま余っていてな。邪魔で仕方なかった。','（足元の…邪魔な…）'),
+  L(2,'ハブ？ああいう機械には触らん。専門外だ。','3階のスイッチのポートの状態を見ましょう。',['net1'],8,'机の脇のハブに、空きポートがあったな…と、気づいた。','（空きポートが…）'),
+  L(3,'ケーブルを挿したりしていない。繋ぐ必要がない。','障害の検知ログが出ているはずです。',['net2'],18,'余ったケーブルの両端を、ハブの空きポートに挿した。繋がっていないと不安でな。…どっちも。','（両端を…）'),
+  L(4,'ネットが止まったのは10時過ぎ。私の操作とは関係ない。','止まった瞬間のネットワークの状態を見ます。',['net3'],26,'挿した直後から、ネットが重くなり、そのうち全部止まった。…ああ、私が挿したあとだ。','（挿した直後に…）'),
+  L(5,'自席のPCは再起動してない。触っていないと言っている。','PCのイベントログを調べましょう。',['log1'],34,'ネットが切れて、ついPCを3回再起動した。ネットが戻らんので、イライラして。','（3回も再起動して…）'),
+  L(6,'私物の機器など職場に持ち込んでいない。規則くらい守る。','無線LANの監視記録を見てみましょう。',['net4'],42,'家で使っているWi-Fiルーターを持ち込んでいる。…社内が遅いのでな。','（家のルーターを…）'),
+  L(7,'ルーターは使っていない。置いてあるだけだ。','DHCPの監視ログに、不審な応答が。',['net5'],49,'会社のLANに繋いで、Wi-Fiで使っていた。…スマホもタブレットも、それで動画を見ていた。','（会社のLANに繋いで…）'),
+  L(8,'パスワードは厳重に管理している。他人には見せん。','モニターの縁も、見ておきましょうか。',['body2'],57,'付箋に書いて…モニターに貼っていた。忘れると困るからな。','（付箋に書いて…）'),
+  L(9,'私物で業務に関係ない動画など、見てない。','ブラウザの履歴は、正直ですよ。',['web1'],62,'昼休みにゴルフのレッスン動画を…いや、午前も、会議中も見ていた。','（会議中も…）'),
+  L(10,'持ち込み禁止の通達なんて、受け取っていない。','送信済みメールに、何か返信していませんか。',['mail1'],68,'通達は来ていた。読まずに「了解した」と返信して…内容は読んでいなかった。','（「了解した」と返信…）')
+ ],
+ labs:['足元のケーブルが邪魔','空きポートを発見','両端を挿してループ','フロア全体がダウン','慌てて3回再起動','私物ルーターを設置','社内LANに接続','パスワードを付箋に','業務中に動画視聴','通達を読まず返信'],
+ tip:'LANケーブルの両端を同じハブに挿すとループになり、フロア全体が止まります。余ったケーブルは触らず情シスへ。私物のルーターは持ち込み禁止、パスワードを付箋に書かないでください。',
+ par:17,parP:6}
+];
+
+/* 責めるコマンド */
+const CMDS={
+ kb:{n:'キーボードを強く叩く',ic:'⌨️',s:14,h:10,hp:'kb',bang:'バンッ！',me:'（ターンッ！とEnterキーを力いっぱい叩いた）'},
+ ms:{n:'マウスを強く叩く',ic:'🖱️',s:12,h:9,hp:'ms',bang:'カチャッ！',me:'（マウスを机にガツンと叩きつけた）'},
+ desk:{n:'机を叩く',ic:'👊',s:20,h:15,bang:'ドンッ！',me:'（バァン！と机を叩いた）'},
+ sigh:{n:'ため息をつく',ic:'😮‍💨',s:8,h:3,bang:'はぁ…',me:'（これ見よがしに、深いため息をついた）'},
+ stare:{n:'無言で見つめる',ic:'👁️',s:10,h:2,bang:'……',me:'（無言で、じっと相手の目を見つめた）'},
+ boss:{n:'上司に報告しますよ',ic:'📞',s:22,h:12,bang:'報告！',me:'「このことは、上司に報告しますよ」'},
+ log:{n:'ログを読み上げる',ic:'📜',s:9,h:0,bang:'カタカタ',me:'「…10時02分、ユーザー操作。10時03分、ユーザー操作。ログ、全部残ってますよ」'}
+};
+const RX={
+ veteran:[['あらぁ、どうしたの急に。落ち着きなさいな。','ふふ、怖くないわよ。私が何年ここにいると思ってるの。'],['…ちょ、ちょっとぉ。そんなに怒らなくてもいいじゃない。','えぇと、あの、それは、その…'],['ま、待って…汗が止まらないわ…。','あらやだ、どうしましょう…頭がまっしろ…']],
+ normal:[['え、なんですか急に…。','…あの、何か問題でも？'],['う…ちょ、ちょっと待ってください…。','あ、あの、顔が怖いです…。'],['や、やめてください…！　えっと、えっと…','うぅ…（目が泳いでいる）']],
+ young:[['え、な、なんすか急に…。','ちょ、びっくりしたっす…。'],['え、あ、あの…こ、こわいっす…。','す、すんません、なんか俺、悪いことしました…？'],['ひぃ…！　あ、あの、あの、えっと…。','ま、待ってください、頭が真っ白っす…！']],
+ boss:[['フン。それがどうした。','ずいぶんと生意気な態度だな、情シス。'],['…ぐっ。な、何のつもりだ。','き、貴様、上司に向かって…！'],['…ぬ、ぬう…。汗など、かいておらん…！','い、いや、これは暑いだけだ…。']]
+};
+const SPECIAL={
+ 'veteran:desk':'あらあら、元気ねぇ。昔の課長はもっと叩いてたわよ。',
+ 'boss:boss':'報告？　私が上司だが？　誰に報告するというのかね。',
+ 'young:stare':'え、あの、なんで黙ってるんすか…こわい…こわいっす…。',
+ 'boss:log':'ぐっ…ログ…？　そ、そんなものを読み上げるな…。',
+ 'normal:sigh':'うっ…そのため息、地味に刺さります…。'
+};
+const EVADE={
+ veteran:['あら、たまたまじゃないかしら。偶然よ、偶然。','それがどうしたの？　そんなの、証拠になるのかしら。'],
+ normal:['たまたまですよ。偶然、そう見えるだけです。','そ、それだけじゃ何とも言えませんよね？'],
+ young:['え、いや、それは…たまたまっす！　偶然っす！','そ、そんなの証拠になんないっすよ…！'],
+ boss:['それがどうした。偶然に決まっているだろう。','フン、そんなものは何の証拠にもならん。']
+};
+const WRONG={
+ veteran:['その証拠は、今の話と関係ないんじゃないかしら？','あらぁ、的外れねぇ。戸締さん、大丈夫？'],
+ normal:['それ、今の話と関係ありますか？','…違いますよね、それは。'],
+ young:['え、それ関係ないっすよね？','それは別の話っすよ…？'],
+ boss:['的外れもいいところだな。情シスがその程度か。','何が言いたいのか、さっぱり分からんな。']
+};
+const CRYTXT={
+ cry:['…うっ、うぅ…（泣き出してしまった）','ひっく…ひどいです…。'],
+ silent:['………（完全に黙りこんでしまった）','…………。'],
+ rage:['うるさい！　誰に向かってものを言っている！！（逆ギレして話にならない）','ええい、黙れ黙れ！！']
+};
+const RANKV={S:4,A:3,B:2,C:1};
+
+/* ====================== ユーティリティ ====================== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<mark>$1</mark>');
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const SAVE_KEY='nanimo.save.v1';
+let save={rank:{},clear:{},best:{},snd:true};
+try{ const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); if(s&&typeof s==='object') save=Object.assign(save,s); }catch(_){}
+function store(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(save)); }catch(_){} }
+const unlocked=i=>i===0||!!save.clear[CASES[i-1].id];
+
+/* ====================== 音（WebAudio 合成） ====================== */
+let AC=null, master=null;
+function ac(){
+  if(!save.snd) return null;
+  if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); master=AC.createGain(); master.gain.value=.5; master.connect(AC.destination); }catch(_){ return null; } }
+  if(AC.state==='suspended'){ try{ AC.resume(); }catch(_){} }
+  return AC;
+}
+function tone(f,d,type,v,slide,delay){
+  const a=ac(); if(!a) return; const t=a.currentTime+(delay||0);
+  const o=a.createOscillator(), g=a.createGain(); o.type=type||'sine';
+  o.frequency.setValueAtTime(f,t); if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(20,f+slide),t+d);
+  g.gain.setValueAtTime(v||.2,t); g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t+d+.03);
+}
+function noise(d,fq,v,type,delay){
+  const a=ac(); if(!a) return; const t=a.currentTime+(delay||0);
+  const n=Math.floor(a.sampleRate*d), b=a.createBuffer(1,n,a.sampleRate), ch=b.getChannelData(0);
+  for(let i=0;i<n;i++) ch[i]=(Math.random()*2-1)*(1-i/n);
+  const s=a.createBufferSource(); s.buffer=b; const f=a.createBiquadFilter(); f.type=type||'lowpass'; f.frequency.value=fq||2000;
+  const g=a.createGain(); g.gain.setValueAtTime(v||.2,t); g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  s.connect(f); f.connect(g); g.connect(master); s.start(t);
+}
+const SFX={
+  click(){ tone(660,.05,'square',.05); },
+  type(){ for(let i=0;i<5;i++){ noise(.03,4000,.08,'highpass',i*.05); tone(1500+i*90,.02,'square',.03,0,i*.05); } },
+  kb(){ noise(.2,1600,.4,'bandpass'); tone(120,.22,'sine',.5,-70); for(let i=0;i<4;i++){ noise(.03,4500,.1,'highpass',.04+i*.035); } },
+  ms(){ tone(900,.04,'square',.12); noise(.12,800,.35,'lowpass'); tone(90,.16,'sine',.4,-40,.02); },
+  desk(){ tone(70,.4,'sine',.8,-40); noise(.28,500,.5,'lowpass'); noise(.08,2500,.2,'bandpass'); },
+  sigh(){ const a=ac(); if(!a) return; noise(.9,1100,.14,'lowpass'); tone(300,.7,'sine',.04,-120); },
+  stare(){ tone(110,.7,'sine',.1); tone(116,.7,'sine',.07); },
+  boss(){ tone(880,.12,'sine',.12); tone(880,.12,'sine',.12,0,.18); tone(660,.2,'sine',.1,0,.4); },
+  log(){ for(let i=0;i<8;i++){ noise(.03,3800,.09,'highpass',i*.045); } },
+  good(){ tone(660,.12,'triangle',.18); tone(880,.12,'triangle',.18,0,.09); tone(1320,.25,'triangle',.18,0,.18); },
+  bad(){ tone(180,.35,'sawtooth',.16,-70); tone(150,.35,'sawtooth',.12,-60,.14); },
+  evade(){ tone(320,.18,'triangle',.14); tone(260,.22,'triangle',.12,0,.12); },
+  alarm(){ for(let i=0;i<4;i++){ tone(880,.16,'square',.1,0,i*.3); tone(660,.16,'square',.1,0,i*.3+.15); } },
+  crash(){ noise(.55,3200,.45,'bandpass'); tone(200,.4,'sawtooth',.2,-150); for(let i=0;i<5;i++){ tone(1200+Math.random()*1800,.05,'square',.08,0,.05+i*.06); } },
+  cry(){ for(let i=0;i<4;i++){ tone(420-i*30,.22,'sine',.1,-40,i*.24); } },
+  rage(){ tone(150,.3,'sawtooth',.2,40); tone(120,.4,'sawtooth',.2,60,.1); },
+  fan(){ [523,659,784,1047,1319].forEach((f,i)=>tone(f,.28,'triangle',.18,0,i*.12)); },
+  step(){ tone(500,.08,'sine',.08); }
+};
+const sfx=n=>{ try{ SFX[n]&&SFX[n](); }catch(_){} };
+
+/* ====================== 状態 ====================== */
+let G=null, screen='title', auto=false, TM=0, aT=0, tw=0, spKey='', spFull='', autoIdx=0;
+const AUTO_DT=.2;
+const S=k=>G.c.st[k];
+const NUM='①②③④⑤⑥⑦⑧⑨⑩';
+const reqOf=k=>k<=1?[]:(k===2?[0]:[k-2]);
+function openList(){ const r=[]; for(let k=0;k<G.c.st.length;k++){ if(!G.done.has(k)&&reqOf(k).every(q=>G.done.has(q))) r.push(k); } return r; }
+function newG(i,keepGot){
+  const c=CASES[i];
+  const g={i,c,got:new Set(keepGot||[]),done:new Set(),steps:new Set(),cur:0,trust:5,shake:0,hr:0,moves:0,miss:0,press:0,used:{},kb:3,ms:3,stun:0,msg:null,pending:null,emo:'',hint:new Set(),win:null,sheet:null,sel:null,fx:null,hitT:0,rank:null,cf:null,tlSel:0,mid:0,evade:0};
+  return g;
+}
+function startCase(i){
+  i=clamp(i|0,0,CASES.length-1);
+  G=newG(i); setScreen('ticket');
+}
+function setScreen(s){
+  screen=s;
+  for(const id of ['sTitle','sTicket','sInv','sInt','sConf','sRes']) $('#'+id).hidden=true;
+  $('#over').hidden=true;
+  const map={title:'sTitle',ticket:'sTicket',inv:'sInv',int:'sInt',conf:'sConf',res:'sRes'};
+  $('#'+map[s]).hidden=false;
+  if(s==='int') buildInt();
+  if(s==='conf') buildConf();
+  R();
+}
+function enterInv(){ if(!G) return; G.win=null; setScreen('inv'); }
+function enterInt(){
+  if(!G) return;
+  G.done=new Set(); G.steps=new Set(); G.msg=null; G.pending=null; G.sheet=null; G.sel=null; G.hint=new Set(); G.emo='';
+  G.cur=openList()[0]; G.curKeep=true; setScreen('int');
+  say('npc',G.c.open);
+  R();
+}
+function retry(){ const g=newG(G.i,G.got); G=g; enterInt(); }
+
+/* ====================== 調査 ====================== */
+function collect(id){
+  if(!G||G.got.has(id)) return false;
+  if(!G.c.ev.some(e=>e.id===id)) return false;
+  G.got.add(id); sfx('good'); if(screen==='inv') R(); return true;
+}
+function evOf(id){ return G.c.ev.find(e=>e.id===id); }
+function appItems(app,tab){ return G.c.ev.filter(e=>e.app===app&&(!APPS[app].tabs||e.tab===tab)); }
+
+/* ====================== 取調べ ====================== */
+function say(who,text,kind,me){ G.msg={who,text,kind:kind||'',me:me||'',id:++G.mid}; if(auto) tw=1e9; }
+function postAction(){ G.shake=Math.max(0,G.shake-(G.c.who.decay||3)); G.hr=Math.max(0,G.hr-4); }
+function canAct(){ return !!G&&screen==='int'&&!G.msg&&!G.pending; }
+function nextCur(){ const o=openList(); if(!o.length){ return; } if(o.includes(G.cur)&&G.curKeep) return; const nx=o.find(k=>k>G.cur); G.cur=nx!=null?nx:o[0]; }
+function stunned(){
+  if(G.stun>0){ G.stun--; const t=G.c.who.cry; say('npc', t==='rage'?'ええい、話にならん！　少し黙っていろ！':t==='silent'?'………（まだ黙っている）':'ひっく…ちょっと、待ってください…（泣いていて話にならない）','stun'); G.emo=t; return true; }
+  return false;
+}
+function ask(){
+  if(!canAct()) return false;
+  G.moves++; sfx('click');
+  if(stunned()){ R(); return true; }
+  const k=G.cur, st=S(k); G.emo='';
+  if(st.s===0){ G.done.add(k); say('npc',st.a); G.curKeep=false; }
+  else { G.hint.add(k); say('me',st.a,'hint'); G.curKeep=true; }
+  postAction(); R(); return true;
+}
+function present(id){
+  if(!canAct()||!G.got.has(id)) return false;
+  G.moves++; sfx('click');
+  if(stunned()){ R(); return true; }
+  G.emo='';
+  const k=G.cur, st=S(k), kind=G.c.who.kind, pick=a=>a[(G.moves+k)%a.length];
+  if(st.s>0&&st.p.includes(id)){
+    if(G.shake<st.n){
+      G.shake=Math.min(100,G.shake+4); G.evade++;
+      say('npc',pick(EVADE[kind]),'evade','（まだ強気だ。もう少し動揺させれば崩れそうだ…）'); sfx('evade'); G.curKeep=true;
+    }else{
+      G.done.add(k); G.steps.add(st.s); G.shake=Math.min(100,G.shake+5);
+      say('npc',st.c,'ok','【ムジュン発見！】　'+'⑴⑵⑶⑷⑸⑹⑺⑻⑼⑽'[st.s-1]+' '+G.c.labs[st.s-1]);
+      sfx('good'); G.hitT=.6; G.curKeep=false;
+      if(G.steps.size>=10) G.pending='conf';
+    }
+  }else{
+    G.miss++; G.trust--; G.shake=Math.max(0,G.shake-4); G.curKeep=true;
+    say('npc',pick(WRONG[kind]),'bad','（的外れだった…！　信頼度が下がった）'); sfx('bad'); G.hitT=.6;
+    if(G.trust<=0) G.pending='over:trust';
+  }
+  postAction(); R(); return true;
+}
+function pressGain(cmd){
+  const C=CMDS[cmd], who=G.c.who, m=who.m[cmd]==null?1:who.m[cmd], n=G.used[cmd]||0;
+  return {gain:C.s*m*Math.max(.3,Math.pow(.78,n)), hr:C.h*(who.hm||1), m};
+}
+function press(cmd){
+  if(!canAct()) return false; const C=CMDS[cmd]; if(!C) return false;
+  if(C.hp&&G[C.hp]<=0) return false;
+  G.moves++; G.press++;
+  const who=G.c.who, kind=who.kind, pg=pressGain(cmd);
+  G.used[cmd]=(G.used[cmd]||0)+1; G.curKeep=true;
+  let gain=pg.gain, hr=pg.hr, text='', cls='', emo='';
+  const wasShake=G.shake;
+  G.fx={k:cmd==='kb'?'kb':cmd==='ms'?'ms':'desk',age:0}; G.hitT=.5;
+  popBang(C.bang,cmd);
+  sfx(C.snd||cmd);
+  if(C.hp){
+    G[C.hp]--;
+    if(G[C.hp]<=0){
+      gain=-8; hr+=6; G.fx.k='brk'+(cmd==='kb'?'kb':'ms'); sfx('crash'); cls='broke';
+      text='…あなたも、何もしてないのに壊しましたね。';
+      popBang('バキィッ！',cmd);
+    }
+  }
+  if(!cls&&wasShake>=who.cryAt&&C.h>=6){
+    gain=-30; hr+=10; G.stun=1; emo=who.cry; cls='cry'; text=pick2(CRYTXT[who.cry]); sfx(who.cry==='rage'?'rage':'cry');
+  }
+  if(!cls&&pg.m===0){ gain=-5; hr+=6; text=SPECIAL[kind+':'+cmd]||'効かん。'; cls='immune'; }
+  if(!cls){
+    const lvl=wasShake<25?0:wasShake<55?1:2;
+    text=SPECIAL[kind+':'+cmd]&&pg.m<=.5?SPECIAL[kind+':'+cmd]:(pg.m>=1.4&&SPECIAL[kind+':'+cmd]?SPECIAL[kind+':'+cmd]:pick2(RX[kind][lvl]));
+  }
+  G.shake=clamp(G.shake+gain,0,100); G.hr=Math.max(0,G.hr+hr);
+  G.emo=emo;
+  let warn='';
+  if(G.hr>=100){ G.pending='over:hr'; text=(cls==='broke'?text+'　しかも、その態度…':'')+'…もう限界です。今のは、パワハラですよね。人事部に報告します。'; cls='over'; sfx('alarm'); }
+  else if(G.hr>=70) warn='（人事の目が…光っている！　やりすぎると通報されるぞ）';
+  say('npc',text,cls||'press',C.me); if(warn) G.msg.warn=warn;
+  R(); return true;
+}
+function pick2(a){ return a[(G.moves+G.press)%a.length]; }
+function ok(){
+  if(!G||!G.msg) return false;
+  G.msg=null; sfx('step');
+  const p=G.pending;
+  if(p){ G.pending=null; if(p==='conf') enterConf(); else showOver(p.split(':')[1]); return true; }
+  if(G.curKeep!==true) nextCur();
+  const o=openList(); if(!o.includes(G.cur)&&o.length) G.cur=o[0];
+  R(); return true;
+}
+function gotoSt(k){ if(!G) return; if(openList().includes(k)){ G.cur=k; G.curKeep=true; R(); } }
+function navSt(d){
+  if(!canAct()) return; const o=openList(); if(o.length<2) return;
+  const i=o.indexOf(G.cur); G.cur=o[(i+d+o.length)%o.length]; G.curKeep=true; sfx('click'); R();
+}
+
+/* ====================== 全面自白・結果 ====================== */
+function rankOf(){
+  const c=G.c, mv=G.moves-c.par, pp=G.press-c.parP;
+  if(G.miss===0&&mv<=2&&pp<=2) return 'S';
+  if(G.miss<=1&&mv<=8) return 'A';
+  if(G.miss<=3&&mv<=16) return 'B';
+  return 'C';
+}
+function enterConf(){
+  const lines=[];
+  for(let n=1;n<=10;n++){ const st=G.c.st.find(s=>s.s===n); lines.push({n,t:st.c}); }
+  G.cf={lines,i:1,fin:false};
+  G.rank=rankOf(); const id=G.c.id;
+  save.clear[id]=1;
+  if(!save.rank[id]||RANKV[G.rank]>RANKV[save.rank[id]]) save.rank[id]=G.rank;
+  if(!save.best[id]||G.moves<save.best[id]) save.best[id]=G.moves;
+  store(); sfx('fan');
+  setScreen('conf');
+}
+function cfAdvance(all){
+  const cf=G.cf; if(!cf) return;
+  if(cf.fin){ setScreen('res'); return; }
+  if(all) cf.i=11; else cf.i++;
+  if(cf.i>=11){ cf.i=11; cf.fin=true; sfx('good'); }
+  else sfx('step');
+  R();
+}
+function totalBest(){ let s=0; for(const c of CASES){ if(!save.best[c.id]) return null; s+=save.best[c.id]; } return s; }
+function nextCaseIdx(){ return (G.i+1)%CASES.length; }
+function gotoNext(){ const n=nextCaseIdx(); if(n===0&&!auto){ G=null; setScreen('title'); return; } startCase(n); }
+function showOver(kind){
+  const el=$('#over'); el.hidden=false;
+  if(kind==='hr'){
+    sfx('alarm');
+    el.innerHTML=`<div class="big">📢</div><h2>パワハラ通報！</h2><p>${esc(G.c.who.nm)}さんは人事部に駆けこんだ。<br>情シス・戸締は、始末書を書くことになった…。</p><p style="color:var(--mute);font-size:12px">責めすぎは禁物。ログと証拠で、冷静に追いつめよう。</p><div class="btns"><button class="btn red" data-act="retry">もう一度取調べる（調査はそのまま）</button><button class="btn sub" data-act="title">タイトルへ</button></div>`;
+  }else{
+    el.innerHTML=`<div class="big">💔</div><h2>信頼度ゼロ…</h2><p>「もういいです。課長に直接言いますから」<br>${esc(G.c.who.nm)}さんは席を立ってしまった。</p><p style="color:var(--mute);font-size:12px">証拠は、よく見て選ぼう。「聞く」でヒントも出るよ。</p><div class="btns"><button class="btn red" data-act="retry">もう一度取調べる（調査はそのまま）</button><button class="btn sub" data-act="title">タイトルへ</button></div>`;
+  }
+  G.over=kind; screen='over';
+}
+
+/* ====================== 画面描画 ====================== */
+function R(){
+  if(screen==='title') renderTitle();
+  else if(screen==='ticket') renderTicket();
+  else if(screen==='inv') renderInv();
+  else if(screen==='int') updInt();
+  else if(screen==='conf') updConf();
+  else if(screen==='res') renderRes();
+  $('#autoBtn').setAttribute('aria-pressed',auto?'true':'false');
+  $('#sndBtn').setAttribute('aria-pressed',save.snd?'true':'false');
+  $('#sndBtn').textContent=save.snd?'🔊':'🔇';
+}
+function renderTitle(){
+  const tb=totalBest();
+  $('#sTitle').innerHTML=`<div class="logo"><small>情シス取調べ推理ゲーム</small><h2>何もしてないのに<br><em>パソコンが壊れた</em></h2><p>株式会社ナニモ商事 情報システム部・戸締 まこと</p></div>
+  <div class="how">「何もしてない」わけがない。<b>ログ・メール・履歴</b>を調べて証拠を集め、取調べで証言のムジュンを<b>つきつけ</b>よう。相手を<b>責める</b>と動揺するけど、やりすぎると<b>人事に通報</b>されるぞ。10個の行動を全部白状させればクリア。</div>
+  <div class="cases">${CASES.map((c,i)=>{ const u=unlocked(i), r=save.rank[c.id];
+    return `<button class="case" data-act="case" data-i="${i}" ${u?'':'disabled'}><span class="no">${u?(i+1):'🔒'}</span><span><b>${esc(c.title)}</b><small>${u?esc(c.sub):'前の事件をクリアすると解放'}</small></span><span class="rk ${r?'':'none'}">${r||(save.clear[c.id]?'済':'—')}</span></button>`; }).join('')}</div>
+  <div class="tot">${tb!=null?`全事件 最短手数の合計：<b>${tb}手</b>`:'全事件クリアで「総合の最短手数」が表示されます'}</div>
+  <button class="btn sub" data-act="autostart">🤖 オートで見る（全事件をSランクで解決）</button>`;
+}
+function renderTicket(){
+  const c=G.c,w=c.who;
+  $('#sTicket').innerHTML=`<div class="tk"><div class="tkbar"><span style="margin-left:0;background:none;color:#fff;font-size:13px">🎫 ヘルプデスク</span>#${c.no}<span>優先度：${esc(c.prio)}</span></div>
+   <h3>${esc(c.subj)}</h3>
+   <dl><dt>申請者</dt><dd>${esc(w.role)}　${esc(w.nm)}</dd><dt>対象端末</dt><dd>${esc(w.pc)}</dd><dt>受付日</dt><dd>${esc(c.date)}　状態：<b style="color:#d9741a">対応中</b></dd><dt>担当</dt><dd>情報システム部 戸締 まこと</dd></dl>
+   <div class="body">${esc(c.body)}</div></div>
+   <div class="memo"><b>戸締のメモ</b><br>「何もしてない」で壊れるPCはない。まずはPCの中を調べて、証拠を集めよう。調べ終わったら取調べだ。<br>目標：${esc(w.nm)}さんに、<b>10個の行動</b>を全部白状させる。</div>
+   <button class="btn" data-act="goinv">🔍 調査をはじめる</button><button class="btn sub" data-act="title">← 事件一覧</button>`;
+}
+function renderInv(){
+  const c=G.c;
+  const apps=Object.keys(APPS).filter(a=>a!=='net'||c.net);
+  const icons=apps.map(a=>{ const n=c.ev.filter(e=>e.app===a).length; return `<button class="ico" data-act="app" data-app="${a}"><i>${APPS[a].ic}</i>${APPS[a].n}<span class="cnt">${n?n+'件':'—'}</span></button>`; }).join('');
+  let win='';
+  if(G.win){
+    const w=G.win, A=APPS[w.app];
+    if(A.tabs&&!w.tab) w.tab=Object.keys(A.tabs)[0];
+    const tabs=A.tabs?`<div class="tabs" role="tablist">${Object.entries(A.tabs).map(([k,v])=>`<button role="tab" aria-selected="${w.tab===k}" data-act="tab" data-tab="${k}">${v} (${appItems(w.app,k).length})</button>`).join('')}</div>`:'';
+    const items=appItems(w.app,w.tab);
+    const rows=items.length?items.map(e=>`<button class="row" data-act="item" data-id="${e.id}" aria-selected="${w.sel===e.id}"><span class="ri">${e.ic}</span><span class="rt"><b>${esc(e.t)}</b><small>${esc(e.tm)}</small></span>${G.got.has(e.id)?'<span class="got">📎済</span>':''}</button>`).join(''):`<div class="empty">調べたが、特に気になるものはなかった。</div>`;
+    let det='<div class="empty">項目をタップして中身を確認</div>';
+    const sel=w.sel&&items.find(e=>e.id===w.sel);
+    if(sel){
+      det=`<h4>${esc(sel.ic)} ${esc(sel.t)}</h4>`+(w.app==='body'?`<div class="big">${sel.ic}</div>`:'')+`<dl class="meta"><dt>日時</dt><dd>${esc(sel.tm)}</dd>${sel.meta.map(m=>`<dt>${esc(m[0])}</dt><dd>${esc(m[1])}</dd>`).join('')}</dl>`+sel.b.map(l=>`<p>${fmt(l)}</p>`).join('')+
+        `<button class="btn add ${G.got.has(sel.id)?'sub':''}" data-act="take" data-id="${sel.id}" ${G.got.has(sel.id)?'disabled':''}>${G.got.has(sel.id)?'✓ 証拠に追加済み':'📎 証拠に追加する'}</button>`;
+    }
+    win=`<div id="win"><div class="tb"><span>${A.ic} ${A.n}</span><button data-act="closewin" aria-label="閉じる">✕</button></div>${tabs}<div id="lst">${rows}</div><div id="det">${det}</div></div>`;
+  }
+  $('#sInv').innerHTML=`<div id="desk">${icons}</div>${win}<div id="task"><span class="st">▶ Windoze</span><span class="grow">${esc(c.who.pc)}　調査中<br>集めた証拠：<b>${G.got.size}</b>件</span><button class="btn go" data-act="goint">取調べへ ▶</button></div>`;
+}
+
+/* --- 取調べ画面 --- */
+function buildInt(){
+  $('#sInt').innerHTML=`<div id="tl"></div><div id="tlinfo"></div>
+  <div id="gg"><div class="hearts" id="gT" aria-label="信頼度"></div><div class="gb"><span>動揺</span><div class="bar" id="gS"><i></i><u></u></div></div><div class="gb"><span>人事の目</span><div class="bar" id="gH"><i></i></div></div></div>
+  <div id="sceneW"><canvas id="cv" width="640" height="352"></canvas><div id="bang"></div></div>
+  <div id="speech"><div id="spName"></div><div id="spBody" data-act="skiptw"><span class="me" id="spMe"></span><span id="spTxt"></span><span class="slip" id="spSlip"></span><span class="me" id="spHint"></span><span class="warn" id="spWarn"></span></div><div id="spNav"></div></div>
+  <div id="cmds"></div><div id="sheet" hidden></div>`;
+  spKey='';
+}
+function updInt(){
+  if(!$('#tl')) buildInt();
+  const c=G.c, w=c.who;
+  // timeline
+  $('#tl').innerHTML=Array.from({length:10},(_,i)=>`<button class="${G.steps.has(i+1)?'on':''}" data-act="tl" data-i="${i+1}" aria-label="自白${i+1}${G.steps.has(i+1)?'：'+esc(c.labs[i]):''}">${NUM[i]}</button>`).join('');
+  const sel=G.tlSel&&G.steps.has(G.tlSel)?G.tlSel:0;
+  $('#tlinfo').textContent=sel?`${NUM[sel-1]} ${c.labs[sel-1]}`:`自白 ${G.steps.size}/10　手数 ${G.moves}`;
+  $('#gT').textContent='❤️'.repeat(Math.max(0,G.trust))+'🖤'.repeat(Math.max(0,5-G.trust));
+  $('#gS i').style.width=G.shake+'%';
+  const cur=S(G.cur), need=cur&&cur.s>0?cur.n:0;
+  const u=$('#gS u'); u.style.display=need?'block':'none'; u.style.left=need+'%';
+  $('#gH i').style.width=G.hr+'%'; $('#gH').classList.toggle('warn',G.hr>=70);
+  // speech
+  let name,txt,me='',slip='',hint='',warn='',lie=false,key;
+  if(G.msg){ name=G.msg.who==='npc'?w.nm:'戸締'; txt=G.msg.text; me=G.msg.me||''; warn=G.msg.warn||''; key='m'+G.msg.id; }
+  else{
+    name=w.nm; txt=cur.t; key='s'+G.cur+(G.stun?'x':'');
+    if(cur.s>0){ lie=G.shake>=40; if(G.shake>=70) slip=cur.l; if(G.hint.has(G.cur)) hint='💡戸締：'+cur.a; }
+    else if(G.done.has(G.cur)) hint='';
+  }
+  $('#spName').textContent=name; $('#spMe').textContent=me; $('#spMe').hidden=!me;
+  $('#spSlip').textContent=slip?'💬 口がすべった？　'+slip:''; $('#spHint').textContent=hint; $('#spWarn').textContent=warn;
+  const tx=$('#spTxt'); tx.classList.toggle('lie',lie);
+  if(key!==spKey){ spKey=key; spFull=txt; tw=auto?1e9:0; tx.textContent=auto?txt:''; } else { spFull=txt; }
+  // nav
+  const o=openList();
+  if(G.msg||G.pending){ $('#spNav').innerHTML=`<span class="tag">&nbsp;</span>`; }
+  else{
+    const idx=Math.max(0,o.indexOf(G.cur));
+    const lock=cur.s>0&&cur.n>0?(G.shake>=cur.n?'<span class="lock">🔓 崩せそう</span>':'<span class="lock">🔒 固い証言</span>'):(cur.s===0?'<span>💬 まずは聞いてみよう</span>':'');
+    $('#spNav').innerHTML=`<button data-act="prev" aria-label="前の証言">◀</button><span class="tag">証言 ${idx+1}/${o.length}　${lock}</span><button data-act="next" aria-label="次の証言">▶</button>`;
+  }
+  // commands
+  if(G.msg) $('#cmds').innerHTML=`<button class="btn wide" data-act="ok">▶ つぎへ</button>`;
+  else $('#cmds').innerHTML=`<button class="btn" data-act="ask">💬 聞く<small>ヒント／深掘り</small></button><button class="btn" data-act="sheetev">📎 つきつける<small>証拠 ${G.got.size}件</small></button><button class="btn red" data-act="sheetpress">💢 責める<small>動揺↑ 通報注意</small></button><button class="btn sub wide" data-act="backinv" style="min-height:40px;padding:8px">🔍 調査にもどる（手数は増えない）</button>`;
+  // sheet
+  const sh=$('#sheet');
+  if(G.sheet==='ev'&&!G.msg){
+    sh.hidden=false;
+    const list=c.ev.filter(e=>G.got.has(e.id));
+    sh.innerHTML=`<div class="sh">📎 証拠品をえらぶ<button data-act="closesheet" aria-label="閉じる">✕</button></div><div class="sb">${list.length?list.map(e=>`<button class="pc" data-act="selev" data-id="${e.id}" aria-selected="${G.sel===e.id}"><span class="pi">${e.ic}</span><span><b>${esc(e.t)}</b><small>${esc(APPS[e.app].n)}　${esc(e.tm)}</small></span></button>`).join(''):'<div class="empty" style="color:#9aa6c4">証拠がありません。調査にもどろう。</div>'}</div><div class="foot"><button class="btn" data-act="present" ${G.sel?'':'disabled'}>☝ これをつきつける！</button></div>`;
+  }else if(G.sheet==='press'&&!G.msg){
+    sh.hidden=false;
+    sh.innerHTML=`<div class="sh">💢 責める　<small style="color:#ff8a8e;font-weight:700">人事の目に注意</small><button data-act="closesheet" aria-label="閉じる">✕</button></div><div class="sb">${Object.entries(CMDS).map(([k,C])=>{ const broken=C.hp&&G[C.hp]<=0; const star=C.h>=12?'★★★':C.h>=8?'★★':C.h>=3?'★':'—';
+      return `<button class="pc" data-act="press" data-cmd="${k}" ${broken?'disabled':''}><span class="pi">${broken?'💥':C.ic}</span><span><b>${C.n}</b><small>${C.hp?(broken?'こわれた':'耐久 '+'■'.repeat(G[C.hp])+'□'.repeat(3-G[C.hp])):'　'}</small></span><span class="risk">ハラスメント度<br>${star}</span></button>`; }).join('')}</div>`;
+  }else{ sh.hidden=true; }
+}
+function popBang(txt,cmd){
+  const b=$('#bang'); if(!b) return;
+  b.textContent=txt; b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+  const a=$('#sInt'); const hard=(cmd==='kb'||cmd==='desk'||cmd==='ms');
+  a.classList.remove('shake','shake-s'); void a.offsetWidth; a.classList.add(hard?'shake':'shake-s');
+}
+
+/* --- 全面自白 --- */
+function buildConf(){
+  $('#sConf').innerHTML=`<h3>🎤 全面自白</h3><div id="cfCvW"><canvas id="cfCv" width="640" height="352"></canvas></div><div id="cfList"></div><div class="btns" id="cfBtn"></div>`;
+}
+function updConf(){
+  if(!$('#cfList')) buildConf();
+  const cf=G.cf, w=G.c.who;
+  let h=cf.lines.slice(0,cf.i).map(l=>`<div class="cfl"><b>${l.n}</b>${esc(l.t)}</div>`).join('');
+  if(cf.fin) h+=`<div class="cfl last">${esc(w.nm)}「…何もしてないって言ってすみませんでした。」</div>`;
+  const L=$('#cfList'); L.innerHTML=h; L.scrollTop=L.scrollHeight;
+  $('#cfBtn').innerHTML=cf.fin?`<button class="btn" data-act="cfdone">結果を見る ▶</button>`:`<button class="btn" data-act="cfnext">▶ つづき</button><button class="btn sub" data-act="cfall">最後まで読む</button>`;
+}
+function renderRes(){
+  const c=G.c, tb=totalBest(), r=G.rank;
+  const nxt=nextCaseIdx(), hasNext=G.i<CASES.length-1;
+  $('#sRes').innerHTML=`<div class="rank"><p>事件 #${c.no}　${esc(c.title)}　解決！</p><div class="r ${r}">${r}</div><p>${esc(c.who.nm)}さんは、一から十まで白状した。</p></div>
+  <div class="stats"><div><b>${G.miss}</b>つきつけミス</div><div><b>${G.press}</b>責めた回数</div><div><b>${G.moves}</b>かかった手数</div></div>
+  <div class="tip"><b>🛠 情シスのひとこと</b>${esc(c.tip)}</div>
+  <div class="tot">${save.best[c.id]?`この事件の最短手数：${save.best[c.id]}手　最高ランク：${save.rank[c.id]}`:''}${tb!=null?`<br>総合の最短手数：<b>${tb}手</b>`:''}</div>
+  <div class="btns">${hasNext?`<button class="btn" data-act="nextcase">次の事件へ ▶ ${esc(CASES[nxt].title)}</button>`:`<div class="tip" style="background:#e5ffe9;color:#12502a;border-color:#8ad9a2"><b>🎉 全事件解決！</b>お疲れさまでした、戸締さん。次に「何もしてない」と言われるのは、きっと明日です。</div>`}
+  <button class="btn sub" data-act="retrycase">もう一度この事件を遊ぶ</button><button class="btn sub" data-act="title">事件一覧へ</button><a class="btn sub" href="../" style="text-decoration:none">← ゲーム一覧にもどる</a></div>`;
+  $('#sRes').scrollTop=0;
+}
+
+/* ====================== キャラ描画 ====================== */
+function rr(x,a,b,w,h,r){ x.beginPath(); x.moveTo(a+r,b); x.arcTo(a+w,b,a+w,b+h,r); x.arcTo(a+w,b+h,a,b+h,r); x.arcTo(a,b+h,a,b,r); x.arcTo(a,b,a+w,b,r); x.closePath(); }
+function el(x,cx,cy,rx,ry){ x.beginPath(); x.ellipse(cx,cy,rx,ry,0,0,Math.PI*2); }
+function drawScene(cv,mode){
+  if(!cv||!G) return; const x=cv.getContext('2d'); if(!x) return;
+  const W=320,H=176; x.setTransform(cv.width/W,0,0,cv.height/H,0,0); x.clearRect(0,0,W,H);
+  const who=G.c.who, Lk=who.look, t=TM, sh=G.shake;
+  const bg=x.createLinearGradient(0,0,0,H); bg.addColorStop(0,'#34416a'); bg.addColorStop(1,'#222b47'); x.fillStyle=bg; x.fillRect(0,0,W,H);
+  x.fillStyle='rgba(255,255,255,.05)'; for(let i=0;i<6;i++) x.fillRect(14,12+i*13,64,7);
+  x.fillStyle='rgba(255,255,255,.07)'; rr(x,236,18,64,44,3); x.fill(); x.fillStyle='#8fb8e8'; x.fillRect(240,22,26,16); x.fillStyle='#e8c78f'; x.fillRect(270,22,26,16);
+  const bow=mode==='bow'?13:0, bob=Math.sin(t*2)*1, jx=(sh>=55&&mode!=='bow')?Math.sin(t*34)*1.3:0;
+  const emo=mode==='bow'?'bow':(G.emo||''), hit=G.hitT>0;
+  x.save(); x.translate(jx,bow+bob);
+  // body
+  x.fillStyle=Lk.cloth; x.beginPath(); x.moveTo(84,180); x.lineTo(96,130); x.quadraticCurveTo(160,108,224,130); x.lineTo(236,180); x.closePath(); x.fill();
+  if(Lk.tie){ x.fillStyle='#fff'; x.beginPath(); x.moveTo(146,118); x.lineTo(160,136); x.lineTo(174,118); x.lineTo(160,114); x.closePath(); x.fill(); x.fillStyle='#c83c4a'; x.beginPath(); x.moveTo(160,128); x.lineTo(154,136); x.lineTo(160,166); x.lineTo(166,136); x.closePath(); x.fill(); }
+  else{ x.fillStyle='#fff'; x.beginPath(); x.moveTo(144,118); x.lineTo(160,138); x.lineTo(176,118); x.lineTo(160,114); x.closePath(); x.fill(); }
+  x.fillStyle=Lk.skin; x.fillRect(150,104,20,16);
+  // back hair
+  x.fillStyle=Lk.hair;
+  if(Lk.style==='bob'){ rr(x,118,52,84,66,26); x.fill(); }
+  if(Lk.style==='perm'){ for(let i=0;i<9;i++){ el(x,122+i*9.5,66+Math.abs(i-4)*3,12,12); x.fill(); } el(x,160,64,42,34); x.fill(); }
+  // head
+  x.fillStyle=Lk.skin; el(x,160,82,33,37); x.fill();
+  // front hair
+  x.fillStyle=Lk.hair;
+  const cap=(ry)=>{ x.beginPath(); x.ellipse(160,76,36,ry,0,Math.PI,2*Math.PI); x.fill(); };
+  if(Lk.style==='short'){ cap(38); x.fillRect(124,74,8,10); x.fillRect(188,74,8,10); }
+  if(Lk.style==='spiky'){ cap(36); for(let i=-3;i<=3;i++){ x.beginPath(); x.moveTo(160+i*10-7,50); x.lineTo(160+i*10,30-Math.abs(i)*1.2); x.lineTo(160+i*10+7,50); x.fill(); } }
+  if(Lk.style==='comb'){ cap(37); x.fillStyle='rgba(255,255,255,.18)'; x.beginPath(); x.ellipse(150,54,16,7,-.3,0,Math.PI*2); x.fill(); x.fillStyle=Lk.hair; x.fillRect(124,72,7,14); x.fillRect(189,72,7,14); }
+  if(Lk.style==='bob'){ cap(38); x.fillRect(124,60,72,16); }
+  if(Lk.style==='perm'){ for(let i=0;i<7;i++){ el(x,132+i*9.3,52-Math.abs(i-3)*2.2,11,10); x.fill(); } }
+  if(Lk.beard){ x.fillStyle='rgba(60,60,70,.35)'; x.beginPath(); x.ellipse(160,100,25,15,0,0,Math.PI); x.fill(); x.fillStyle='#8a8a92'; rr(x,150,95,20,4,2); x.fill(); }
+  // eyes
+  const nerv=sh>=25, panic=sh>=55;
+  const blink=(t%4.3)<.12;
+  const closed=emo==='bow'||emo==='cry'||emo==='silent'||blink||hit;
+  const eyeY=82;
+  for(const ex of [146,174]){
+    if(closed){
+      x.strokeStyle='#222'; x.lineWidth=2; x.beginPath();
+      if(emo==='cry'||emo==='bow'||hit){ x.moveTo(ex-6,eyeY-2); x.lineTo(ex,eyeY+2); x.lineTo(ex+6,eyeY-2); } else { x.moveTo(ex-6,eyeY); x.lineTo(ex+6,eyeY); }
+      x.stroke();
+    }else{
+      x.fillStyle='#fff'; el(x,ex,eyeY,7,6.5); x.fill();
+      const px=panic?Math.sin(t*7+ex)*3.2:(nerv?Math.sin(t*2.2+ex)*1.6:0), py=panic?Math.cos(t*5)*1.8:0;
+      x.fillStyle='#222'; el(x,ex+px,eyeY+py,3,3.2); x.fill();
+    }
+    // brows
+    x.strokeStyle=Lk.hair==='#bdbdc4'?'#777':'#2a2a2a'; x.lineWidth=2.4; x.beginPath();
+    const inner=ex<160?1:-1;
+    if(emo==='rage'){ x.moveTo(ex-inner*7,eyeY-14); x.lineTo(ex+inner*7,eyeY-8); }
+    else if(nerv){ x.moveTo(ex-inner*7,eyeY-8); x.lineTo(ex+inner*7,eyeY-14); }
+    else { x.moveTo(ex-7,eyeY-11); x.lineTo(ex+7,eyeY-11); }
+    x.stroke();
+    if(Lk.glasses){ x.strokeStyle='#40424a'; x.lineWidth=1.6; el(x,ex,eyeY,10,9); x.stroke(); }
+  }
+  if(Lk.glasses){ x.strokeStyle='#40424a'; x.lineWidth=1.6; x.beginPath(); x.moveTo(156,eyeY); x.lineTo(164,eyeY); x.stroke(); }
+  // nose + mouth
+  x.strokeStyle='rgba(120,70,40,.5)'; x.lineWidth=1.5; x.beginPath(); x.moveTo(160,86); x.lineTo(158,93); x.lineTo(162,93); x.stroke();
+  x.strokeStyle='#7a2c2c'; x.fillStyle='#7a2c2c'; x.lineWidth=2.2;
+  const my=104;
+  if(emo==='cry'){ x.beginPath(); x.arc(160,my+6,7,Math.PI*1.1,Math.PI*1.9); x.stroke(); }
+  else if(emo==='rage'){ rr(x,150,my-3,20,9,3); x.fill(); x.fillStyle='#fff'; x.fillRect(153,my-2,14,3); }
+  else if(emo==='silent'){ x.beginPath(); x.moveTo(152,my); x.lineTo(168,my); x.stroke(); }
+  else if(emo==='bow'){ x.beginPath(); x.arc(160,my-2,7,Math.PI*.15,Math.PI*.85); x.stroke(); }
+  else if(panic){ el(x,160,my+1,6+Math.sin(t*9)*1,5); x.fill(); }
+  else if(nerv){ x.beginPath(); x.moveTo(150,my); for(let i=0;i<=5;i++) x.lineTo(150+i*4,my+(i%2?2.5:-1)); x.stroke(); }
+  else { x.beginPath(); x.moveTo(152,my); x.quadraticCurveTo(160,my+3,168,my); x.stroke(); }
+  // sweat
+  if(sh>=35&&emo!=='bow'){
+    const drops=sh>=60?3:sh>=45?2:1;
+    for(let i=0;i<drops;i++){ const ph=(t*26+i*17)%34, dx=[124,198,134][i], dy=[58,56,50][i]+ph;
+      x.fillStyle='rgba(120,200,255,'+(1-ph/40).toFixed(2)+')'; x.beginPath(); x.moveTo(dx,dy-6); x.quadraticCurveTo(dx+5,dy+1,dx,dy+5); x.quadraticCurveTo(dx-5,dy+1,dx,dy-6); x.fill(); }
+  }
+  if(emo==='cry'){ x.strokeStyle='rgba(120,200,255,.9)'; x.lineWidth=3; for(const ex of [146,174]){ const ph=(t*40)%30; x.beginPath(); x.moveTo(ex,eyeY+4); x.lineTo(ex-1,eyeY+8+ph); x.stroke(); } }
+  x.restore();
+  if(emo==='silent'){ x.fillStyle='#fff'; rr(x,208,30,56,28,10); x.fill(); x.fillStyle='#333'; x.font='bold 20px sans-serif'; x.fillText('…',224,52); }
+  if(emo==='rage'){ x.font='28px sans-serif'; x.fillText('💢',206+Math.sin(t*20)*2,56); }
+  // desk
+  x.fillStyle='#5b4126'; x.fillRect(0,140,W,40); x.fillStyle='#7a5a37'; x.fillRect(0,140,W,4);
+  if(mode!=='bow'){
+    // keyboard
+    x.save();
+    const kbOk=G.kb>0;
+    if(!kbOk){ x.translate(76,156); x.rotate(-.18); x.translate(-76,-156); }
+    x.fillStyle='#c9ced8'; rr(x,26,146,100,22,4); x.fill();
+    x.fillStyle='#eef0f5';
+    for(let r=0;r<3;r++) for(let c=0;c<12;c++){
+      if(!kbOk&&((r*12+c)%5===2)) continue;
+      if(G.kb===2&&r===1&&c===5) continue;
+      x.fillRect(30+c*7.8,149+r*6,6,4.5);
+    }
+    if(!kbOk){ x.strokeStyle='#555'; x.lineWidth=1.5; x.beginPath(); x.moveTo(60,146); x.lineTo(72,157); x.lineTo(66,168); x.stroke(); }
+    x.restore();
+    if(!kbOk){ x.fillStyle='#eef0f5'; for(const [a,b] of [[132,150],[142,158],[150,147],[20,170],[136,170]]) x.fillRect(a,b,7,5); }
+    // mouse
+    if(G.ms>0){ x.fillStyle='#c9ced8'; el(x,250,158,11,14); x.fill(); x.strokeStyle='#8a90a0'; x.lineWidth=1.5; x.beginPath(); x.moveTo(250,144); x.lineTo(250,154); x.moveTo(239,154); x.lineTo(261,154); x.stroke(); x.strokeStyle='#333'; x.beginPath(); x.moveTo(250,144); x.quadraticCurveTo(250,128,276,126); x.stroke(); }
+    else{ x.fillStyle='#b4b9c6'; x.save(); x.translate(250,162); x.rotate(.5); x.fillRect(-12,-6,11,12); x.rotate(-1); x.fillRect(2,-6,10,12); x.restore(); x.strokeStyle='#333'; x.lineWidth=1.5; x.beginPath(); x.moveTo(274,162); x.lineTo(285,150); x.stroke(); }
+    // hp markers
+    x.font='11px sans-serif'; x.fillStyle='rgba(255,255,255,.8)';
+  }
+  // impact fx
+  if(G.fx&&G.fx.age<.4){
+    const k=G.fx.k, p=k==='kb'||k==='brkkb'?[76,156]:(k==='ms'||k==='brkms')?[250,156]:[160,142];
+    const a=G.fx.age/.4; x.strokeStyle='rgba(255,236,150,'+(1-a).toFixed(2)+')'; x.lineWidth=3;
+    for(let i=0;i<10;i++){ const ang=i*Math.PI/5+.2, r1=10+a*14, r2=r1+10+a*10; x.beginPath(); x.moveTo(p[0]+Math.cos(ang)*r1,p[1]+Math.sin(ang)*r1*.7); x.lineTo(p[0]+Math.cos(ang)*r2,p[1]+Math.sin(ang)*r2*.7); x.stroke(); }
+    if(k==='brkkb'||k==='brkms'){ x.font='26px sans-serif'; x.fillText('💥',p[0]-12,p[1]-6); }
+  }
+}
+
+/* ====================== オート（TAS風） ====================== */
+function autoNeeds(c){
+  const need=new Set();
+  for(let k=1;k<=10;k++){ const st=c.st[k]; const has=st.p.find(id=>need.has(id)); need.add(has||st.p[0]); }
+  return [...need];
+}
+function bestPress(need){
+  let best=null, bestReach=null;
+  for(const k of Object.keys(CMDS)){
+    const C=CMDS[k]; if(C.hp&&G[C.hp]<=1) continue;
+    const pg=pressGain(k); if(pg.gain<=0) continue;
+    if(G.hr+pg.hr>55) continue;
+    if(G.shake>=G.c.who.cryAt-1) continue;
+    const score=pg.gain;
+    if(G.shake+pg.gain>=need){ if(!bestReach||pg.hr<bestReach.hr||(pg.hr===bestReach.hr&&pg.gain>bestReach.gain)) bestReach={k,hr:pg.hr,gain:pg.gain}; }
+    if(!best||score>best.score) best={k,score};
+  }
+  return best?best.k:null;
+}
+function autoPlan(){
+  const o=openList();
+  const truth=o.find(k=>S(k).s===0);
+  if(truth!=null){ G.cur=truth; G.curKeep=true; ask(); return; }
+  const lies=o.slice().sort((a,b)=>S(a).n-S(b).n);
+  const tgt=lies[0]; G.cur=tgt; G.curKeep=true;
+  const st=S(tgt);
+  if(G.shake<st.n){ const k=bestPress(st.n); if(k){ press(k); return; } ask(); return; }
+  const id=st.p.find(i=>G.got.has(i)); present(id);
+}
+function autoStep(){
+  if(screen==='title'){ let i=autoIdx; if(!unlocked(i)) i=CASES.findIndex((c,j)=>unlocked(j)&&!save.clear[c.id]); if(i<0) i=0; autoIdx=i; startCase(i); return; }
+  if(screen==='ticket'){ enterInv(); return; }
+  if(screen==='inv'){
+    const nx=autoNeeds(G.c).find(id=>!G.got.has(id));
+    if(nx){ const e=evOf(nx); G.win={app:e.app,tab:e.tab||(APPS[e.app].tabs?Object.keys(APPS[e.app].tabs)[0]:''),sel:nx}; collect(nx); R(); return; }
+    enterInt(); if(G.msg) G.msg=null; R(); return;
+  }
+  if(screen==='int'){ if(G.msg){ ok(); return; } autoPlan(); return; }
+  if(screen==='conf'){ cfAdvance(true); return; }
+  if(screen==='res'){ aT=.6; autoIdx=(G.i+1)%CASES.length; startCase(autoIdx); return; }
+  if(screen==='over'){ retry(); return; }
+}
+function setAuto(b){
+  auto=!!b; aT=.3; R();
+}
+
+/* ====================== ループ ====================== */
+function tick(dt,fast){
+  TM+=dt;
+  if(G){ if(G.fx){ G.fx.age+=dt; if(G.fx.age>1) G.fx=null; } if(G.hitT>0) G.hitT-=dt; }
+  if(auto){ aT-=dt; if(aT<=0){ aT=AUTO_DT; autoStep(); } }
+  if(screen==='int'&&spFull){ tw+=dt*48; const tx=$('#spTxt'); if(tx){ const n=Math.min(spFull.length,Math.floor(tw)); const s=spFull.slice(0,n); if(tx.textContent!==s) tx.textContent=s; } }
+  if(!fast){
+    if(screen==='int') drawScene($('#cv'),'');
+    else if(screen==='conf'&&G&&G.cf) drawScene($('#cfCv'),G.cf.fin?'bow':'');
+  }
+}
+let lastTs=0;
+function frame(ts){ const dt=Math.min(.1,(ts-lastTs)/1000||0); lastTs=ts; tick(dt); requestAnimationFrame(frame); }
+
+/* ====================== 入力 ====================== */
+document.addEventListener('click',e=>{
+  if(auto&&e.isTrusted&&e.target.closest&&e.target.closest('button,a')&&!e.target.closest('#autoBtn,#sndBtn')) setAuto(false);
+  const b=e.target.closest('[data-act]'); if(!b) return;
+  const a=b.dataset.act;
+  if(auto&&e.isTrusted&&a!=='skiptw') setAuto(false);
+  ac();
+  switch(a){
+    case 'case': { const i=+b.dataset.i; if(unlocked(i)){ sfx('click'); startCase(i); } break; }
+    case 'autostart': setAuto(true); break;
+    case 'title': G=null; setScreen('title'); break;
+    case 'goinv': sfx('click'); enterInv(); break;
+    case 'app': { sfx('click'); const ap=b.dataset.app; G.win={app:ap,tab:APPS[ap].tabs?Object.keys(APPS[ap].tabs)[0]:'',sel:null}; R(); break; }
+    case 'closewin': G.win=null; R(); break;
+    case 'tab': G.win.tab=b.dataset.tab; G.win.sel=null; sfx('click'); R(); break;
+    case 'item': G.win.sel=b.dataset.id; sfx('click'); R(); { const d=$('#det'); if(d) d.scrollTop=0; } break;
+    case 'take': collect(b.dataset.id); break;
+    case 'goint': sfx('click'); if(G.got.size===0&&!confirmEmpty()) break; enterInt(); break;
+    case 'backinv': G.sheet=null; setScreen('inv'); break;
+    case 'ask': ask(); break;
+    case 'sheetev': G.sheet='ev'; G.sel=null; sfx('click'); R(); break;
+    case 'sheetpress': G.sheet='press'; sfx('click'); R(); break;
+    case 'closesheet': G.sheet=null; R(); break;
+    case 'selev': G.sel=b.dataset.id; sfx('click'); R(); break;
+    case 'present': { const id=G.sel; G.sheet=null; G.sel=null; if(id) present(id); break; }
+    case 'press': { G.sheet=null; press(b.dataset.cmd); break; }
+    case 'ok': ok(); break;
+    case 'prev': navSt(-1); break;
+    case 'next': navSt(1); break;
+    case 'tl': { const i=+b.dataset.i; G.tlSel=G.steps.has(i)?(G.tlSel===i?0:i):0; sfx('click'); R(); break; }
+    case 'skiptw': tw=1e9; break;
+    case 'cfnext': cfAdvance(false); break;
+    case 'cfall': cfAdvance(true); break;
+    case 'cfdone': setScreen('res'); break;
+    case 'nextcase': gotoNext(); break;
+    case 'retrycase': startCase(G.i); break;
+    case 'retry': retry(); break;
+  }
+});
+function confirmEmpty(){ return true; }
+$('#autoBtn').addEventListener('click',()=>{ ac(); setAuto(!auto); });
+$('#sndBtn').addEventListener('click',()=>{ save.snd=!save.snd; store(); if(save.snd) sfx('click'); R(); });
+addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  if(e.key==='o'||e.key==='O'){ ac(); setAuto(!auto); e.preventDefault(); return; }
+  if(auto&&e.isTrusted) setAuto(false);
+  if((e.key==='Enter'||e.key===' ')&&screen==='int'&&G&&G.msg&&!(document.activeElement&&document.activeElement.tagName==='BUTTON')){ ok(); e.preventDefault(); }
+});
+
+/* ====================== テスト用フック ====================== */
+window.__nanimo={
+  state(){ return {screen,auto,case:G&&G.i,trust:G&&G.trust,shake:G&&Math.round(G.shake*10)/10,hr:G&&Math.round(G.hr*10)/10,moves:G&&G.moves,miss:G&&G.miss,press:G&&G.press,steps:G&&G.steps.size,kb:G&&G.kb,ms:G&&G.ms,got:G&&[...G.got],cur:G&&G.cur,open:G&&screen==='int'?openList():null,msg:G&&G.msg?G.msg.text:null,pending:G&&G.pending,rank:G&&G.rank,over:G&&G.over,stun:G&&G.stun,evade:G&&G.evade}; },
+  data(){ return CASES; },
+  save(){ return save; },
+  startCase, toInv:enterInv, toInt:enterInt, collect, collectAll(){ G.c.ev.forEach(e=>G.got.add(e.id)); R(); },
+  ask, present, press, ok, goto:gotoSt, retry,
+  setAuto, step(dt){ tick(dt,true); }, draw(){ tick(0,false); },
+  reset(){ save={rank:{},clear:{},best:{},snd:save.snd}; store(); G=null; setScreen('title'); },
+  unlockAll(){ CASES.forEach(c=>save.clear[c.id]=1); store(); R(); },
+  title(){ G=null; setScreen('title'); },
+  setScreen, openList(){ return G?openList():[]; },
+  autoNeeds:i=>autoNeeds(CASES[i]), pressGain:c=>pressGain(c), finishConf(){ cfAdvance(true); }
+};
+setScreen('title');
+requestAnimationFrame(t=>{ lastTs=t; requestAnimationFrame(frame); });
+})();
+</script>
+<!-- zoom guard: ピンチ・ダブルタップでズームしない -->
+<script>(function(){var p=function(e){e.preventDefault();};['gesturestart','gesturechange','gestureend'].forEach(function(t){document.addEventListener(t,p,{passive:false});});document.addEventListener('touchmove',function(e){if(e.touches&&e.touches.length>1)e.preventDefault();},{passive:false});document.addEventListener('dblclick',function(e){var t=e.target;if(t&&t.closest&&t.closest('input,textarea,select,[contenteditable]'))return;e.preventDefault();},{passive:false});})();</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>
