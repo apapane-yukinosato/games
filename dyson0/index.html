@@ -164,7 +164,7 @@ const K={
  kai  :{l:'相談所 月会費',k:'multi',hp:3,spd:78,dmg:.06,col:'#F0C9B0',sl:'#C03A6A'},
  ore  :{l:'オレオレ詐欺',k:'tap',spd:112,dmg:.06,zig:1,col:'#C8C8C8',sl:'#444',shape:'phone'},
  kaden:{l:'洗濯機がこわれた',k:'tap',spd:88,dmg:.09,col:'#D8E8F0',sl:'#6A8AA0',r:30},
- oya  :{l:'親の借金',k:'multi',hp:7,spd:44,dmg:.14,col:'#E8C8A0',sl:'#5A3A2A',r:38},
+ oya  :{l:'利家の借金 残り',k:'multi',hp:7,spd:44,dmg:.14,col:'#E8C8A0',sl:'#5A3A2A',r:38},
  mai3 :{max:2,l:'麻依「ちゃんと食べてる？」',k:'mai',spd:50,dmg:.03,aff:2,col:'#FFD8BE',sl:'#FF8FB0'},
  giant:{l:'ぜんぶ持ってく',k:'giant',spd:40,dmg:1,col:'#6A5A7A',sl:'#1A1426',r:70}
 };
@@ -189,16 +189,17 @@ const rankOf=r=>{ for(const [t,k] of RANKS) if(r>=t) return k; return 'C'; };
 const ARW={L:'←',R:'→',U:'↑',D:'↓'};
 
 /* ================= story ================= */
-const NM={n:null,daison:'大存',mai:'麻依',father:'父',mother:'母',owner:'店長',senpai:'先輩',sales:'営業の人',boss:'上司',doki:'同期',mori:'森さん',scam:'「息子」',voice:'声',future:'？？？',atm:'ATM',dad:'父'};
+const NM={n:null,daison:'大存',mai:'麻依',father:'利家',mother:'後子',owner:'店長',senpai:'先輩',sales:'営業の人',boss:'上司',doki:'同期',mori:'森さん',scam:'「息子」',voice:'声',future:'？？？',atm:'ATM',dad:'利家'};
 const L=(c,t,m,p)=>({c,t,m:m||'',p:p===undefined?undefined:p});
 const SC={
  c1pre:{bg:'home',age:10,mage:5,lines:[
   L('n','前田 大存、10さい。\nうちは、ふつうの家だった。きのうまでは。','', 'nameplate'),
-  L('father','大存……すまん。友だちの借金の、連帯保証人になってしまった。','sad',null),
-  L('daison','れんたい……ほしょうにん？','shock'),
+  L('n','父の前田利家は、友だちの借金の連帯保証人になっていた。\n母は前田後子。','',null),
+  L('father','大存……すまん。友だちの借金の、連帯保証人になってしまった。','sad'),
+  L('daison','お父さん……れんたい、ほしょうにん？','shock'),
   L('father','サインしただけだ。すぐ終わると思ったんだ。','sad'),
   L('mother','家計のために、お年玉は預かるわね。おこづかいも、しばらく半分ね。','n'),
-  L('daison','えっ、お年玉ぜんぶ!? ……わかった。家のためだもんな。','sad'),
+  L('daison','えっ、お母さん、お年玉ぜんぶ!? ……わかった。家のためだもんな。','sad'),
   L('mai','おにいちゃん！ 麻依ね、おやつ ほしい！','smile','profile'),
   L('daison','……うん。麻依のおやつ代だけは、ぜったいに守る。','smile'),
   L('n','画面のふちから、お金を吸う手がのびてくる！\nタップではじき返そう。','',null)]},
@@ -215,7 +216,7 @@ const SC={
   L('mai','ライト、スマホのでいいよね！ 照らすの、まかせて！','smile')]},
  c2pre:{bg:'campus',age:20,mage:15,lines:[
   L('n','前田 大存、20さい。大学生。\nバイトと奨学金で、ぎりぎりの毎日。','','postcard'),
-  L('mai','お兄ちゃんへ。年賀状、うちの表札みたいに並べて書いたよ。','smile'),
+  L('mai','お兄ちゃんへ。年賀状、家族みんなの名前を並べて書いたよ。','smile'),
   L('owner','バイト代？ 来月ね、来月。……3か月目だけど。','n',null),
   L('daison','……はい。（来月って、いつだ）','sad'),
   L('senpai','よう大存。ジュース代かしてくれよ〜。返す返す（返さない）。','smile'),
@@ -255,7 +256,7 @@ const SC={
   L('mori','前田さん、今月もお見合い、がんばりましょう！','smile'),
   L('scam','もしもし、オレだけど。事故っちゃってさ。','n'),
   L('daison','……オレって誰だ。','tired'),
-  L('n','洗濯機が壊れた。親の借金も、まだ残っている。','',null),
+  L('n','洗濯機が壊れた。父・利家の借金も、まだ残っている。','',null),
   L('n','そのとき、スマホが鳴った。','',null),
   L('mai','お兄ちゃん？ ちゃんと食べてる？','smile','photo'),
   L('mai','むかし自販機の下、二人でさがしたよね。あのころ、楽しかったな。','smile'),
@@ -390,9 +391,12 @@ function vortex(x,y,R,t,col,rev){ g.save(); g.translate(x,y); g.strokeStyle=col;
 function card(x,y,w,h,col='#FFFDF4'){ g.fillStyle='rgba(0,0,0,.2)'; rr(x+3,y+4,w,h,10); g.fill(); g.fillStyle=col; rr(x,y,w,h,10); g.fill(); }
 function propDraw(p,age,mage,t,ln){
   const x=180,y=44;
-  if(p==='nameplate'){ g.fillStyle='#8A5A2A'; rr(x-90,y+4,180,170,10); g.fill(); g.fillStyle='#E8C890'; rr(x-82,y+12,164,154,8); g.fill(); txt('表札',x,y+30,12,'#6A4A22'); txt('前田',x,y+66,34,'#3A2412'); pair(x,y+108,22,'#3A2412'); }
-  else if(p==='profile'){ card(x-100,y,200,176); txt('かぞくのプロフィール',x,y+18,13,'#6A4A22'); g.fillStyle='#E6DCC6'; g.fillRect(x-86,y+30,172,2); pair(x-40,y+60,26,'#3A2412'); txt(age+'さい',x+52,y+60,20,'#8A5A2A'); txt((mage)+'さい',x+52,y+60+26*1.18,20,'#8A5A2A'); txt('きょうだい',x,y+140,12,'#8A7A62'); }
-  else if(p==='postcard'){ card(x-110,y,220,160,'#FFF4F0'); g.strokeStyle='#E04A4A'; g.lineWidth=3; g.strokeRect(x-100,y+10,200,140); txt('あけまして',x-20,y+40,22,'#C03030'); txt('おめでとう',x-20,y+68,22,'#C03030'); pair(x+72,y+110,24,'#3A2412'); txt('賀',x+82,y+30,20,'#C03030'); }
+  if(p==='nameplate'){ g.fillStyle='#8A5A2A'; rr(x-84,y-6,168,222,10); g.fill(); g.fillStyle='#E8C890'; rr(x-76,y+2,152,206,8); g.fill(); txt('表札',x,y+18,11,'#6A4A22'); txt('前田',x,y+50,30,'#3A2412'); txt('利家',x,y+88,20,'#3A2412'); txt('後子',x,y+112,20,'#3A2412'); pair(x,y+146,20,'#3A2412'); }
+  else if(p==='profile'){ card(x-112,y-6,224,214); txt('かぞくのプロフィール',x,y+12,13,'#6A4A22'); g.fillStyle='#E6DCC6'; g.fillRect(x-98,y+24,196,2);
+    const rows=[['利家',age+30],['後子',age+28],['大存',age],['麻依',mage]]; rows.forEach((r,i)=>{ const yy=y+48+i*34+(i>=3?0:0); txt(r[0],x-30,yy,22,'#3A2412'); txt(r[1]+'さい',x+52,yy,18,'#8A5A2A'); });
+    txt('前田家',x,y+190,12,'#8A7A62'); }
+  else if(p==='postcard'){ card(x-112,y,224,170,'#FFF4F0'); g.strokeStyle='#E04A4A'; g.lineWidth=3; g.strokeRect(x-102,y+10,204,150); txt('あけまして',x-30,y+36,20,'#C03030'); txt('おめでとう',x-30,y+62,20,'#C03030'); txt('賀',x+84,y+30,18,'#C03030');
+    txt('前田',x,y+92,14,'#3A2412'); txt('利家',x-44,y+118,16,'#3A2412'); txt('後子',x-44,y+140,16,'#3A2412'); pair(x+44,y+118,16,'#3A2412'); }
   else if(p==='album'){ card(x-120,y,240,170,'#EDE6D0'); txt('そつぎょうアルバム',x,y+16,13,'#6A4A22'); g.fillStyle='#8EC6E8'; rr(x-100,y+34,86,70,6); g.fill(); g.fillStyle='#F4B8C8'; rr(x+14,y+34,86,70,6); g.fill(); person(x-57,y+62,.5,personOf('daison',age),'smile'); person(x+57,y+62,.5,personOf('mai',mage),'smile'); pair(x,y+138,20,'#3A2412'); }
   else if(p==='passbook'){ card(x-110,y,220,150,'#2A4A8A'); g.fillStyle='#F4EEE2'; rr(x-98,y+12,196,126,8); g.fill(); txt('つうちょう',x-50,y+30,14,'#2A4A8A'); txt('口座名義',x-50,y+66,12,'#8A7A62'); pair(x+36,y+60,26,'#2A2A2A'); txt('残高 '+(age>=38?'ほぼ0円':'わずか'),x,y+122,14,'#C03030'); }
   else if(p==='photo'){ card(x-100,y,200,170,'#FFFFFF'); g.fillStyle=age>=38?'#E8A070':'#F4C890'; rr(x-88,y+10,176,106,6); g.fill(); person(x-34,y+50,.55,personOf('daison',age),'smile'); person(x+36,y+54,.55,personOf('mai',mage),'smile'); pair(x,y+138,20,'#3A2412'); }
