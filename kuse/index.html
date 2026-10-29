@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="description" content="AIの占い師「クセミ」が、あなたの手の出し方を学習して次の手を読んでくる。最後にあなたのクセを診断！ 読まれないじゃんけん。">
+<title>あなたのクセを読むじゃんけん</title>
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" href="data:,">
+<style>
+html,body{touch-action:manipulation}
+:root{--bg:#120a28;--bg2:#1e1245;--pan:#2a1a5c;--pan2:#3a2680;--ink:#f6efff;--mute:#b3a4d6;--gold:#ffd36b;--pink:#ff7ab8;--cyan:#6fe3ff;--win:#6dffb1;--lose:#ff6b8b;--draw:#ffe27a}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);overflow:hidden;overscroll-behavior:none}
+body{font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;font-size:15px;line-height:1.4}
+button{font:inherit;color:inherit;cursor:pointer;border:0}
+button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#app{position:relative;height:100vh;height:100dvh;max-width:540px;margin:0 auto;display:flex;flex-direction:column;background:radial-gradient(ellipse at 50% 0%,#3b2480 0%,var(--bg2) 38%,var(--bg) 100%);padding-top:env(safe-area-inset-top,0px)}
+#top{display:flex;align-items:center;gap:6px;padding:6px 10px;flex:none}
+#top a{color:var(--ink);text-decoration:none;font-weight:800;font-size:13px;white-space:nowrap;padding:6px 4px}
+#top h1{flex:1;margin:0;text-align:center;font-size:13px;font-weight:800;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini{font-size:13px;font-weight:800;padding:7px 10px;border-radius:999px;background:var(--pan);color:var(--ink);white-space:nowrap}
+.mini[aria-pressed=true]{background:var(--gold);color:#2b1850}
+#sndBtn[aria-pressed=false]{opacity:.6}
+.scr{flex:1;min-height:0;display:flex;flex-direction:column;padding:0 14px calc(10px + env(safe-area-inset-bottom,0px))}
+.scroll{overflow-y:auto;-webkit-overflow-scrolling:touch}
+/* title */
+#title{align-items:center;text-align:center;overflow-y:auto}
+#title h2{margin:2px 0 0;font-size:26px;line-height:1.2;color:var(--gold);text-shadow:0 0 18px #a96bff}
+#title h2 small{display:block;font-size:13px;color:var(--cyan);letter-spacing:.2em;margin-bottom:4px}
+#title .lead{margin:6px 0 8px;font-size:13px;color:var(--mute)}
+.modes{display:grid;gap:8px;width:100%;margin:6px 0}
+.mode{display:flex;align-items:center;gap:10px;text-align:left;padding:10px 12px;border-radius:14px;background:var(--pan);border:2px solid transparent}
+.mode[aria-pressed=true]{border-color:var(--gold);background:var(--pan2)}
+.mode b{display:block;font-size:15px}.mode small{color:var(--mute);font-size:12px}
+.mode .ic{font-size:26px}
+.lvs{display:flex;gap:6px;justify-content:center;margin:2px 0 4px}
+.lv{width:44px;height:38px;border-radius:10px;background:var(--pan);font-weight:800}
+.lv[aria-pressed=true]{background:var(--gold);color:#2b1850}
+.bests{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%;margin:8px 0;font-size:12px}
+.bests div{background:rgba(255,255,255,.07);border-radius:10px;padding:6px 8px;color:var(--mute)}
+.bests b{display:block;color:var(--ink);font-size:16px}
+.big{width:100%;padding:14px;border-radius:16px;background:linear-gradient(180deg,#ffe28a,#ffb73b);color:#3a2000;font-size:18px;font-weight:900;box-shadow:0 4px 0 #b57400}
+.big:active{transform:translateY(3px);box-shadow:0 1px 0 #b57400}
+.sub{display:block;margin-top:8px;color:var(--mute);font-size:12px}
+/* kusemi */
+.kuse{width:100%;height:100%;display:block}
+.kuse .eyeH,.kuse .eyeS{display:none}
+.kuse[data-face=H] .eyeN,.kuse[data-face=S] .eyeN{display:none}
+.kuse[data-face=H] .eyeH{display:inline}
+.kuse[data-face=S] .eyeS{display:inline}
+.kuse .ballglow{animation:pulse 2.4s ease-in-out infinite}
+.kuse.think .ball{animation:shake .18s linear infinite}
+@keyframes pulse{50%{opacity:.55}}
+@keyframes shake{0%{transform:translate(0,0)}25%{transform:translate(2px,-3px)}75%{transform:translate(-2px,2px)}}
+#kTitle{width:200px;height:190px}
+/* play */
+#play{gap:6px}
+#hud{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;flex:none}
+#hud .grow{flex:1;color:var(--mute)}
+.tag{padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.1)}
+.tag b{font-size:16px;margin-left:2px}
+.tag.w b{color:var(--win)}.tag.l b{color:var(--lose)}.tag.d b{color:var(--draw)}
+#stage{position:relative;flex:1 1 150px;min-height:140px;max-height:300px;border-radius:18px;background:radial-gradient(ellipse at 50% 100%,#4a2c9a,#241552);overflow:hidden;border:2px solid rgba(255,255,255,.1);transition:box-shadow .3s}
+#stage.read{box-shadow:0 0 0 3px var(--lose),0 0 28px 4px rgba(255,80,120,.6) inset;animation:aura 1.1s ease-in-out infinite}
+@keyframes aura{50%{box-shadow:0 0 0 3px var(--lose),0 0 46px 10px rgba(255,80,120,.85) inset}}
+#kPlay{position:absolute;left:50%;top:0;height:100%;aspect-ratio:200/190;transform:translateX(-50%)}
+#bubble{position:absolute;left:8px;top:8px;max-width:46%;background:#fff;color:#2b1850;border-radius:12px;padding:5px 9px;font-size:12px;font-weight:800;line-height:1.3;box-shadow:0 2px 0 rgba(0,0,0,.25)}
+#bubble:after{content:"";position:absolute;right:-7px;top:12px;border:7px solid transparent;border-left-color:#fff;border-right:0}
+#beat{position:absolute;right:10px;top:10px;font-size:22px;font-weight:900;color:var(--gold);text-shadow:0 0 12px #a96bff}
+#banner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:900;color:#fff;background:rgba(210,30,80,.3);text-shadow:0 0 14px #ff2b6b,0 3px 0 #7a0030;animation:ban 1.4s ease-out forwards;pointer-events:none;letter-spacing:.08em}
+@keyframes ban{0%{opacity:0;transform:scale(1.7)}15%{opacity:1;transform:scale(1)}20%{transform:translateX(-6px)}28%{transform:translateX(6px)}36%{transform:translateX(-4px)}80%{opacity:1}100%{opacity:0}}
+#hands{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;flex:none}
+.hbox{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border-radius:14px;padding:4px 10px;height:62px}
+.hbox.you{flex-direction:row-reverse}
+.hbox .e{font-size:38px;line-height:1}
+.hbox small{color:var(--mute);font-size:11px;font-weight:700;display:block}
+.hbox b{font-size:14px}
+.shk .e{animation:shk .22s linear infinite}
+@keyframes shk{0%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+#verdict{font-size:20px;font-weight:900;min-width:58px;text-align:center}
+#verdict.w{color:var(--win)}#verdict.l{color:var(--lose)}#verdict.d{color:var(--draw)}
+#meterBox{display:flex;align-items:center;gap:8px;flex:none;font-size:13px;font-weight:800}
+#meterBox label{width:62px;color:var(--cyan)}
+.bar{flex:1;height:14px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#6fe3ff,#ffd36b,#ff6b8b);background-size:var(--bw,100%) 100%;transition:width .35s}
+#meterPct{width:44px;text-align:right}
+#readBox{flex:none;background:rgba(255,255,255,.06);border-radius:14px;padding:8px 10px}
+.rrow{display:grid;grid-template-columns:62px 1fr 38px;align-items:center;gap:6px;font-size:12px;height:20px}
+.rrow .tr{height:10px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}
+.rrow .tr i{display:block;height:100%;width:0;background:#8a7bd0;transition:width .3s}
+.rrow.pred .tr i{background:var(--gold)}
+.rrow.act{color:var(--cyan);font-weight:800}
+.rrow span:last-child{text-align:right}
+#readTxt{margin-top:4px;font-size:13px;font-weight:800;min-height:20px}
+#topEx{font-size:12px;color:var(--gold);min-height:18px}
+#aiSeq{display:none;font-size:26px;letter-spacing:4px;text-align:center;min-height:36px}
+#play.rev .rrow{display:none}#play.rev #aiSeq{display:block}#play.rev #topEx{display:none}
+#autoNote{flex:none;text-align:center;font-size:13px;font-weight:800;color:var(--cyan);background:rgba(111,227,255,.12);border-radius:10px;padding:4px}
+#btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex:none;margin-top:auto}
+.hb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:96px;border-radius:18px;background:linear-gradient(180deg,#5a3cc0,#3a2290);font-weight:900;font-size:15px;box-shadow:0 5px 0 #20104f;position:relative}
+.hb .e{font-size:42px;line-height:1}
+.hb kbd{position:absolute;right:8px;top:5px;font:700 10px system-ui;color:var(--mute)}
+.hb:active{transform:translateY(4px);box-shadow:0 1px 0 #20104f}
+body.auto .hb{opacity:.6}
+#strip{flex:none;display:flex;gap:3px;justify-content:center;height:28px;align-items:center}
+#strip i{font-style:normal;font-size:15px;line-height:1;padding:2px 3px;border-radius:7px;border:2px solid transparent}
+#strip i.w{border-color:var(--win)}#strip i.l{border-color:var(--lose)}#strip i.d{border-color:var(--draw)}
+/* result */
+#result{overflow-y:auto;-webkit-overflow-scrolling:touch;gap:10px}
+.rhead{text-align:center;margin-top:2px}
+.rhead .rm{font-size:12px;color:var(--cyan);font-weight:800}
+.rhead h2{margin:2px 0;font-size:24px;color:var(--gold)}
+.rhead .cnt{font-size:15px;font-weight:800}.cnt b{font-size:22px}
+.cnt .w{color:var(--win)}.cnt .l{color:var(--lose)}.cnt .d{color:var(--draw)}
+.card{background:rgba(255,255,255,.08);border-radius:16px;padding:12px}
+.card h3{margin:0 0 8px;font-size:14px;color:var(--gold)}
+.type .tname{font-size:24px;font-weight:900;text-align:center}
+.type .tdesc{text-align:center;color:var(--mute);font-size:13px;margin:2px 0 8px}
+.rs{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800}
+.rs b{font-size:26px;color:var(--cyan)}
+.diag{margin:0;padding:0;list-style:none;display:grid;gap:7px}
+.diag li{background:rgba(0,0,0,.2);border-radius:10px;padding:8px 10px;font-size:14px;font-weight:700;border-left:4px solid var(--pink)}
+.heat{display:grid;grid-template-columns:44px repeat(3,1fr);gap:4px;text-align:center;font-size:13px;font-weight:800}
+.heat .h{color:var(--mute);font-size:11px;align-self:center}
+.heat .c{border-radius:8px;padding:9px 0;background:rgba(255,211,107,var(--a));min-height:38px}
+.heat .c small{display:block;font-size:10px;font-weight:600;color:var(--ink);opacity:.8}
+.note{font-size:11px;color:var(--mute);margin:6px 0 0}
+#graph{width:100%;height:auto;display:block}
+.rec{background:linear-gradient(90deg,rgba(255,211,107,.25),rgba(255,122,184,.2));font-weight:800;font-size:14px}
+.acts{display:grid;gap:8px;margin-bottom:6px}
+.acts .big.alt{background:var(--pan2);color:var(--ink);box-shadow:0 4px 0 #1b0f45}
+.acts a.big{display:block;text-align:center;text-decoration:none;font-size:15px;background:transparent;border:2px solid var(--mute);color:var(--ink);box-shadow:none;padding:11px}
+#swipeToastSpacer{display:none}
+@media (min-width:600px){.hb{height:110px}}
+@media (max-height:700px){.hb{height:76px}.hb .e{font-size:32px}.hbox{height:52px}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <a href="../" id="backLink">← 一覧</a>
+    <h1>クセを読むじゃんけん</h1>
+    <button class="mini" id="autoBtn" aria-pressed="false" title="オートモード（Oキー）">🤖 オート</button>
+    <button class="mini" id="sndBtn" aria-pressed="true" aria-label="音">🔊</button>
+  </header>
+
+  <section id="title" class="scr">
+    <h2><small>CLAIRVOYANT JANKEN</small>あなたのクセを読む<br>じゃんけん</h2>
+    <div id="kTitle"></div>
+    <p class="lead">占い師AI「クセミ」が、あなたの手の出し方を学習して次の手を読んでくる。最後に、自分でも知らなかった「クセ」を明かされる…！</p>
+    <div class="modes" role="group" aria-label="モード">
+      <button class="mode" data-mode="normal" aria-pressed="true"><span class="ic">🔮</span><span><b>ふつう</b><small>30手勝負。読まれずに勝ち越そう</small></span></button>
+      <button class="mode" data-mode="hard" aria-pressed="false"><span class="ic">🎲</span><span><b>読まれないチャレンジ</b><small>100手勝負。ランダムさスコアに挑戦</small></span></button>
+      <button class="mode" data-mode="rev" aria-pressed="false"><span class="ic">🔁</span><span><b>逆読み</b><small>クセミのクセを読んで勝つ練習（20手・Lv1〜5）</small></span></button>
+    </div>
+    <div class="lvs" id="lvs" hidden role="group" aria-label="レベル"></div>
+    <button class="big" id="startBtn">はじめる</button>
+    <div class="bests" id="bests"></div>
+    <span class="sub">キー：1/2/3 か J/K/L で手を出す ・ O でオート</span>
+  </section>
+
+  <section id="play" class="scr" hidden>
+    <div id="hud"><span class="tag" id="moveNo">1/30</span><span class="tag w">勝<b id="cw">0</b></span><span class="tag l">負<b id="cl">0</b></span><span class="tag d">分<b id="cd">0</b></span><span class="grow" id="modeTag"></span></div>
+    <div id="stage"><div id="kPlay"></div><div id="bubble">さあ、あなたの手を読ませてもらうわ</div><div id="beat"></div></div>
+    <div id="hands">
+      <div class="hbox ai"><span class="e" id="aiE">？</span><span><small>クセミ</small><b id="aiN">&nbsp;</b></span></div>
+      <div id="verdict">VS</div>
+      <div class="hbox you"><span class="e" id="youE">？</span><span><small>あなた</small><b id="youN">&nbsp;</b></span></div>
+    </div>
+    <div id="meterBox"><label id="meterLbl">読まれ度</label><div class="bar"><i id="meterFill"></i></div><b id="meterPct">--</b></div>
+    <div id="readBox">
+      <div class="rrow" data-h="0"><span>✊ グー</span><div class="tr"><i></i></div><span>?</span></div>
+      <div class="rrow" data-h="1"><span>✌️ チョキ</span><div class="tr"><i></i></div><span>?</span></div>
+      <div class="rrow" data-h="2"><span>✋ パー</span><div class="tr"><i></i></div><span>?</span></div>
+      <div id="aiSeq"></div>
+      <div id="readTxt">クセミは あなたの次の手を読んでいる…</div>
+      <div id="topEx"></div>
+    </div>
+    <div id="autoNote" hidden>🤖 AI の思考を先読み中… <small id="peekTxt"></small></div>
+    <div id="btns">
+      <button class="hb" data-h="0"><kbd>1 / J</kbd><span class="e">✊</span>グー</button>
+      <button class="hb" data-h="1"><kbd>2 / K</kbd><span class="e">✌️</span>チョキ</button>
+      <button class="hb" data-h="2"><kbd>3 / L</kbd><span class="e">✋</span>パー</button>
+    </div>
+    <div id="strip"></div>
+  </section>
+
+  <section id="result" class="scr" hidden></section>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const HN=['グー','チョキ','パー'], HE=['✊','✌️','✋'];
+const beat=h=>(h+2)%3;                       // the hand that beats h
+const judge=(me,ai)=>me===ai?0:(ai===(me+1)%3?1:-1); // +1: player wins
+const pct=x=>Math.round(x*100);
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const MODES={normal:{name:'ふつう',total:30},hard:{name:'読まれないチャレンジ',total:100},rev:{name:'逆読み',total:20}};
+const CLEAR_WINS=11;
+
+/* ---------- save ---------- */
+const SAVE_KEY='kuse_v1';
+let SV={snd:true,best:{win:0,rand:0,margin:null,rev:0},hist:[],first:[]};
+try{ const o=JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); if(o&&typeof o==='object'){ SV=Object.assign(SV,o); SV.best=Object.assign({win:0,rand:0,margin:null,rev:0},o.best||{}); if(!Array.isArray(SV.hist)) SV.hist=[]; if(!Array.isArray(SV.first)) SV.first=[]; } }catch(e){}
+function save(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(SV)); }catch(e){} }
+
+/* ---------- sound (WebAudio) ---------- */
+let AC=null, quiet=false;
+function ac(){ if(!SV.snd||quiet) return null; try{ if(!AC){ const C=window.AudioContext||window.webkitAudioContext; if(!C) return null; AC=new C(); } if(AC.state==='suspended') AC.resume(); return AC; }catch(e){ return null; } }
+function tone(f,d,type,v,delay,f2){ const a=ac(); if(!a) return; try{ const t=a.currentTime+(delay||0), o=a.createOscillator(), g=a.createGain(); o.type=type||'sine'; o.frequency.setValueAtTime(f,t); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+d); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(v||.1,t+.01); g.gain.exponentialRampToValueAtTime(0.0001,t+d); o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+d+.03); }catch(e){} }
+const sfx={
+  tick(i){ tone([330,392,523][i]||440,.12,'triangle',.12); },
+  win(){ [523,659,784,1047].forEach((f,i)=>tone(f,.14,'square',.06,i*.07)); },
+  lose(){ tone(300,.35,'sawtooth',.07,0,110); },
+  draw(){ tone(440,.1,'triangle',.1); tone(440,.1,'triangle',.1,.12); },
+  read(){ tone(90,.9,'sawtooth',.12,0,50); tone(180,.6,'square',.04,.1,70); },
+  hit(){ tone(880,.08,'sine',.06); },
+  end(){ [392,523,659,784,1047].forEach((f,i)=>tone(f,.2,'triangle',.09,i*.1)); },
+  rec(){ [659,784,988,1319].forEach((f,i)=>tone(f,.16,'square',.06,.5+i*.09)); }
+};
+
+/* ---------- RNG (state lives inside the object so it can be cloned) ---------- */
+function rnd(o){ o.rs=(o.rs+0x6D2B79F5)|0; let t=o.rs; t=Math.imul(t^(t>>>15),t|1); t^=t+Math.imul(t^(t>>>7),t|61); return ((t^(t>>>14))>>>0)/4294967296; }
+
+/* ---------- prediction engine: mixture of experts ---------- */
+const EXN={freq:'全体の出しがち',recent:'最近の偏り',m1:'直前の手からのクセ',ng2:'2手パターン',ng3:'3手パターン',wsls:'勝ち負けのあとのクセ',react:'相手の手への反応',beatlast:'相手の手を追いかけるクセ',streak:'連続のクセ',shift:'ずらしのクセ',shift2:'ずらし方（循環）のクセ'};
+const EXK=Object.keys(EXN);
+let ALPHA=0.4, LAM=0.88, BETA=2.2;
+function newEng(seed){ return {rs:seed|0,H:[],A:[],R:[],sc:EXK.map(()=>0)}; }
+function sm(c){ const s=c[0]+c[1]+c[2]+3*ALPHA; return [(c[0]+ALPHA)/s,(c[1]+ALPHA)/s,(c[2]+ALPHA)/s]; }
+const sum3=c=>c[0]+c[1]+c[2];
+function experts(E){
+  const {H,A,R}=E, n=H.length, out=[];
+  const last=H[n-1], al=A[n-1], rl=R[n-1]+1;
+  const rotate=(d3,from)=>{ const p=[0,0,0]; for(let d=0;d<3;d++) p[(from+d)%3]=d3[d]; return p; };
+  // freq
+  { if(n<1) out.push(null); else { const c=[0,0,0]; H.forEach(h=>c[h]++); out.push(sm(c)); } }
+  // recent (last 8)
+  { if(n<1) out.push(null); else { const c=[0,0,0]; H.slice(-8).forEach(h=>c[h]++); out.push(sm(c)); } }
+  // m1
+  { const c=[0,0,0]; for(let i=0;i<n-1;i++) if(H[i]===last) c[H[i+1]]++; out.push(sum3(c)?sm(c):null); }
+  // ng2
+  { const c=[0,0,0]; if(n>=3) for(let i=0;i<n-2;i++) if(H[i]===H[n-2]&&H[i+1]===H[n-1]) c[H[i+2]]++; out.push(sum3(c)?sm(c):null); }
+  // ng3
+  { const c=[0,0,0]; if(n>=4) for(let i=0;i<n-3;i++) if(H[i]===H[n-3]&&H[i+1]===H[n-2]&&H[i+2]===H[n-1]) c[H[i+3]]++; out.push(sum3(c)?sm(c):null); }
+  // wsls : relative change given the previous result
+  { const t=[[0,0,0],[0,0,0],[0,0,0]]; for(let i=1;i<n;i++) t[R[i-1]+1][(H[i]-H[i-1]+3)%3]++;
+    out.push(n>=2&&sum3(t[rl])?rotate(sm(t[rl]),last):null); }
+  // react : absolute move given the AI's previous move
+  { const t=[[0,0,0],[0,0,0],[0,0,0]]; for(let i=1;i<n;i++) t[A[i-1]][H[i]]++;
+    out.push(n>=2&&sum3(t[al])?sm(t[al]):null); }
+  // beatlast : relation to the AI's previous move, given the previous result
+  { const t=[[0,0,0],[0,0,0],[0,0,0]]; for(let i=1;i<n;i++) t[R[i-1]+1][(H[i]-A[i-1]+3)%3]++;
+    out.push(n>=2&&sum3(t[rl])?rotate(sm(t[rl]),al):null); }
+  // streak
+  { if(n<2){ out.push(null); } else {
+      const cont=[0,0,0,0,0], end=[0,0,0,0,0]; let r=1;
+      for(let i=1;i<n;i++){ const rr=Math.min(r,4); if(H[i]===H[i-1]){ cont[rr]++; r++; } else { end[rr]++; r=1; } }
+      const rr=Math.min(r,4), s=cont[rr]+end[rr];
+      if(!s) out.push(null); else { const pc=(cont[rr]+1/3)/(s+1), o=(1-pc)/2, p=[o,o,o]; p[last]=pc; out.push(p); } } }
+  // shift : unconditional relative change
+  { if(n<2) out.push(null); else { const c=[0,0,0]; for(let i=1;i<n;i++) c[(H[i]-H[i-1]+3)%3]++; out.push(rotate(sm(c),last)); } }
+  // shift2 : relative change given the previous relative change
+  { const t=[[0,0,0],[0,0,0],[0,0,0]]; for(let i=2;i<n;i++) t[(H[i-1]-H[i-2]+3)%3][(H[i]-H[i-1]+3)%3]++;
+    if(n<3) out.push(null); else { const c=t[(H[n-1]-H[n-2]+3)%3]; out.push(sum3(c)?rotate(sm(c),last):null); } }
+  return out;
+}
+function decide(E){
+  const n=E.H.length;
+  if(n<3){ const m=Math.floor(rnd(E)*3); return {ai:m,pred:(m+1)%3,dist:[1/3,1/3,1/3],top:-1,rand:true}; }
+  const ds=experts(E), tot=[0,0,0]; let ws=0, bw=-1, top=-1;
+  ds.forEach((d,i)=>{ if(!d) return; const w=Math.exp(BETA*E.sc[i]); ws+=w; for(let k=0;k<3;k++) tot[k]+=w*d[k]; if(w>bw){ bw=w; top=i; } });
+  let dist=ws?tot.map(v=>v/ws):[1/3,1/3,1/3];
+  const mx=Math.max(...dist), cand=[0,1,2].filter(k=>dist[k]>mx-1e-9);
+  const pred=cand.length===1?cand[0]:cand[Math.floor(rnd(E)*cand.length)];
+  return {ai:beat(pred),pred,dist,top,rand:false};
+}
+function learn(E,y,a,r){
+  const ds=experts(E);
+  ds.forEach((d,i)=>{ E.sc[i]=LAM*E.sc[i]+(d?d[y]-1/3:0); });
+  E.H.push(y); E.A.push(a); E.R.push(r);
+}
+
+/* ---------- Kusemi's own habit (reverse mode) ---------- */
+function newHab(lv,seed){
+  const Hb={lv,rs:seed|0,pos:0,t:0,pat:[],tbl:null,noise:[0,0,0,.05,.10][lv-1],mut:[0,0,8,6,7][lv-1]};
+  if(lv===1){ const s=Math.floor(rnd(Hb)*3), dir=rnd(Hb)<.5?1:2; Hb.pat=[s,(s+dir)%3,(s+2*dir)%3]; }
+  else if(lv===5){ Hb.pat=[Math.floor(rnd(Hb)*3)]; Hb.tbl=[0,1,2].map(()=>Math.floor(rnd(Hb)*3)); if(new Set(Hb.tbl).size<2) Hb.tbl=[2,0,1]; }
+  else { const len=lv===4?5:4; do{ Hb.pat=[]; for(let i=0;i<len;i++) Hb.pat.push(Math.floor(rnd(Hb)*3)); }while(new Set(Hb.pat).size<2); }
+  return Hb;
+}
+function habDecide(Hb,lastY){
+  let b=(Hb.lv===5&&lastY!=null)?Hb.tbl[lastY]:Hb.pat[Hb.pos%Hb.pat.length];
+  if(Hb.noise&&rnd(Hb)<Hb.noise) b=Math.floor(rnd(Hb)*3);
+  return b;
+}
+function habLearn(Hb,y,a,r){
+  Hb.pos++; if(Hb.lv===4&&r===1) Hb.pos++;
+  Hb.t++;
+  if(Hb.mut&&Hb.t%Hb.mut===0){
+    if(Hb.lv===5){ const k=Math.floor(rnd(Hb)*3); Hb.tbl[k]=(Hb.tbl[k]+1+Math.floor(rnd(Hb)*2))%3; }
+    else { const i=Math.floor(rnd(Hb)*Hb.pat.length); Hb.pat[i]=(Hb.pat[i]+1+Math.floor(rnd(Hb)*2))%3; }
+  }
+}
+function habDesc(Hb){
+  const lv=Hb.lv;
+  if(lv===5) return 'あなたの前の手を見て、決まった返し方で出す（'+[0,1,2].map(k=>HN[k]+'→'+HN[Hb.tbl[k]]).join('、')+'）。7手ごとに返し方が1つ変わり、ときどき気まぐれ。';
+  const p=Hb.pat.map(h=>HN[h]).join('→');
+  if(lv===1) return p+' をぐるぐるくりかえす。';
+  if(lv===2) return p+' をくりかえす。';
+  if(lv===3) return p+' をくりかえし、8手ごとに1つだけ入れかわる。';
+  return p+' をくりかえし、6手ごとに1つ入れかわる。負けたときは1つ飛ばし、ときどき気まぐれ。';
+}
+
+/* ---------- match ---------- */
+let M=null, nextSeed=null;
+function randSeed(){ return Math.floor(Math.random()*2147483647); }
+function newMatch(mode,level,seed){
+  if(seed==null) seed=(nextSeed!=null?nextSeed:randSeed());
+  const eng=newEng(seed);
+  M={mode,level:level||1,total:MODES[mode].total,seed,eng,H:eng.H,A:eng.A,R:eng.R,hits:[],w:0,l:0,d:0,
+     hab:mode==='rev'?newHab(level||1,seed^0x5bd1e995):null,auto:false,last:null,pend:null,result:null};
+  beginRound();
+  return M;
+}
+function beginRound(){
+  const lastY=M.H.length?M.H[M.H.length-1]:null;
+  M.pre={eng:structuredClone(M.eng),hab:M.hab?structuredClone(M.hab):null,lastY};
+  const dd=decide(M.eng);
+  if(M.hab) dd.ai=habDecide(M.hab,lastY);
+  M.pend=dd;
+}
+function lookahead(){
+  // simulate the AI's next decision on a copy of its state taken before it drew anything
+  if(M.hab) return habDecide(structuredClone(M.pre.hab),M.pre.lastY);
+  return decide(structuredClone(M.pre.eng)).ai;
+}
+function commit(y){
+  const p=M.pend, a=p.ai, r=judge(y,a), hit=p.pred===y;
+  M.hits.push(hit?1:0);
+  if(r>0) M.w++; else if(r<0) M.l++; else M.d++;
+  learn(M.eng,y,a,r);
+  if(M.hab) habLearn(M.hab,y,a,r);
+  M.last={y,a,r,dist:p.dist,pred:p.rand?null:p.pred,hit,top:p.top,rand:p.rand};
+  if(M.H.length<M.total) beginRound();
+  return M.last;
+}
+
+/* ---------- analysis / diagnosis ---------- */
+function analyze(H,A,R,hits){
+  const n=H.length, cnt=[0,0,0]; H.forEach(h=>cnt[h]++);
+  const tr=[[0,0,0],[0,0,0],[0,0,0]], rx=[[0,0,0],[0,0,0],[0,0,0]];
+  const ar={'-1':{n:0,stay:0},'0':{n:0,stay:0},'1':{n:0,stay:0}}, drawRel=[0,0,0], dc=[0,0,0];
+  let br=0, brn=0, stay=0, maxRun=n?1:0, run=1;
+  for(let i=0;i<n-1;i++){
+    tr[H[i]][H[i+1]]++; rx[A[i]][H[i+1]]++;
+    const o=ar[R[i]]; o.n++; if(H[i+1]===H[i]){ o.stay++; stay++; }
+    dc[(H[i+1]-H[i]+3)%3]++;
+    const rel=(H[i+1]-A[i]+3)%3; if(R[i]===0) drawRel[rel]++;
+    brn++; if(rel===2) br++;
+    if(H[i+1]===H[i]){ run++; if(run>maxRun) maxRun=run; } else run=1;
+  }
+  const hr=hits.slice(3), hrate=hr.length?hr.reduce((s,v)=>s+v,0)/hr.length:1/3;
+  return {n,cnt,tr,rx,ar,drawRel,dc,br,brn,stay,maxRun,hrate,hn:hr.length};
+}
+const ent=p=>-p.reduce((s,v)=>s+(v>0?v*Math.log2(v):0),0);
+function randScore(st){
+  if(st.n<6) return 50;
+  const Hs=ent(st.cnt.map(v=>v/st.n))/Math.log2(3);
+  let Hc=0, tot=0;
+  st.tr.forEach(c=>{ const s=sum3(c); if(!s) return; Hc+=ent(c.map(v=>(v+.5)/(s+1.5)))*s; tot+=s; });
+  Hc=tot?Hc/tot/Math.log2(3):1;
+  const pr=Math.max(0,Math.min(1,1-(st.hrate-1/3)/.45));
+  const raw=.6*pr+.2*Hs+.2*Hc;
+  return Math.round(100*Math.max(0,Math.min(1,(raw-.35)/.6)));
+}
+function typeOf(st,score){
+  const n=st.n, dmax=Math.max(...st.cnt)/Math.max(1,n), dh=st.cnt.indexOf(Math.max(...st.cnt));
+  const m=Math.max(1,n-1), L=st.ar['-1'];
+  let best=0; st.tr.forEach(c=>{ const s=sum3(c); if(s>=3) best=Math.max(best,Math.max(...c)/s); });
+  if(score>=78) return {e:'🎲',name:'天然ランダム',desc:'クセがほとんど見つからない。クセミ泣かせの予測不能タイプ！'};
+  if(dmax>=.47) return [{e:'✊',name:'グー信者',desc:'とにかくグーが好き。パーを出されがち。'},{e:'✌️',name:'チョキ職人',desc:'チョキへのこだわりが強い。グーを出されがち。'},{e:'✋',name:'パー信者',desc:'パーを信じて疑わない。チョキを出されがち。'}][dh];
+  const cy=Math.max(st.dc[1],st.dc[2])/m;
+  if(st.brn>=8&&st.br/st.brn>=.55&&cy<st.br/st.brn) return {e:'🎯',name:'相手追いかけ屋',desc:'クセミの直前の手に勝とうとしがち。'};
+  if(cy>=.5) return {e:'🔄',name:'几帳面な循環派',desc:'グー→チョキ→パーのリズムが体にしみついている。'};
+  if(L.n>=4&&1-L.stay/L.n>=.8) return {e:'🔀',name:'負けず嫌いの切り替え屋',desc:'負けるとすぐ手を変える。変え方を読まれると弱い。'};
+  if(st.dc[0]/m>=.45) return {e:'🗿',name:'ガンコ一徹',desc:'同じ手を続けがち。いったん決めたら動かない。'};
+  if(st.brn>=8&&st.br/st.brn>=.5) return {e:'🎯',name:'相手追いかけ屋',desc:'クセミの直前の手に勝とうとしがち。'};
+  if(best>=.6) return {e:'🧵',name:'マイルール職人',desc:'「この手のあとはこの手」という自分ルールがある。'};
+  if(score>=62) return {e:'🎲',name:'天然ランダム',desc:'ほぼ読めない。ちょっとだけクセはあるかも？'};
+  return {e:'🌀',name:'気まぐれ屋',desc:'ゆるいクセがチラホラ。気分で出しているタイプ。'};
+}
+function diagnose(st,mode,firstArr){
+  const n=st.n, A=[], B=[], mm=Math.max(1,n-1);
+  // each candidate is ranked by how far it is from chance (z-score)
+  const cand=(t,k,m,p0,min)=>{ if(m<4) return; const p=k/m, z=(p-p0)/Math.sqrt(p0*(1-p0)/m); if(z>=2&&p>=(min||.55)) A.push({sc:z,t}); };
+  const L=st.ar['-1'], W=st.ar['1'];
+  for(let c=0;c<3;c++){ const s=sum3(st.tr[c]); if(s<4) continue; const k=st.tr[c].indexOf(Math.max(...st.tr[c]));
+    cand('あなたは'+HN[c]+'のあと、'+pct(st.tr[c][k]/s)+'% で'+HN[k]+'を出す',st.tr[c][k],s,1/3); }
+  cand('負けた次は、'+pct(1-L.stay/Math.max(1,L.n))+'% で手を変える（負け替えタイプ）',L.n-L.stay,L.n,2/3,.8);
+  cand('負けても、'+pct(L.stay/Math.max(1,L.n))+'% で同じ手を出す（意地っぱりタイプ）',L.stay,L.n,1/3);
+  cand('勝った次は、'+pct(W.stay/Math.max(1,W.n))+'% で同じ手を続ける（勝ち残りタイプ）',W.stay,W.n,1/3);
+  cand('勝った次は、'+pct(1-W.stay/Math.max(1,W.n))+'% で手を変える（勝つと気分を変えたいタイプ）',W.n-W.stay,W.n,2/3,.85);
+  const dn=sum3(st.drawRel);
+  if(dn>=4){ const k=st.drawRel.indexOf(Math.max(...st.drawRel));
+    cand('あいこのあとは、'+(k===2?'相手が出した手に勝つ手を出しがち':k===0?'同じ手をもう一度出しがち':'相手の手に負ける手を出しがち')+'（'+pct(st.drawRel[k]/dn)+'%）',st.drawRel[k],dn,1/3); }
+  cand('クセミの直前の手に勝つ手を、'+pct(st.br/Math.max(1,st.brn))+'% で出す（追いかけタイプ）',st.br,st.brn,1/3,.5);
+  cand('グー→チョキ→パーの順に出しがち（'+pct(st.dc[1]/mm)+'%）— 循環派',st.dc[1],mm,1/3,.5);
+  cand('パー→チョキ→グーの逆順に出しがち（'+pct(st.dc[2]/mm)+'%）',st.dc[2],mm,1/3,.5);
+  cand('前と同じ手を続けがち（'+pct(st.dc[0]/mm)+'%）',st.dc[0],mm,1/3,.5);
+  for(let a=0;a<3;a++){ const s=sum3(st.rx[a]); if(s<4) continue; const k=st.rx[a].indexOf(Math.max(...st.rx[a]));
+    cand('クセミが'+HN[a]+'を出した次は、'+pct(st.rx[a][k]/s)+'% で'+HN[k]+'を出す',st.rx[a][k],s,1/3,.6); }
+  A.sort((x,y)=>y.sc-x.sc);
+  const lines=A.slice(0,3).map(o=>o.t);
+  // ratio
+  const rt=st.cnt.map(v=>v/Math.max(1,n)); let tag=[];
+  const mx=Math.max(...rt), mi=Math.min(...rt);
+  if(mx>=.45) tag.push(HN[rt.indexOf(mx)]+'多め'); if(mi<=.18) tag.push(HN[rt.indexOf(mi)]+'不足');
+  lines.push('グー・チョキ・パーの割合：'+HN.map((h,i)=>h+' '+pct(rt[i])+'%').join(' / ')+'（'+(tag.length?tag.join('・'):'バランスよし')+'）');
+  // streak
+  if(st.maxRun<=2) lines.push('同じ手を3回続けたことは'+(n>=15?'一度もない':'まだない'));
+  else lines.push('同じ手を最長 '+st.maxRun+' 回続けたことがある');
+  // switching rate
+  lines.push('手を変える割合は '+pct(1-st.stay/mm)+'%（ランダムなら約 67%）');
+  // first move
+  const fa=firstArr.filter(v=>v===0||v===1||v===2);
+  if(fa.length>=3){ const fc=[0,0,0]; fa.forEach(v=>fc[v]++); const k=fc.indexOf(Math.max(...fc));
+    lines.push(fc[k]/fa.length>=.5?'最初の1手は'+HN[k]+'が多い（'+fa.length+'試合中 '+fc[k]+'回）':'最初の1手はバラバラ（'+fa.length+'試合の記録から）'); }
+  else lines.push('今回の最初の1手は'+HN[st.n?firstArr[firstArr.length-1]:0]);
+  // hit rate
+  if(mode==='rev') lines.push('クセミのクセを読めた割合：'+pct(st.winRate)+'%（まぐれなら約 33%）');
+  else lines.push('クセミの読みは '+pct(st.hrate)+'% 的中（ランダムなら 33% のはず）');
+  return lines;
+}
+
+/* ---------- UI state ---------- */
+const G={phase:'title',t:0,auto:false,mode:'normal',level:1,beatIdx:-1,autoT:0,d1:.66,d2:.42,y:null,bannerAt:-99,tmp:null};
+function kusemiSVG(){ return `<svg class="kuse" viewBox="0 0 200 190" data-face="N" aria-hidden="true">
+<defs><radialGradient id="bg{ID}" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#bdeaff"/><stop offset="1" stop-color="#7a6bd6"/></radialGradient></defs>
+<g>
+<path d="M28 190 Q36 118 100 108 Q164 118 172 190Z" fill="#5b3a9f"/><path d="M60 190 Q70 140 100 130 Q130 140 140 190Z" fill="#4a2c88"/>
+<circle cx="52" cy="150" r="3" fill="#ffd36b"/><circle cx="148" cy="150" r="3" fill="#ffd36b"/><circle cx="40" cy="172" r="2.5" fill="#ffd36b"/><circle cx="160" cy="172" r="2.5" fill="#ffd36b"/>
+<ellipse cx="100" cy="76" rx="33" ry="35" fill="#f4d5b3"/>
+<path d="M52 98 Q50 26 100 22 Q150 26 148 98 Q132 76 100 74 Q68 76 52 98Z" fill="#3b2570"/>
+<path d="M52 98 Q50 26 100 22 Q150 26 148 98" fill="none" stroke="#ffd36b" stroke-width="3"/>
+<path d="M62 40 Q100 14 138 40" fill="none" stroke="#ffd36b" stroke-width="2" stroke-dasharray="2 5"/>
+<polygon points="100,38 103,47 112,47 105,52 108,61 100,56 92,61 95,52 88,47 97,47" fill="#ffd36b"/>
+<g class="eyeN"><ellipse cx="86" cy="80" rx="5" ry="6" fill="#fff"/><ellipse cx="114" cy="80" rx="5" ry="6" fill="#fff"/><circle cx="87" cy="81" r="3.2" fill="#2b1850"/><circle cx="113" cy="81" r="3.2" fill="#2b1850"/><path d="M78 72 Q86 68 93 72M107 72 Q114 68 122 72" stroke="#2b1850" stroke-width="2" fill="none"/></g>
+<g class="eyeH"><path d="M80 82 Q86 74 92 82M108 82 Q114 74 120 82" stroke="#2b1850" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M76 70 Q86 64 94 68M106 68 Q114 64 124 70" stroke="#2b1850" stroke-width="2" fill="none"/></g>
+<g class="eyeS"><circle cx="86" cy="80" r="8" fill="#fff"/><circle cx="114" cy="80" r="8" fill="#fff"/><circle cx="86" cy="80" r="2.4" fill="#2b1850"/><circle cx="114" cy="80" r="2.4" fill="#2b1850"/><path d="M76 66 L94 70M124 66 L106 70" stroke="#2b1850" stroke-width="2.4"/></g>
+<circle cx="76" cy="92" r="5" fill="#ff9aa8" opacity=".5"/><circle cx="124" cy="92" r="5" fill="#ff9aa8" opacity=".5"/>
+<path d="M68 90 Q100 120 132 90 L132 104 Q100 134 68 104Z" fill="#6fe3d6" opacity=".88"/><path d="M68 90 Q100 120 132 90" stroke="#ffd36b" stroke-width="2" fill="none"/>
+</g>
+<g class="ball"><ellipse cx="100" cy="184" rx="30" ry="6" fill="#ffd36b"/><path d="M78 184 Q100 168 122 184Z" fill="#e0a52a"/>
+<circle class="ballglow" cx="100" cy="150" r="33" fill="#b49bff" opacity=".55"/><circle cx="100" cy="150" r="27" fill="url(#bg{ID})"/><ellipse cx="90" cy="138" rx="7" ry="4" fill="#fff" opacity=".8" transform="rotate(-30 90 138)"/>
+<text class="bh" x="100" y="161" text-anchor="middle" font-size="30">🔮</text></g>
+<ellipse cx="62" cy="152" rx="11" ry="8" fill="#f4d5b3" transform="rotate(-20 62 152)"/><ellipse cx="138" cy="152" rx="11" ry="8" fill="#f4d5b3" transform="rotate(20 138 152)"/>
+</svg>`; }
+let svgN=0;
+function mkKusemi(el){ svgN++; el.innerHTML=kusemiSVG().replace(/\{ID\}/g,svgN); }
+function setFace(f,think){ $$('.kuse').forEach(s=>{ s.dataset.face=f; s.classList.toggle('think',!!think); }); }
+function setBall(t){ $$('.kuse .bh').forEach(x=>x.textContent=t); }
+function say(t){ $('#bubble').textContent=t; }
+
+function setSnd(){ $('#sndBtn').setAttribute('aria-pressed',String(SV.snd)); $('#sndBtn').textContent=SV.snd?'🔊':'🔇'; }
+function setAuto(on){
+  G.auto=!!on; $('#autoBtn').setAttribute('aria-pressed',String(G.auto));
+  document.body.classList.toggle('auto',G.auto);
+  if(M&&G.auto) M.auto=true;
+  G.autoT=0; updateAutoNote();
+}
+function updateAutoNote(){
+  const show=G.auto&&(G.phase==='idle'||G.phase==='shake'||G.phase==='reveal');
+  $('#autoNote').hidden=!show;
+  if(show&&M&&M.pend){ $('#peekTxt').textContent='先読み → クセミは '+HE[M.pend.ai]+' '+HN[M.pend.ai]+' を出す'; }
+}
+function show(id){ ['title','play','result'].forEach(k=>$('#'+k).hidden=(k!==id)); }
+function bestsHtml(){
+  const b=SV.best;
+  return `<div>最高勝率（30手）<b>${b.win?b.win+'%':'--'}</b></div><div>最高ランダムさ<b>${b.rand?b.rand:'--'}</b></div><div>読まれない 最高勝ち越し<b>${b.margin==null?'--':(b.margin>0?'+':'')+b.margin}</b></div><div>逆読み 到達<b>${b.rev?'Lv'+b.rev+'クリア':'--'}</b></div>`;
+}
+function showTitle(){
+  G.phase='title'; G.t=0; show('title'); $('#bests').innerHTML=bestsHtml(); setFace('N',false); setBall('🔮'); updateAutoNote();
+  $$('.mode').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===G.mode)));
+  $('#lvs').hidden=G.mode!=='rev';
+  $$('.lv').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.lv===G.level)));
+}
+function startGame(mode,level,seed){
+  if(mode) G.mode=mode; if(level) G.level=level;
+  newMatch(G.mode,G.level,seed);
+  if(G.auto) M.auto=true;
+  show('play'); $('#play').classList.toggle('rev',G.mode==='rev');
+  $('#meterLbl').textContent=G.mode==='rev'?'読めた度':'読まれ度';
+  $('#modeTag').textContent=MODES[G.mode].name+(G.mode==='rev'?' Lv'+G.level:'');
+  $('#stage').classList.remove('read'); $$('#banner').forEach(x=>x.remove());
+  G.bannerAt=-99;
+  renderStats(); renderHistory(); renderReadHidden();
+  $('#meterFill').style.width='0'; $('#meterPct').textContent='--'; $('#topEx').textContent='';
+  $('#aiSeq').textContent='';
+  toIdle();
+}
+function toIdle(){
+  G.phase='idle'; G.t=0; G.autoT=0;
+  $('#aiE').textContent='？'; $('#youE').textContent='？'; $('#aiN').innerHTML='&nbsp;'; $('#youN').innerHTML='&nbsp;';
+  $('#hands').classList.remove('shk'); $('#verdict').textContent='VS'; $('#verdict').className='';
+  $('#beat').textContent=''; setFace('N',false); setBall('🔮'); renderReadHidden();
+  $('#readTxt').textContent=G.mode==='rev'?'クセミの手のならびに、クセがあるはず。読んで勝とう！':'クセミは あなたの次の手を読んでいる…';
+  $('#moveNo').textContent=(M.H.length+1)+'/'+M.total;
+  updateAutoNote();
+}
+function renderReadHidden(){ $$('.rrow').forEach(r=>{ r.className='rrow'; r.querySelector('i').style.width='0'; r.lastElementChild.textContent='?'; }); }
+function renderStats(){
+  $('#cw').textContent=M.w; $('#cl').textContent=M.l; $('#cd').textContent=M.d;
+  const n=M.H.length; let v;
+  if(M.mode==='rev'){ const r=M.R.slice(-10); v=r.length?r.filter(x=>x>0).length/r.length:null; }
+  else { const h=M.hits.slice(-10); v=h.length?h.reduce((s,x)=>s+x,0)/h.length:null; }
+  $('#meterFill').style.width=(v==null?0:pct(v))+'%'; $('#meterPct').textContent=v==null?'--':pct(v)+'%';
+  return v;
+}
+function renderHistory(){
+  const n=M.H.length, from=Math.max(0,n-12);
+  let h=''; for(let i=from;i<n;i++) h+=`<i class="${M.R[i]>0?'w':M.R[i]<0?'l':'d'}">${HE[M.H[i]]}</i>`;
+  $('#strip').innerHTML=h;
+}
+function press(y,human){
+  if(G.phase==='title'||G.phase==='result'){ return false; }
+  if(G.phase!=='idle') return false;
+  if(human&&G.auto) setAuto(false);
+  G.y=y; const L=commit(y);
+  G.phase='shake'; G.t=0; G.beatIdx=-1; G.d1=G.auto?.2:.66; G.d2=G.auto?.2:.42;
+  $('#aiE').textContent=HE[0]; $('#youE').textContent=HE[0]; $('#hands').classList.add('shk');
+  $('#aiN').textContent='…'; $('#youN').textContent='…';
+  setFace('N',true); setBall('✊'); updateAutoNote();
+  return true;
+}
+function doReveal(){
+  const L=M.last, n=M.H.length;
+  G.phase='reveal'; G.t=0;
+  $('#hands').classList.remove('shk');
+  $('#aiE').textContent=HE[L.a]; $('#youE').textContent=HE[L.y]; $('#aiN').textContent=HN[L.a]; $('#youN').textContent=HN[L.y];
+  setBall(HE[L.a]); $('#beat').textContent='ぽん！';
+  const v=$('#verdict'); v.textContent=L.r>0?'勝ち！':L.r<0?'負け':'あいこ'; v.className=L.r>0?'w':L.r<0?'l':'d';
+  const rev=M.mode==='rev';
+  if(rev){
+    setFace(L.r>0?'S':L.r<0?'H':'N',false);
+    say(L.r>0?'あら、読まれたわ…！':L.r<0?'ふふ、まだまだね':'おや、同じね');
+    $('#aiSeq').textContent=M.A.slice(-10).map(h=>HE[h]).join(' ');
+    $('#readTxt').textContent=L.r>0?'読み勝ち！ クセミの手のならびを見てみよう':'クセミの手のならびをよく見て、次を読もう';
+  } else {
+    setFace(L.hit?'H':'S',false);
+    $$('.rrow').forEach(r=>{ const k=+r.dataset.h, p=L.dist[k]; r.className='rrow'+(!L.rand&&k===L.pred?' pred':'')+(k===L.y?' act':''); r.querySelector('i').style.width=pct(p)+'%'; r.lastElementChild.textContent=pct(p)+'%'; });
+    if(L.rand){ $('#readTxt').textContent='読み：まだ学習中（クセミはカンで出した）'; say('まずはあなたを観察させてもらうわ'); }
+    else { $('#readTxt').textContent='読み：'+HN[L.pred]+' '+pct(L.dist[L.pred])+'%  →  '+(L.hit?'的中！ 😏':'はずれ 😳'); say(L.hit?['見えた！','やっぱりね','お見通しよ'][n%3]:['えっ…！','読みはずれ…','やるわね']); }
+    $('#topEx').textContent=L.top>=0?'💡 いま効いている読み：'+EXN[EXK[L.top]]:'💡 まだ学習中';
+  }
+  const v10=renderStats(); renderHistory();
+  if(!rev&&!L.rand&&L.hit) sfx.hit();
+  if(L.r>0) sfx.win(); else if(L.r<0) sfx.lose(); else sfx.draw();
+  // "read!" effect
+  const behind=M.l>M.w;
+  $('#stage').classList.toggle('read',!rev&&behind&&n>=6);
+  if(!rev&&n>=6&&M.l-M.w>=2&&v10!=null&&v10>=.5&&n-G.bannerAt>=6){
+    G.bannerAt=n; const b=document.createElement('div'); b.id='banner'; b.textContent='読まれてる！'; $('#stage').appendChild(b); setTimeout(()=>b.remove(),1500);
+    sfx.read(); say('ふふふ…あなたのクセ、見えているわ');
+  }
+  updateAutoNote();
+}
+function afterReveal(){
+  if(M.H.length>=M.total) finishMatch(); else toIdle();
+}
+
+/* ---------- result ---------- */
+function heatHtml(st){
+  let h='<div class="heat"><span></span>'+HN.map((x,i)=>`<span class="h">${HE[i]}${x}</span>`).join('');
+  for(let r=0;r<3;r++){ const s=sum3(st.tr[r]); h+=`<span class="h">${HE[r]}${HN[r]}<br>のあと</span>`;
+    for(let c=0;c<3;c++){ const p=s?st.tr[r][c]/s:0; h+=`<span class="c" style="--a:${s?(.08+p*.85).toFixed(2):0}">${s?pct(p)+'%':'–'}<small>${st.tr[r][c]}回</small></span>`; } }
+  return h+'</div><p class="note">行＝直前に出した手、列＝その次に出した手の割合。濃い黄色ほどクセ。</p>';
+}
+function graphHtml(extra){
+  const arr=SV.hist.slice(-19).map(o=>({s:o.s,m:o.m}));
+  if(extra) arr.push({s:extra.s,m:extra.m,cur:true,unsaved:extra.unsaved});
+  const W=320,Hh=130,px=26,py=14, n=arr.length;
+  const X=i=>n<=1?W/2:px+(W-px-10)*i/(n-1), Y=s=>py+(Hh-py*2)*(1-s/100);
+  let g=`<svg id="graph" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="ランダムさスコアの推移">`;
+  [0,50,100].forEach(v=>{ g+=`<line x1="${px}" x2="${W-6}" y1="${Y(v)}" y2="${Y(v)}" stroke="#ffffff" stroke-opacity="${v===50?.18:.1}"/><text x="${px-4}" y="${Y(v)+4}" fill="#b3a4d6" font-size="10" text-anchor="end">${v}</text>`; });
+  if(n>=2) g+=`<polyline fill="none" stroke="#6fe3ff" stroke-width="2.5" stroke-linejoin="round" points="${arr.map((o,i)=>X(i).toFixed(1)+','+Y(o.s).toFixed(1)).join(' ')}"/>`;
+  arr.forEach((o,i)=>{ g+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(o.s).toFixed(1)}" r="${o.cur?6:3.5}" fill="${o.cur?'#ffd36b':'#6fe3ff'}" stroke="#120a28" stroke-width="1.5"/>`; if(o.cur) g+=`<text x="${Math.min(W-14,Math.max(px+8,X(i)))}" y="${Y(o.s)-10}" fill="#ffd36b" font-size="11" font-weight="800" text-anchor="middle">${o.s}</text>`; });
+  g+='</svg>';
+  return g+`<p class="note">${n>=2?'黄色が今回。上にいくほどランダム（読まれにくい）。':'まだ今回だけ。遊ぶほど推移がたまります。'}${extra&&extra.unsaved?'（オート中の試合は記録に残りません）':''}</p>`;
+}
+function finishMatch(){
+  const st=analyze(M.H,M.A,M.R,M.hits); st.winRate=st.n?M.w/st.n:0;
+  const score=randScore(st), ty=typeOf(st,score);
+  const lines=diagnose(st,M.mode,SV.first.concat([M.H[0]]).slice(-30));
+  const recs=[]; let cleared=false;
+  const winRate=pct(M.w/M.total);
+  if(M.mode==='rev') cleared=M.w>=CLEAR_WINS;
+  const unsaved=M.auto;
+  if(!unsaved){
+    const b=SV.best;
+    if(M.mode==='normal'&&winRate>b.win){ b.win=winRate; recs.push('最高勝率 '+winRate+'%'); }
+    if(M.mode!=='rev'&&score>b.rand){ b.rand=score; recs.push('最高ランダムさ '+score); }
+    if(M.mode==='hard'){ const mg=M.w-M.l; if(b.margin==null||mg>b.margin){ b.margin=mg; recs.push('読まれないチャレンジ 勝ち越し '+(mg>0?'+':'')+mg); } }
+    if(M.mode==='rev'&&cleared&&M.level>b.rev){ b.rev=M.level; recs.push('逆読み Lv'+M.level+' クリア'); }
+    if(M.mode!=='rev'||true){ SV.hist.push({s:score,m:M.mode}); SV.hist=SV.hist.slice(-30); }
+    SV.first.push(M.H[0]); SV.first=SV.first.slice(-30);
+    save();
+  }
+  M.result={score,type:ty.name,lines,cleared,recs,winRate:pct(M.w/M.total),st};
+  G.phase='result'; G.t=0;
+  const rev=M.mode==='rev';
+  const headTxt=rev?(cleared?(M.level>=5?'全レベル、クセを読み切った！':'Lv'+M.level+' クリア！'):'あと少し…クセを読み切れなかった'):(M.w>M.l?'あなたの勝ち！':M.w<M.l?'クセミの勝ち…読まれた！':'引き分け');
+  const nextLabel=rev?(cleared?(M.level>=5?'もう一度 Lv1 から':'次のレベルへ（Lv'+(M.level+1)+'）'):'もう一回（Lv'+M.level+'）'):'もう一回';
+  const R=$('#result');
+  R.innerHTML=`
+  <div class="rhead"><div class="rm">${MODES[M.mode].name}${rev?' Lv'+M.level:''} ・ ${M.total}手</div><h2>${headTxt}</h2>
+  <div class="cnt"><b class="w">${M.w}</b>勝 <b class="l">${M.l}</b>負 <b class="d">${M.d}</b>分${M.mode==='hard'?'　（勝ち越し '+(M.w-M.l>0?'+':'')+(M.w-M.l)+'）':''}</div></div>
+  ${recs.length?`<div class="card rec">🏆 新記録！ ${recs.join(' ／ ')}</div>`:''}
+  ${rev?`<div class="card"><h3>🔁 クセミのクセ</h3><div style="font-size:14px;font-weight:700">${habDesc(M.hab)}</div><p class="note">クリア条件：${M.total}手中 ${CLEAR_WINS} 勝以上（今回 ${M.w} 勝）</p></div>`:''}
+  <div class="card type"><h3>あなたのタイプ</h3><div class="tname">${ty.e} ${ty.name}</div><div class="tdesc">${ty.desc}</div>
+   <div class="rs"><span>ランダムさスコア</span><b id="rsv">${score}</b><span>/100</span><div class="bar"><i style="width:${score}%"></i></div></div></div>
+  <div class="card"><h3>🔮 あなたのクセ診断</h3><ul class="diag">${lines.map(t=>`<li>${t}</li>`).join('')}</ul>${M.auto?'<p class="note">※ オート中の手は、クセミの手を先読みして出したものです。</p>':''}</div>
+  <div class="card"><h3>🔥 クセのヒートマップ（直前の手 → 次の手）</h3>${heatHtml(st)}</div>
+  <div class="card"><h3>📈 ランダムさの推移</h3>${graphHtml({s:score,m:M.mode,unsaved:unsaved})}</div>
+  <div class="acts"><button class="big" id="againBtn">${nextLabel}</button><button class="big alt" id="titleBtn">モード選択へ</button><a class="big" href="../">← ゲーム一覧にもどる</a></div>`;
+  R.scrollTop=0; show('result');
+  $('#againBtn').onclick=()=>nextFromResult(false);
+  $('#titleBtn').onclick=()=>showTitle();
+  sfx.end(); if(recs.length) sfx.rec();
+  updateAutoNote();
+}
+function nextFromResult(fromAuto){
+  if(G.mode==='rev'&&M.result&&M.result.cleared) G.level=M.level>=5?1:M.level+1;
+  else if(G.mode==='rev') G.level=M.level;
+  startGame(G.mode,G.level);
+}
+
+/* ---------- loop ---------- */
+function step(dt){
+  G.t+=dt;
+  if(G.phase==='idle'){ if(G.auto){ G.autoT+=dt; if(G.autoT>=0.12) press(beat(lookahead()),false); } }
+  else if(G.phase==='shake'){
+    const bi=Math.min(2,Math.floor(G.t/G.d1*3));
+    if(bi!==G.beatIdx){ G.beatIdx=bi; $('#beat').textContent=['じゃん…','けん…','ぽん！'][bi]; sfx.tick(bi); }
+    if(G.t>=G.d1) doReveal();
+  }
+  else if(G.phase==='reveal'){ if(G.t>=G.d2) afterReveal(); }
+  else if(G.phase==='result'){ if(G.auto&&G.t>=1.9) nextFromResult(true); }
+  else if(G.phase==='title'){ if(G.auto&&G.t>=.5) startGame(G.mode,G.level); }
+}
+let lastT=0;
+function frame(t){ const dt=Math.min(.1,(t-lastT)/1000||0); lastT=t; step(dt); requestAnimationFrame(frame); }
+
+/* ---------- events ---------- */
+$('#autoBtn').addEventListener('click',()=>{ setAuto(!G.auto); ac(); });
+$('#sndBtn').addEventListener('click',()=>{ SV.snd=!SV.snd; save(); setSnd(); ac(); });
+$$('.mode').forEach(b=>b.addEventListener('click',()=>{ G.mode=b.dataset.mode; showTitle(); }));
+$('#lvs').innerHTML=[1,2,3,4,5].map(i=>`<button class="lv" data-lv="${i}" aria-pressed="false">Lv${i}</button>`).join('');
+$$('.lv').forEach(b=>b.addEventListener('click',()=>{ G.level=+b.dataset.lv; showTitle(); }));
+$('#startBtn').addEventListener('click',()=>{ ac(); startGame(G.mode,G.level); });
+$$('.hb').forEach(b=>b.addEventListener('click',()=>{ ac(); if(G.auto) setAuto(false); press(+b.dataset.h,true); }));
+const KEYH={'1':0,'2':1,'3':2,'j':0,'k':1,'l':2};
+addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  const k=e.key.toLowerCase();
+  if(k==='o'){ setAuto(!G.auto); e.preventDefault(); return; }
+  if(k in KEYH){ if(G.phase==='idle'||G.phase==='shake'||G.phase==='reveal'){ ac(); if(G.auto) setAuto(false); if(G.phase==='idle') press(KEYH[k],true); e.preventDefault(); } return; }
+  if((k==='enter'||k===' ')&&document.activeElement===document.body){
+    if(G.phase==='title'){ startGame(G.mode,G.level); e.preventDefault(); }
+    else if(G.phase==='result'){ if(G.auto) setAuto(false); nextFromResult(false); e.preventDefault(); }
+  }
+});
+
+/* ---------- test hook ---------- */
+function flush(){ // finish the staged animation instantly
+  if(G.phase==='shake') doReveal();
+  if(G.phase==='reveal') afterReveal();
+}
+window.__kuse={
+  state(){ return M?{phase:G.phase,auto:G.auto,mode:M.mode,level:M.level,total:M.total,n:M.H.length,w:M.w,l:M.l,d:M.d,H:M.H.slice(),A:M.A.slice(),R:M.R.slice(),hits:M.hits.slice(),pend:M.pend?M.pend.ai:null,last:M.last,result:M.result,seed:M.seed}:{phase:G.phase,auto:G.auto}; },
+  start(mode,level,seed){ quiet=true; startGame(mode,level||1,seed); return this.state(); },
+  press(h){ return press(h,true); },
+  play(h){ if(G.phase!=='idle') return false; const q=quiet; quiet=true; press(h,false); flush(); quiet=q; return true; },
+  playMatch(botFn){ // run a whole match with a bot: botFn(state)->hand
+    let g=0; while(G.phase==='idle'&&g++<500){ const h=botFn({H:M.H,A:M.A,R:M.R,n:M.H.length,total:M.total}); this.play(h); }
+    return this.state(); },
+  step(dt){ step(dt); }, setAuto, setSeed(n){ nextSeed=n; }, peek(){ return M&&M.pend?M.pend.ai:null; },
+  lookahead(){ return lookahead(); }, quiet(q){ quiet=!!q; },
+  next(){ if(G.phase==='result') nextFromResult(false); },
+  title(){ showTitle(); }, setMode(m,l){ G.mode=m; if(l) G.level=l; showTitle(); },
+  analyze:(H,A,R,hits)=>analyze(H,A,R,hits), randScore, typeOf, diagnose,
+  best(){ return JSON.parse(JSON.stringify(SV)); }, reset(){ SV={snd:true,best:{win:0,rand:0,margin:null,rev:0},hist:[],first:[]}; save(); },
+  banner(){ return !!$('#banner'); },
+  setParams(a,l,b){ ALPHA=a; LAM=l; BETA=b; },
+  engine:{newEng,decide,learn,experts,EXK}
+};
+
+/* ---------- init ---------- */
+mkKusemi($('#kTitle')); mkKusemi($('#kPlay'));
+setSnd(); showTitle();
+requestAnimationFrame(t=>{ lastT=t; requestAnimationFrame(frame); });
+})();
+</script>
+<!-- zoom guard: ピンチ・ダブルタップでズームしない -->
+<script>(function(){var p=function(e){e.preventDefault();};['gesturestart','gesturechange','gestureend'].forEach(function(t){document.addEventListener(t,p,{passive:false});});document.addEventListener('touchmove',function(e){if(e.touches&&e.touches.length>1)e.preventDefault();},{passive:false});document.addEventListener('dblclick',function(e){var t=e.target;if(t&&t.closest&&t.closest('input,textarea,select,[contenteditable]'))return;e.preventDefault();},{passive:false});})();</script>
+<!-- swipe guard: an edge swipe or a single "back" does not leave the game (a second back within 2.5s does) -->
+<style>html,body{overscroll-behavior:none}#swipeGuardToast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483647;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(20,20,20,.86);color:#fff;font:700 14px/1.4 "Hiragino Sans","Yu Gothic",system-ui,sans-serif;padding:10px 16px;border-radius:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}</style>
+<script>
+(()=>{
+  const EDGE=24;
+  // iPhone Safari: a touch that starts at the left/right edge would become the "go back" swipe
+  addEventListener('touchstart',e=>{
+    const t=e.touches[0]; if(!t||e.touches.length>1) return;
+    if(t.clientX>EDGE&&t.clientX<innerWidth-EDGE) return;
+    if(e.target.closest&&e.target.closest('a,button,input,select,textarea,label,[role=button]')) return;
+    e.preventDefault();
+  },{passive:false});
+  // back gesture / back button: the first one stays in the game, a second one within 2.5s leaves
+  let armed=false, lastBack=0, hideT=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.pushState({swipeGuard:1},''); }catch(_){} };
+  addEventListener('pointerdown',arm,true); addEventListener('keydown',arm,true);
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const now=Date.now();
+    if(now-lastBack<2500){ history.back(); return; }
+    lastBack=now; try{ history.pushState({swipeGuard:1},''); }catch(_){}
+    let el=document.getElementById('swipeGuardToast');
+    if(!el){ el=document.createElement('div'); el.id='swipeGuardToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent='ゲームを続けます（もう一度もどる操作をすると、ゲームをやめます）';
+    el.style.opacity=1; clearTimeout(hideT); hideT=setTimeout(()=>{ el.style.opacity=0; },2500);
+  });
+})();
+</script>
+</body>
+</html>
