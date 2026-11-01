@@ -1024,7 +1024,8 @@ addEventListener('keydown',e=>{
   if(e.code==='KeyQ'||e.code==='Tab')edgeIn.sw=true;
 });
 addEventListener('keyup',e=>{ K[e.code]=false; });
-addEventListener('blur',()=>{ for(const k in K)K[k]=false; touch.atk=false; mouse.down=false; });
+addEventListener('blur',()=>{ for(const k in K)K[k]=false; touch.atk=false; mouse.down=false; touch.stick=null;touch.mx=touch.my=0; $('#stk').style.display='none'; });
+addEventListener('touchcancel',()=>{ touch.atk=false; touch.stick=null;touch.mx=touch.my=0; $('#stk').style.display='none'; });
 // ポインタ
 const main=$('#main');
 function posOf(e){ const r=main.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top}; }
@@ -1040,11 +1041,12 @@ main.addEventListener('pointerdown',e=>{
   if(!touch.stick&&p.x<G.cw*.62&&p.y>G.ch*.25){ touch.stick={id:e.pointerId,x:p.x,y:p.y}; touch.mx=touch.my=0; const s=$('#stk'); s.style.display='block'; s.style.left=p.x+'px'; s.style.top=p.y+'px'; $('#knb').style.transform=''; try{ main.setPointerCapture(e.pointerId); }catch(_){} }
 });
 function release(e){ if(e.pointerType==='mouse'&&e.button===0)mouse.down=false; if(touch.stick&&e.pointerId===touch.stick.id){ touch.stick=null;touch.mx=touch.my=0; $('#stk').style.display='none'; } }
-main.addEventListener('pointerup',release); main.addEventListener('pointercancel',release);
+main.addEventListener('pointerup',release); main.addEventListener('pointercancel',release); main.addEventListener('lostpointercapture',release); addEventListener('pointerup',release); addEventListener('pointercancel',release);
 main.addEventListener('contextmenu',e=>e.preventDefault());
 // ボタン
 function hold(id,on,off){ const b=$(id); b.addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); manual(); on(); try{b.setPointerCapture(e.pointerId);}catch(_){} }); const o=()=>off&&off(); b.addEventListener('pointerup',o); b.addEventListener('pointercancel',o); b.addEventListener('contextmenu',e=>e.preventDefault()); }
 hold('#bAtk',()=>{touch.atk=true;},()=>{touch.atk=false;});
+$('#bAtk').addEventListener('lostpointercapture',()=>{touch.atk=false;});
 hold('#bBur',()=>{edgeIn.burrow=true;});
 hold('#bPick',()=>{edgeIn.pick=true;});
 hold('#bHon',()=>{edgeIn.honey=true;});
