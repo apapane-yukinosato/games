@@ -40,6 +40,8 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--acc);outline-offset
 #bRipe i{background:linear-gradient(90deg,#ffe27a,#ffb000)}
 #bRoot i{background:linear-gradient(90deg,#b98a5a,#7a4a2a)}
 .bar.warn{animation:bl .5s infinite alternate;border-color:#ff5a4a}
+.bar.low{animation:bf .3s infinite alternate;border-color:#ff2a1a}
+@keyframes bf{from{background:rgba(10,20,10,.72);box-shadow:0 0 0 rgba(255,40,20,0)}to{background:rgba(255,50,30,.85);box-shadow:0 0 12px #ff2a1a}}
 @keyframes bl{from{box-shadow:0 0 0 rgba(255,90,74,0)}to{box-shadow:0 0 8px #ff5a4a}}
 #mmw{position:absolute;right:6px;top:6px;width:92px;height:92px;border-radius:10px;overflow:hidden;border:2px solid rgba(255,255,255,.35);background:#000}
 #mm{width:100%;height:100%;display:block}
@@ -125,7 +127,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--acc);outline-offset
       <div class="card">
         <div class="how">
           <b>あなたは正体を隠した安納芋。</b>100本の芋の中にまぎれて、最後の1本をめざそう。<br>
-          ・トラクターから<b>降下</b>→物資をひろう→<b>焼き芋ゾーン</b>（外は生焼け）から逃げる<br>
+          ・トラクターから<b>降下</b>→物資をひろう。降下がおわると<b>焼き芋ゾーン</b>が<b>止まらずに縮みつづける</b>。外は生焼けで、時間がたつほど熱い<br>・攻撃は3〜5発でやられる！ 回復（水・肥料）は1秒かかって、その間は攻撃できない<br>
           ・走る／たたかうと<b>UNKNOWN度</b>が上がる。満タンで「安納芋だ！」とバレて、みんな集まってくる<br>
           ・<b>芋る</b>で土にもぐればほぼ見つからない。でも根が張って出にくく、芽も出るよ<br>
           ・<b>熟成度</b>が満タンで<b>蜜あふれモード</b>（約8秒、攻撃と速さUP）
@@ -174,17 +176,17 @@ const VARS=[{n:'紅はるか',c:'#b8466e',d:'#8a2c4c',l:'#d9779a'},{n:'鳴門金
 const ANNOU={c:'#f0a53a',d:'#b56f1c',l:'#ffd27a'};
 const WP={
   fist:{n:'こぶし',melee:1,dmg:4,cd:.4,rng:30,arc:1.5},
-  hoe:{n:'くわ',melee:1,dmg:14,cd:.5,rng:46,arc:1.7,g:'く',col:'#c9a35a'},
-  shovel:{n:'スコップ',melee:1,dmg:26,cd:.75,rng:52,arc:1.6,g:'ス',col:'#9fb3c4'},
-  can:{n:'じょうろ',melee:0,dmg:6,cd:.17,rng:250,spd:560,ammo:110,g:'じ',col:'#5ec8ff'},
-  pebble:{n:'小石',melee:0,dmg:15,cd:.55,rng:380,spd:440,ammo:12,g:'石',col:'#b9b4aa'},
-  roast:{n:'焼き石',melee:0,dmg:11,cd:.9,rng:330,spd:350,ammo:6,burn:1,g:'焼',col:'#ff8a3a'}
+  hoe:{n:'くわ',melee:1,dmg:20,cd:.62,rng:46,arc:1.7,g:'く',col:'#c9a35a'},
+  shovel:{n:'スコップ',melee:1,dmg:28,cd:.75,rng:52,arc:1.6,g:'ス',col:'#9fb3c4'},
+  can:{n:'じょうろ',melee:0,dmg:3,cd:.2,rng:250,spd:560,ammo:110,g:'じ',col:'#5ec8ff'},
+  pebble:{n:'小石',melee:0,dmg:22,cd:.55,rng:380,spd:440,ammo:12,g:'石',col:'#b9b4aa'},
+  roast:{n:'焼き石',melee:0,dmg:17,cd:.9,rng:330,spd:350,ammo:6,burn:1,g:'焼',col:'#ff8a3a'}
 };
 const ITYPES=['can','hoe','shovel','pebble','roast','helm','armor','water','fert','skin'];
-const IW=[10,8,5,12,6,7,7,10,4,4];
+const IW=[10,8,5,12,6,7,7,6,2.5,4];
 const IN={helm:'マルチシート',armor:'わら',water:'水',fert:'肥料',skin:'変装の皮'};
 const IG={helm:['マ','#c8d6e0'],armor:['わ','#e6c860'],water:['水','#4aa8ff'],fert:['肥','#9a6a3a'],skin:['皮','#d070a0']};
-const WSCORE={shovel:10,can:8,roast:6,pebble:5,hoe:4};
+const WSCORE={pebble:10,shovel:9,hoe:7,can:6,roast:4};
 const POIS=[
  {n:'肥料小屋',x:1480,y:1520,pop:1,col:'#8d6e4b',w:150,h:100},
  {n:'ビニールハウス',x:760,y:820,pop:1,col:'#cfe9e0',w:190,h:90},
@@ -200,7 +202,10 @@ const POIS=[
  {n:'干しいも小屋',x:2650,y:1450,pop:0,col:'#b59a6a',w:110,h:80}
 ];
 const PAD={x:2800,y:220};
-const ZR=[2100,1100,650,380,200,90,0], WT=[75,55,50,38,30,18,1e9], ST=[50,45,38,30,27,35,0], DR=[1.2,2.6,4.4,7,10.5,15,22];
+/* ゾーン：ドロップが終わった瞬間から、止まらずに縮みつづける（だんだん加速）。半径は ZT 秒でぴったり0 */
+const ZR0=2100, ZT=200, ZV0=8, ZA=2*(ZR0-ZV0*ZT)/(ZT*ZT), ZLEAD=20;
+const zoneR=tau=>tau<=0?ZR0:tau>=ZT?0:Math.max(0,ZR0-ZV0*tau-.5*ZA*tau*tau);
+const zoneDps=tau=>1.5+22*Math.pow(clamp(tau/ZT,0,1.3),1.4);
 const TSP=280;
 const PERS=['detective','rush','hider','looter','edge'];
 const PERSN={detective:'芋探偵',rush:'突撃型',hider:'芋りっぱなし型',looter:'物資あつめ型',edge:'ぎりぎり型'};
@@ -231,6 +236,7 @@ function sfx(k){ if(!save.snd||!AC)return; const now=performance.now(); if(lastS
     case 'kill': tone(520,.1,'square',.1); tone(780,.14,'square',.1,0,.08); break;
     case 'warn': tone(440,.12,'square',.09); tone(330,.16,'square',.09,0,.13); break;
     case 'zone': tone(150,.5,'sawtooth',.1,60); break;
+    case 'beat': tone(70,.13,'sine',.34,-25); tone(58,.16,'sine',.28,-20,.17); break;
     case 'jump': tone(500,.3,'triangle',.1,-300); break;
     case 'reveal': tone(900,.1,'square',.12); tone(600,.2,'square',.12,0,.1); break;
     case 'win': [523,659,784,1046,1318].forEach((f,i)=>tone(f,.25,'triangle',.14,0,i*.12)); break;
@@ -239,7 +245,7 @@ function sfx(k){ if(!save.snd||!AC)return; const now=performance.now(); if(lastS
 
 /* ---------- ゲーム状態 ---------- */
 let G={mode:'title',t:0,auto:false,ai:null,over:false};
-let P=[],IT=[],PJ=[],FX=[],LOG=[],TR=null,Z={ph:0,state:'wait',t:0,cx:1500,cy:1500,r:2100},ZC=[],alive=0,hist=[],perfAcc={n:0,sum:0,max:0};
+let P=[],IT=[],PJ=[],FX=[],LOG=[],TR=null,Z={t:0,go:false,cx:1500,cy:1500,r:ZR0,c0x:1500,c0y:1500,fx:1500,fy:1500,dps:0},alive=0,hist=[],perfAcc={n:0,sum:0,max:0};
 const GC=150,GN=Math.ceil(W/GC)+1,GRID=Array.from({length:GN*GN},()=>[]);
 const IC=250,IN2=Math.ceil(W/IC)+1,IGRID=Array.from({length:IN2*IN2},()=>[]);
 const NL=[],NL2=[],NL3=[];
@@ -252,20 +258,19 @@ function pickType(boost){ let tot=0; const w=IW.map((v,i)=>{ const t=ITYPES[i]; 
 
 function mkPot(i){ return {i,human:i===0,name:'',x:0,y:0,vx:0,vy:0,r:14,face:0,st:'tractor',cook:0,helm:0,armor:0,w:[],cur:0,vr:0,skin:-1,skinT:0,skinHeld:-1,burrow:0,emT:0,root:0,sprout:0,unk:0,ripe:0,honey:0,cd:0,burnT:0,burnDps:0,burnSrc:null,kills:0,hitT:0,swingT:0,swingA:0,pers:'looter',
   in:{mx:0,my:0,ax:1,ay:0,atk:false,pick:false,burrow:false,honey:false,sw:false,jump:false,skin:false},
-  tx:0,ty:0,gt:0,gt0:0,jumpT:0,thinkT:R()*.3,tgt:null,wx:0,wy:0,hasW:false,ae:.1,react:0,lastHit:null,lastHitT:-9,rank:0,aliveT:0,reveals:0,revealed:false,revT:0,wasRevealed:false,hiddenT:0,hiddenDone:false,hideAt:0,bsp:1,lootIt:null,ai:{},landT:0,firstHoney:0,tint:0,diedT:0,killer:null,cause:''}; }
+  tx:0,ty:0,gt:0,gt0:0,jumpT:0,thinkT:R()*.3,tgt:null,wx:0,wy:0,hasW:false,ae:.1,react:0,lastHit:null,lastHitT:-9,rank:0,aliveT:0,reveals:0,revealed:false,revT:0,wasRevealed:false,hiddenT:0,hiddenDone:false,hideAt:0,bsp:1,lootIt:null,ai:{},landT:0,firstHoney:0,tint:0,diedT:0,killer:null,cause:'',healT:0,healAmt:0,over:0,wind:null}; }
 
 /* ---------- 試合のはじまり ---------- */
 function initMatch(){
   P=[];IT=[];PJ=[];FX=[];LOG=[];
   for(const g of GRID)g.length=0; for(const g of IGRID)g.length=0;
-  // ゾーンの中心列
-  ZC=[{x:1500,y:1500}];
-  for(let k=0;k<6;k++){ let best=null; for(let n=0;n<30;n++){ const a=R()*TAU,d=Math.sqrt(R())*Math.max(0,ZR[k]-ZR[k+1])*0.85; const c={x:ZC[k].x+Math.cos(a)*d,y:ZC[k].y+Math.sin(a)*d}; if(c.x>700&&c.x<2300&&c.y>700&&c.y<2300){best=c;break;} } ZC.push(best||{x:ZC[k].x+(1500-ZC[k].x)*.3,y:ZC[k].y+(1500-ZC[k].y)*.3}); }
-  Z={ph:0,state:'wait',t:0,cx:ZC[0].x,cy:ZC[0].y,r:ZR[0]};
+  // ゾーン：最終地点（ここに向かってなめらかに中心が動く）
+  { let f=null; for(let n=0;n<40&&!f;n++){ const a=R()*TAU,d=Math.sqrt(R())*700; const c={x:1500+Math.cos(a)*d,y:1500+Math.sin(a)*d}; if(c.x>700&&c.x<2300&&c.y>700&&c.y<2300)f=c; } f=f||{x:1500,y:1500};
+    Z={t:0,go:false,cx:1500,cy:1500,r:ZR0,c0x:1500,c0y:1500,fx:f.x,fy:f.y,dps:0}; }
   // 品種・性格
   const pl=[]; PERS.forEach((p,i)=>{ const n=[12,22,20,25,20][i]; for(let k=0;k<n;k++)pl.push(p); });
   for(let i=pl.length-1;i>0;i--){ const j=(R()*(i+1))|0; [pl[i],pl[j]]=[pl[j],pl[i]]; }
-  for(let i=0;i<100;i++){ const p=mkPot(i); if(i===0){ p.name='UNKNOWN'; p.vr=(R()*3)|0; p.pers='human'; } else { p.vr=i%3; p.pers=pl[i-1]; p.name=VARS[p.vr].n+i; p.ae=RR(.12,.3); p.bsp=RR(.9,1.02); if(p.pers==='detective')p.ae=.06; } P.push(p); }
+  for(let i=0;i<100;i++){ const p=mkPot(i); if(i===0){ p.name='UNKNOWN'; p.vr=(R()*3)|0; p.pers='human'; } else { p.vr=i%3; p.pers=pl[i-1]; p.name=VARS[p.vr].n+i; p.ae=RR(.16,.36); p.bsp=RR(.9,1.02); if(p.pers==='detective')p.ae=.06; } P.push(p); }
   // トラクター
   const a=R()*TAU,dx=Math.cos(a),dy=Math.sin(a),L=4400;
   TR={dx,dy,sx:1500-dx*L/2,sy:1500-dy*L/2,len:L,t:0,x:0,y:0,done:false};
@@ -288,24 +293,21 @@ function initMatch(){
   G.landCnt=cnt;
   P[0].jumpT=1e9; P[0].tx=0;P[0].ty=0; P[0].marked=false;
   alive=100; G.t=0; G.over=false; G.ending=0; G.resT=0; G.deadShown=false; G.winner=null; G.endT=0; G.msgs=[];
-  G.spec=null; G.specT=0; G.cam={x:1500,y:1500}; G.flow=0; G.warned=0; G.record=null; G.lastTweet=0; G.noRec=false;
+  G.spec=null; G.specT=0; G.pendHuman=false; G.dmgBy={}; G.hits=[]; G.shake=0; G.hb=0; G.hbPulse=0; G.cam={x:1500,y:1500}; G.flow=0; G.warned=0; G.record=null; G.lastTweet=0; G.noRec=false;
   setMsg('トラクターから とびおりよう！','タップで場所を決めて「とびおりる！」');
 }
 
 /* ---------- ゾーン ---------- */
+function zoneAt(tau){ const r=zoneR(tau), u=1-r/ZR0; return {x:lerp(Z.c0x,Z.fx,u),y:lerp(Z.c0y,Z.fy,u),r}; }
 function zoneUpdate(dt){
-  Z.t+=dt; const ph=Z.ph;
-  if(ph<6){
-    if(Z.state==='wait'&&Z.t>=WT[ph]){ Z.state='shrink'; Z.t=0; setMsg('ゾーンが ちぢみはじめた！','外は石焼きの熱さ'); sfx('zone'); }
-    else if(Z.state==='shrink'&&Z.t>=ST[ph]){ Z.ph++; Z.state='wait'; Z.t=0; }
-  }
-  const p2=Z.ph;
-  if(p2>=6){ Z.r=0; Z.cx=ZC[6].x; Z.cy=ZC[6].y; }
-  else if(Z.state==='wait'){ Z.r=ZR[p2]; Z.cx=ZC[p2].x; Z.cy=ZC[p2].y; }
-  else { const u=Z.t/ST[p2]; Z.r=lerp(ZR[p2],ZR[p2+1],u); Z.cx=lerp(ZC[p2].x,ZC[p2+1].x,u); Z.cy=lerp(ZC[p2].y,ZC[p2+1].y,u); }
+  if(!Z.go&&TR&&TR.t>=TR.len/TSP){ Z.go=true; setMsg('焼き芋ゾーンが ちぢみはじめた！','もう止まらない。内側へ'); sfx('zone'); }
+  if(Z.go)Z.t+=dt;
+  const z=zoneAt(Z.t); Z.r=z.r; Z.cx=z.x; Z.cy=z.y; Z.dps=Z.go?zoneDps(Z.t):0;
 }
-function nextZone(){ const k=Math.min(6,Z.ph+1); return {x:ZC[k].x,y:ZC[k].y,r:ZR[k]}; }
-function toShrink(){ return Z.state==='wait'&&Z.ph<6?Math.max(0,WT[Z.ph]-Z.t):0; }
+/* 先読み（ボット／オートが「これから安全な場所」を決めるため）。L 秒あとのゾーン */
+function nextZone(L){ const z=zoneAt(Z.t+(L===undefined?ZLEAD:L)); return z; }
+/* ゾーンの外にいるとき、生焼け度が上がる速さ（毎秒） */
+function zoneRate(){ return Z.go?zoneDps(Z.t):0; }
 
 /* ---------- ログ・メッセージ ---------- */
 function setMsg(a,b){ const m=$('#msg'); if(!m)return; m.innerHTML=a+(b?'<small>'+b+'</small>':''); m.style.opacity=1; clearTimeout(setMsg.t); setMsg.t=setTimeout(()=>{m.style.opacity=0;},2400); }
@@ -315,13 +317,14 @@ function addLog(txt,mine){ LOG.push({t:G.t,txt,mine}); if(LOG.length>30)LOG.shif
 function curW(p){ const sl=p.w[p.cur]; return sl?WP[sl.t]:WP.fist; }
 function hurt(t,dmg,src,wname,kind){
   if(t.st!=='ground')return;
-  let d=dmg*DMGS*(src&&!src.human?BOTF:1);
-  if(t.honey>0)d*=.7;
+  let d=dmg*(t.human?DMGS:(src&&src.human?HUMF:BOTF*(1+8*clamp(Z.t/ZT,0,1))));
+  if(t.honey>0)d*=.9;
   if(t.human&&src&&!src.human)d*=(G.ai&&G.ai.taken||1);
   if(src&&src.human&&G.ai&&G.ai.dmg)d*=G.ai.dmg;
-  if(t.helm>0){ d*=.8; t.helm=Math.max(0,t.helm-dmg*.6); }
-  if(t.armor>0){ d*=.7; t.armor=Math.max(0,t.armor-dmg*.6); }
+  if(t.helm>0){ d*=.9; t.helm=Math.max(0,t.helm-dmg*.4); }
+  if(t.armor>0){ d*=.78; t.armor=Math.max(0,t.armor-dmg*.4); }  // 防具をぜんぶ着けても 約37%カットまで
   t.cook+=d; t.hitT=.15;
+  if(t.human){ onHumanHit(d,src); G.dmgBy[wname]=(G.dmgBy[wname]||0)+d; }
   if(t.burrow===1){ t.burrow=0; t.root=0; t.sprout=0; if(t.human)sfx('emerge'); }
   else if(t.burrow===2){ t.burrow=0; t.emT=0; t.root=0; t.sprout=0; }
   if(src){ t.lastHit=src; t.lastHitT=G.t; }
@@ -332,36 +335,39 @@ function hurt(t,dmg,src,wname,kind){
 }
 function kill(t,src,wname,kind){
   if(t.st==='dead')return;
-  t.cook=100; t.st='dead'; t.rank=alive; alive--; t.diedT=G.t; t.killer=src||null; t.burrow=0;
+  t.wind=null; t.over=t.cook-100; t.cook=100; t.st='dead'; t.rank=alive; alive--; t.diedT=G.t; t.killer=src||null; t.burrow=0;
   for(const s of t.w) addItem(s.t,t.x+RR(-20,20),t.y+RR(-20,20),s.a);
   if(t.helm>20)addItem('helm',t.x+RR(-20,20),t.y+RR(-20,20)); if(t.armor>20)addItem('armor',t.x+RR(-20,20),t.y+RR(-20,20));
-  if(R()<.35)addItem(R()<.5?'water':'fert',t.x+RR(-20,20),t.y+RR(-20,20));
+  if(R()<.2)addItem(R()<.6?'water':'fert',t.x+RR(-20,20),t.y+RR(-20,20));
   let txt;
   if(src&&src!==t){ src.kills++; src.ripe=Math.min(100,src.ripe+8); txt=`${src.name} が ${t.name} を焼き芋にした`; t.cause=kind||'hit'; if(src.human)sfx('kill'); }
   else if(kind==='burn'){ txt=`${t.name} は やけどで焼き芋になった`; t.cause='burn'; }
   else { txt=`${t.name} は ゾーンの熱で焼き芋になった`; t.cause='zone'; }
   addLog(txt,t.human||(src&&src.human));
   FX.push({k:'poof',x:t.x,y:t.y,t:.7});
-  if(t.human)onHumanDeath(t);
-  checkEnd();
+  if(t.human){ if(alive<=1)G.pendHuman=true; else onHumanDeath(t); }
 }
 function fire(p){
-  const I=p.in; if(p.cd>0||p.burrow)return;
+  const I=p.in; if(p.cd>0||p.burrow||p.healT>0)return;
   const sl=p.w[p.cur], w=sl?WP[sl.t]:WP.fist;
   p.cd=w.cd/(p.honey>0?1.35:1);
   const ang=Math.atan2(I.ay,I.ax); p.face=ang;
   const dm=p.honey>0?1.8:1;
   if(p.human){ p.unk+=(w.melee?1.5:(w.n==='じょうろ'?.3:.7))*(p.skin>=0?.35:1); }
   if(w.melee){
-    p.swingT=.2; p.swingA=ang; if(p.human)sfx('swing');
-    nearList(p.x,p.y,w.rng+30,NL);
-    for(let k=0;k<NL.length;k++){ const q=NL[k]; if(q===p||q.st!=='ground')continue; const dx=q.x-p.x,dy=q.y-p.y,d=Math.sqrt(dx*dx+dy*dy); if(d>w.rng+q.r)continue; if(d>q.r+6&&Math.abs(angdiff(Math.atan2(dy,dx),ang))>w.arc/2)continue; hurt(q,w.dmg*dm,p,w.n,'melee'); }
+    if(!p.human){ p.wind={t:.3,a:ang,w,dm}; return; }  // ボットの近接は「ふりかぶり」あり：見てから よけられる
+    swingHit(p,w,ang,dm);
   } else {
     sl.a--; const sp=w.spd*(p.honey>0?1.15:1); const a=ang+(w.n==='じょうろ'?RR(-.035,.035):0);
     PJ.push({x:p.x+Math.cos(a)*16,y:p.y+Math.sin(a)*16,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:w.rng/sp,dmg:w.dmg*dm,o:p,k:sl.t,burn:w.burn,wn:w.n});
     if(p.human)sfx('shoot');
     if(sl.a<=0){ p.w.splice(p.cur,1); p.cur=0; }
   }
+}
+function swingHit(p,w,ang,dm){
+  p.swingT=.2; p.swingA=ang; if(p.human)sfx('swing');
+  nearList(p.x,p.y,w.rng+30,NL);
+  for(let k=0;k<NL.length;k++){ const q=NL[k]; if(q===p||q.st!=='ground')continue; const dx=q.x-p.x,dy=q.y-p.y,d=Math.sqrt(dx*dx+dy*dy); if(d>w.rng+q.r)continue; if(d>q.r+6&&Math.abs(angdiff(Math.atan2(dy,dx),ang))>w.arc/2)continue; hurt(q,w.dmg*dm,p,w.n,'melee'); }
 }
 function projUpdate(dt){
   for(let i=PJ.length-1;i>=0;i--){ const b=PJ[i]; const px=b.x,py=b.y; b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt; let dead=b.life<=0||b.x<0||b.y<0||b.x>W||b.y>W;
@@ -380,7 +386,7 @@ function canTake(p,it){
   const t=it.t;
   if(WP[t]){ const have=p.w.find(s=>s.t===t); if(have)return !!WP[t].ammo; return true; }
   if(t==='helm')return p.helm<30; if(t==='armor')return p.armor<30;
-  if(t==='water')return p.cook>8; if(t==='fert')return p.cook>20;
+  if(t==='water')return p.cook>12&&!(p.healT>0); if(t==='fert')return p.cook>25&&!(p.healT>0);
   if(t==='skin')return p.skinHeld<0;
   return false;
 }
@@ -390,23 +396,26 @@ function take(p,it){
     else if(p.w.length<2){ p.w.push({t,a:it.a}); p.cur=p.w.length-1; }
     else { const old=p.w[p.cur]; addItem(old.t,p.x+RR(-10,10),p.y+RR(-10,10),old.a); p.w[p.cur]={t,a:it.a}; } }
   else if(t==='helm')p.helm=60; else if(t==='armor')p.armor=80;
-  else if(t==='water')p.cook=Math.max(0,p.cook-25); else if(t==='fert')p.cook=Math.max(0,p.cook-60);
+  else if(t==='water'){ p.healT=1; p.healAmt=20; if(p.human)setMsg('回復中…','1秒 こうげきできない'); }
+  else if(t==='fert'){ p.healT=1; p.healAmt=40; if(p.human)setMsg('回復中…','1秒 こうげきできない'); }
   else if(t==='skin')p.skinHeld=it.a;
   if(p.human)sfx('pick');
 }
 function useSkin(p){ if(p.skinHeld<0)return false; p.skin=p.skinHeld;p.skinHeld=-1;p.skinT=30;p.unk=Math.max(0,p.unk-12); if(p.human){ sfx('pick'); setMsg(VARS[p.skin].n+'のふり！','30秒 UNKNOWN度が上がりにくい'); } return true; }
 
 /* ---------- 1体の行動 ---------- */
-const BASE=150, DMGS=.55, BOTF=.14;
+const BASE=150, DMGS=.8, HUMF=1, BOTF=.13;  // DMGS:ボット→あなた（ほぼそのまま）／HUMF:あなた→ボット／BOTF:ボット同士（弱め。100本が序盤で全滅しないように）
 function act(p,dt){
   const I=p.in;
   p.cd=Math.max(0,p.cd-dt); p.hitT=Math.max(0,p.hitT-dt); p.swingT=Math.max(0,p.swingT-dt);
+  if(p.wind){ p.wind.t-=dt; if(p.wind.t<=0){ const wd=p.wind; p.wind=null; swingHit(p,wd.w,wd.a,wd.dm); } }
+  if(p.healT>0){ p.healT-=dt; if(p.healT<=0){ p.healT=0; p.cook=Math.max(0,p.cook-p.healAmt); if(p.human)sfx('pick'); } }
   if(p.honey>0){ p.honey-=dt; if(p.honey<=0&&p.human)setMsg('蜜あふれ おわり'); }
   if(p.skinT>0){ p.skinT-=dt; if(p.skinT<=0)p.skin=-1; }
   if(p.burnT>0){ p.burnT-=dt; if(p.st==='ground')hurt(p,p.burnDps*dt,p.burnSrc,'やけど','burn'); if(p.st!=='ground')return; }
   // ゾーン
   const dc=Math.hypot(p.x-Z.cx,p.y-Z.cy);
-  if(dc>Z.r){ const rate=DR[Math.min(6,Z.ph)]*(p.burrow===1?1:1); p.cook+=rate*dt; p.zoneHot=true; if(p.cook>=100){ kill(p,null,'ゾーン','zone'); return; } if(p.human&&G.t-G.warned>2.5){G.warned=G.t;sfx('warn');} } else p.zoneHot=false;
+  if(dc>Z.r){ const rate=zoneRate(); p.cook+=rate*dt; p.zoneHot=true; if(p.cook>=100){ kill(p,null,'ゾーン','zone'); return; } if(p.human&&G.t-G.warned>2.5){G.warned=G.t;sfx('warn');} } else p.zoneHot=false;
   p.aliveT+=dt;
   // UNKNOWN度
   if(p.human){
@@ -422,14 +431,14 @@ function act(p,dt){
   } else if(p.ripe<100)p.ripe=Math.min(100,p.ripe+dt*(100/150));
   // 芋る
   if(p.burrow===1){
-    p.root=Math.min(100,p.root+11*dt); p.sprout=Math.min(100,p.sprout+7*dt); p.vx=p.vy=0; if(!p.zoneHot)p.cook=Math.max(0,p.cook-1.6*dt);
+    p.root=Math.min(100,p.root+11*dt); p.sprout=Math.min(100,p.sprout+7*dt); p.vx=p.vy=0;
     if(I.burrow){ I.burrow=false; p.burrow=2; p.emT=.35+p.root*.022; if(p.human)sfx('emerge'); }
     return;
   }
   if(p.burrow===2){ p.emT-=dt; p.vx=p.vy=0; I.burrow=false; if(p.emT<=0){ p.burrow=0; p.root=0; p.sprout=0; } return; }
   if(I.burrow){ I.burrow=false; if(p.honey<=0){ p.burrow=1; p.root=0; p.sprout=0; p.vx=p.vy=0; if(p.human)sfx('burrow'); return; } }
   // 移動
-  const spd=BASE*p.bsp*(p.honey>0?1.5:1)*(p.swingT>0&&curW(p).melee?.85:1);
+  const spd=BASE*p.bsp*(p.honey>0?1.5:1)*(p.swingT>0&&curW(p).melee?.85:1)*(p.wind?.2:1);
   let mx=I.mx,my=I.my; const ml=Math.hypot(mx,my); if(ml>1){mx/=ml;my/=ml;}
   p.vx+=(mx*spd-p.vx)*Math.min(1,dt*12); p.vy+=(my*spd-p.vy)*Math.min(1,dt*12);
   p.x=clamp(p.x+p.vx*dt,16,W-16); p.y=clamp(p.y+p.vy*dt,16,W-16);
@@ -448,7 +457,7 @@ function canSee(a,q,vis){
   if(q===a||q.st!=='ground')return false;
   const dx=q.x-a.x,dy=q.y-a.y,d2=dx*dx+dy*dy;
   if(q.human&&q.revealed&&d2<1100*1100&&a.pers!=='human')return true;
-  const lim=q.burrow===1?40+q.sprout*2.6:vis;
+  const lim=(q.burrow===1?40+q.sprout*2.6:vis)*(q.human&&a.pers!=='human'?1+q.unk/600:1);
   return d2<lim*lim;
 }
 
@@ -461,17 +470,15 @@ function wantItem(b,it){
   return 0;
 }
 function bestWeaponIdx(b,d,save){ let bi=-1,bs=-1; const hasMelee=b.w.some(s=>WP[s.t].melee); for(let i=0;i<b.w.length;i++){ const w=WP[b.w[i].t]; let s; if(w.melee)s=d<w.rng+30?w.dmg/w.cd*1.0:w.dmg/w.cd*.4; else { s=d<w.rng*.95?w.dmg/w.cd*(w.n==='じょうろ'?1:1.1):0; if(save&&hasMelee&&d<125)s=0; if(save&&w.n==='じょうろ'&&d<125)s=0; } if(s>bs){bs=s;bi=i;} } return bi; }
-function zoneGoal(b){ const k=Math.min(6,Z.ph+2); const g=ZC[k]; return {x:g.x,y:g.y}; }
+function zoneGoal(b,L){ const z=nextZone(L===undefined?14:L); const d=Math.hypot(b.x-z.x,b.y-z.y)||1; const k=Math.min(d,z.r*.55); return {x:z.x+(b.x-z.x)/d*k,y:z.y+(b.y-z.y)/d*k}; }
 function botThink(b,dt){
   const I=b.in; I.atk=false;I.pick=false;I.honey=false;I.sw=false;
   const redo=(b.thinkT-=dt)<=0; if(redo)b.thinkT=.2+R()*.12;
-  const dc=Math.hypot(b.x-Z.cx,b.y-Z.cy), nz=nextZone(), dn=Math.hypot(b.x-nz.x,b.y-nz.y);
-  const edge=b.pers==='edge', marg=edge?20:90, toS=toShrink();
+  const dc=Math.hypot(b.x-Z.cx,b.y-Z.cy);
+  const edge=b.pers==='edge', marg=edge?20:70;
   const exitT=b.burrow===1?(.35+b.root*.022):0;
-  const travel=Math.max(0,dn-(nz.r-marg))/BASE;
-  let danger=false;
-  if(dc>Z.r-20)danger=true;
-  else if(dn>nz.r-marg&&Z.ph<6){ const buf=edge?1.8:(b.pers==='hider'?15:8); if(Z.state==='shrink'||toS<travel+exitT+buf)danger=true; }
+  const nz=nextZone(exitT+(edge?1.5:(b.pers==='hider'?10:5))), dn=Math.hypot(b.x-nz.x,b.y-nz.y);
+  const danger=dc>Z.r-20||dn>nz.r-marg;
   if(danger){
     if(b.burrow===1){ I.burrow=true; I.mx=I.my=0; return; }
     if(b.burrow===2){ return; }
@@ -486,7 +493,7 @@ function botThink(b,dt){
     // ターゲット
     let best=null,bs=-1e9; const vis=b.pers==='detective'?430:(b.pers==='hider'?300:360);
     nearList(b.x,b.y,vis+10,NL);
-    for(let k=0;k<NL.length;k++){ const q=NL[k]; if(!canSee(b,q,vis))continue; const d=Math.hypot(q.x-b.x,q.y-b.y); let s=-d; if(q.human){ if(q.revealed)s+=250; else if(b.pers==='detective'&&q.unk>35)s+=120; } if(q===b.lastHit&&G.t-b.lastHitT<4)s+=200; if(s>bs){bs=s;best=q;} }
+    for(let k=0;k<NL.length;k++){ const q=NL[k]; if(!canSee(b,q,vis))continue; const d=Math.hypot(q.x-b.x,q.y-b.y); let s=-d; if(q.human){ s+=q.unk*.6; if(q.revealed)s+=250; else if(b.pers==='detective'&&q.unk>35)s+=120; } if(q===b.lastHit&&G.t-b.lastHitT<4)s+=200; if(s>bs){bs=s;best=q;} }
     // 全方位：バレた安納芋
     const h=P[0]; if(h.st==='ground'&&h.revealed&&!best){ const d=Math.hypot(h.x-b.x,h.y-b.y); if(d<1100&&b.pers!=='hider'){ b.huntH=true; } else b.huntH=false; } else b.huntH=false;
     b.tgt=best;
@@ -500,13 +507,13 @@ function botThink(b,dt){
   if(t&&(t.st!=='ground'||!canSee(b,t,430)))b.tgt=null;
   let engage=false,td=0;
   if(b.tgt){ td=Math.hypot(b.tgt.x-b.x,b.tgt.y-b.y); const armed=b.w.length>0; const retal=b.lastHit===b.tgt&&G.t-b.lastHitT<4;
-    const eR={rush:b.w.length?320:150,detective:300,edge:170,looter:armed?150:50,hider:70}[b.pers]; engage=retal||(td<eR&&G.t>(b.calm||0)); if(!armed&&!retal&&b.pers!=='rush')engage=false; if(!armed&&b.pers==='rush'&&td>90)engage=false;
+    const eR={rush:b.w.length?320:150,detective:300,edge:260,looter:armed?220:50,hider:130}[b.pers]; engage=retal||(td<eR*(b.tgt.human?1+b.tgt.unk/400:1)&&G.t>(b.calm||0)&&!(b.cook>75)); if(!armed&&!retal&&b.pers!=='rush')engage=false; if(!armed&&b.pers==='rush'&&td>90)engage=false;
     if(danger&&td>90&&!retal)engage=false;
   }
   let mx=0,my=0;
   if(engage){
     const q=b.tgt; const wi=bestWeaponIdx(b,td); if(wi>=0)b.cur=wi; const w=curW(b);
-    if(b.react<=0&&!b.engaged){b.engaged=true;b.react=RR(.25,.6);} b.react=Math.max(0,b.react-dt);
+    if(b.react<=0&&!b.engaged){b.engaged=true;b.react=RR(.35,.8);} b.react=Math.max(0,b.react-dt);
     let lx=q.x,ly=q.y; if(b.pers==='detective'&&!w.melee){ const tt=td/w.spd; lx+=q.vx*tt*.7; ly+=q.vy*tt*.7; }
     let a=Math.atan2(ly-b.y,lx-b.x); const e=Math.sin(G.t*3+b.i)*b.ae+((b.i*13)%7-3)*.01; a+=e*(w.melee?.4:1);
     I.ax=Math.cos(a);I.ay=Math.sin(a);
@@ -520,11 +527,11 @@ function botThink(b,dt){
   } else {
     b.engaged=false; b.react=0; I.atk=false;
     let tx=null,ty=null;
-    if(danger){ const g=zoneGoal(b); tx=g.x;ty=g.y; const gd=Math.hypot(tx-b.x,ty-b.y); if(gd>nz.r*.9){ tx=nz.x+(b.x-nz.x)/dn*nz.r*.5; ty=nz.y+(b.y-nz.y)/dn*nz.r*.5; } }
+    if(danger){ const g=zoneGoal(b); tx=g.x;ty=g.y; }
     else if(b.lootIt&&b.lootIt.alive){ tx=b.lootIt.x;ty=b.lootIt.y; if(Math.hypot(tx-b.x,ty-b.y)<30){ I.pick=true; b.lootIt=null; } }
     else if(b.huntH&&P[0].st==='ground'){ tx=P[0].x;ty=P[0].y; }
     else if(b.pers==='hider'&&G.t>b.hideAt&&G.t>20&&dc<Z.r-100&&dn<nz.r-120){ I.burrow=true; return; }
-    else if(b.pers==='edge'&&Z.ph<6&&dc<Z.r-60&&dn<nz.r-20){ // 縁ぎりぎり：次の円の縁を目指す
+    else if(b.pers==='edge'&&Z.r>40&&dc<Z.r-60&&dn<nz.r-20){ // 縁ぎりぎり：次の円の縁を目指す
       const ang=Math.atan2(b.y-nz.y,b.x-nz.x); tx=nz.x+Math.cos(ang)*(nz.r-40); ty=nz.y+Math.sin(ang)*(nz.r-40); if(Math.hypot(tx-b.x,ty-b.y)<50){tx=null;} }
     else { if(!b.hasW||Math.hypot(b.wx-b.x,b.wy-b.y)<40||(redo&&R()<.05)){ const a=R()*TAU,rr=Math.sqrt(R())*nz.r*.7; b.wx=clamp(nz.x+Math.cos(a)*rr,60,W-60); b.wy=clamp(nz.y+Math.sin(a)*rr,60,W-60); b.hasW=true; if(b.pers==='looter'||b.pers==='hider'){ b.wx=lerp(b.x,b.wx,.4);b.wy=lerp(b.y,b.wy,.4);} } tx=b.wx;ty=b.wy; }
     if(tx!==null){ const dx=tx-b.x,dy=ty-b.y,d=Math.hypot(dx,dy); if(d>14){mx=dx/d;my=dy/d;} }
@@ -573,13 +580,13 @@ function glideUpdate(p,dt){
 }
 
 /* ---------- AI（オート／人間もどき） ---------- */
-const SK_TAS={err:0,react:0,lead:true,dodge:true,buf:1.0,fightR:1,bunch:3,lootR:800,cool:true,drop:'smart',atkDist:1};
-const SK_HUM={err:.6,react:1.1,lead:false,dodge:false,buf:-4,fightR:.6,bunch:9,lootR:200,cool:false,drop:'human',atkDist:1.1,dmg:.8,taken:1.12};
+const SK_TAS={err:0,react:0,lead:true,dodge:true,buf:1.0,fightR:1,bunch:2,lootR:800,cool:true,drop:'smart',atkDist:1};
+const SK_HUM={err:.4,react:.7,lead:false,dodge:true,buf:-4,fightR:.6,bunch:9,lootR:400,cool:false,drop:'human',atkDist:1.1,dmg:.85,taken:1};
 function autoDrop(p,sk){
   const I=p.in; I.jump=false;
   if(!p.ai.dropPlan){
     p.ai.dropPlan=true; let ch=null,bs=1e9;
-    const fin=ZC[6], pd=(x,y)=>{ const rx=x-TR.sx,ry=y-TR.sy; const s=clamp(rx*TR.dx+ry*TR.dy,0,TR.len); return Math.hypot(rx-TR.dx*s,ry-TR.dy*s); };
+    const fin={x:Z.fx,y:Z.fy}, pd=(x,y)=>{ const rx=x-TR.sx,ry=y-TR.sy; const s=clamp(rx*TR.dx+ry*TR.dy,0,TR.len); return Math.hypot(rx-TR.dx*s,ry-TR.dy*s); };
     if(sk.drop==='smart'){
       // 武器のそばで、ほかのボットがいない場所をえらぶ（先読み）
       for(const it of IT){ if(!it.alive||!WP[it.t])continue; if(pd(it.x,it.y)>1150)continue; let crowd=0; for(let i=1;i<P.length;i++){ const b=P[i]; const dd=Math.hypot(b.tx-it.x,b.ty-it.y); if(dd<420)crowd+=1+(dd<200?2:0); }
@@ -587,7 +594,7 @@ function autoDrop(p,sk){
         const sc=-(WSCORE[it.t]||3)*30-near*60+crowd*260+Math.hypot(it.x-fin.x,it.y-fin.y)*.12; if(sc<bs){bs=sc;ch=it;} }
       if(ch)ch={x:ch.x,y:ch.y};
     } else {
-      POIS.forEach((po,i)=>{ if(pd(po.x,po.y)>1100)return; const sc=RR(0,1500)+(po.pop?-200:0)+G.landCnt[i]*40; if(sc<bs){bs=sc;ch=po;} });
+      POIS.forEach((po,i)=>{ if(pd(po.x,po.y)>1100)return; const sc=RR(0,1200)+(po.pop?150:0)+G.landCnt[i]*90; if(sc<bs){bs=sc;ch=po;} });
     }
     if(!ch){ ch={x:TR.x+TR.dx*400,y:TR.y+TR.dy*400}; }
     p.ai.spot={x:clamp(ch.x+RR(-12,12),60,W-60),y:clamp(ch.y+RR(-12,12),60,W-60)};
@@ -606,13 +613,15 @@ function autoThink(p,dt,sk){
   if(p.st==='tractor'){ autoDrop(p,sk); return; }
   I.atk=false;I.pick=false;I.honey=false;I.sw=false;I.skin=false;
   if(p.st!=='ground')return;
-  const dc=Math.hypot(p.x-Z.cx,p.y-Z.cy), nz=nextZone(), dn=Math.hypot(p.x-nz.x,p.y-nz.y), toS=toShrink();
-  const gz=zoneGoal(p); const exitT=p.burrow===1?(.35+p.root*.022):0; const spd=BASE*(p.honey>0?1.5:1);
+  const dc=Math.hypot(p.x-Z.cx,p.y-Z.cy);
+  const exitT=p.burrow===1?(.35+p.root*.022):0;
+  const nz=nextZone(Math.max(0,exitT+sk.buf+2)), dn=Math.hypot(p.x-nz.x,p.y-nz.y);
   const margin=sk.cool?60:100;
-  const travel=Math.max(0,dn-(nz.r-margin))/spd;
-  let need=dc>Z.r-30;
-  if(!need&&dn>nz.r-margin&&Z.ph<6&&(Z.state==='shrink'||toS<travel+exitT+sk.buf))need=true;
-  if(Z.ph>=6)need=true;
+  const finale=sk.cool&&Z.go&&Z.r<260;  // さいごの円：中心にいる芋がいちばん長く生きる
+  const gz=finale?{x:Z.cx,y:Z.cy}:zoneGoal(p,14);
+  const low=sk.cool&&p.cook>=55&&!finale;
+  let need=dc>Z.r-30||dn>nz.r-margin;
+  if(finale)need=dc>Z.r-45;  // さいごの円：中心にいれば OK（土にもぐって待つ）
   if(p.burrow===1){
     I.mx=I.my=0;
     let out=need||p.sprout>=70||(p.unk<=10&&p.root>20)||A.hitFlag;
@@ -629,8 +638,8 @@ function autoThink(p,dt,sk){
     if(best!==A.tgt){ A.tgt=best; A.seenT=A.t; }
     A.cnt=cnt;
     // アイテム
-    A.lootIt=null; let bv=0; const gs=p.w.reduce((m,s)=>m+(WSCORE[s.t]||0),0); const gearOK=sk.cool&&(p.w.length>=2||gs>=8); const lr=gearOK?(p.cook>25?500:260):sk.lootR; itemsNear(p.x,p.y,gearOK?650:lr,NL2);
-    for(const it of NL2){ let w=autoWant(p,it); if(w<=0)continue; if(gearOK&&WP[it.t]&&w<6)continue; const d=Math.hypot(it.x-p.x,it.y-p.y); if(d>((it.t==='helm'||it.t==='armor')&&gearOK?Math.max(lr,650):lr))continue; if(sk.cool){ nearList(it.x,it.y,230,NL3); let c=0; for(const q of NL3)if(q!==p&&q.st==='ground'&&q.burrow!==1)c++; if(c>=2||(c>=1&&d>150))continue; } const v=w/(d+100); if(v>bv){bv=v;A.lootIt=it;} }
+    A.lootIt=null; let bv=0; const gs=p.w.reduce((m,s)=>m+(WSCORE[s.t]||0),0); const gearOK=sk.cool&&(p.w.length>=2&&gs>=15); const lr=gearOK?(p.cook>25?500:260):sk.lootR; itemsNear(p.x,p.y,sk.cool?950:(gearOK||p.cook>40?700:lr),NL2);
+    for(const it of NL2){ let w=autoWant(p,it); if(w<=0)continue; if(gearOK&&WP[it.t]&&w<6)continue; const d=Math.hypot(it.x-p.x,it.y-p.y); if(d>(((it.t==='helm'||it.t==='armor')&&gearOK)?Math.max(lr,650):((it.t==='water'||it.t==='fert')&&sk.cool)?(p.cook>30?900:400):((it.t==='helm'||it.t==='armor')&&sk.cool)?900:lr))continue; if(sk.cool){ nearList(it.x,it.y,230,NL3); let c=0; for(const q of NL3)if(q!==p&&q.st==='ground'&&q.burrow!==1)c++; if(c>=2||(c>=1&&d>150))continue; } const v=w/(d+100); if(v>bv){bv=v;A.lootIt=it;} }
   }
   const t=A.tgt&&A.tgt.st==='ground'?A.tgt:null;
   // 回避
@@ -644,7 +653,7 @@ function autoThink(p,dt,sk){
     const fightD=Math.max(90,wr*sk.atkDist);
     const crowd=(A.cnt||1)>sk.bunch&&p.honey<=0;
     const hunted=p.lastHit===t&&G.t-p.lastHitT<3;
-    let mustFight=(!need||td<110)&&(td<fightD||hunted||(p.revealed&&td<260)); if(p.w.length===0&&A.lootIt&&WP[A.lootIt.t]&&Math.hypot(A.lootIt.x-p.x,A.lootIt.y-p.y)<520)mustFight=false;
+    let mustFight=(!need||td<110)&&(td<fightD||hunted||(p.revealed&&td<260)); if(low&&!hunted&&td>130)mustFight=false; if(p.w.length===0&&A.lootIt&&WP[A.lootIt.t]&&Math.hypot(A.lootIt.x-p.x,A.lootIt.y-p.y)<520)mustFight=false;
     if(mustFight&&!(crowd&&!hunted&&td>160)){
       engaged=true;
       if(bi>=0)p.cur=bi; const w=curW(p);
@@ -658,20 +667,23 @@ function autoThink(p,dt,sk){
       if(sk.dodge&&(!w.melee||d<pref+40)){ const s=Math.sin(G.t*1.1+p.i)>0?1:-1; mx+=-dy/d*s*.45; my+=dx/d*s*.45; }
       I.atk=reacted&&d<(w.melee?w.rng+t.r-6:w.rng*.96);
       if(sk.lead&&!w.melee&&I.atk){ /* 全弾命中のため、射線上に他がいるか気にしない */ }
-      if(p.ripe>=100&&p.honey<=0&&((d<200&&((A.cnt||1)>=2||p.cook>45))||(p.revealed&&d<200)))I.honey=true;
+      if(p.ripe>=100&&p.honey<=0&&((d<200&&((A.cnt||1)>=2||p.cook>25||finale))||(p.revealed&&d<200)))I.honey=true;
     }
   }
   A.hitFlag=false;
+  if(!engaged&&low&&t&&p.honey<=0){ // HPが少ない：相手からはなれて、回復アイテムか隠れ場所へ
+    const dx=p.x-t.x,dy=p.y-t.y,d=Math.hypot(dx,dy)||1; mx=dx/d; my=dy/d; if(A.lootIt&&A.lootIt.alive&&(A.lootIt.t==='water'||A.lootIt.t==='fert')){ const lx=A.lootIt.x-p.x,ly=A.lootIt.y-p.y,ll=Math.hypot(lx,ly)||1; mx=mx*.4+lx/ll*.8; my=my*.4+ly/ll*.8; if(ll<26){ I.pick=true; A.lootIt=null; } }
+    engaged=true; I.atk=false; }
   if(!engaged&&sk.cool&&(A.cnt||0)>=3&&p.honey<=0){ // 人だかりから はなれる
     let ax=0,ay=0; nearList(p.x,p.y,360,NL3); for(const q of NL3){ if(q===p||q.st!=='ground'||(q.burrow===1&&Math.hypot(q.x-p.x,q.y-p.y)>60))continue; const dx=p.x-q.x,dy=p.y-q.y,d2=dx*dx+dy*dy+400; ax+=dx/d2;ay+=dy/d2; } const l=Math.hypot(ax,ay)||1; mx=ax/l;my=ay/l; engaged=true; I.atk=false; }
   if(!engaged){
     let tx=null,ty=null;
     A.moveZ=A.moveZ&&Math.hypot(p.x-gz.x,p.y-gz.y)>70;
     if(need||A.moveZ){ A.moveZ=true; tx=gz.x;ty=gz.y; if(sk.drop==='human'){tx=nz.x;ty=nz.y;} }
-    else if(A.lootIt&&A.lootIt.alive&&reacted){ tx=A.lootIt.x;ty=A.lootIt.y; if(Math.hypot(tx-p.x,ty-p.y)<26){I.pick=true;A.lootIt=null;} }
+    else if(A.lootIt&&A.lootIt.alive&&reacted){ tx=A.lootIt.x;ty=A.lootIt.y; if(Math.hypot(tx-p.x,ty-p.y)<26&&!((A.lootIt.t==='water'||A.lootIt.t==='fert')&&t&&Math.hypot(t.x-p.x,t.y-p.y)<260)){I.pick=true;A.lootIt=null;} }
     else if(p.skinHeld>=0&&p.unk>40){ I.skin=true; }
     else if(sk.cool&&!t&&p.unk>=72&&p.honey<=0&&p.burrow===0&&dc<Z.r-100){ I.burrow=true; }
-    else if(sk.cool&&!t&&p.honey<=0&&p.burrow===0&&Z.ph<6&&dc<Z.r-100&&!(Z.state==='shrink'&&dn>nz.r-margin-60)){ I.burrow=true; }
+    else if(sk.cool&&!t&&p.honey<=0&&p.burrow===0&&(finale?dc<Z.r-60&&Math.hypot(gz.x-p.x,gz.y-p.y)<60:(Z.r>150&&dc<Z.r-100&&dn<nz.r-margin-60))){ I.burrow=true; }
     else if(sk.drop==='human'){ if(!A.w||Math.hypot(A.w.x-p.x,A.w.y-p.y)<40||R()<.004){ const a=R()*TAU,rr=Math.sqrt(R())*nz.r*.7; A.w={x:clamp(nz.x+Math.cos(a)*rr,60,W-60),y:clamp(nz.y+Math.sin(a)*rr,60,W-60)}; } tx=A.w.x;ty=A.w.y; }
     else { // 目標地点でまつ
       const d=Math.hypot(gz.x-p.x,gz.y-p.y); if(d>90){tx=gz.x;ty=gz.y;} }
@@ -679,14 +691,14 @@ function autoThink(p,dt,sk){
   }
   if(sk.dodge&&p.burrow===0){ // 近接のスキをよけて、すかし打ち（相手のクールダウン中に近づく）
     let rx=0,ry=0,hit=false,nt=0; nearList(p.x,p.y,150,NL3);
-    for(const q of NL3){ if(q===p||q.st!=='ground'||q.burrow>0)continue; const qw=curW(q); if(!qw.melee)continue; const dx=p.x-q.x,dy=p.y-q.y,d=Math.sqrt(dx*dx+dy*dy)||1; const reach=qw.rng+q.r+14; const eta=Math.max(0,(d-reach)/BASE); nt++; if(q.cd<=eta+.16&&d<reach+40){ rx+=dx/d;ry+=dy/d;hit=true; } }
-    if(hit&&(nt>=2||p.cook>45)){ const l=Math.hypot(rx,ry)||1; mx=rx/l; my=ry/l; }
+    for(const q of NL3){ if(q===p||q.st!=='ground'||q.burrow>0)continue; const qw=q.wind?q.wind.w:curW(q); if(!qw.melee)continue; const dx=p.x-q.x,dy=p.y-q.y,d=Math.sqrt(dx*dx+dy*dy)||1; const reach=qw.rng+q.r+14; const eta=Math.max(0,(d-reach)/BASE); nt++; if(q.wind?d<reach+26:(q.cd<=eta+.16&&d<reach+40)){ rx+=dx/d;ry+=dy/d;hit=true; } }
+    if(hit){ const l=Math.hypot(rx,ry)||1; mx=rx/l; my=ry/l; }
   }
-  mx+=ev.x*2.5;my+=ev.y*2.5;
+  mx+=ev.x*3.5;my+=ev.y*3.5;
   if(sk.cool){ // ゾーン最優先：外に出ない・出ていたら最短で戻る
     const ex=Z.cx-p.x,ey=Z.cy-p.y,el=Math.hypot(ex,ey)||1; const edgeD=Z.r-dc;
     if(edgeD<0){ const gx=gz.x-p.x,gy=gz.y-p.y,gl=Math.hypot(gx,gy)||1; mx=(ex/el*.5+gx/gl*.5); my=(ey/el*.5+gy/gl*.5); I.atk=I.atk&&edgeD>-30; }
-    else if(edgeD<70&&(Z.state==='shrink'||Z.ph>=6||edgeD<30)){ const out=-(mx*ex+my*ey)/el; if(out>0){ mx+=ex/el*(out+.6);my+=ey/el*(out+.6);} else { mx+=ex/el*.5;my+=ey/el*.5; } }
+    else if(edgeD<70){ const out=-(mx*ex+my*ey)/el; if(out>0){ mx+=ex/el*(out+.6);my+=ey/el*(out+.6);} else { mx+=ex/el*.5;my+=ey/el*.5; } }
   }
   I.mx=mx;I.my=my;
   if(!sk.cool&&false){}
@@ -694,22 +706,26 @@ function autoThink(p,dt,sk){
 function autoWant(p,it){
   const t=it.t;
   if(WP[t]){ const have=p.w.find(s=>s.t===t); if(have)return WP[t].ammo&&have.a<WP[t].ammo*.8?2:0; if(p.w.length<2)return 8+(WSCORE[t]||3); const worst=Math.min(...p.w.map(s=>WSCORE[s.t]||0)); return (WSCORE[t]||0)>worst+2?4:0; }
-  if(t==='helm')return p.helm<20?6:0; if(t==='armor')return p.armor<20?7:0;
-  if(t==='water')return p.cook>30?6:0; if(t==='fert')return p.cook>55?8:0;
+  if(t==='helm')return p.helm<20?(p.w.length?17:9):0; if(t==='armor')return p.armor<20?(p.w.length?18:10):0;
+  if(t==='water')return p.cook>25?6:0; if(t==='fert')return p.cook>40?8:0;
   if(t==='skin')return p.skinHeld<0?2:0;
   return 0;
 }
 
 /* ---------- 試合の進行 ---------- */
 function checkEnd(){
-  if(G.over)return;
-  if(alive<=1){
-    G.over=true; G.endT=G.t;
-    const w=P.find(p=>p.st!=='dead')||P.slice().sort((a,b)=>b.diedT-a.diedT)[0];
-    G.winner=w; if(w){ if(w.st!=='dead'){ w.rank=1; } }
-    if(w&&w.human){ if(w.st==='dead'){w.st='ground';} onWin(); }
-    else if(P[0].st==='dead'){ updateDeathPanel(); }
+  if(G.over||alive>1)return;
+  G.over=true; G.endT=G.t;
+  let w;
+  if(alive===1) w=P.find(p=>p.st!=='dead');
+  else { // 同じフレームでぜんぶ倒れた：のこりHP（＝オーバーキルが小さい順）で勝者を決める
+    const grp=P.filter(p=>p.st==='dead'&&p.diedT===G.t).sort((a,b)=>a.over-b.over||a.i-b.i);
+    grp.forEach((p,i)=>{ p.rank=i+1; }); w=grp[0];
+    if(w){ w.st='ground'; w.cook=99; w.burrow=0; alive=1; }
   }
+  G.winner=w; if(w)w.rank=1;
+  if(w&&w.human){ onWin(); }
+  else { if(G.pendHuman&&P[0].st==='dead'){ G.pendHuman=false; onHumanDeath(P[0]); } if(P[0].st==='dead')updateDeathPanel(); }
 }
 function recordHuman(win){
   const h=P[0]; if(G.record)return; if(!h.hiddenDone){h.hiddenT=h.aliveT;}
@@ -717,6 +733,10 @@ function recordHuman(win){
   G.record=rec; hist.push(rec);
   if(G.noRec)return;
   const b=save.best; b.games++; if(rec.rank<b.rank)b.rank=rec.rank; if(win)b.wins++; if(rec.kills>b.kills)b.kills=rec.kills; if(rec.hidden>b.hidden)b.hidden=rec.hidden; if(rec.honey&&(!b.honey||rec.honey<b.honey))b.honey=rec.honey; store();
+}
+function onHumanHit(d,src){
+  G.shake=Math.min(1,(G.shake||0)+.25+d/60);
+  if(src&&src!==P[0]){ const h=P[0]; G.hits.push({a:Math.atan2(src.y-h.y,src.x-h.x),t:1.0,k:Math.min(1,.5+d/30)}); if(G.hits.length>6)G.hits.shift(); }
 }
 function onHumanDeath(h){
   recordHuman(false); G.deadAt=G.t; G.deadShown=false;
@@ -762,7 +782,7 @@ function update(dt){
   G.t+=dt;
   dropUpdate(dt);
   zoneUpdate(dt);
-  if(G.t>800&&!G.over){ for(const p of P)if(p.st==='ground'){p.cook=100;} }
+  if(G.t>420&&!G.over){ for(const p of P)if(p.st==='ground'){p.cook+=40*dt;} }
   rebuild();
   const ai=aiFor();
   for(let i=0;i<P.length;i++){ const p=P[i];
@@ -774,6 +794,11 @@ function update(dt){
   }
   separate();
   projUpdate(dt);
+  checkEnd();
+  // ピンチ演出：画面ゆれ・被弾の向き・ハートビート
+  G.shake=Math.max(0,(G.shake||0)-dt*3.2); for(let i=G.hits.length-1;i>=0;i--){ G.hits[i].t-=dt; if(G.hits[i].t<=0)G.hits.splice(i,1); }
+  G.hbPulse=Math.max(0,G.hbPulse-dt*3.5);
+  if(h.st==='ground'&&!G.over&&h.cook>=65){ G.hb-=dt; if(G.hb<=0){ const sev=clamp((h.cook-65)/35,0,1); G.hb=lerp(.95,.5,sev); G.hbPulse=1; sfx('beat'); } } else G.hb=0;
   for(let i=FX.length-1;i>=0;i--){ FX[i].t-=dt; if(FX[i].t<=0)FX.splice(i,1); }
   // 蜜・ほか
   if(h.st==='dead'){
@@ -831,7 +856,10 @@ function drawWorld(){
   // ゾーン
   { const zx=sx(Z.cx),zy=sy(Z.cy),zr=Z.r*z; ctx.save(); ctx.fillStyle='rgba(255,50,0,'+(.4+Math.sin(performance.now()/260)*.05)+')'; ctx.beginPath(); ctx.rect(0,0,w,hh); if(zr>0.5)ctx.arc(zx,zy,zr,0,TAU); ctx.fill('evenodd');
     if(zr>0.5){ ctx.strokeStyle='#ff8a3a'; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(zx,zy,zr,0,TAU); ctx.stroke(); }
-    const nz=nextZone(); if(Z.ph<6&&nz.r>0){ ctx.strokeStyle='rgba(255,255,255,.9)'; ctx.lineWidth=2.5; ctx.setLineDash([12,10]); ctx.beginPath(); ctx.arc(sx(nz.x),sy(nz.y),nz.r*z,0,TAU); ctx.stroke(); ctx.setLineDash([]); }
+    const nz=nextZone(); if(nz.r>0){ ctx.strokeStyle='rgba(255,255,255,.9)'; ctx.lineWidth=2.5; ctx.setLineDash([12,10]); ctx.beginPath(); ctx.arc(sx(nz.x),sy(nz.y),nz.r*z,0,TAU); ctx.stroke();
+      // 最終地点（ゾーンの中心はここへ向かってうごく）
+      const fx=sx(Z.fx),fy=sy(Z.fy); ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(zx,zy); ctx.lineTo(fx,fy); ctx.stroke(); ctx.setLineDash([]);
+      ctx.beginPath(); ctx.arc(fx,fy,7*z+2,0,TAU); ctx.moveTo(fx-12*z,fy); ctx.lineTo(fx+12*z,fy); ctx.moveTo(fx,fy-12*z); ctx.lineTo(fx,fy+12*z); ctx.stroke(); }
     ctx.restore(); }
   // 弾
   for(const b of PJ){ const x=sx(b.x),y=sy(b.y); if(x<-20||x>w+20||y<-20||y>hh+20)continue; ctx.fillStyle=b.k==='can'?'#8ad8ff':b.k==='roast'?'#ff8a2a':'#d8d4c8'; ctx.beginPath(); ctx.arc(x,y,(b.k==='can'?3:5)*z,0,TAU); ctx.fill(); }
@@ -900,6 +928,8 @@ function drawPot(p,x,y,z){
   if(p.st==='ground'){ const w=curW(p); const sl=p.w[p.cur]; if(sl){ ctx.save(); const ang=p.swingT>0?p.swingA+(0.2-p.swingT)*10-1:p.face; ctx.rotate(ang); ctx.fillStyle=w.col; if(w.melee){ ctx.fillRect(r*.9,-2*z,r*(sl.t==='shovel'?1.2:.9),4*z); ctx.fillRect(r*.9+r*(sl.t==='shovel'?1.0:.75),-5*z,5*z,10*z); } else { ctx.beginPath(); ctx.arc(r*1.15,0,3.6*z,0,TAU); ctx.fill(); } ctx.restore(); }
     else if(p.swingT>0){ ctx.save(); ctx.rotate(p.swingA); ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(r*1.3,0,3*z,0,TAU); ctx.fill(); ctx.restore(); }
     if(p.swingT>0&&sl&&WP[sl.t].melee){ ctx.save(); ctx.rotate(p.swingA); ctx.strokeStyle='rgba(255,255,255,'+(p.swingT*4)+')'; ctx.lineWidth=3*z; ctx.beginPath(); ctx.arc(0,0,r*1.2+WP[sl.t].rng*z*.7,-.8,.8); ctx.stroke(); ctx.restore(); } }
+  if(p.wind){ const w=p.wind; ctx.save(); ctx.rotate(w.a); ctx.fillStyle='rgba(255,60,40,'+(.18+.35*(1-w.t/.3))+')'; ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,(w.w.rng+14)*z,-w.w.arc/2,w.w.arc/2); ctx.closePath(); ctx.fill(); ctx.restore(); }
+  if(p.healT>0){ ctx.strokeStyle='#7dff8a'; ctx.lineWidth=3*z; ctx.beginPath(); ctx.arc(0,0,r*1.45,-Math.PI/2,-Math.PI/2+TAU*(1-p.healT)); ctx.stroke(); ctx.fillStyle='#7dff8a'; ctx.font=`900 ${Math.round(12*z+3)}px ${FONT}`; ctx.textAlign='center'; ctx.fillText('+',0,-r*1.5); }
   // 名札など
   if(p.human){ ctx.fillStyle='#ffd23f'; ctx.font=`900 ${Math.round(11*z+2)}px ${FONT}`; ctx.textAlign='center'; ctx.lineWidth=3; ctx.strokeStyle='#000'; ctx.strokeText('UNKNOWN',0,-r*1.9); ctx.fillText('UNKNOWN',0,-r*1.9); ctx.strokeStyle='rgba(255,230,120,.9)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,0,r*1.55,0,TAU); ctx.stroke();
     if(p.revealed){ ctx.fillStyle='#ff3b30'; ctx.font=`900 ${Math.round(16*z)}px ${FONT}`; ctx.fillText('!!',0,-r*2.6); } }
@@ -945,7 +975,7 @@ function drawMini(){
   const s=mm.width,k=s/W; mctx.fillStyle='#2d7ea6'; mctx.fillRect(0,0,s,s); mctx.fillStyle='#78a544'; mctx.fillRect(0,0,s,s);
   mctx.fillStyle='#8a5a3a'; for(let j=0;j<10;j++)for(let i=0;i<10;i++){ if(hash(i,j)>=.28)mctx.fillRect(i*300*k,j*300*k,300*k-1,300*k-1); }
   mctx.save(); mctx.fillStyle='rgba(255,90,20,.5)'; mctx.beginPath(); mctx.rect(0,0,s,s); if(Z.r>1)mctx.arc(Z.cx*k,Z.cy*k,Z.r*k,0,TAU); mctx.fill('evenodd'); mctx.restore();
-  mctx.strokeStyle='#fff'; mctx.lineWidth=1.2; const nz=nextZone(); if(Z.ph<6&&nz.r>0){ mctx.beginPath(); mctx.arc(nz.x*k,nz.y*k,nz.r*k,0,TAU); mctx.stroke(); }
+  mctx.strokeStyle='#fff'; mctx.lineWidth=1.2; const nz=nextZone(); if(nz.r>0){ mctx.beginPath(); mctx.arc(nz.x*k,nz.y*k,nz.r*k,0,TAU); mctx.stroke(); mctx.beginPath(); mctx.arc(Z.fx*k,Z.fy*k,2,0,TAU); mctx.stroke(); }
   mctx.fillStyle='#ffd76a'; for(const po of POIS)if(po.pop)mctx.fillRect(po.x*k-1.5,po.y*k-1.5,3,3);
   const h=P[0]; if(h.st!=='tractor'&&h.st!=='dead'){ mctx.fillStyle='#fff'; mctx.beginPath(); mctx.arc(h.x*k,h.y*k,5,0,TAU); mctx.fill(); mctx.fillStyle='#ffb000'; mctx.beginPath(); mctx.arc(h.x*k,h.y*k,3.5,0,TAU); mctx.fill(); }
   else if(h.st==='tractor'&&TR){ mctx.fillStyle='#fff'; mctx.fillRect(TR.x*k-3,TR.y*k-3,6,6); }
@@ -958,9 +988,9 @@ function setBar(id,v,txt,warn){ const e=$(id); const w=clamp(v,0,100)+'%'; if(hc
 function drawHUD(){
   const h=P[0];
   setT('#cAlive',alive); setT('#cKill',h.kills);
-  let zt; if(Z.ph>=6)zt='最終'; else if(Z.state==='wait')zt='縮小まで '+fmt(Math.ceil(toShrink())); else zt='縮小中 '+fmt(Math.ceil(ST[Z.ph]-Z.t));
+  const zt=Z.go?(Z.r<=0?'ゼロ！':'ぜんぶ消えるまで '+fmt(Math.ceil(ZT-Z.t))):'降下がおわると縮小';
   setT('#cZt',zt);
-  setBar('#bCook',h.cook,Math.round(h.cook)+'%',h.cook>70||h.zoneHot);
+  setBar('#bCook',h.cook,Math.round(h.cook)+'%',h.cook>=65||h.zoneHot); $('#bCook').classList.toggle('low',h.cook>=65&&h.st!=='dead');
   setBar('#bUnk',h.unk,h.revealed?'バレた！':Math.round(h.unk)+'%',h.unk>80);
   setBar('#bRipe',h.ripe,h.ripe>=100?'蜜OK!':Math.round(h.ripe)+'%',h.ripe>=100);
   const rv=h.burrow>0; $('#bRoot').style.display=(rv||h.root>0)?'':'none'; setBar('#bRoot',h.root,h.burrow===1&&(h.root>70||h.sprout>60)?'芋りすぎ注意！':Math.round(h.root)+'%',h.burrow===1&&(h.root>70||h.sprout>60));
@@ -972,6 +1002,13 @@ function drawHUD(){
   $('.bars').style.display=h.st==='dead'?'none':''; $('#wpn').style.display=h.st==='dead'?'none':'';
   $('#bHon').classList.toggle('on',h.ripe>=100&&h.honey<=0); $('#bBur').classList.toggle('on',h.burrow>0);
   $('#bAtk').textContent=curW(h).n;
+}
+function drawPinch(h){
+  const w=G.cw,hh=G.ch;
+  // 被弾の向き（赤い弧）
+  for(const d of G.hits){ ctx.save(); ctx.translate(w/2,hh/2); ctx.strokeStyle='rgba(255,40,30,'+Math.min(1,d.t*1.6)*d.k+')'; ctx.lineWidth=9; ctx.lineCap='round'; ctx.beginPath(); const R0=Math.min(w,hh)*.3; ctx.arc(0,0,R0,d.a-.3,d.a+.3); ctx.stroke(); ctx.restore(); }
+  // HPが少ないとき：赤い縁取りがドクンと脈うつ
+  if(h.cook>=65&&!G.over){ const sev=clamp((h.cook-65)/35,0,1); const a=(.3+.3*sev)+G.hbPulse*(.25+.2*sev); ctx.save(); ctx.translate(w/2,hh/2); ctx.scale(w/2,hh/2); const rg=ctx.createRadialGradient(0,0,.5-.1*G.hbPulse,0,0,1.25); rg.addColorStop(0,'rgba(200,0,0,0)'); rg.addColorStop(1,'rgba(225,10,0,'+clamp(a,0,.9)+')'); ctx.fillStyle=rg; ctx.fillRect(-1.6,-1.6,3.2,3.2); ctx.restore(); }
 }
 function render(){
   const t0=performance.now();
@@ -985,7 +1022,10 @@ function render(){
   if(h.st==='tractor'){ drawOverview(); drawHUD(); drawMini(); return; }
   const tgt=cameraTarget(); if(tgt){ const k=Math.min(1,(performance.now()-(G.lastR||performance.now()))/1000*8+.02); G.cam.x=lerp(G.cam.x,tgt.x,.18); G.cam.y=lerp(G.cam.y,tgt.y,.18); }
   G.zoom=clamp(Math.min(G.cw,G.ch)/520,.6,1.5);
-  drawWorld(); if(G.mode==='play'){ drawHUD(); G.mmT=(G.mmT||0)+1; if(G.mmT%3===0)drawMini(); }
+  ctx.save(); if(G.shake>0&&h.st!=='dead'){ const m=G.shake*9; ctx.translate((Math.random()*2-1)*m,(Math.random()*2-1)*m); }
+  drawWorld(); ctx.restore();
+  if(h.st!=='dead')drawPinch(h);
+  if(G.mode==='play'){ drawHUD(); G.mmT=(G.mmT||0)+1; if(G.mmT%3===0)drawMini(); }
   const dt=performance.now()-t0; perfAcc.n++;perfAcc.sum+=dt;perfAcc.max=Math.max(perfAcc.max,dt);
 }
 
@@ -1066,11 +1106,11 @@ const frameT={n:0,sum:0,max:0};
 
 /* ===================== テスト用フック ===================== */
 window.__annou={
-  state(){ const h=P[0]; return {mode:G.mode,t:G.t,alive,over:G.over,auto:G.auto,zone:{ph:Z.ph,state:Z.state,r:Z.r,cx:Z.cx,cy:Z.cy},me:h&&{st:h.st,x:h.x,y:h.y,cook:h.cook,unk:h.unk,ripe:h.ripe,root:h.root,sprout:h.sprout,burrow:h.burrow,honey:h.honey,kills:h.kills,rank:h.rank,revealed:h.revealed,w:h.w.map(s=>s.t+':'+s.a),helm:h.helm,armor:h.armor,skin:h.skin,skinHeld:h.skinHeld,firstHoney:h.firstHoney},winner:G.winner&&G.winner.name,record:G.record,ending:G.ending}; },
+  state(){ const h=P[0]; return {mode:G.mode,t:G.t,alive,over:G.over,auto:G.auto,zone:{go:Z.go,t:Z.t,r:Z.r,cx:Z.cx,cy:Z.cy,fx:Z.fx,fy:Z.fy,dps:Z.dps},me:h&&{st:h.st,x:h.x,y:h.y,cook:h.cook,unk:h.unk,ripe:h.ripe,root:h.root,sprout:h.sprout,burrow:h.burrow,honey:h.honey,kills:h.kills,rank:h.rank,revealed:h.revealed,w:h.w.map(s=>s.t+':'+s.a),helm:h.helm,armor:h.armor,skin:h.skin,skinHeld:h.skinHeld,firstHoney:h.firstHoney},winner:G.winner&&G.winner.name,record:G.record,ending:G.ending}; },
   step(dt){ step(dt); }, render(){ render(); },
   start(){ startMatch(); }, newMatch(s){ if(s!=null)seed=s>>>0; startMatch(); }, title(){ toTitle(); }, showResult(){ if(!G.record)recordHuman(false); showResult(); },
   setAuto, setBot(m){ G.ai=m==='tas'?SK_TAS:m==='human'?SK_HUM:null; P[0]&&(P[0].ai={}); }, setSeed(s){ seed=s>>>0; }, noRecord(v){ G.noRec=!!v; },
-  hist(){ return hist; }, clearHist(){ hist=[]; },
+  hist(){ return hist; }, dmgBy(){ return G.dmgBy; }, hurtMe(d,i){ hurt(P[0],d,P[i||1],'テスト','shot'); }, clearHist(){ hist=[]; },
   perf(){ return {avg:frameT.sum/Math.max(1,frameT.n),max:frameT.max,n:frameT.n,render:perfAcc.sum/Math.max(1,perfAcc.n),renderMax:perfAcc.max}; },
   resetPerf(){ frameT.n=frameT.sum=frameT.max=0; perfAcc.n=perfAcc.sum=perfAcc.max=0; },
   me(){ return P[0]; }, pots(){ return P; }, zone(){ return Z; }, items(){ return IT; }, tractor(){ return TR; },
@@ -1079,7 +1119,7 @@ window.__annou={
   jumpTo(t){ P[0].in.jump=true; },
   skipDrop(){ for(const p of P){ if(p.st==='tractor'||p.st==='glide'){ if(p.st==='tractor'){ if(p.human&&!p.marked){p.tx=TR.x;p.ty=TR.y;} glideStart(p);} p.gt=0.01; } } for(let i=0;i<3;i++)update(1/30); },
   spawnNear(n,dx,dy){ let k=0; for(const p of P){ if(p.human||p.st==='dead')continue; if(k>=n)break; p.st='ground'; p.x=P[0].x+(dx||90)+k*25; p.y=P[0].y+(dy||0)+((k%2)?30:-30); p.pers='rush'; k++; } },
-  setZone(ph,state,t){ Z.ph=ph;Z.state=state||'wait';Z.t=t||0; zoneUpdate(0); },
+  setZone(t){ Z.go=true; Z.t=t||0; zoneUpdate(0); },
   showDeath, flow(){ return G.mode; },
   save(){ return save; }, resetSave(){ save={snd:save.snd,best:{rank:100,wins:0,kills:0,hidden:0,honey:0,games:0}}; store(); renderRec(); },
   size(){ return {w:G.cw,h:G.ch,zoom:G.zoom}; }, dbg(){ return {edgeIn:{...edgeIn},touch:{mx:touch.mx,my:touch.my,atk:touch.atk,stick:!!touch.stick},K:{...K},mouse:{...mouse}}; }
