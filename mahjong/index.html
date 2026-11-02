@@ -9,7 +9,7 @@
 <link rel="icon" href="data:,">
 <style>
 html,body{touch-action:manipulation}
-:root{--bg:#06140f;--bg2:#0c2a1d;--felt:#14613f;--felt2:#0e4a30;--pan:#1a3d2d;--pan2:#25593f;--ink:#f1faf3;--mute:#9cc5ad;--gold:#ffd36b;--red:#ff6b6b;--cyan:#7fe8ff;--ok:#6dffb1;--warn:#ffb347;--hw:min(calc((100vw - 14px) / 14.8),40px);--pw:min(calc((100vw - 20px) / 23),16px)}
+:root{--bg:#06140f;--bg2:#0c2a1d;--felt:#14613f;--felt2:#0e4a30;--pan:#1a3d2d;--pan2:#25593f;--ink:#f1faf3;--mute:#9cc5ad;--gold:#ffd36b;--red:#ff6b6b;--cyan:#7fe8ff;--ok:#6dffb1;--warn:#ffb347;--hw:min(calc((100vw - 14px) / 14.8),40px);--k:1;--pw0:min(calc((100vw - 20px) / 23),16px);--pw:calc(var(--pw0) * var(--k))}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);overflow:hidden;overscroll-behavior:none}
@@ -64,7 +64,7 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var
 .keys{margin:8px 0 0;font-size:11px;color:var(--mute)}
 /* ---- 対局 ---- */
 #play{padding:0 6px calc(6px + env(safe-area-inset-bottom,0px));gap:4px;overflow:hidden;display:flex;flex-direction:column}
-#table{flex:1 1 auto;justify-content:space-between;background:radial-gradient(ellipse at 50% 50%,var(--felt) 0%,var(--felt2) 100%);border-radius:14px;padding:4px;display:flex;flex-direction:column;gap:2px;box-shadow:inset 0 0 0 2px #0a3a25,0 4px 14px rgba(0,0,0,.45);min-height:0}
+#table{flex:1 1 auto;overflow:hidden;justify-content:space-between;background:radial-gradient(ellipse at 50% 50%,var(--felt) 0%,var(--felt2) 100%);border-radius:14px;padding:4px;display:flex;flex-direction:column;gap:2px;box-shadow:inset 0 0 0 2px #0a3a25,0 4px 14px rgba(0,0,0,.45);min-height:0}
 .midrow{display:grid;grid-template-columns:auto 1fr auto;gap:3px;align-items:start;flex:1;align-content:center}
 .pl.side .bd{flex-direction:column;gap:0;border-radius:10px;padding:2px 6px;line-height:1.25}
 .pl{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
@@ -78,7 +78,8 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var
 .pond{display:grid;grid-template-columns:repeat(6,var(--pw));grid-auto-rows:calc(var(--pw) * 1.45);gap:1px;align-content:start;justify-content:center}
 .pond .t{--w:var(--pw)}
 .pond .t.last{box-shadow:0 0 0 2px var(--red),0 1px 2px rgba(0,0,0,.5)}
-.p0 .pond,.p2 .pond{--pw:min(calc((100vw - 20px) / 15),26px)}
+.pond{--pw:calc(var(--pw0) * var(--k))}
+.p0 .pond,.p2 .pond{--pw0:min(calc((100vw - 20px) / 15),26px)}
 .pond.me{min-height:calc(var(--pw) * 1.45 * 2 + 2px)}
 .mlds{display:flex;flex-wrap:wrap;gap:3px;justify-content:center;min-height:0}
 .mlds .tl .t{--w:calc(var(--pw) * .95)}
@@ -113,7 +114,7 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var
 #calls .adv{flex-basis:100%;font-size:12px;font-weight:700;color:var(--gold);text-align:center;background:rgba(0,0,0,.35);border-radius:8px;padding:3px 6px}
 @keyframes pulse{50%{transform:scale(1.05)}}
 #handrow{display:flex;justify-content:center;align-items:flex-end;gap:calc(var(--hw) * .3);padding:4px 2px 2px;min-height:calc(var(--hw) * 1.38 + 14px)}
-#hand{display:flex;gap:1px;align-items:flex-end}
+#hand{display:flex;gap:1px;align-items:flex-end;touch-action:none}
 #hand .t{--w:var(--hw);cursor:pointer;transition:transform .08s}
 #hand .t.sel{transform:translateY(-10px)}
 #hand .t.drawn{margin-left:calc(var(--hw) * .4)}
@@ -121,12 +122,13 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var
 #hand .t[data-dg]::before{content:"";position:absolute;left:0;right:0;bottom:-5px;height:4px;border-radius:2px;pointer-events:none}
 #hand .t[data-dg="0"]::before{background:#38d27a}#hand .t[data-dg="1"]::before{background:#bfe86a}#hand .t[data-dg="2"]::before{background:#ffd34d}#hand .t[data-dg="3"]::before{background:#ff5252}
 #ctl{display:flex;gap:6px;justify-content:center}
+#ctl button[aria-pressed=true]{background:var(--pan2);box-shadow:inset 0 0 0 2px var(--gold)}
 #ctl button{padding:6px 10px;border-radius:10px;background:var(--pan);font-size:12px;font-weight:800;white-space:nowrap}
 #ctl .info{flex:1;font-size:11px;color:var(--mute);align-self:center;text-align:left;font-weight:700}
 /* ---- モーダル ---- */
 #modal{position:absolute;inset:0;background:rgba(2,10,6,.78);z-index:20;display:flex;align-items:flex-start;justify-content:center;padding:calc(10px + env(safe-area-inset-top,0px)) 8px 8px;overflow-y:auto}
 #modal .card{width:100%;max-width:520px;background:linear-gradient(180deg,#143d2b,#0d2a1d);border:2px solid var(--gold);border-radius:18px;padding:12px;box-shadow:0 10px 40px rgba(0,0,0,.6);text-align:left}
-.card h3{margin:0 0 6px;font-size:24px;text-align:center;color:var(--gold);letter-spacing:.08em}
+.card h3,.card h4{margin:0 0 6px;font-size:24px;text-align:center;color:var(--gold);letter-spacing:.08em}
 .card h4{margin:10px 0 4px;font-size:13px;color:var(--cyan);border-bottom:1px solid rgba(127,232,255,.3);padding-bottom:2px}
 .card .hnd{display:flex;flex-wrap:wrap;gap:2px;align-items:flex-end;justify-content:center;margin:4px 0}
 .card .hnd .t{--w:min(22px,calc((100vw - 60px) / 15))}
@@ -204,11 +206,12 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var
 .qq .cand.bestc{color:var(--ok);font-weight:800}
 .rec2{font-size:12px;color:var(--mute);margin:6px 0;width:100%}
 @media (prefers-reduced-motion:reduce){.hero .t,#calls button.go{animation:none}}
+#title>*,#learn>*,#lesson>*,#quiz>*{max-width:560px;width:100%;margin-left:auto;margin-right:auto}
 /* ---- PC ---- */
 @media (min-width:900px) and (min-height:600px){
  #app{max-width:1200px}
- :root{--hw:min(46px,calc((100vh - 330px) / 1.7));--pw:min(21px,calc((100vh - 260px) / 17))}
- .p0 .pond,.p2 .pond{--pw:min(30px,calc((100vh - 260px) / 13))}
+ :root{--hw:min(46px,calc((100vh - 330px) / 1.7));--pw0:min(21px,calc((100vh - 260px) / 17));--pw:calc(var(--pw0) * var(--k))}
+ .p0 .pond,.p2 .pond{--pw0:min(30px,calc((100vh - 260px) / 13))}
  #play{display:grid;grid-template-columns:minmax(0,680px) minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto auto auto;column-gap:14px;justify-content:center;padding:0 12px 8px;align-content:stretch}
  #play>#table{grid-column:1;grid-row:1}
  #play>#sup{grid-column:2;grid-row:1;max-height:none;font-size:14px;align-self:start;overflow-y:auto}
@@ -237,7 +240,7 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var
  <main id="title" class="scr">
   <div class="hero" id="hero" aria-hidden="true"></div>
   <h2><small>YUKINOSATO MAHJONG</small>ゆきの里麻雀</h2>
-  <p class="lead">4人打ちのリーチ麻雀。<br>役もおすすめの捨て牌も、点数の数え方もわかる！</p>
+  <p class="lead">4人打ちのリーチ麻雀。<br>役もおすすめの捨て牌も、点数の数え方もわかる！<br><small>対戦相手：雪うさぎ（慎重派）／もふ丸（鳴き好き）／モチ太郎（バランス型）</small></p>
   <div class="row" id="modeRow">
    <button data-mode="normal" aria-pressed="false">通常モード<small>ヒントなし</small></button>
    <button data-mode="support" aria-pressed="true">サポートモード<small>初心者向け</small></button>
@@ -366,28 +369,31 @@ function isAgariC(c,melds){ // 門前部分の完成判定（melds=副露数）
 function shantenNormal(c,m0){
   let best=8;
   function calc(m,t,hd){const mm=m+m0;if(mm+t>4)t=4-mm;const s=8-2*mm-t-hd;if(s<best)best=s;}
-  function scanT(i,m,t,hd){
+  function scanT(i,m,t,hd,left){
     while(i<34&&c[i]===0)i++;
+    const mm=m+m0;
+    if(8-2*mm-Math.min(4-mm,t+(left>>1))-hd>=best)return;
     if(i>=34){calc(m,t,hd);return;}
-    if(m+m0+t<4){
-      if(c[i]>=2){c[i]-=2;scanT(i,m,t+1,hd);c[i]+=2;}
+    if(mm+t<4){
+      if(c[i]>=2){c[i]-=2;scanT(i,m,t+1,hd,left-2);c[i]+=2;}
       if(i<27){
         const p=i%9;
-        if(p<8&&c[i+1]>0){c[i]--;c[i+1]--;scanT(i,m,t+1,hd);c[i]++;c[i+1]++;}
-        if(p<7&&c[i+2]>0){c[i]--;c[i+2]--;scanT(i,m,t+1,hd);c[i]++;c[i+2]++;}
+        if(p<8&&c[i+1]>0){c[i]--;c[i+1]--;scanT(i,m,t+1,hd,left-2);c[i]++;c[i+1]++;}
+        if(p<7&&c[i+2]>0){c[i]--;c[i+2]--;scanT(i,m,t+1,hd,left-2);c[i]++;c[i+2]++;}
       }
     }
-    c[i]--;scanT(i,m,t,hd);c[i]++;
+    c[i]--;scanT(i,m,t,hd,left-1);c[i]++;
   }
-  function scanM(i,m,hd){
+  function scanM(i,m,hd,left){
     while(i<34&&c[i]===0)i++;
-    if(i>=34){scanT(0,m,0,hd);return;}
-    if(c[i]>=3){c[i]-=3;scanM(i,m+1,hd);c[i]+=3;}
-    if(i<27&&i%9<7&&c[i+1]>0&&c[i+2]>0){c[i]--;c[i+1]--;c[i+2]--;scanM(i,m+1,hd);c[i]++;c[i+1]++;c[i+2]++;}
-    scanM(i+1,m,hd);
+    if(i>=34){scanT(0,m,0,hd,left);return;}
+    if(c[i]>=3){c[i]-=3;scanM(i,m+1,hd,left-3);c[i]+=3;}
+    if(i<27&&i%9<7&&c[i+1]>0&&c[i+2]>0){c[i]--;c[i+1]--;c[i+2]--;scanM(i,m+1,hd,left-3);c[i]++;c[i+1]++;c[i+2]++;}
+    scanM(i+1,m,hd,left);
   }
-  for(let h=0;h<34;h++){if(c[h]>=2){c[h]-=2;scanM(0,0,1);c[h]+=2;}}
-  scanM(0,0,0);
+  let n=0;for(let i=0;i<34;i++)n+=c[i];
+  for(let h=0;h<34;h++){if(c[h]>=2){c[h]-=2;scanM(0,0,1,n-2);c[h]+=2;}}
+  scanM(0,0,0,n);
   return best;
 }
 function shantenChiitoi(c){let p=0,k=0;for(let i=0;i<34;i++){if(c[i]>=2)p++;if(c[i]>=1)k++;}return 6-p+(k<7?7-k:0);}
@@ -1641,6 +1647,7 @@ const SFX={
 /* ============ 8. 画面切り替え ============ */
 function show(v){
   S.view=v;
+  if(v!=='play'){$('#modal').hidden=true;S.modal=null;}
   for(const id of ['title','learn','lesson','quiz','play'])$('#'+id).hidden=id!==v;
   $('#back').textContent=v==='title'?'← 一覧':'← もどる';
   $('#back').setAttribute('href',v==='title'?'../':'#');
@@ -1713,20 +1720,21 @@ function startGame(o){
 }
 function onEvent(e){
   const G=S.G;
-  const dl=S.fast?0:(S.auto?0.4:1);
+  const dl=S.fast?0:1,au=S.auto;
+  const w=(m,a)=>{S.wait=Math.max(S.wait,(au?a:m)*dl+(S.fast?0:0.001));};
   switch(e.t){
-    case 'discard':SFX.dahai();if(e.p!==0||S.auto)S.wait=Math.max(S.wait,(e.p===0?0.15:0.42)*dl+0.001);if(e.riichi){}break;
-    case 'draw':if(e.p!==0)S.wait=Math.max(S.wait,0.05*dl);break;
+    case 'discard':SFX.dahai();if(e.p!==0||au)w(0.42,0.17);break;
+    case 'draw':if(e.p!==0)w(0.05,0.02);break;
     case 'call':{
       const nm={chi:'チー',pon:'ポン',minkan:'カン',ankan:'カン',kakan:'カン'}[e.type];
       (e.type==='chi'?SFX.chi:e.type==='pon'?SFX.pon:SFX.kan)();
-      flash(NAMES[e.p]+'：'+nm+'！');S.wait=Math.max(S.wait,0.75*dl);break;}
-    case 'riichi':SFX.riichi();flash(NAMES[e.p]+'：リーチ！');S.wait=Math.max(S.wait,0.9*dl);break;
-    case 'win':SFX.win();flash(NAMES[e.p]+'：'+(e.tsumo?'ツモ！':'ロン！'));S.wait=Math.max(S.wait,0.9*dl);break;
-    case 'draw_end':flash(G.result.kind||'流局');S.wait=Math.max(S.wait,0.6*dl);break;
+      flash(NAMES[e.p]+'：'+nm+'！');w(0.75,0.3);break;}
+    case 'riichi':SFX.riichi();flash(NAMES[e.p]+'：リーチ！');w(0.9,0.35);break;
+    case 'win':SFX.win();flash(NAMES[e.p]+'：'+(e.tsumo?'ツモ！':'ロン！'));w(0.9,0.4);break;
+    case 'draw_end':flash(G.result.kind||'流局');w(0.6,0.3);break;
   }
 }
-function flash(t){const el=$('#toast');el.textContent=t;el.hidden=false;S.toastT=S.fast?0.01:(S.auto?0.8:1.4);}
+function flash(t){const el=$('#toast');el.textContent=t;el.hidden=false;S.toastT=S.fast?0.01:(S.auto?0.5:1.4);}
 function tick(dt){
   if(S.toastT>0){S.toastT-=dt;if(S.toastT<=0)$('#toast').hidden=true;}
   if(S.view!=='play'||!S.G)return;
@@ -1796,8 +1804,21 @@ function render(){
   $('#hintBtn').hidden=S.mode!=='support';
   $('#hintBtn').setAttribute('aria-pressed',SV.hint);
   $('#sup').hidden=!(S.mode==='support'&&SV.hint);
+  fitTable();
   const pro=$('#pro');
   if(S.auto&&S.why){pro.textContent='🤖 '+S.why;pro.hidden=false;}else pro.hidden=true;
+}
+function fitTable(){
+  const t=$('#table');if(!t||S.view!=='play')return;
+  let k=S.k||1;
+  for(let i=0;i<4;i++){
+    document.documentElement.style.setProperty('--k',k.toFixed(3));
+    const need=t.scrollHeight,have=t.clientHeight;
+    if(need>have+1){k=Math.max(.45,k*have/need*0.97);continue;}
+    if(k<1&&need<have*0.88){k=Math.min(1,k*1.06);continue;}
+    break;
+  }
+  S.k=k;
 }
 function renderHand(){
   const G=S.G,h=G.hands[0];
@@ -2068,7 +2089,7 @@ function drawHTML(R,G){
 }
 function openResult(){
   const G=S.G,R=G.result;
-  SV.rec.hands++;
+  if(!S.autoUsed)SV.rec.hands++;
   if(R.type==='win'){
     SFX.win();
     if(R.winner===0&&!S.autoUsed){
@@ -2078,7 +2099,7 @@ function openResult(){
       if(R.res.ymN)for(const y of R.res.yaku)if(y.ym&&!SV.rec.ym.includes(y.n))SV.rec.ym.push(y.n);
     }
     save();
-    openModal(winHTML(R,G),'result',S.auto?(R.res.limit?2.2:1.4):1);
+    openModal(winHTML(R,G),'result',S.auto?(R.res.limit?2:1.5):1);
   }else{
     openModal(drawHTML(R,G),'result',S.auto?0.9:1);
   }
@@ -2099,7 +2120,7 @@ function openFinal(){
   <div class="btns"><button class="go" id="againBtn">もう一回</button><button id="toTitleBtn">タイトルへ</button></div>
   <div class="btns"><a href="../">← ゲーム一覧にもどる</a></div></div>`;
   SFX[rank<=2?'win':'lose']();
-  openModal(h,'final',3);
+  openModal(h,'final',2.5);
   $('#againBtn').addEventListener('click',()=>{closeModalPlain();startGame({});});
   $('#toTitleBtn').addEventListener('click',()=>{closeModalPlain();show('title');});
 }
@@ -2559,9 +2580,10 @@ function endQuiz(){
    <div class="res" style="text-align:center"><div class="v ${pct>=70?'o':'x'}">${Q.ok} / ${Q.total} 問 正解（${pct}%）</div>
    <div>通算：${rec[0]} / ${rec[1]}問（${rec[1]?Math.round(rec[0]/rec[1]*100):0}%）</div>
    <div style="margin-top:6px">${pct>=80?'すばらしい！この調子で実戦へ！':pct>=50?'いい調子！もう一回やってみよう':'レッスンを読み返してからもう一度どうぞ'}</div></div>
-   <div class="pnav"><button id="qAgain" class="go">もう一回</button><button id="qBack">学習メニューへ</button></div></div>`;
+   <div class="pnav"><button id="qAgain" class="go">もう一回</button><button id="qBack">学習メニューへ</button></div><div class="pnav"><button id="qPlay">通常モードで実戦！</button></div></div>`;
   $('#qAgain').onclick=()=>startQuiz(Q.kind);
   $('#qBack').onclick=()=>show('learn');
+  $('#qPlay').onclick=()=>{S.mode='normal';startGame({mode:'normal',len:'hanchan'});};
   SFX.ok();
 }
 function recordQuiz(ok){
@@ -2646,7 +2668,8 @@ function quizExplain(q){
     h+=`<div>正解の役：${q.correct.join('、')}</div>`;
     h+=`<div style="margin-top:4px">${q.r.shape==='chiitoi'?'七対子の形です。':''}合計 ${q.r.han}翻 ${q.r.fu}符 ${q.r.limit||''}</div>`;
   }else{
-    h+='<div style="margin-top:4px">'+explainHTML(q.r)+'</div>';
+    h+=`<div>正解：${q.options.find(o=>o.ok).text}</div>`;
+    h+='<div class="card" style="background:none;border:0;padding:0;box-shadow:none">'+explainHTML(q.r)+'</div>';
     h+=`<div style="margin-top:4px">あがり：${q.r.yaku.map(y=>y.n).join('・')}${q.r.dora?'・ドラ'+q.r.dora:''}${q.r.aka?'・赤'+q.r.aka:''}${q.r.ura?'・裏'+q.r.ura:''}</div>`;
   }
   return h+'</div>';
@@ -2710,7 +2733,7 @@ $('#calls').addEventListener('click',e=>{const b=e.target.closest('button');if(!
   let sx=0,sy=0,sid=-1;
   const h=$('#hand');
   h.addEventListener('pointerdown',e=>{const b=e.target.closest('.t');if(!b)return;sx=e.clientX;sy=e.clientY;sid=+b.dataset.id;});
-  h.addEventListener('pointerup',e=>{
+  document.addEventListener('pointerup',e=>{
     if(sid<0)return;const dy=e.clientY-sy,dx=Math.abs(e.clientX-sx);const id=sid;sid=-1;
     if(dy<-34&&dx<40&&S.waitingHuman&&!S.auto&&S.opts&&S.G.phase==='act'){
       const o=S.opts,k=id>>2;
@@ -2719,7 +2742,7 @@ $('#calls').addEventListener('click',e=>{const b=e.target.closest('button');if(!
       e.preventDefault();submit('act',{a:'discard',id,riichi:S.riichiMode});
     }
   });
-  h.addEventListener('pointercancel',()=>{sid=-1;});
+  document.addEventListener('pointercancel',()=>{sid=-1;});
 })();
 // 人が操作したらオートを解除
 document.addEventListener('pointerdown',e=>{
