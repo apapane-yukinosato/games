@@ -132,6 +132,8 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var
 .card h4{margin:10px 0 4px;font-size:13px;color:var(--cyan);border-bottom:1px solid rgba(127,232,255,.3);padding-bottom:2px}
 .card .hnd{display:flex;flex-wrap:wrap;gap:2px;align-items:flex-end;justify-content:center;margin:4px 0}
 .card .hnd .t{--w:min(22px,calc((100vw - 60px) / 15))}
+.yomi{font-size:.68em;font-weight:600;opacity:.78;letter-spacing:0;margin-left:1px}
+.card .ex .f>span:first-child{min-width:0}
 .card .yk{width:100%;border-collapse:collapse}
 .card .yk td{padding:3px 4px;border-bottom:1px solid rgba(255,255,255,.1);font-size:14px;font-weight:700}
 .card .yk td:last-child{text-align:right;color:var(--gold);white-space:nowrap}
@@ -450,6 +452,40 @@ const NM={riichi:'立直',dbl:'ダブル立直',ippatsu:'一発',tsumo:'門前�
   ryanpei:'二盃口',junchan:'純全帯么九',honitsu:'混一色',chinitsu:'清一色',
   kokushi:'国士無双',suuankou:'四暗刻',daisangen:'大三元',shousuushii:'小四喜',daisuushii:'大四喜',tsuuiisou:'字一色',ryuuiisou:'緑一色',
   chinroutou:'清老頭',chuuren:'九蓮宝燈',suukantsu:'四槓子',tenhou:'天和',chiihou:'地和'};
+
+/* ---- 役の読み方（カタカナ）をカッコで添える ---- */
+const YOMI={'立直':'リーチ','ダブル立直':'ダブルリーチ','一発':'イッパツ','門前清自摸和':'メンゼンツモ','断么九':'タンヤオ','平和':'ピンフ','一盃口':'イーペーコー',
+  '嶺上開花':'リンシャンカイホウ','槍槓':'チャンカン','海底摸月':'ハイテイモーユエ','河底撈魚':'ホウテイラオユイ','三色同順':'サンショクドウジュン','一気通貫':'イッキツウカン',
+  '混全帯么九':'チャンタ','七対子':'チートイツ','対々和':'トイトイホー','三暗刻':'サンアンコー','三色同刻':'サンショクドウコー','三槓子':'サンカンツ','小三元':'ショウサンゲン',
+  '混老頭':'ホンロートー','二盃口':'リャンペーコー','純全帯么九':'ジュンチャン','混一色':'ホンイツ','清一色':'チンイツ','国士無双':'コクシムソウ','四暗刻':'スーアンコー',
+  '大三元':'ダイサンゲン','小四喜':'ショウスーシー','大四喜':'ダイスーシー','字一色':'ツーイーソー','緑一色':'リューイーソー','清老頭':'チンロートー','九蓮宝燈':'チューレンポウトウ',
+  '四槓子':'スーカンツ','天和':'テンホー','地和':'チーホー','赤ドラ':'アカドラ','裏ドラ':'ウラドラ','数え役満':'カゾエヤクマン','役牌':'ヤクハイ',
+  '役牌 白':'ハク','役牌 發':'ハツ','役牌 中':'チュン'};
+['東:トン','南:ナン','西:シャー','北:ペー'].forEach(x=>{const [k,v]=x.split(':');YOMI['場風 '+k]=v;YOMI['自風 '+k]=v;});
+// 学習ページ・解説用の用語
+const YOMI_TERM={'翻':'ハン','符':'フ','満貫':'マンガン','跳満':'ハネマン','倍満':'バイマン','三倍満':'サンバイマン','役満':'ヤクマン','副底':'フーテイ','雀頭':'ジャントウ',
+  '刻子':'コーツ','槓子':'カンツ','嵌張':'カンチャン','辺張':'ペンチャン','単騎':'タンキ','両面':'リャンメン','双碰':'シャンポン','向聴':'シャンテン','聴牌':'テンパイ',
+  '順子':'シュンツ','面子':'メンツ','暗刻':'アンコ','明刻':'ミンコ','門前':'メンゼン'};
+const YOMI_ALL=Object.assign({},YOMI_TERM,YOMI);
+const _yre=m=>new RegExp('(?<!（)('+Object.keys(m).sort((a,b)=>b.length-a.length).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')(（[ぁ-ゖァ-ヶー・／ ]+）)?','g');
+const YRE_Y=_yre(YOMI),YRE_YT=_yre(YOMI_ALL);
+// 文字列（HTML可）の中の役名に読みを足す。タグの中は触らない。o.once=最初の1回だけ／o.terms=用語も
+function yomi(str,o){
+  o=o||{};const seen=new Set(),re=o.terms?YRE_YT:YRE_Y,tab=o.terms?YOMI_ALL:YOMI;
+  const parts=String(str).split(/(<[^>]*>)/);
+  return parts.map((seg,i)=>{
+    if(i%2)return seg;
+    return seg.replace(re,(m,nm,rd,off,all)=>{
+      if(rd||(off+m.length===all.length&&parts[i+1]==='<small class="yomi">')){seen.add(nm);return m;}
+      if(nm==='役満'&&all[off-1]==='倍')return m;
+      if(o.once&&seen.has(nm))return m;
+      seen.add(nm);
+      return nm+'<small class="yomi">（'+tab[nm]+'）</small>';
+    });
+  }).join('');
+}
+const yomiPlain=str=>String(str).replace(YRE_Y,(m,nm,rd)=>rd?m:nm+'（'+YOMI[nm]+'）');
+const kata2hira=t=>t.replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-96));
 const ceil100=x=>Math.ceil(x/100)*100;
 function basicPoints(han,fu,ym){
   if(ym)return 8000*ym;
@@ -1455,25 +1491,25 @@ function yakuHints(G,p){
   for(const mm of m){const k=mm.ids[0]>>2;if(mm.type!=='chi'&&(k>=31||k===G.roundWind||k===G.seatWind(p)))out.push('「'+tileName(k)+'」の副露で役牌（1翻）がついているよ');}
   // タンヤオ
   let yao=0;for(let k=0;k<34;k++)if(isYao(k))yao+=allC[k];
-  if(yao===0)out.push('全部が2〜8の数牌。タンヤオ（断么九）が成立しているよ');
+  if(yao===0)out.push('全部が2〜8の数牌。断么九が成立しているよ');
   else if(yao<=4&&m.every(mm=>mm.ids.every(i=>!isYao(i>>2))))out.push('么九牌（1・9・字牌）があと'+yao+'枚。捨てていけばタンヤオになるよ');
   // 染め手
   for(let s=0;s<3;s++){
     let n=0,o=0;for(let k=0;k<27;k++){if((k/9|0)===s)n+=allC[k];else o+=allC[k];}
     let hn=0;for(let k=27;k<34;k++)hn+=allC[k];
-    if(o===0&&hn===0&&n>=13){out.push('一色だけの手！チンイツ（清一色）');break;}
-    if(o<=3&&n>=8&&n+hn>=11&&o>0){out.push(tileName(s*9).slice(-1)+'子が多いね。他の色を捨てればホンイツ（混一色）が狙えるよ');break;}
-    if(o===0&&n+hn>=10&&hn>0){out.push('ホンイツ（混一色）の形になっているよ');break;}
+    if(o===0&&hn===0&&n>=13){out.push('一色だけの手！清一色だよ');break;}
+    if(o<=3&&n>=8&&n+hn>=11&&o>0){out.push(tileName(s*9).slice(-1)+'子が多いね。他の色を捨てれば混一色が狙えるよ');break;}
+    if(o===0&&n+hn>=10&&hn>0){out.push('混一色の形になっているよ');break;}
   }
   // 七対子
   let pairs=0;for(let k=0;k<34;k++)if(c[k]>=2)pairs++;
-  if(closed&&m.length===0&&pairs>=4)out.push('対子が'+pairs+'組。七対子（チートイツ）も狙えるよ');
+  if(closed&&m.length===0&&pairs>=4)out.push('対子が'+pairs+'組。七対子も狙えるよ');
   // トイトイ
   let trip=0;for(let k=0;k<34;k++)if(c[k]>=3)trip++;
   trip+=m.filter(mm=>mm.type!=='chi').length;
-  if(pairs+trip>=4&&trip>=1&&(m.length>0||pairs>=4))out.push('同じ牌が多いね。ポンで対々和（トイトイ）も狙えるよ');
+  if(pairs+trip>=4&&trip>=1&&(m.length>0||pairs>=4))out.push('同じ牌が多いね。ポンで対々和も狙えるよ');
   // 一気通貫
-  for(let s=0;s<3;s++){let ok=true;for(let i=0;i<9;i++)if(!allC[s*9+i])ok=false;if(ok){out.push('1〜9がそろいそう。一気通貫（イッツー）の形だよ');break;}}
+  for(let s=0;s<3;s++){let ok=true;for(let i=0;i<9;i++)if(!allC[s*9+i])ok=false;if(ok){out.push('1〜9がそろいそう。一気通貫の形だよ');break;}}
   if(closed&&m.length===0)out.push('鳴かずにテンパイしたらリーチで役がつくよ');
   if(m.length>0&&!yakuPotential(G,p,c,m))out.push('注意：いまの鳴きだけだと役がまだ無いよ。役牌・タンヤオ・染め手のどれかをめざそう');
   return out;
@@ -1673,9 +1709,9 @@ function renderTitle(){
    <tr><td>対局数</td><td>${r.games}回（1位 ${r.ranks[0]}回／2位 ${r.ranks[1]}回／3位 ${r.ranks[2]}回／4位 ${r.ranks[3]}回）</td></tr>
    <tr><td>平均順位</td><td>${avg}</td></tr>
    <tr><td>最高得点</td><td>${r.best?r.best.toLocaleString()+'点':'-'}</td></tr>
-   <tr><td>最大の和了</td><td>${r.maxWin?r.maxDesc:'-'}</td></tr>
+   <tr><td>最大の和了</td><td>${r.maxWin?yomi(r.maxDesc):'-'}</td></tr>
    <tr><td>和了回数</td><td>${r.wins}回（${r.hands}局中）</td></tr>
-   <tr><td>役満</td><td>${r.ym.length?r.ym.join('、'):'まだなし'}</td></tr></table>
+   <tr><td>役満</td><td>${r.ym.length?r.ym.map(n=>yomi(n)).join('、'):'まだなし'}</td></tr></table>
    <h4 style="margin-top:6px">学習の進みぐあい</h4><table>
    <tr><td>レッスン</td><td>${Object.keys(SV.lessons).length} / ${LESSONS.length} 完了</td></tr>
    ${QUIZ_KINDS.map(q=>`<tr><td>${q.name}クイズ</td><td>${SV.quiz[q.id][1]?SV.quiz[q.id][0]+' / '+SV.quiz[q.id][1]+'問正解（'+Math.round(SV.quiz[q.id][0]/SV.quiz[q.id][1]*100)+'%）':'まだ'}</td></tr>`).join('')}
@@ -1868,7 +1904,7 @@ function renderCalls(){
       if(o.pon)h+=`<button data-a="pon">ポン</button>`;
       o.chi.forEach((ks,i)=>{h+=`<button data-a="chi" data-i="${i}">チー<span class="tl xs">${kindsHTML(ks)}</span></button>`;});
       h+=`<button class="skip" data-a="pass">スキップ</button>`;
-      if(S.mode==='support'&&SV.hint){const adv=adviceCall(G,0);if(adv)h+=`<div class="adv">${adv.good?'👍 ':'🤔 '}${adv.text}</div>`;}
+      if(S.mode==='support'&&SV.hint){const adv=adviceCall(G,0);if(adv)h+=`<div class="adv">${adv.good?'👍 ':'🤔 '}${yomi(adv.text)}</div>`;}
     }
   }
   el.innerHTML=h;
@@ -1919,7 +1955,7 @@ function renderSup(){
       if(b.furiten)h+='<div class="l bad">⚠ この待ちはフリテン！ロンできません</div>';
     }
     const hints=yakuHints(G,0).slice(0,2);
-    for(const t of hints)h+=`<div class="l">💡 ${t}</div>`;
+    for(const t of hints)h+=`<div class="l">💡 ${yomi(t)}</div>`;
   }else if(G.phase!=='over'){
     const c=counts(G.hands[0]);
     const n=G.hands[0].length;
@@ -1934,7 +1970,7 @@ function renderSup(){
         else if(ti.waits.length&&ti.waits.every(w=>!w.ron))h+='<div class="l wr">いまは役がないよ。リーチをかけるとロンできる</div>';
       }
       if(threats.length)h+=`<div class="l wr">⚠ ${threats.map(p=>NAMES[p]).join('・')}がリーチ中。安全な牌をさがそう</div>`;
-      for(const t of yakuHints(G,0).slice(0,2))h+=`<div class="l">💡 ${t}</div>`;
+      for(const t of yakuHints(G,0).slice(0,2))h+=`<div class="l">💡 ${yomi(t)}</div>`;
     }
     if(!h)h='<div class="l">ほかの人の番です…</div>';
   }
@@ -2009,10 +2045,10 @@ function explainHTML(r,o){
   o=o||{};
   const dealer=r.dealer,tsumo=r.tsumo;
   let h='<h4>① 翻（はん）を数える</h4><div class="ex">';
-  for(const y of r.yaku)h+=`<div class="f"><span>${y.n}</span><span>${y.ym?'役満':y.h+'翻'}</span></div>`;
+  for(const y of r.yaku)h+=`<div class="f"><span>${yomi(y.n)}</span><span>${y.ym?'役満':y.h+'翻'}</span></div>`;
   if(r.dora)h+=`<div class="f"><span>ドラ ${r.dora}枚</span><span>${r.dora}翻</span></div>`;
-  if(r.aka)h+=`<div class="f"><span>赤ドラ ${r.aka}枚</span><span>${r.aka}翻</span></div>`;
-  if(r.ura)h+=`<div class="f"><span>裏ドラ ${r.ura}枚</span><span>${r.ura}翻</span></div>`;
+  if(r.aka)h+=`<div class="f"><span>${yomi('赤ドラ')} ${r.aka}枚</span><span>${r.aka}翻</span></div>`;
+  if(r.ura)h+=`<div class="f"><span>${yomi('裏ドラ')} ${r.ura}枚</span><span>${r.ura}翻</span></div>`;
   h+=`<div class="f sum"><span>合計</span><span>${r.ymN?(r.ymN>1?r.ymN+'倍役満':'役満'):r.han+'翻'}</span></div></div>`;
   if(r.ymN){
     h+=`<h4>② 役満は符計算なし</h4><div class="ex"><div class="calc">基本点 = 8000${r.ymN>1?' × '+r.ymN:''} = ${r.basic}</div></div>`;
@@ -2020,7 +2056,7 @@ function explainHTML(r,o){
     h+='<h4>② 符（ふ）を数える</h4><div class="ex">'+fuExplain(r)+'</div>';
     h+='<h4>③ 基本点を出す</h4><div class="ex">';
     const raw=r.fu*Math.pow(2,r.han+2);
-    if(r.han>=13)h+=`<div class="calc">13翻以上 → 数え役満（基本点 8000）</div>`;
+    if(r.han>=13)h+=`<div class="calc">13翻以上 → ${yomi('数え役満')}（基本点 8000）</div>`;
     else if(r.han>=11)h+=`<div class="calc">11〜12翻 → 三倍満（基本点 6000）</div>`;
     else if(r.han>=8)h+=`<div class="calc">8〜10翻 → 倍満（基本点 4000）</div>`;
     else if(r.han>=6)h+=`<div class="calc">6〜7翻 → 跳満（基本点 3000）</div>`;
@@ -2051,17 +2087,17 @@ function winHTML(R,G,detail){
   const wi=R.winId;
   let hand=h13.slice();
   if(R.tsumo){const ix=hand.indexOf(wi);if(ix>=0)hand.splice(ix,1);}
-  let html=`<div class="card"><h3>${R.chankan?'槍槓ロン！':R.tsumo?'ツモ！':'ロン！'}</h3>
+  let html=`<div class="card"><h3>${R.chankan?yomi('槍槓')+'ロン！':R.tsumo?'ツモ！':'ロン！'}</h3>
    <div style="text-align:center;font-weight:800;margin-bottom:4px">${who}${R.tsumo?'':'（'+NAMES[R.from]+'から）'}</div>
    <div class="hnd">${hand.map(i=>tileHTML(i)).join('')}<span style="width:6px"></span>${tileHTML(wi,'wintile')}<span style="width:8px"></span>${R.melds.map(m=>meldHTML(m)).join('<span style="width:4px"></span>')}</div>
    <div style="font-size:12px;color:var(--mute);text-align:center">ドラ表示 ${R.doraInd.map(i=>tileHTML(i)).join('')}${R.uraInd.length?' 裏 '+R.uraInd.map(i=>tileHTML(i)).join(''):''}</div>
    <h4>役</h4><table class="yk">`;
-  for(const y of r.yaku)html+=`<tr><td>${y.n}</td><td>${y.ym?'役満':y.h+'翻'}</td></tr>`;
+  for(const y of r.yaku)html+=`<tr><td>${yomi(y.n)}</td><td>${y.ym?'役満':y.h+'翻'}</td></tr>`;
   if(r.dora)html+=`<tr><td>ドラ</td><td>${r.dora}翻</td></tr>`;
-  if(r.aka)html+=`<tr><td>赤ドラ</td><td>${r.aka}翻</td></tr>`;
-  if(r.ura)html+=`<tr><td>裏ドラ</td><td>${r.ura}翻</td></tr>`;
+  if(r.aka)html+=`<tr><td>${yomi('赤ドラ')}</td><td>${r.aka}翻</td></tr>`;
+  if(r.ura)html+=`<tr><td>${yomi('裏ドラ')}</td><td>${r.ura}翻</td></tr>`;
   html+=`</table>`;
-  html+=`<div class="tot">${r.ymN?'':r.han+'翻 '+r.fu+'符 '}${r.limit?`<span class="lim">${r.limit}</span>`:''}<b>${r.tsumo?(r.dealer?r.pay.each+'オール':r.pay.other+'・'+r.pay.dealer):r.pay.total}点</b>${R.honba?`<div style="font-size:12px;color:var(--mute)">（${R.honba}本場 +${r.tsumo?R.honba*100+'点ずつ':R.honba*300+'点'}）</div>`:''}</div>`;
+  html+=`<div class="tot">${r.ymN?'':r.han+'翻 '+r.fu+'符 '}${r.limit?`<span class="lim">${yomi(r.limit)}</span>`:''}<b>${r.tsumo?(r.dealer?r.pay.each+'オール':r.pay.other+'・'+r.pay.dealer):r.pay.total}点</b>${R.honba?`<div style="font-size:12px;color:var(--mute)">（${R.honba}本場 +${r.tsumo?R.honba*100+'点ずつ':R.honba*300+'点'}）</div>`:''}</div>`;
   html+='<div class="mv">';
   for(let p=0;p<4;p++){const d=R.delta[p];html+=`<div class="${d>0?'up':d<0?'dn':''}">${NAMES[p]}<b>${G.pts[p]}</b>${d>0?'+':''}${d}</div>`;}
   html+='</div>';
@@ -2129,31 +2165,31 @@ function closeModalPlain(){$('#modal').hidden=true;S.modal=null;}
 /* ============ 12. 学習モード：レッスン ============ */
 // 役一覧（k=エンジンの役キー, ex=例の手牌, w=和了牌, m=副露）
 const YAKU_LIST=[
- {n:'立直（リーチ）',h:'1翻',o:'×',d:'門前でテンパイしたら1000点を出して「リーチ」を宣言。宣言後は手を変えられないけど、ロンかツモで必ず役がつく。',ex:'234m567m345p678s99p',w:'4m',x:{riichi:1},k:'riichi'},
+ {n:'立直',h:'1翻',o:'×',d:'門前でテンパイしたら1000点を出して「リーチ」を宣言。宣言後は手を変えられないけど、ロンかツモで必ず役がつく。',ex:'234m567m345p678s99p',w:'4m',x:{riichi:1},k:'riichi'},
  {n:'一発',h:'1翻',o:'×',d:'リーチをかけてから1巡以内（途中で誰かが鳴くと消える）にあがると+1翻。',ex:'234m567m345p678s99p',w:'4m',x:{riichi:1,ippatsu:true},k:'ippatsu'},
- {n:'門前清自摸和（ツモ）',h:'1翻',o:'×',d:'鳴かずに（門前で）ツモあがりすると+1翻。',ex:'123m456p789s234s55m',w:'4s',x:{tsumo:true},k:'tsumo'},
- {n:'断么九（タンヤオ）',h:'1翻',o:'○',d:'2〜8の数牌だけであがる。1・9・字牌を使わない。鳴いてもOK（喰いタン）。',ex:'234m567m345p678s55p',w:'4m',k:'tanyao'},
- {n:'平和（ピンフ）',h:'1翻',o:'×',d:'順子4つ＋役にならない雀頭で、両面待ちであがる。符が少ないぶん点は低め。',ex:'234m567m345p678s99p',w:'4m',k:'pinfu'},
- {n:'一盃口（イーペーコー）',h:'1翻',o:'×',d:'同じ数字の順子を同じ色で2組そろえる（例：112233）。',ex:'112233m456p789s55p',w:'3m',k:'iipei'},
+ {n:'門前清自摸和',h:'1翻',o:'×',d:'鳴かずに（門前で）ツモあがりすると+1翻。',ex:'123m456p789s234s55m',w:'4s',x:{tsumo:true},k:'tsumo'},
+ {n:'断么九',h:'1翻',o:'○',d:'2〜8の数牌だけであがる。1・9・字牌を使わない。鳴いてもOK（喰いタン）。',ex:'234m567m345p678s55p',w:'4m',k:'tanyao'},
+ {n:'平和',h:'1翻',o:'×',d:'順子4つ＋役にならない雀頭で、両面待ちであがる。符が少ないぶん点は低め。',ex:'234m567m345p678s99p',w:'4m',k:'pinfu'},
+ {n:'一盃口',h:'1翻',o:'×',d:'同じ数字の順子を同じ色で2組そろえる（例：112233）。',ex:'112233m456p789s55p',w:'3m',k:'iipei'},
  {n:'役牌（白・發・中・場風・自風）',h:'1翻',o:'○',d:'白・發・中の刻子は1翻ずつ。場風（東場なら東）と自風（自分の風）の刻子も1翻。',ex:'555z234m678p345s99s',w:'4m',k:'yh'},
  {n:'嶺上開花',h:'1翻',o:'○',d:'カンしたあとにもらう嶺上牌でツモあがり。',ex:'',k:null},
- {n:'槍槓（チャンカン）',h:'1翻',o:'○',d:'他の人が加槓（ポンからカン）した牌でロンあがり。',ex:'',k:null},
+ {n:'槍槓',h:'1翻',o:'○',d:'他の人が加槓（ポンからカン）した牌でロンあがり。',ex:'',k:null},
  {n:'海底摸月／河底撈魚',h:'1翻',o:'○',d:'最後のツモ牌であがる（海底）／最後の捨て牌でロンする（河底）。',ex:'',k:null},
  {n:'ダブル立直',h:'2翻',o:'×',d:'配牌から最初の捨て牌でリーチ（誰も鳴いていない場合）。',ex:'',k:null},
  {n:'三色同順',h:'2翻（鳴き1翻）',o:'○',d:'萬子・筒子・索子で同じ数字の順子を作る（例：234m234p234s）。',ex:'234m234p234s567m99p',w:'7m',k:'sanshoku'},
- {n:'一気通貫（イッツー）',h:'2翻（鳴き1翻）',o:'○',d:'同じ色で123・456・789の順子をそろえる。',ex:'123456789m234p55s',w:'9m',k:'ittsu'},
- {n:'混全帯么九（チャンタ）',h:'2翻（鳴き1翻）',o:'○',d:'すべての面子と雀頭に1・9・字牌がからむ。順子も1〜3か7〜9。字牌が必要。',ex:'123m789m123p999s11z',w:'3p',k:'chanta'},
- {n:'七対子（チートイツ）',h:'2翻（25符）',o:'×',d:'7種類の対子を作る。同じ牌4枚を2対子にはできない。',ex:'1133m55p77p2288s44z',w:'4z',k:'chiitoi'},
- {n:'対々和（トイトイ）',h:'2翻',o:'○',d:'4つの面子がすべて刻子（同じ牌3枚）。',ex:'222m555p888s333z66m',w:'3z',k:'toitoi'},
+ {n:'一気通貫',h:'2翻（鳴き1翻）',o:'○',d:'同じ色で123・456・789の順子をそろえる。',ex:'123456789m234p55s',w:'9m',k:'ittsu'},
+ {n:'混全帯么九',h:'2翻（鳴き1翻）',o:'○',d:'すべての面子と雀頭に1・9・字牌がからむ。順子も1〜3か7〜9。字牌が必要。',ex:'123m789m123p999s11z',w:'3p',k:'chanta'},
+ {n:'七対子',h:'2翻（25符）',o:'×',d:'7種類の対子を作る。同じ牌4枚を2対子にはできない。',ex:'1133m55p77p2288s44z',w:'4z',k:'chiitoi'},
+ {n:'対々和',h:'2翻',o:'○',d:'4つの面子がすべて刻子（同じ牌3枚）。',ex:'222m555p888s333z66m',w:'3z',k:'toitoi'},
  {n:'三暗刻',h:'2翻',o:'○',d:'自分の手の中だけで作った刻子（暗刻）が3つ。ロンであがった刻子は暗刻にならない。',ex:'222m555p888s345s66z',w:'6z',x:{tsumo:true},k:'sanankou'},
  {n:'三色同刻',h:'2翻',o:'○',d:'3色で同じ数字の刻子（例：777m777p777s）。',ex:'777m777p777s123s44z',w:'4z',k:'sandoukou'},
  {n:'三槓子',h:'2翻',o:'○',d:'カンを3つ作る。',ex:'',k:null},
  {n:'小三元',h:'2翻',o:'○',d:'白・發・中のうち2つが刻子、残り1つが雀頭。役牌の分も合わせて合計4翻。',ex:'555z666z77z123m456p',w:'3m',k:'shousangen'},
  {n:'混老頭',h:'2翻',o:'○',d:'1・9・字牌だけであがる（必ず対々和か七対子になる）。',ex:'111m999m111p999s11z',w:'1m',k:'honroutou'},
- {n:'二盃口（リャンペーコー）',h:'3翻',o:'×',d:'一盃口を2組。',ex:'112233m445566p77s',w:'3m',k:'ryanpei'},
- {n:'純全帯么九（ジュンチャン）',h:'3翻（鳴き2翻）',o:'○',d:'チャンタの字牌なし版。すべての面子と雀頭に1か9がからむ。',ex:'123m789m123p789p11s',w:'9p',k:'junchan'},
- {n:'混一色（ホンイツ）',h:'3翻（鳴き2翻）',o:'○',d:'1つの色の数牌と字牌だけであがる。',ex:'123456789m555z11z',w:'9m',k:'honitsu'},
- {n:'清一色（チンイツ）',h:'6翻（鳴き5翻）',o:'○',d:'1つの色の数牌だけであがる。字牌なし。',ex:'123456789m11122m',w:'2m',k:'chinitsu'},
+ {n:'二盃口',h:'3翻',o:'×',d:'一盃口を2組。',ex:'112233m445566p77s',w:'3m',k:'ryanpei'},
+ {n:'純全帯么九',h:'3翻（鳴き2翻）',o:'○',d:'チャンタの字牌なし版。すべての面子と雀頭に1か9がからむ。',ex:'123m789m123p789p11s',w:'9p',k:'junchan'},
+ {n:'混一色',h:'3翻（鳴き2翻）',o:'○',d:'1つの色の数牌と字牌だけであがる。',ex:'123456789m555z11z',w:'9m',k:'honitsu'},
+ {n:'清一色',h:'6翻（鳴き5翻）',o:'○',d:'1つの色の数牌だけであがる。字牌なし。',ex:'123456789m11122m',w:'2m',k:'chinitsu'},
  {n:'国士無双',h:'役満',o:'×',d:'13種類の么九牌（1・9・字牌）を1枚ずつ＋そのうち1つをもう1枚。',ex:'19m19p19s1234567z1m',w:'1m',k:'kokushi'},
  {n:'四暗刻',h:'役満',o:'×',d:'暗刻（自力で作った刻子）が4つ。',ex:'111m222p333s444p55z',w:'5z',x:{tsumo:true},k:'suuankou'},
  {n:'大三元',h:'役満',o:'○',d:'白・發・中をすべて刻子にする。',ex:'555z666z777z123m99p',w:'9p',k:'daisangen'},
@@ -2275,7 +2311,7 @@ const LESSONS=[
  {id:'yaku',title:'役とは',sub:'役がないとあがれない',html:()=>`
   <h2>役（やく）とは</h2>
   <p>麻雀では、形がそろっていても <b>「役」がひとつもないとあがれません</b>。これが一番のポイントです。</p>
-  <div class="box"><b>役がある手の例（断么九）</b><br>${tn('234m567m345p678s55p','s')}<br>→ 2〜8だけ。タンヤオ！</div>
+  <div class="box"><b>役がある手の例：断么九</b><br>${tn('234m567m345p678s55p','s')}<br>→ 2〜8だけ。タンヤオ！</div>
   <div class="box"><b>役がない手の例</b><br>${tn('123m456p789s234s99m','s')}<br>→ 形はそろっているけど役がない。門前でリーチをかければ「リーチ」の役がつく。</div>
   <h3>ドラは役ではない</h3>
   <p>ドラ・赤ドラ・裏ドラは翻（点数）を増やすだけ。<b>役が別にあるときだけ</b>数えます。</p>
@@ -2297,8 +2333,8 @@ const LESSONS=[
     const el=$('#yakuList');
     const draw=q=>{
       q=(q||'').trim();
-      const list=YAKU_LIST.filter(y=>!q||(y.n+y.h+y.d+(y.o==='○'?'鳴きOK':'門前のみ')).includes(q));
-      el.innerHTML=list.length?list.map(y=>`<div class="ex"><div class="cap">${y.n}　<span style="color:var(--cyan)">${y.h}</span>　<span class="${y.o==='○'?'ok':'ng'}">${y.o==='○'?'鳴きOK':'門前のみ'}</span></div><div>${y.d}</div>${y.ex?tn(y.ex,'s'):''}</div>`).join(''):'<p>見つかりませんでした。</p>';
+      const list=YAKU_LIST.filter(y=>!q||kata2hira(yomiPlain(y.n)+y.h+y.d+(y.o==='○'?'鳴きOK':'門前のみ')).includes(kata2hira(q)));
+      el.innerHTML=list.length?list.map(y=>`<div class="ex"><div class="cap">${yomi(y.n)}　<span style="color:var(--cyan)">${y.h}</span>　<span class="${y.o==='○'?'ok':'ng'}">${y.o==='○'?'鳴きOK':'門前のみ'}</span></div><div>${y.d}</div>${y.ex?tn(y.ex,'s'):''}</div>`).join(''):'<p>見つかりませんでした。</p>';
     };
     draw('');
     $('#yakuSearch').addEventListener('input',e=>draw(e.target.value));
@@ -2505,7 +2541,7 @@ function genAgari(o){
 const YAKU_POOL=['立直','門前清自摸和','断么九','平和','一盃口','一発','三色同順','一気通貫','混全帯么九','対々和','三暗刻','混一色','清一色','七対子','純全帯么九','小三元','役牌 白','役牌 發','役牌 中','場風 東','自風 南','二盃口','混老頭','三色同刻'];
 function situText(c,r){
   const sw=['東','南','西','北'][c.seatWind-27],rw=['東','南'][c.roundWind-27];
-  return `${rw}場・${sw}家（${c.seatWind===27?'親':'子'}）／${c.tsumo?'ツモ':'ロン'}あがり／${c.riichi?'リーチあり':'リーチなし'}${c.ippatsu?'（一発）':''}／${c.melds.length?'鳴きあり':'門前'}`;
+  return `${rw}場・${sw}家（${c.seatWind===27?'親':'子'}）／${c.tsumo?'ツモ':'ロン'}あがり／${c.riichi?'リーチあり':'リーチなし'}${c.ippatsu?'・一発':''}／${c.melds.length?'鳴きあり':'門前'}`;
 }
 function genYaku(){
   const g=genAgari({});if(!g)return null;
@@ -2609,13 +2645,13 @@ function renderQuiz(){
     const conc=sortIds(c.conc.filter(i=>i!==c.winId));
     h+=`<div class="q">${q.type==='yaku'?'この手についている役を、すべてえらんでね':'この手のあがり点はいくつ？'}</div>
     <div class="hnd">${conc.map(i=>tileHTML(i)).join('')}<span style="width:6px"></span>${tileHTML(c.winId,'wintile')}<span style="width:8px"></span>${c.melds.map(m=>meldHTML(m)).join('<span style="width:4px"></span>')}</div>
-    <div style="font-size:12px;color:var(--mute)">${situText(c)}<br>ドラ表示牌：${c.doraInd.map(i=>tileHTML(i)).join('')}${c.uraInd.length?'　裏ドラ表示牌：'+c.uraInd.map(i=>tileHTML(i)).join(''):''}　（赤い印の牌は赤ドラ／場風：${['東','南'][c.roundWind-27]}）</div>`;
+    <div style="font-size:12px;color:var(--mute)">${yomi(situText(c))}<br>ドラ表示牌：${c.doraInd.map(i=>tileHTML(i)).join('')}${c.uraInd.length?'　裏ドラ表示牌：'+c.uraInd.map(i=>tileHTML(i)).join(''):''}　（赤い印の牌は赤ドラ／場風：${['東','南'][c.roundWind-27]}）</div>`;
     h+='<div class="opts">';
     if(q.type==='yaku'){
       q.options.forEach((o,i)=>{
         const isc=q.correct.includes(o);
         const cls=(Q.sel.includes(i)?'sel ':'')+(Q.done?(isc?'ok':(Q.sel.includes(i)?'ng':'')):'');
-        h+=`<button class="${cls}" data-i="${i}">${o}</button>`;
+        h+=`<button class="${cls}" data-i="${i}">${yomi(o)}</button>`;
       });
       h+='</div>';
       if(!Q.done)h+=`<div class="pnav"><button class="go" id="qSubmit" ${Q.sel.length?'':'disabled'}>答え合わせ</button></div>`;
@@ -2661,16 +2697,16 @@ function quizExplain(q){
     h+=q.cands.slice(0,6).map((c,i)=>`<div class="cand ${q.good.includes(c.kind)?'bestc':''}">${kindHTML(c.kind)} ${tileName(c.kind)}：受け入れ ${c.ukeire}枚 ${c.tiles.length?'（'+c.tiles.map(tileName).join('・')+'）':''}${q.good.includes(c.kind)?' ★':''}</div>`).join('');
     h+='<div style="margin-top:4px">💡 孤立した牌や、つながりの薄い牌から切ると、受け入れが広くなります。形が同じなら字牌・端の牌を先に切るのが基本。</div>';
   }else if(q.type==='machi'){
-    h+=`<div>正解の待ち：${q.waits.map(w=>`${tileName(w)}（${q.shapes[w].join('／')||'?'}）`).join('、')}</div>`;
+    h+=`<div>正解の待ち：${q.waits.map(w=>`${tileName(w)}＝${yomi(q.shapes[w].join('／')||'?',{terms:true})}`).join('、')}</div>`;
     h+='<div style="margin:4px 0">'+kindsHTML(q.waits,'s')+'</div>';
     h+='<div>💡 待ちの形：両面は2種類、嵌張・辺張・単騎は1種類。『ノベタン』『三面張』のように、複数の形が重なって待ちが増えることもあります。</div>';
   }else if(q.type==='yaku'){
-    h+=`<div>正解の役：${q.correct.join('、')}</div>`;
+    h+=`<div>正解の役：${q.correct.map(n=>yomi(n)).join('、')}</div>`;
     h+=`<div style="margin-top:4px">${q.r.shape==='chiitoi'?'七対子の形です。':''}合計 ${q.r.han}翻 ${q.r.fu}符 ${q.r.limit||''}</div>`;
   }else{
     h+=`<div>正解：${q.options.find(o=>o.ok).text}</div>`;
     h+='<div class="card" style="background:none;border:0;padding:0;box-shadow:none">'+explainHTML(q.r)+'</div>';
-    h+=`<div style="margin-top:4px">あがり：${q.r.yaku.map(y=>y.n).join('・')}${q.r.dora?'・ドラ'+q.r.dora:''}${q.r.aka?'・赤'+q.r.aka:''}${q.r.ura?'・裏'+q.r.ura:''}</div>`;
+    h+=`<div style="margin-top:4px">あがり：${q.r.yaku.map(y=>yomi(y.n)).join('・')}${q.r.dora?'・ドラ'+q.r.dora:''}${q.r.aka?'・赤'+q.r.aka:''}${q.r.ura?'・裏'+q.r.ura:''}</div>`;
   }
   return h+'</div>';
 }
@@ -2699,7 +2735,7 @@ function openLesson(i){
   const l=LESSONS[i];
   show('lesson');
   const last=i===LESSONS.length-1;
-  $('#lesson').innerHTML=`<div class="lpage">${l.html()}
+  $('#lesson').innerHTML=`<div class="lpage">${yomi(l.html(),{once:true,terms:true})}
    <div class="pnav">${i>0?'<button id="lPrev">← まえ</button>':''}${last?'<button class="go" id="lDone">レッスン完了！</button>':'<button class="go" id="lNext">つぎへ →</button>'}</div></div>`;
   SV.lessons[l.id]=1;save();
   if(l.after)l.after();
